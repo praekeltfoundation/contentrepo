@@ -1,6 +1,6 @@
 # Content Repository
 
-This content repository allows easy content management via a headless CMS that is meant for web and various messaging platforms.
+This content repository allows easy content management via a headless CMS, using [wagtail](https://wagtail.io/) that is meant for web and various messaging platforms.
 
 ## Installation
 
