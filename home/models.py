@@ -28,14 +28,26 @@ class ContentPage(Page):
     parent_page_type = [
         'HomePage',
     ]
-    tags = ClusterTaggableManager(through=ContentPageTag, blank=True)
+
+    # general page attributes
+    tags = ClusterTaggableManager(through=ContentPageTag)
+    enable_web = models.BooleanField(
+        default=False,
+        help_text='When enabled, the API will include the web content')
+    enable_whatsapp = models.BooleanField(
+        default=False,
+        help_text='When enabled, the API will include the whatsapp content')
+    enable_messenger = models.BooleanField(
+        default=False,
+        help_text='When enabled, the API will include the messenger content')
+
     # Web page setup
-    subtitle = models.CharField(max_length=200)
+    subtitle = models.CharField(max_length=200, blank=True, null=True)
     body = StreamField([
         ('paragraph', blocks.RichTextBlock()),
         ('image', ImageChooserBlock()),
 
-    ])
+    ], blank=True, null=True)
 
     # Web panels
     web_panels = [
@@ -49,33 +61,60 @@ class ContentPage(Page):
         ),
     ]
 
-    # IM page setup
-    im_subtitle = models.CharField(max_length=200)
-    im_body = StreamField([
+    # whatsapp page setup
+    whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
+    whatsapp_subtitle = models.CharField(max_length=200, blank=True, null=True)
+    whatsapp_body = StreamField([
         ('paragraph', blocks.RichTextBlock()),
         ('image', ImageChooserBlock()),
+    ], blank=True, null=True)
 
-    ])
-
-    # im_panels
-    im_panels = [
+    # whatsapp panels
+    whatsapp_panels = [
         MultiFieldPanel(
             [
-                FieldPanel("im_subtitle"),
-                StreamFieldPanel("im_body"),
+                FieldPanel("whatsapp_title"),
+                FieldPanel("whatsapp_subtitle"),
+                StreamFieldPanel("whatsapp_body"),
             ],
-            heading="Messaging",
+            heading="Whatsapp",
+        ),
+    ]
+
+    # messenger page setup
+    messenger_title = models.CharField(max_length=200, blank=True, null=True)
+    messenger_subtitle = models.CharField(max_length=200, blank=True, null=True)
+    messenger_body = StreamField([
+        ('paragraph', blocks.RichTextBlock()),
+        ('image', ImageChooserBlock()),
+    ], blank=True, null=True)
+
+    # messenger panels
+    messenger_panels = [
+        MultiFieldPanel(
+            [
+                FieldPanel("messenger_title"),
+                FieldPanel("messenger_subtitle"),
+                StreamFieldPanel("messenger_body"),
+            ],
+            heading="Messenger",
         ),
     ]
 
     promote_panels = Page.promote_panels + [
         FieldPanel('tags'),
     ]
+    settings_panels = Page.settings_panels + [
+        FieldPanel("enable_web"),
+        FieldPanel("enable_whatsapp"),
+        FieldPanel("enable_messenger"),
+    ]
     edit_handler = TabbedInterface(
         [
             ObjectList(web_panels, heading='Web'),
-            ObjectList(im_panels, heading="Messaging"),
+            ObjectList(whatsapp_panels, heading="Whatsapp"),
+            ObjectList(messenger_panels, heading="Messenger"),
             ObjectList(promote_panels, heading='Promotional'),
-            ObjectList(Page.settings_panels, heading='Settings'),
+            ObjectList(settings_panels, heading='Settings'),
         ]
     )
