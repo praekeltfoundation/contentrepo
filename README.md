@@ -10,14 +10,12 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install content
 pip install contentrepo
 ```
 
-## Usage
+## Setting up locally
 
-```python
-import foobar
-
-foobar.pluralize('word') # returns 'words'
-foobar.pluralize('goose') # returns 'geese'
-foobar.singularize('phenomena') # returns 'phenomenon'
+```bash
+./manage.py migrate
+./manage.py createsuperuser
+./manage.py runserver
 ```
 
 ## Contributing
