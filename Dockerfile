@@ -46,6 +46,5 @@ USER wagtail
 
 # Collect static files.
 RUN python manage.py collectstatic --noinput --clear
-RUN python manage.py migrate --no-input --settings=contentrepo.settings.production
 
 CMD set -xe; gunicorn contentrepo.wsgi:application
