@@ -1,6 +1,6 @@
 # Content Repository
 
-This content repository allows easy content management via a headless CMS that is meant for web and various messaging platforms.
+This content repository allows easy content management via a headless CMS, using [wagtail](https://wagtail.io/) that is meant for web and various messaging platforms.
 
 ## Installation
 
@@ -10,14 +10,14 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install content
 pip install contentrepo
 ```
 
-## Usage
-
-```python
-import foobar
-
-foobar.pluralize('word') # returns 'words'
-foobar.pluralize('goose') # returns 'geese'
-foobar.singularize('phenomena') # returns 'phenomenon'
+## Setting up locally
+Run the following in a virtual environment
+```bash
+pip install -r requirements.txt
+pip intsall -r requirements-dev.txt
+./manage.py migrate
+./manage.py createsuperuser
+./manage.py runserver
 ```
 
 ## Contributing
