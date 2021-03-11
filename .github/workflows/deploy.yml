@@ -1,7 +1,8 @@
 name: Publish Docker image
 on:
   push:
-    branches: [ main ]
+    tags:
+      - "v*"
 
 jobs:
   push_to_registry:
@@ -10,11 +11,15 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
+      - name: Get the version
+        id: get_version
+        run: |
+          .ci/tag-from-ref.sh "${GITHUB_REF}"`
       - name: Push to Docker Hub
-        uses: docker/build-push-action@v1
+        uses: mr-smithers-excellent/docker-build-push@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: praekeltfoundation/contentrepo
-          tags: praekeltfoundation/contentrepo:latest
-          tag_with_ref: true
+          image: praekeltfoundation/contentrepo
+          tag: ${{ steps.get_version.outputs.TAG }}
+          registry: docker.io
