@@ -16,4 +16,5 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: praekeltfoundation/contentrepo
+          tags: praekeltfoundation/contentrepo:latest
           tag_with_ref: true
