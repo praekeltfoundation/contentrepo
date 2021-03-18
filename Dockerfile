@@ -44,6 +44,8 @@ COPY --chown=wagtail:wagtail . .
 # Use user "wagtail" to run the build commands below and the server itself.
 USER wagtail
 
+ENV DJANGO_SETTINGS_MODULE=contentrepo.settings.base
+
 # Collect static files.
 RUN python manage.py collectstatic --noinput --clear
 
