@@ -22,4 +22,4 @@ DATABASES = {
 SECRET_KEY = os.environ.get(
     'SECRET_KEY', 'vg%%_7^bt(68qg50vgp^*f^&_(f)36k1vnyg%49n8*0s86hxj6')
 
-ALLOWED_HOSTS = ['*'] 
+ALLOWED_HOSTS = ['*']
