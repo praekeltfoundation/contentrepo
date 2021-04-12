@@ -15,13 +15,6 @@ from wagtail.admin.edit_handlers import (
     TabbedInterface,
 )
 from wagtail_content_import.models import ContentImportMixin
-from wagtail_content_import.mappers.converters import ImageConverter, RichTextConverter, TableConverter, TextConverter
-from wagtail_content_import.mappers.streamfield import StreamFieldMapper
-
-
-class MyMapper(StreamFieldMapper):
-    html = RichTextConverter('paragraph')
-    image = ImageConverter('image')
 
 
 class HomePage(Page):
