@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
-
 DEBUG = True
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
@@ -38,6 +37,9 @@ INSTALLED_APPS = [
     'wagtail.documents',
     'wagtail.images',
     'wagtail.search',
+    'wagtail_content_import',
+    'wagtail_content_import.pickers.google',
+    'wagtail_content_import.pickers.local',
     'wagtail.admin',
     'wagtail.core',
     'wagtail.locales',
@@ -173,3 +175,6 @@ WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = 'http://example.com'
+
+
+WAGTAILCONTENTIMPORT_DEFAULT_MAPPER = 'home.models.MyMapper'
