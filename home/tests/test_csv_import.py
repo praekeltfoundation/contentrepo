@@ -39,8 +39,9 @@ class CSVImportTestCase(TestCase):
             "Whatsapp Body 3"
         )
 
-
         # assert correct tags
+        self.assertEquals(page_1.tags.first().name, "tag1")
+        self.assertEquals(page_1.tags.last().name, "tag2")
 
         # assert handles empty csv field
         self.assertEquals(len(page_3.messenger_body), 0)

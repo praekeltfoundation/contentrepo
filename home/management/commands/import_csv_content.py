@@ -2,6 +2,7 @@ import csv
 from django.core.management.base import BaseCommand, CommandError
 from home.models import ContentPage, HomePage
 from wagtail.core.rich_text import RichText
+from taggit.models import Tag
 
 
 class Command(BaseCommand):
@@ -18,6 +19,12 @@ class Command(BaseCommand):
                 if len(line) != 0:
                     body = body + [('paragraph', RichText(line))]
             return body
+
+        def create_tags(row, page):
+            tags = row[12].split(" ")
+            for tag in tags:
+                created_tag, _ = Tag.objects.get_or_create(name=tag)
+                page.tags.add(created_tag)
 
         path = options['path']
         home_page = HomePage.objects.first()
@@ -37,8 +44,8 @@ class Command(BaseCommand):
                     viber_title=row[9],
                     viber_subtitle=row[10],
                     viber_body=get_body(row[11]),
-                    tags=row[12].split(" ")
                 )
+                create_tags(row, contentpage)
                 home_page.add_child(instance=contentpage)
                 contentpage.save_revision()
 
