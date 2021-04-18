@@ -36,9 +36,10 @@ class Command(BaseCommand):
                     messenger_body=get_body(row[8]),
                     viber_title=row[9],
                     viber_subtitle=row[10],
-                    viber_body=get_body(row[11])
+                    viber_body=get_body(row[11]),
+                    tags=row[12].split(" ")
                 )
                 home_page.add_child(instance=contentpage)
-                contentpage.save()
+                contentpage.save_revision()
 
             self.stdout.write(self.style.SUCCESS('Successfully imported Content Pages'))
