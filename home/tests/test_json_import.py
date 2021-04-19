@@ -5,7 +5,7 @@ from home.models import ContentPage
 
 class JSONImportTestCase(TestCase):
 
-    def test_csv_import(self):
+    def test_json_import(self):
         "Tests importing content via json management command"
 
         # assert no content pages exist
