@@ -33,3 +33,7 @@ class JSONImportTestCase(TestCase):
             page_1.body[1].render(),
             "<p>this is some richtext</p>"
         )
+
+        # assert correct tags
+        self.assertEquals(page_1.tags.first().name, "tag1")
+        self.assertEquals(page_1.tags.last().name, "tag2")

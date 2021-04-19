@@ -1,5 +1,6 @@
 import json
 from django.core.management.base import BaseCommand
+from taggit.models import Tag
 from home.models import ContentPage, HomePage
 from wagtail.core.rich_text import RichText
 
@@ -18,6 +19,11 @@ class Command(BaseCommand):
                     body = body + [('paragraph', RichText(line))]
             return body
 
+        def create_tags(tags, page):
+            for tag in tags:
+                created_tag, _ = Tag.objects.get_or_create(name=tag)
+                page.tags.add(created_tag)
+
         path = options['path']
         home_page = HomePage.objects.first()
         with open(path) as json_file:
@@ -26,8 +32,9 @@ class Command(BaseCommand):
                 contentpage = ContentPage(
                     title=article[0],
                     subtitle=article[1],
-                    body=get_body(article[2]),
+                    body=get_body(article[2])
                 )
+                create_tags(article[3], contentpage)
                 home_page.add_child(instance=contentpage)
                 contentpage.save_revision()
 
