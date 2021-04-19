@@ -14,6 +14,7 @@ from wagtail.admin.edit_handlers import (
     ObjectList,
     TabbedInterface,
 )
+from wagtail_content_import.models import ContentImportMixin
 
 
 class HomePage(Page):
@@ -27,7 +28,7 @@ class ContentPageTag(TaggedItemBase):
         'ContentPage', on_delete=models.CASCADE, related_name='tagged_items')
 
 
-class ContentPage(Page):
+class ContentPage(Page, ContentImportMixin):
     parent_page_type = [
         'HomePage',
     ]
