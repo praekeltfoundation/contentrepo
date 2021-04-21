@@ -100,7 +100,7 @@ class ContentPage(Page, ContentImportMixin):
     whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
     whatsapp_subtitle = models.CharField(max_length=200, blank=True, null=True)
     whatsapp_body = StreamField([
-        ('paragraph', blocks.RichTextBlock()),
+        ('paragraph', blocks.RichTextBlock(help_text="Each paragraph cannot extend over the whatsapp message limit of 4096 characters")),
         ('image', ImageChooserBlock()),
     ], blank=True, null=True)
 
@@ -120,7 +120,7 @@ class ContentPage(Page, ContentImportMixin):
     messenger_title = models.CharField(max_length=200, blank=True, null=True)
     messenger_subtitle = models.CharField(max_length=200, blank=True, null=True)
     messenger_body = StreamField([
-        ('paragraph', blocks.RichTextBlock()),
+        ('paragraph', blocks.RichTextBlock(help_text="Each paragraph cannot extend over the messenger message limit of 2000 characters")),
         ('image', ImageChooserBlock()),
     ], blank=True, null=True)
 
@@ -141,7 +141,7 @@ class ContentPage(Page, ContentImportMixin):
     viber_title = models.CharField(max_length=200, blank=True, null=True)
     viber_subtitle = models.CharField(max_length=200, blank=True, null=True)
     viber_body = StreamField([
-        ('paragraph', blocks.RichTextBlock()),
+        ('paragraph', blocks.RichTextBlock(help_text="Each paragraph cannot extend over the viber message limit of 7000 characters")),
         ('image', ImageChooserBlock()),
     ], blank=True, null=True)
 
