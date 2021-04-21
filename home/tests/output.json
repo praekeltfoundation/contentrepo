@@ -1,1 +1,1 @@
-{"articles": [["article title", "article subtitle", ["<p>this is some plain text</p>", "<p>this is some richtext</p>"], ["tag1", "tag2"]]]}
+{"articles": [{"title": "article title", "subtitle": "article subtitle", "body": ["<p>this is some plain text</p>", "<p>this is some richtext</p>"], "tags": ["tag1", "tag2"]}]}

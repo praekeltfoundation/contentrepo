@@ -30,11 +30,11 @@ class Command(BaseCommand):
             data = json.load(json_file)
             for article in data["articles"]:
                 contentpage = ContentPage(
-                    title=article[0],
-                    subtitle=article[1],
-                    body=get_body(article[2])
+                    title=article["title"],
+                    subtitle=article["subtitle"],
+                    body=get_body(article["body"])
                 )
-                create_tags(article[3], contentpage)
+                create_tags(article["tags"], contentpage)
                 home_page.add_child(instance=contentpage)
                 contentpage.save_revision()
 
