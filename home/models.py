@@ -15,6 +15,34 @@ from wagtail.admin.edit_handlers import (
     TabbedInterface,
 )
 from wagtail_content_import.models import ContentImportMixin
+from wagtail.admin.forms import WagtailAdminPageForm
+
+
+class ContentPageForm(WagtailAdminPageForm):
+
+    def clean(self):
+        cleaned_data = super().clean()
+        whatsapp_body = cleaned_data.get("whatsapp_body")
+        messenger_body = cleaned_data.get("messenger_body")
+        viber_body = cleaned_data.get("viber_body")
+        total_count = 0
+        for block in whatsapp_body:
+            if block.block_type == "paragraph":
+                total_count += len(block.render())
+        if total_count >= 4096:
+            self.add_error(None, 'Whatsapp body exceeds 4096 characters')
+        total_count = 0
+        for block in messenger_body:
+            if block.block_type == "paragraph":
+                total_count += len(block.render())
+        if total_count >= 2000:
+            self.add_error(None, 'Messenger body exceeds 2000 characters')
+        for block in viber_body:
+            if block.block_type == "paragraph":
+                total_count += len(block.render())
+        if total_count >= 2000:
+            self.add_error(None, 'Viber body exceeds 7000 characters')
+        return cleaned_data
 
 
 class HomePage(Page):
@@ -52,9 +80,9 @@ class ContentPage(Page, ContentImportMixin):
     subtitle = models.CharField(max_length=200, blank=True, null=True)
     body = StreamField([
         ('paragraph', blocks.RichTextBlock()),
-        ('image', ImageChooserBlock()),
-
-    ], blank=True, null=True)
+        ('image', ImageChooserBlock()),],
+        blank=True,
+        null=True)
 
     # Web panels
     web_panels = [
@@ -163,3 +191,4 @@ class ContentPage(Page, ContentImportMixin):
         APIField('viber_subtitle'),
         APIField('viber_body'),
     ]
+    base_form_class = ContentPageForm
