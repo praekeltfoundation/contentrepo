@@ -40,7 +40,7 @@ class ContentPageForm(WagtailAdminPageForm):
         for block in viber_body:
             if block.block_type == "paragraph":
                 total_count += len(block.render())
-        if total_count >= 2000:
+        if total_count >= 7000:
             self.add_error(None, 'Viber body exceeds 7000 characters')
         return cleaned_data
 
