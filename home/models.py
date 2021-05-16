@@ -100,8 +100,7 @@ class ContentPage(Page, ContentImportMixin):
     whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
     whatsapp_subtitle = models.CharField(max_length=200, blank=True, null=True)
     whatsapp_body = StreamField([
-        ('paragraph', blocks.RichTextBlock(help_text="Each paragraph cannot extend over the whatsapp message limit of 4096 characters")),
-        ('image', ImageChooserBlock()),
+        ('paragraph', blocks.TextBlock(help_text="Each paragraph cannot extend over the whatsapp message limit of 4096 characters")),
     ], blank=True, null=True)
 
     # whatsapp panels
@@ -120,8 +119,7 @@ class ContentPage(Page, ContentImportMixin):
     messenger_title = models.CharField(max_length=200, blank=True, null=True)
     messenger_subtitle = models.CharField(max_length=200, blank=True, null=True)
     messenger_body = StreamField([
-        ('paragraph', blocks.RichTextBlock(help_text="Each paragraph cannot extend over the messenger message limit of 2000 characters")),
-        ('image', ImageChooserBlock()),
+        ('paragraph', blocks.TextBlock(help_text="Each paragraph cannot extend over the messenger message limit of 2000 characters")),
     ], blank=True, null=True)
 
     # messenger panels
@@ -141,8 +139,7 @@ class ContentPage(Page, ContentImportMixin):
     viber_title = models.CharField(max_length=200, blank=True, null=True)
     viber_subtitle = models.CharField(max_length=200, blank=True, null=True)
     viber_body = StreamField([
-        ('paragraph', blocks.RichTextBlock(help_text="Each paragraph cannot extend over the viber message limit of 7000 characters")),
-        ('image', ImageChooserBlock()),
+        ('paragraph', blocks.TextBlock(help_text="Each paragraph cannot extend over the viber message limit of 7000 characters")),
     ], blank=True, null=True)
 
     # viber panels
@@ -181,14 +178,5 @@ class ContentPage(Page, ContentImportMixin):
         APIField('title'),
         APIField('subtitle'),
         APIField('body'),
-        APIField('whatsapp_title'),
-        APIField('whatsapp_subtitle'),
-        APIField('whatsapp_body'),
-        APIField('messenger_title'),
-        APIField('messenger_subtitle'),
-        APIField('messenger_body'),
-        APIField('viber_title'),
-        APIField('viber_subtitle'),
-        APIField('viber_body'),
     ]
     base_form_class = ContentPageForm
