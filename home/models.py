@@ -106,7 +106,9 @@ class ContentPage(Page, ContentImportMixin):
     whatsapp_subtitle = models.CharField(
         max_length=200, blank=True, null=True)
     whatsapp_body = StreamField([
-        ('paragraph', blocks.TextBlock(help_text="Each paragraph cannot extend over the whatsapp message limit of 4096 characters")),
+        ('paragraph', blocks.TextBlock(help_text="Each "
+        "paragraph cannot extend over the whatsapp "
+        "message limit of 4096 characters")),
     ], blank=True, null=True)
 
     # whatsapp panels
@@ -128,7 +130,9 @@ class ContentPage(Page, ContentImportMixin):
         max_length=200, blank=True, null=True)
     messenger_body = StreamField([
         ('paragraph',
-         blocks.TextBlock(help_text="Each paragraph cannot extend over the messenger message limit of 2000 characters")),
+         blocks.TextBlock(help_text="Each paragraph cannot "
+         "extend over the messenger message limit of "
+         "2000 characters")),
     ], blank=True, null=True)
 
     # messenger panels
@@ -150,7 +154,9 @@ class ContentPage(Page, ContentImportMixin):
         max_length=200, blank=True, null=True)
     viber_body = StreamField([
         ('paragraph',
-         blocks.TextBlock(help_text="Each paragraph cannot extend over the viber message limit of 7000 characters")),
+         blocks.TextBlock(help_text="Each paragraph cannot "
+         "extend over the viber message limit of "
+         "7000 characters")),
     ], blank=True, null=True)
 
     # viber panels
