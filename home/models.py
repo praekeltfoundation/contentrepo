@@ -157,7 +157,7 @@ class ContentPage(Page, ContentImportMixin):
         max_length=200, blank=True, null=True)
     viber_body = StreamField([(
         'paragraph',
-         blocks.TextBlock(
+        blocks.TextBlock(
             help_text="Each paragraph cannot extend "
                       "over the viber message limit "
                       "of 7000 characters")),
