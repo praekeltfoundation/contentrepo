@@ -80,7 +80,7 @@ class ContentPage(Page, ContentImportMixin):
     subtitle = models.CharField(max_length=200, blank=True, null=True)
     body = StreamField([
         ('paragraph', blocks.RichTextBlock()),
-        ('image', ImageChooserBlock()),],
+        ('image', ImageChooserBlock()), ],
         blank=True,
         null=True)
 
