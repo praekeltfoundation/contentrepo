@@ -107,8 +107,8 @@ class ContentPage(Page, ContentImportMixin):
         max_length=200, blank=True, null=True)
     whatsapp_body = StreamField([(
         'paragraph',
-        blocks.TextBlock(help_text=
-            "Each paragraph cannot extend over the"
+        blocks.TextBlock(
+            help_text="Each paragraph cannot extend over the"
             " whatsapp message limit of 4096 characters")),
     ], blank=True, null=True)
 
