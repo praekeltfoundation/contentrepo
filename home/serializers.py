@@ -48,7 +48,7 @@ class SubtitleField(serializers.Field):
 
 
 def has_next_message(message_index, content_page, platform):
-    message_length = None
+    messages_length = None
     if platform == "whatsapp":
         messages_length = (len(content_page.whatsapp_body._raw_data) - 1)
     elif platform == "viber":
@@ -60,8 +60,9 @@ def has_next_message(message_index, content_page, platform):
     elif messages_length > message_index:
         return message_index + 2
 
+
 def has_previous_message(message_index, content_page, platform):
-    message_length = None
+    messages_length = None
     if platform == "whatsapp":
         messages_length = (len(content_page.whatsapp_body._raw_data) - 1)
     elif platform == "viber":
@@ -103,8 +104,10 @@ class BodyField(serializers.Field):
                 try:
                     return OrderedDict([
                         ("message", message + 1),
-                        ("next_message", has_next_message(message, page, "whatsapp")),
-                        ("previous_message", has_previous_message(message, page, "whatsapp")),
+                        ("next_message",
+                         has_next_message(message, page, "whatsapp")),
+                        ("previous_message",
+                         has_previous_message(message, page, "whatsapp")),
                         ("text",
                          page.whatsapp_body._raw_data[message]['value']),
                     ])
@@ -115,8 +118,10 @@ class BodyField(serializers.Field):
                 try:
                     return OrderedDict([
                         ("message", message + 1),
-                        ("next_message", has_next_message(message, page, "messenger")),
-                        ("previous_message", has_previous_message(message, page, "messenger")),
+                        ("next_message",
+                         has_next_message(message, page, "messenger")),
+                        ("previous_message",
+                         has_previous_message(message, page, "messenger")),
                         ("text",
                          page.messenger_body._raw_data[message]['value']),
                     ])
@@ -127,8 +132,10 @@ class BodyField(serializers.Field):
                 try:
                     return OrderedDict([
                         ("message", message + 1),
-                        ("next_message", has_next_message(message, page, "viber")),
-                        ("previous_message", has_previous_message(message, page, "viber")),
+                        ("next_message",
+                         has_next_message(message, page, "viber")),
+                        ("previous_message",
+                         has_previous_message(message, page, "viber")),
                         ("text", page.viber_body._raw_data[message]['value']),
                     ])
                 except IndexError:
