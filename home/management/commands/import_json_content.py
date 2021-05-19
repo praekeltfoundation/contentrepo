@@ -38,4 +38,5 @@ class Command(BaseCommand):
                 home_page.add_child(instance=contentpage)
                 contentpage.save_revision()
 
-            self.stdout.write(self.style.SUCCESS('Successfully imported Content Pages'))
+            self.stdout.write(self.style.SUCCESS(
+                'Successfully imported Content Pages'))
