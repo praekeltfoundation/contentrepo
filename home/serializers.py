@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from wagtail.api.v2.serializers import PageSerializer
 from collections import OrderedDict
+from rest_framework.exceptions import APIException
 
 
 class TitleField(serializers.Field):
@@ -62,27 +63,43 @@ class BodyField(serializers.Field):
     def to_representation(self, page):
         request = self.context['request']
         if 'message' in request.GET:
-            message = int(request.GET['message'][0]) - 1
+            try:
+                message = int(request.GET['message'][0]) - 1
+            except ValueError:
+                raise APIException(
+                    "Please insert a positive integer for message in "
+                    "the query string")
         else:
             message = 0
         if 'whatsapp' in request.GET and page.enable_whatsapp == True:
             if page.whatsapp_body != []:
-                return OrderedDict([
-                    ("message", message + 1),
-                    ("text", page.whatsapp_body._raw_data[message]['value']),
-                ])
+                try:
+                    return OrderedDict([
+                        ("message", message + 1),
+                        ("text",
+                         page.whatsapp_body._raw_data[message]['value']),
+                    ])
+                except IndexError:
+                    raise APIException("The requested message does not exist")
         elif 'messenger' in request.GET and page.enable_messenger == True:
             if page.messenger_body != []:
-                return OrderedDict([
-                    ("message", message + 1),
-                    ("text", page.messenger_body._raw_data[message]['value']),
-                ])
+                try:
+                    return OrderedDict([
+                        ("message", message + 1),
+                        ("text",
+                         page.messenger_body._raw_data[message]['value']),
+                    ])
+                except IndexError:
+                    raise APIException("The requested message does not exist")
         elif 'viber' in request.GET and page.enable_viber == True:
             if page.viber_body != []:
-                return OrderedDict([
-                    ("message", message + 1),
-                    ("text", page.viber_body._raw_data[message]['value']),
-                ])
+                try:
+                    return OrderedDict([
+                        ("message", message + 1),
+                        ("text", page.viber_body._raw_data[message]['value']),
+                    ])
+                except IndexError:
+                    raise APIException("The requested message does not exist")
         return OrderedDict([
             ("text", page.body._raw_data),
         ])
