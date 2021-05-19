@@ -11,9 +11,16 @@ class PaginationTestCase(TestCase):
         args = ["home/tests/content2.csv"]
         opts = {}
         call_command('import_csv_content', *args, **opts)
+        self.content_page1 = ContentPage.objects.first()
+
+        # it should return the web body if enable_whatsapp=false
+        response = self.client.get("/api/v2/pages/4/?whatsapp=True")
+        content = json.loads(response.content)
+        self.assertNotEquals(content["body"]["text"], "Whatsapp Body 1")
+        self.assertEquals(
+            content["body"]["text"][0]["value"], "This is a nice body")
 
         # it should only return the whatsapp body if enable_whatsapp=True
-        self.content_page1 = ContentPage.objects.first()
         self.content_page1.enable_whatsapp = True
         self.content_page1.save_revision().publish()
 
