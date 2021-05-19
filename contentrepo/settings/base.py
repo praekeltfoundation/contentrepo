@@ -3,8 +3,9 @@ import os
 DEBUG = True
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY', 'vg%%_7^bt(68qg50vgp^*f^&_(f)36k1vnyg%49n8*0s86hxj6')
+# SECURITY WARNING: keep the secret key used in production secret!
+DEFAULT_SECRET_KEY = 'please-change-me'
+SECRET_KEY = environ.get('SECRET_KEY') or DEFAULT_SECRET_KEY
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS', 'localhost')
 INSTALLED_APPS = [
