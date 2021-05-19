@@ -30,9 +30,8 @@ COPY --chown=wagtail:wagtail . .
 
 USER wagtail
 
-ENV DJANGO_SETTINGS_MODULE=contentrepo.settings.base
+ENV DJANGO_SETTINGS_MODULE=contentrepo.settings.production
 
-RUN SECRET_KEY='vg%%_7^bt(68qg50vgp^*f^&_(f)36k1vnyg%49n8*0s86hxj6' python manage.py collectstatic --noinput --clear
-RUN SECRET_KEY='vg%%_7^bt(68qg50vgp^*f^&_(f)36k1vnyg%49n8*0s86hxj6' python manage.py migrate
+RUN python manage.py collectstatic --noinput --clear
 
 CMD set -xe; gunicorn contentrepo.wsgi:application
