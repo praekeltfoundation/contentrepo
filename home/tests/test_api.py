@@ -1,6 +1,6 @@
 import json
 from django.test import TestCase, Client
-from home.models import ContentPage, Page
+from home.models import ContentPage
 from django.core.management import call_command
 
 
