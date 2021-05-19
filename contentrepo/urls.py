@@ -12,15 +12,29 @@ from wagtail_content_import import urls as wagtail_content_import_urls
 from search import views as search_views
 from home.api import api_router
 
+from django.views.generic import TemplateView
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView
+)
+
 
 urlpatterns = [
     path('django-admin/', admin.site.urls),
     path('', include(wagtail_content_import_urls)),
     path('admin/', include(wagtailadmin_urls)),
     path('documents/', include(wagtaildocs_urls)),
-
     path('search/', search_views.search, name='search'),
-
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path(
+        'api/schema/swagger-ui/',
+        SpectacularSwaggerView.as_view(url_name='schema'),
+        name='swagger-ui'),
+    path(
+        'api/schema/redoc/',
+        SpectacularRedocView.as_view(url_name='schema'),
+        name='redoc'),
 ]
 
 
