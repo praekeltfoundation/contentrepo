@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -165,3 +166,12 @@ WAGTAILCONTENTIMPORT_DEFAULT_MAPPER = 'home.mappers.ContentMapper'
 #         }
 #     }
 # }
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'ContentRepo API',
+    'VERSION': '1.0.0',
+}
