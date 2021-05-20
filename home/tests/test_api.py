@@ -46,16 +46,20 @@ class PaginationTestCase(TestCase):
         # is out of range
         response = self.client.get("/api/v2/pages/4/?whatsapp=True&message=3")
         content = json.loads(response.content)
+        self.assertEquals(response.status_code, 400)
         self.assertEquals(
-            content, {'detail': 'The requested message does not exist'})
+            content, ['The requested message does not exist'])
 
         # it should return an appropriate error if requested message is not
         # a positive integer value
         response = self.client.get(
             "/api/v2/pages/4/?whatsapp=True&message=notint")
         content = json.loads(response.content)
+        self.assertEquals(response.status_code, 400)
         self.assertEquals(
             content,
-            {'detail':
-             'Please insert a positive integer '
-             'for message in the query string'})
+            [
+                'Please insert a positive integer '
+                'for message in the query string'
+            ]
+        )
