@@ -12,7 +12,6 @@ from wagtail_content_import import urls as wagtail_content_import_urls
 from search import views as search_views
 from home.api import api_router
 
-from django.views.generic import TemplateView
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
