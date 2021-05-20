@@ -1,5 +1,5 @@
 import csv
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from home.models import ContentPage, HomePage
 from wagtail.core.rich_text import RichText
 from taggit.models import Tag
@@ -57,4 +57,5 @@ class Command(BaseCommand):
                 home_page.add_child(instance=contentpage)
                 contentpage.save_revision()
 
-            self.stdout.write(self.style.SUCCESS('Successfully imported Content Pages'))
+            self.stdout.write(self.style.SUCCESS(
+                'Successfully imported Content Pages'))
