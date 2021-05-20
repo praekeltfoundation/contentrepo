@@ -148,7 +148,8 @@ WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
     ('es', "Spanish"),
 ]
 
-# Base URL to use when referring to full URLs within the Wagtail admin backend -
+# Base URL to use when referring to full URLs
+# within the Wagtail admin backend
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = os.environ.get(
     'BASE_URL', 'http://example.com')
