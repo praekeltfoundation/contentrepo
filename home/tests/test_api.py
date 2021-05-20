@@ -31,6 +31,7 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["body"]["message"], 1)
         self.assertEquals(content["body"]["next_message"], 2)
         self.assertEquals(content["body"]["previous_message"], None)
+        self.assertEquals(content["body"]["total_messages"], 2)
         self.assertEquals(content["body"]["text"], "Whatsapp Body 1")
 
         # it should only return the second paragraph if 2nd message

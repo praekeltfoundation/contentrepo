@@ -80,8 +80,9 @@ class BodyField(serializers.Field):
     Example:
     "body": {
         "message": 1,
-        "next_message": 2
-        "previous_message": None
+        "next_message": 2,
+        "previous_message": None,
+        "total_messages": 3,
         "text": "body based on platform requested"
     }
     """
@@ -108,11 +109,13 @@ class BodyField(serializers.Field):
                          has_next_message(message, page, "whatsapp")),
                         ("previous_message",
                          has_previous_message(message, page, "whatsapp")),
+                        ("total_messages", len(page.whatsapp_body._raw_data)),
                         ("text",
                          page.whatsapp_body._raw_data[message]['value']),
                     ])
                 except IndexError:
-                    raise ValidationError("The requested message does not exist")
+                    raise ValidationError(
+                        "The requested message does not exist")
         elif 'messenger' in request.GET and page.enable_messenger is True:
             if page.messenger_body != []:
                 try:
@@ -122,11 +125,13 @@ class BodyField(serializers.Field):
                          has_next_message(message, page, "messenger")),
                         ("previous_message",
                          has_previous_message(message, page, "messenger")),
+                        ("total_messages", len(page.messenger_body._raw_data)),
                         ("text",
                          page.messenger_body._raw_data[message]['value']),
                     ])
                 except IndexError:
-                    raise ValidationError("The requested message does not exist")
+                    raise ValidationError(
+                        "The requested message does not exist")
         elif 'viber' in request.GET and page.enable_viber is True:
             if page.viber_body != []:
                 try:
@@ -136,10 +141,12 @@ class BodyField(serializers.Field):
                          has_next_message(message, page, "viber")),
                         ("previous_message",
                          has_previous_message(message, page, "viber")),
+                        ("total_messages", len(page.viber_body._raw_data)),
                         ("text", page.viber_body._raw_data[message]['value']),
                     ])
                 except IndexError:
-                    raise ValidationError("The requested message does not exist")
+                    raise ValidationError(
+                        "The requested message does not exist")
         return OrderedDict([
             ("text", page.body._raw_data),
         ])
