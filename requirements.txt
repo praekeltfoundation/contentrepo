@@ -4,3 +4,4 @@ psycopg2-binary
 wagtail-content-import
 django-redis
 drf-spectacular
+dj-database-url
