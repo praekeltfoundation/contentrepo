@@ -32,6 +32,4 @@ USER wagtail
 
 ENV DJANGO_SETTINGS_MODULE=contentrepo.settings.production
 
-RUN python manage.py collectstatic --noinput --clear
-
 CMD set -xe; gunicorn contentrepo.wsgi:application
