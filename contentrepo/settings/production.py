@@ -3,7 +3,7 @@ import dj_database_url
 from os.path import abspath, dirname, join
 
 
-DEBUG = False
+DEBUG = True
 
 # DATABASES = {
 #     'default': {
