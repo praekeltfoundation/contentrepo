@@ -15,7 +15,8 @@ DEBUG = False
 #         'CONN_MAX_AGE': 600,
 #     }
 # }
-
+PROJECT_ROOT = (
+    os.environ.get('PROJECT_ROOT') or dirname(dirname(abspath(__file__))))
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///%s' % (join(PROJECT_ROOT, 'contentrepo.db'),))}
