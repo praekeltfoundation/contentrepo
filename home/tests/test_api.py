@@ -5,6 +5,26 @@ from django.core.management import call_command
 
 
 class PaginationTestCase(TestCase):
+    def test_tag_filtering(self):
+        self.client = Client()
+        # import content
+        args = ["home/tests/content2.csv"]
+        opts = {}
+        call_command('import_csv_content', *args, **opts)
+        self.content_page1 = ContentPage.objects.first()
+        # it should return 1 page for correct tag
+        response = self.client.get("/api/v2/pages/?tag=tag1")
+        content = json.loads(response.content)
+        self.assertEquals(content["meta"]['total_count'], 1)
+        # it should not return any pages for bogus tag
+        response = self.client.get("/api/v2/pages/?tag=bogus")
+        content = json.loads(response.content)
+        self.assertEquals(content["meta"]['total_count'], 0)
+        # it should return all pages for no tag
+        response = self.client.get("/api/v2/pages/")
+        content = json.loads(response.content)
+        self.assertEquals(content["meta"]['total_count'], 4)
+
     def test_pagination(self):
         self.client = Client()
         # import content

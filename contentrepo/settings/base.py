@@ -7,7 +7,7 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 DEFAULT_SECRET_KEY = 'please-change-me'
 SECRET_KEY = os.environ.get('SECRET_KEY') or DEFAULT_SECRET_KEY
 ALLOWED_HOSTS = os.environ.get(
-    'ALLOWED_HOSTS', 'localhost')
+    'ALLOWED_HOSTS', ['localhost',])
 INSTALLED_APPS = [
     'home',
     'search',
@@ -155,13 +155,11 @@ BASE_URL = os.environ.get(
     'BASE_URL', 'http://example.com')
 
 WAGTAILCONTENTIMPORT_DEFAULT_MAPPER = 'home.mappers.ContentMapper'
-#
+
 # CACHES = {
 #     'default': {
 #         'BACKEND': 'django_redis.cache.RedisCache',
 #         'LOCATION': 'redis://127.0.0.1:6379/db.sqlite3',
-#         # for django-redis < 3.8.0, use:
-#         # 'LOCATION': '127.0.0.1:6379',
 #         'OPTIONS': {
 #             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
 #         }

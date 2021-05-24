@@ -3,19 +3,29 @@ from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.images.api.v2.views import ImagesAPIViewSet
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
 from .serializers import ContentPageSerializer
+from django.views.decorators.cache import cache_page
+from.models import ContentPageTag
 
 
 class ContentPagesViewSet(PagesAPIViewSet):
     base_serializer_class = ContentPageSerializer
+    known_query_parameters = PagesAPIViewSet.known_query_parameters.union([
+        'tag',
+    ])
+    def get_queryset(self):
+        queryset = super(ContentPagesViewSet, self).get_queryset()
+        tag = self.request.query_params.get('tag')
+        if tag is not None:
+            ids = []
+            for t in ContentPageTag.objects.all():
+                if t.tag.name == tag:
+                    ids.append(t.content_object_id)
+            queryset = queryset.filter(id__in=ids)
+        return queryset
 
 
-# Create the router. "wagtailapi" is the URL namespace
 api_router = WagtailAPIRouter('wagtailapi')
 
-# Add the three endpoints using the "register_endpoint" method.
-# The first parameter is the name of the endpoint (eg. pages, images). This
-# is used in the URL of the endpoint
-# The second parameter is the endpoint class that handles the requests
 api_router.register_endpoint('pages', ContentPagesViewSet)
 api_router.register_endpoint('images', ImagesAPIViewSet)
 api_router.register_endpoint('documents', DocumentsAPIViewSet)
