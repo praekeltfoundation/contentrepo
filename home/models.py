@@ -199,5 +199,6 @@ class ContentPage(Page, ContentImportMixin):
         APIField('title'),
         APIField('subtitle'),
         APIField('body'),
+        APIField('tags'),
     ]
     base_form_class = ContentPageForm
