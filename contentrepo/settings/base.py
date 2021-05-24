@@ -7,7 +7,7 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 DEFAULT_SECRET_KEY = 'please-change-me'
 SECRET_KEY = os.environ.get('SECRET_KEY') or DEFAULT_SECRET_KEY
 ALLOWED_HOSTS = os.environ.get(
-    'ALLOWED_HOSTS', ['localhost',])
+    'ALLOWED_HOSTS', ['localhost', ])
 INSTALLED_APPS = [
     'home',
     'search',
