@@ -12,6 +12,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union([
         'tag',
     ])
+
     def get_queryset(self):
         queryset = super(ContentPagesViewSet, self).get_queryset()
         tag = self.request.query_params.get('tag')
