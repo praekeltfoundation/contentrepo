@@ -1,3 +1,4 @@
+from rest_framework.pagination import PageNumberPagination
 from wagtail.api.v2.views import PagesAPIViewSet
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.images.api.v2.views import ImagesAPIViewSet
@@ -10,7 +11,9 @@ class ContentPagesViewSet(PagesAPIViewSet):
     base_serializer_class = ContentPageSerializer
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union([
         'tag',
+        'page',
     ])
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         queryset = super(ContentPagesViewSet, self).get_queryset()

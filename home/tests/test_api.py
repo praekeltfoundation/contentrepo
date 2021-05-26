@@ -15,15 +15,15 @@ class PaginationTestCase(TestCase):
         # it should return 1 page for correct tag
         response = self.client.get("/api/v2/pages/?tag=tag1")
         content = json.loads(response.content)
-        self.assertEquals(content["meta"]['total_count'], 1)
+        self.assertEquals(content['count'], 1)
         # it should not return any pages for bogus tag
         response = self.client.get("/api/v2/pages/?tag=bogus")
         content = json.loads(response.content)
-        self.assertEquals(content["meta"]['total_count'], 0)
+        self.assertEquals(content['count'], 0)
         # it should return all pages for no tag
         response = self.client.get("/api/v2/pages/")
         content = json.loads(response.content)
-        self.assertEquals(content["meta"]['total_count'], 4)
+        self.assertEquals(content['count'], 4)
 
     def test_pagination(self):
         self.client = Client()
