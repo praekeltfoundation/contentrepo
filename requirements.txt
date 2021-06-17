@@ -1,5 +1,5 @@
 Django>=3.1,<3.2
-wagtail==2.13
+wagtail==2.13.2
 psycopg2-binary
 wagtail-content-import
 django-redis
