@@ -15,7 +15,6 @@ from wagtail.admin.edit_handlers import (
     TabbedInterface,
 )
 from wagtail_content_import.models import ContentImportMixin
-from wagtail.admin.forms import WagtailAdminPageForm
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 
@@ -29,7 +28,10 @@ class WhatsappBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
     document = DocumentChooserBlock(icon='document', required=False)
     media = MediaBlock(icon='media', required=False)
-    message = blocks.TextBlock(max_lenth=4096, help_text="each message cannot exceed 4096 characters.")
+    message = blocks.TextBlock(
+        max_lenth=4096,
+        help_text="each message cannot exceed 4096 characters."
+    )
 
     class Meta:
         icon = 'user'
@@ -38,15 +40,22 @@ class WhatsappBlock(blocks.StructBlock):
 
 class ViberBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
-    message = blocks.TextBlock(max_lenth=7000, help_text="each message cannot exceed 7000 characters.")
+    message = blocks.TextBlock(
+        max_lenth=7000,
+        help_text="each message cannot exceed 7000 characters."
+    )
 
     class Meta:
         icon = 'user'
         form_classname = 'whatsapp-message-block struct-block'
 
+
 class MessengerBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
-    message = blocks.TextBlock(max_lenth=2000, help_text="each message cannot exceed 2000 characters.")
+    message = blocks.TextBlock(
+        max_lenth=2000,
+        help_text="each message cannot exceed 2000 characters."
+    )
 
     class Meta:
         icon = 'user'
@@ -111,7 +120,7 @@ class ContentPage(Page, ContentImportMixin):
     whatsapp_body = StreamField([(
         'Whatsapp_Message',
         WhatsappBlock(
-            help_text="Each message will be sent with the paragraph and the image")),
+            help_text="Each message will be sent with the text and media")),
     ], blank=True, null=True)
 
     # whatsapp panels
