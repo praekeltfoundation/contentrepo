@@ -1,4 +1,5 @@
 import csv
+from wagtail.core import blocks
 from django.core.management.base import BaseCommand
 from home.models import ContentPage, HomePage
 from wagtail.core.rich_text import RichText
@@ -17,16 +18,16 @@ class Command(BaseCommand):
             row = row.splitlines()
             for line in row:
                 if len(line) != 0:
-                    body = body + [('paragraph', RichText(line))]
+                    body = body + [('text', RichText(line))]
             return body
 
         def get_text_body(row):
-            body = []
             row = row.splitlines()
-            for line in row:
-                if len(line) != 0:
-                    body = body + [('paragraph', line)]
-            return body
+            block = blocks.StructBlock([
+                ('message', blocks.TextBlock()),
+            ])
+            block_value = block.to_python({'message': row})
+            return block_value
 
         def create_tags(row, page):
             tags = row[12].split(" ")
@@ -44,14 +45,8 @@ class Command(BaseCommand):
                     subtitle=row[1],
                     body=get_rich_text_body(row[2]),
                     whatsapp_title=row[3],
-                    whatsapp_subtitle=row[4],
-                    whatsapp_body=get_text_body(row[5]),
-                    messenger_title=row[6],
-                    messenger_subtitle=row[7],
-                    messenger_body=get_text_body(row[8]),
-                    viber_title=row[9],
-                    viber_subtitle=row[10],
-                    viber_body=get_text_body(row[11]),
+                    whatsapp_body=[
+                        ("Whatsapp_Message", get_text_body(row[5]))],
                 )
                 create_tags(row, contentpage)
                 home_page.add_child(instance=contentpage)
