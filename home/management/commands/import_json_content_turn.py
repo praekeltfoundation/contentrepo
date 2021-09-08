@@ -23,7 +23,7 @@ class Command(BaseCommand):
                 title = message['attachment_media_object']['filename']
                 try:
                     im = Image.objects.get(title=title).id
-                except Exception: 
+                except Exception:
                     http_res = requests.get(message["attachment_uri"])
                     image_file = ImageFile(
                         BytesIO(http_res.content), name=title)
