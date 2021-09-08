@@ -6,4 +6,5 @@ wagtail-content-import
 django-redis
 drf-spectacular
 dj-database-url
+django-environ==0.4.5
 django-treebeard==4.5.1
