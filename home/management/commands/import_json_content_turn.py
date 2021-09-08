@@ -23,7 +23,7 @@ class Command(BaseCommand):
                 title = message['attachment_media_object']['filename']
                 try:
                     im = Image.objects.get(title=title).id
-                except Exception as e:
+                except:
                     http_res = requests.get(message["attachment_uri"])
                     image_file = ImageFile(
                         BytesIO(http_res.content), name=title)
@@ -84,8 +84,8 @@ class Command(BaseCommand):
                             key = translation.translation_key
                             contentpage.translation_key = key
                             contentpage.save_revision().publish()
-                except Exception:
-                    print(Exception)
+                except Exception as e:
+                    print(e)
 
             self.stdout.write(self.style.SUCCESS(
                 'Successfully imported Content Pages'))
