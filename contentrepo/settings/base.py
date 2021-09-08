@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     'wagtail.core',
     'wagtail.locales',
     'wagtail.api.v2',
+    'wagtailmedia',
+    "wagtail.contrib.simple_translation",
 
     'rest_framework',
 
@@ -143,9 +145,26 @@ MEDIA_URL = '/media/'
 WAGTAIL_SITE_NAME = "contentrepo"
 WAGTAIL_I18N_ENABLED = True
 WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
+    ('ar', "Arabic"),
+    ('id', "Bahasa"),
+    ('bn', "Bangla"),
+    ('zh', "Chinese"),
+    ('prs', "Dari"),
     ('en', "English"),
     ('fr', "French"),
+    ('ha', "Hausa"),
+    ('hi', "Hindi"),
+    ('it', "Italian"),
+    ('ku', "Kurdish"),
+    ('lv', "Latvian"),
+    ('ps', "Pashto"),
+    ('pl', "Polish"),
+    ('pt', "Portuguese"),
+    ('ru', "Russian"),
+    ('so', "Somali"),
     ('es', "Spanish"),
+    ('sw', "Swahili"),
+    ('ur', "Urdu")
 ]
 
 # Base URL to use when referring to full URLs

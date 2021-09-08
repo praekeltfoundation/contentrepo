@@ -18,7 +18,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
     pagination_class = PageNumberPagination
 
     # cache queryset for an hour
-    @method_decorator(cache_page(60 * 60))
+    # @method_decorator(cache_page(60 * 60))
     def get_queryset(self):
         queryset = super(ContentPagesViewSet, self).get_queryset()
         tag = self.request.query_params.get('tag')

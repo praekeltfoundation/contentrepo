@@ -35,15 +35,6 @@ class SubtitleField(serializers.Field):
 
     def to_representation(self, page):
         request = self.context['request']
-        if 'whatsapp' in request.GET and page.enable_whatsapp is True:
-            if page.whatsapp_subtitle:
-                return page.whatsapp_subtitle
-        elif 'messenger' in request.GET and page.enable_messenger is True:
-            if page.messenger_subtitle:
-                return page.messenger_subtitle
-        elif 'viber' in request.GET and page.enable_viber is True:
-            if page.viber_subtitle:
-                return page.viber_subtitle
         return page.subtitle
 
 
@@ -111,7 +102,7 @@ class BodyField(serializers.Field):
                          has_previous_message(message, page, "whatsapp")),
                         ("total_messages", len(page.whatsapp_body._raw_data)),
                         ("text",
-                         page.whatsapp_body._raw_data[message]['value']),
+                         page.whatsapp_body._raw_data),
                     ])
                 except IndexError:
                     raise ValidationError(

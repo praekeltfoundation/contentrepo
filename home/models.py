@@ -16,36 +16,41 @@ from wagtail.admin.edit_handlers import (
 )
 from wagtail_content_import.models import ContentImportMixin
 from wagtail.admin.forms import WagtailAdminPageForm
+from wagtailmedia.blocks import AbstractMediaChooserBlock
+from wagtail.documents.blocks import DocumentChooserBlock
 
 
-class ContentPageForm(WagtailAdminPageForm):
+class MediaBlock(AbstractMediaChooserBlock):
+    def render_basic(self, value, context=None):
+        pass
 
-    def clean(self):
-        cleaned_data = super().clean()
-        whatsapp_body = cleaned_data.get("whatsapp_body")
-        messenger_body = cleaned_data.get("messenger_body")
-        viber_body = cleaned_data.get("viber_body")
-        total_count = 0
-        for block in whatsapp_body:
-            if block.block_type == "paragraph":
-                total_count += len(block.render())
-        if total_count >= 4096:
-            self.add_error(
-                None, 'Whatsapp body exceeds 4096 characters')
-        total_count = 0
-        for block in messenger_body:
-            if block.block_type == "paragraph":
-                total_count += len(block.render())
-        if total_count >= 2000:
-            self.add_error(
-                None, 'Messenger body exceeds 2000 characters')
-        for block in viber_body:
-            if block.block_type == "paragraph":
-                total_count += len(block.render())
-        if total_count >= 7000:
-            self.add_error(
-                None, 'Viber body exceeds 7000 characters')
-        return cleaned_data
+
+class WhatsappBlock(blocks.StructBlock):
+    image = ImageChooserBlock(required=False)
+    document = DocumentChooserBlock(icon='document', required=False)
+    media = MediaBlock(icon='media', required=False)
+    message = blocks.TextBlock(max_lenth=4096, help_text="each message cannot exceed 4096 characters.")
+
+    class Meta:
+        icon = 'user'
+        form_classname = 'whatsapp-message-block struct-block'
+
+
+class ViberBlock(blocks.StructBlock):
+    image = ImageChooserBlock(required=False)
+    message = blocks.TextBlock(max_lenth=7000, help_text="each message cannot exceed 7000 characters.")
+
+    class Meta:
+        icon = 'user'
+        form_classname = 'whatsapp-message-block struct-block'
+
+class MessengerBlock(blocks.StructBlock):
+    image = ImageChooserBlock(required=False)
+    message = blocks.TextBlock(max_lenth=2000, help_text="each message cannot exceed 2000 characters.")
+
+    class Meta:
+        icon = 'user'
+        form_classname = 'whatsapp-message-block struct-block'
 
 
 class HomePage(Page):
@@ -103,14 +108,10 @@ class ContentPage(Page, ContentImportMixin):
     # whatsapp page setup
     whatsapp_title = models.CharField(
         max_length=200, blank=True, null=True)
-    whatsapp_subtitle = models.CharField(
-        max_length=200, blank=True, null=True)
     whatsapp_body = StreamField([(
-        'paragraph',
-        blocks.TextBlock(
-            help_text="Each paragraph cannot extend over the"
-                      " whatsapp message limit of 4096 "
-                      "characters")),
+        'Whatsapp_Message',
+        WhatsappBlock(
+            help_text="Each message will be sent with the paragraph and the image")),
     ], blank=True, null=True)
 
     # whatsapp panels
@@ -118,7 +119,6 @@ class ContentPage(Page, ContentImportMixin):
         MultiFieldPanel(
             [
                 FieldPanel("whatsapp_title"),
-                FieldPanel("whatsapp_subtitle"),
                 StreamFieldPanel("whatsapp_body"),
             ],
             heading="Whatsapp",
@@ -128,11 +128,9 @@ class ContentPage(Page, ContentImportMixin):
     # messenger page setup
     messenger_title = models.CharField(
         max_length=200, blank=True, null=True)
-    messenger_subtitle = models.CharField(
-        max_length=200, blank=True, null=True)
     messenger_body = StreamField([(
-        'paragraph',
-        blocks.TextBlock(
+        'messenger_block',
+        MessengerBlock(
             help_text="Each paragraph cannot extend "
                       "over the messenger message "
                       "limit of 2000 characters")),
@@ -143,7 +141,6 @@ class ContentPage(Page, ContentImportMixin):
         MultiFieldPanel(
             [
                 FieldPanel("messenger_title"),
-                FieldPanel("messenger_subtitle"),
                 StreamFieldPanel("messenger_body"),
             ],
             heading="Messenger",
@@ -153,11 +150,9 @@ class ContentPage(Page, ContentImportMixin):
     # viber page setup
     viber_title = models.CharField(
         max_length=200, blank=True, null=True)
-    viber_subtitle = models.CharField(
-        max_length=200, blank=True, null=True)
     viber_body = StreamField([(
-        'paragraph',
-        blocks.TextBlock(
+        'viber_message',
+        ViberBlock(
             help_text="Each paragraph cannot extend "
                       "over the viber message limit "
                       "of 7000 characters")),
@@ -168,7 +163,6 @@ class ContentPage(Page, ContentImportMixin):
         MultiFieldPanel(
             [
                 FieldPanel("viber_title"),
-                FieldPanel("viber_subtitle"),
                 StreamFieldPanel("viber_body"),
             ],
             heading="Viber",
@@ -201,4 +195,3 @@ class ContentPage(Page, ContentImportMixin):
         APIField('body'),
         APIField('tags'),
     ]
-    base_form_class = ContentPageForm
