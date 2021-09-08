@@ -22,7 +22,6 @@ class Command(BaseCommand):
             return body
 
         def get_text_body(row):
-            body = []
             row = row.splitlines()
             block = blocks.StructBlock([
                 ('message', blocks.TextBlock()),
