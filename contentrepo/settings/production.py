@@ -23,8 +23,5 @@ DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///%s' % (join(PROJECT_ROOT, 'contentrepo.db'),))}
 
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY', '')
-
-ALLOWED_HOSTS = os.environ.get(
-    'ALLOWED_HOSTS', 'localhost')
+SECRET_KEY = env.str("SECRET_KEY")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
