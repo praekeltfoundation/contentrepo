@@ -3,7 +3,6 @@ import requests
 from django.core.management.base import BaseCommand
 # from taggit.models import Tag
 from home.models import ContentPage, HomePage
-from wagtail.core.rich_text import RichText
 from wagtail.core import blocks
 from wagtail.images.models import Image
 from io import BytesIO
@@ -87,7 +86,6 @@ class Command(BaseCommand):
                             contentpage.save_revision().publish()
                 except Exception as e:
                     print(e)
-
 
             self.stdout.write(self.style.SUCCESS(
                 'Successfully imported Content Pages'))

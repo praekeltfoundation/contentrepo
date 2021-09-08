@@ -29,14 +29,14 @@ class Command(BaseCommand):
         with open(path) as json_file:
             data = json.load(json_file)
             for article in data["articles"]:
-                    contentpage = ContentPage(
-                        title=article["title"],
-                        subtitle=article["subtitle"],
-                        body=get_body(article["body"])
-                    )
-                    create_tags(article["tags"], contentpage)
-                    home_page.add_child(instance=contentpage)
-                    contentpage.save_revision()
+                contentpage = ContentPage(
+                    title=article["title"],
+                    subtitle=article["subtitle"],
+                    body=get_body(article["body"])
+                )
+                create_tags(article["tags"], contentpage)
+                home_page.add_child(instance=contentpage)
+                contentpage.save_revision()
 
             self.stdout.write(self.style.SUCCESS(
                 'Successfully imported Content Pages'))

@@ -34,7 +34,6 @@ class SubtitleField(serializers.Field):
         return instance
 
     def to_representation(self, page):
-        request = self.context['request']
         return page.subtitle
 
 
