@@ -84,8 +84,8 @@ class Command(BaseCommand):
                             key = translation.translation_key
                             contentpage.translation_key = key
                             contentpage.save_revision().publish()
-                except Exception as e:
-                    print(e)
+                except Exception:
+                    print(Exception)
 
             self.stdout.write(self.style.SUCCESS(
                 'Successfully imported Content Pages'))
