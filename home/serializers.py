@@ -101,7 +101,7 @@ class BodyField(serializers.Field):
                          has_previous_message(message, page, "whatsapp")),
                         ("total_messages", len(page.whatsapp_body._raw_data)),
                         ("text",
-                         page.whatsapp_body._raw_data),
+                         page.whatsapp_body._raw_data[message]),
                     ])
                 except IndexError:
                     raise ValidationError(
