@@ -93,7 +93,7 @@ class BodyField(serializers.Field):
         if 'whatsapp' in request.GET and page.enable_whatsapp is True:
             if page.whatsapp_body != []:
                 try:
-                    return OrderedDict([
+                    return OrderedDict(
                         ("message", message + 1),
                         ("next_message",
                          has_next_message(message, page, "whatsapp")),
@@ -102,14 +102,14 @@ class BodyField(serializers.Field):
                         ("total_messages", len(page.whatsapp_body._raw_data)),
                         ("text",
                          page.whatsapp_body._raw_data),
-                    ])
+                    )
                 except IndexError:
                     raise ValidationError(
                         "The requested message does not exist")
         elif 'messenger' in request.GET and page.enable_messenger is True:
             if page.messenger_body != []:
                 try:
-                    return OrderedDict([
+                    return OrderedDict(
                         ("message", message + 1),
                         ("next_message",
                          has_next_message(message, page, "messenger")),
@@ -118,14 +118,14 @@ class BodyField(serializers.Field):
                         ("total_messages", len(page.messenger_body._raw_data)),
                         ("text",
                          page.messenger_body._raw_data[message]['value']),
-                    ])
+                    )
                 except IndexError:
                     raise ValidationError(
                         "The requested message does not exist")
         elif 'viber' in request.GET and page.enable_viber is True:
             if page.viber_body != []:
                 try:
-                    return OrderedDict([
+                    return OrderedDict(
                         ("message", message + 1),
                         ("next_message",
                          has_next_message(message, page, "viber")),
@@ -133,13 +133,13 @@ class BodyField(serializers.Field):
                          has_previous_message(message, page, "viber")),
                         ("total_messages", len(page.viber_body._raw_data)),
                         ("text", page.viber_body._raw_data[message]['value']),
-                    ])
+                    )
                 except IndexError:
                     raise ValidationError(
                         "The requested message does not exist")
-        return OrderedDict([
+        return OrderedDict(
             ("text", page.body._raw_data),
-        ])
+        )
 
 
 class ContentPageSerializer(PageSerializer):
