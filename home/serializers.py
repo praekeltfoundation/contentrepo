@@ -1,3 +1,4 @@
+from logging import setLogRecordFactory
 from rest_framework import serializers
 from wagtail.api.v2.serializers import PageSerializer
 from collections import OrderedDict
@@ -35,6 +36,17 @@ class SubtitleField(serializers.Field):
 
     def to_representation(self, page):
         return page.subtitle
+
+
+class HasChildrenField(serializers.Field):
+    """
+    Serializes the "has_children" field.
+    """
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        return page.has_children
 
 
 def has_next_message(message_index, content_page, platform):
@@ -146,3 +158,4 @@ class ContentPageSerializer(PageSerializer):
     title = TitleField(read_only=True)
     subtitle = SubtitleField(read_only=True)
     body = BodyField(read_only=True)
+    has_childen = HasChildrenField(read_only=True)

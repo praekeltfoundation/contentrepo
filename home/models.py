@@ -203,4 +203,9 @@ class ContentPage(Page, ContentImportMixin):
         APIField('subtitle'),
         APIField('body'),
         APIField('tags'),
+        APIField('has_children'),
     ]
+
+    @property
+    def has_children(self):
+        return self.objects.filter(child_of=self.id).count() > 0
