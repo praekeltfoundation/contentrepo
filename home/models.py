@@ -208,4 +208,4 @@ class ContentPage(Page, ContentImportMixin):
 
     @property
     def has_children(self):
-        return self.objects.filter(child_of=self.id).count() > 0
+        return self.get_children_count() > 0

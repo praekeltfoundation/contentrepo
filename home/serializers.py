@@ -1,4 +1,3 @@
-from logging import setLogRecordFactory
 from rest_framework import serializers
 from wagtail.api.v2.serializers import PageSerializer
 from collections import OrderedDict
@@ -158,4 +157,4 @@ class ContentPageSerializer(PageSerializer):
     title = TitleField(read_only=True)
     subtitle = SubtitleField(read_only=True)
     body = BodyField(read_only=True)
-    has_childen = HasChildrenField(read_only=True)
+    has_children = HasChildrenField(read_only=True)
