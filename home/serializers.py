@@ -37,6 +37,17 @@ class SubtitleField(serializers.Field):
         return page.subtitle
 
 
+class HasChildrenField(serializers.Field):
+    """
+    Serializes the "has_children" field.
+    """
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        return page.has_children
+
+
 def has_next_message(message_index, content_page, platform):
     messages_length = None
     if platform == "whatsapp":
@@ -146,3 +157,4 @@ class ContentPageSerializer(PageSerializer):
     title = TitleField(read_only=True)
     subtitle = SubtitleField(read_only=True)
     body = BodyField(read_only=True)
+    has_children = HasChildrenField(read_only=True)
