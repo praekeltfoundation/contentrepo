@@ -18,16 +18,20 @@ class Command(BaseCommand):
             row = row.splitlines()
             for line in row:
                 if len(line) != 0:
-                    body = body + [('text', RichText(line))]
+                    body = body + [('paragraph', RichText(line))]
             return body
 
-        def get_text_body(row):
-            row = row.splitlines()
-            block = blocks.StructBlock([
-                ('message', blocks.TextBlock()),
-            ])
-            block_value = block.to_python({'message': row})
-            return block_value
+        def get_text_body(raw):
+            struct_blocks = []
+            rows = raw.splitlines()
+            for row in rows:
+                if row:
+                    block = blocks.StructBlock([
+                        ('message', blocks.TextBlock()),
+                    ])
+                    block_value = block.to_python({'message': row})
+                    struct_blocks.append(("Whatsapp_Message", block_value))
+            return struct_blocks
 
         def create_tags(row, page):
             tags = row[12].split(" ")
@@ -45,11 +49,14 @@ class Command(BaseCommand):
                     subtitle=row[1],
                     body=get_rich_text_body(row[2]),
                     whatsapp_title=row[3],
-                    whatsapp_body=[
-                        ("Whatsapp_Message", get_text_body(row[5]))],
+                    whatsapp_body=get_text_body(row[5]),
                 )
                 create_tags(row, contentpage)
-                home_page.add_child(instance=contentpage)
+                if row[13]:
+                    parent = ContentPage.objects.filter(title=row[13])[0]
+                    parent.add_child(instance=contentpage)
+                else:
+                    home_page.add_child(instance=contentpage)
                 contentpage.save_revision()
 
             self.stdout.write(self.style.SUCCESS(

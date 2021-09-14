@@ -25,6 +25,9 @@ class CSVImportTestCase(TestCase):
         self.assertEquals(page_1.title, "Web Title 1")
         self.assertEquals(page_3.title, "Web Title 3")
 
+        # assert parent linked correctly
+        self.assertEquals(page_3.get_parent().title, "Web Title 1")
+
         # assert correct rich text blocks with markdown
         self.assertEquals(
             str(page_1.body[0].render()),
@@ -34,9 +37,9 @@ class CSVImportTestCase(TestCase):
             str(page_1.body[1].render()),
             "<h2>With two paragraphs</h2>"
         )
-        self.assertEquals(
-            page_3.whatsapp_body[0].render(),
-            "Whatsapp Body 3"
+        self.assertTrue(
+            "Whatsapp Body 3" in
+            page_3.whatsapp_body[0].render()
         )
 
         # assert correct tags

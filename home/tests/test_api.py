@@ -52,7 +52,8 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["body"]["next_message"], 2)
         self.assertEquals(content["body"]["previous_message"], None)
         self.assertEquals(content["body"]["total_messages"], 2)
-        self.assertEquals(content["body"]["text"], "Whatsapp Body 1")
+        self.assertEquals(content["body"]["text"]["value"]["message"],
+                          "Whatsapp Body 1")
 
         # it should only return the second paragraph if 2nd message
         # is requested
@@ -61,7 +62,8 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["body"]["message"], 2)
         self.assertEquals(content["body"]["next_message"], None)
         self.assertEquals(content["body"]["previous_message"], 1)
-        self.assertEquals(content["body"]["text"], "whatsapp body2")
+        self.assertEquals(content["body"]["text"]["value"]["message"],
+                          "whatsapp body2")
 
         # it should return an appropriate error if requested message index
         # is out of range
