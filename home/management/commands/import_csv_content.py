@@ -43,7 +43,7 @@ class Command(BaseCommand):
 
         path = options["path"]
         home_page = HomePage.objects.first()
-        with open(path, 'rt') as f:
+        with open(path, "rt") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 contentpage = ContentPage(
