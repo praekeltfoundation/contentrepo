@@ -36,7 +36,7 @@ class Command(BaseCommand):
             return struct_blocks
 
         def create_tags(row, page):
-            tags = row["tags"].split(" ")
+            tags = row["tags"].split(",")
             for tag in tags:
                 created_tag, _ = Tag.objects.get_or_create(name=tag)
                 page.tags.add(created_tag)
