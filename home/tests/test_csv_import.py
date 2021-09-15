@@ -4,7 +4,6 @@ from home.models import ContentPage
 
 
 class CSVImportTestCase(TestCase):
-
     def test_csv_import(self):
         "Tests importing content via csv management command"
 
@@ -13,7 +12,7 @@ class CSVImportTestCase(TestCase):
 
         args = ["home/tests/content2.csv"]
         opts = {}
-        call_command('import_csv_content', *args, **opts)
+        call_command("import_csv_content", *args, **opts)
 
         # assert 3 content pages were created
         self.assertEquals(ContentPage.objects.count(), 3)
@@ -29,18 +28,9 @@ class CSVImportTestCase(TestCase):
         self.assertEquals(page_3.get_parent().title, "Web Title 1")
 
         # assert correct rich text blocks with markdown
-        self.assertEquals(
-            str(page_1.body[0].render()),
-            "This is a nice body"
-        )
-        self.assertEquals(
-            str(page_1.body[1].render()),
-            "<h2>With two paragraphs</h2>"
-        )
-        self.assertTrue(
-            "Whatsapp Body 3" in
-            page_3.whatsapp_body[0].render()
-        )
+        self.assertEquals(str(page_1.body[0].render()), "This is a nice body")
+        self.assertEquals(str(page_1.body[1].render()), "<h2>With two paragraphs</h2>")
+        self.assertTrue("Whatsapp Body 3" in page_3.whatsapp_body[0].render())
 
         # assert correct tags
         self.assertEquals(page_1.tags.first().name, "tag1")

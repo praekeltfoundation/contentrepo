@@ -4,7 +4,6 @@ from home.models import ContentPage
 
 
 class JSONImportTestCase(TestCase):
-
     def test_json_import(self):
         "Tests importing content via json management command"
 
@@ -13,7 +12,7 @@ class JSONImportTestCase(TestCase):
 
         args = ["home/tests/output.json"]
         opts = {}
-        call_command('import_json_content', *args, **opts)
+        call_command("import_json_content", *args, **opts)
 
         # assert 1 content page were created
         self.assertEquals(ContentPage.objects.count(), 1)
@@ -26,13 +25,9 @@ class JSONImportTestCase(TestCase):
 
         # assert correct rich text blocks
         self.assertEquals(
-            str(page_1.body[0].render()),
-            "<p>this is some plain text</p>"
+            str(page_1.body[0].render()), "<p>this is some plain text</p>"
         )
-        self.assertEquals(
-            page_1.body[1].render(),
-            "<p>this is some richtext</p>"
-        )
+        self.assertEquals(page_1.body[1].render(), "<p>this is some richtext</p>")
 
         # assert correct tags
         self.assertEquals(page_1.tags.first().name, "tag1")

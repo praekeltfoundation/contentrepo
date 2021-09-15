@@ -8,10 +8,12 @@ from taggit.models import Tag
 
 class PaginationTestCase(TestCase):
     def create_page(self, title="Test Title", parent=None, tags=[]):
-        block = blocks.StructBlock([
-            ('message', blocks.TextBlock()),
-        ])
-        block_value = block.to_python({'message': "test content WA"})
+        block = blocks.StructBlock(
+            [
+                ("message", blocks.TextBlock()),
+            ]
+        )
+        block_value = block.to_python({"message": "test content WA"})
         contentpage = ContentPage(
             title=title,
             subtitle="Test Subtitle",
@@ -20,7 +22,7 @@ class PaginationTestCase(TestCase):
             whatsapp_title="WA Title",
             whatsapp_body=[
                 ("Whatsapp_Message", block_value),
-                ("Whatsapp_Message", block_value)
+                ("Whatsapp_Message", block_value),
             ],
         )
         for tag in tags:
@@ -40,35 +42,34 @@ class PaginationTestCase(TestCase):
         # import content
         args = ["home/tests/content2.csv"]
         opts = {}
-        call_command('import_csv_content', *args, **opts)
+        call_command("import_csv_content", *args, **opts)
         self.content_page1 = ContentPage.objects.first()
         # it should return 1 page for correct tag
         response = self.client.get("/api/v2/pages/?tag=tag1")
         content = json.loads(response.content)
-        self.assertEquals(content['count'], 1)
+        self.assertEquals(content["count"], 1)
         # it should not return any pages for bogus tag
         response = self.client.get("/api/v2/pages/?tag=bogus")
         content = json.loads(response.content)
-        self.assertEquals(content['count'], 0)
+        self.assertEquals(content["count"], 0)
         # it should return all pages for no tag
         response = self.client.get("/api/v2/pages/")
         content = json.loads(response.content)
-        self.assertEquals(content['count'], 4)
+        self.assertEquals(content["count"], 4)
 
     def test_pagination(self):
         self.client = Client()
         # import content
         args = ["home/tests/content2.csv"]
         opts = {}
-        call_command('import_csv_content', *args, **opts)
+        call_command("import_csv_content", *args, **opts)
         self.content_page1 = ContentPage.objects.first()
 
         # it should return the web body if enable_whatsapp=false
         response = self.client.get("/api/v2/pages/4/?whatsapp=True")
         content = json.loads(response.content)
         self.assertNotEquals(content["body"]["text"], "Whatsapp Body 1")
-        self.assertEquals(
-            content["body"]["text"][0]["value"], "This is a nice body")
+        self.assertEquals(content["body"]["text"][0]["value"], "This is a nice body")
 
         # it should only return the whatsapp body if enable_whatsapp=True
         self.content_page1.enable_whatsapp = True
@@ -82,8 +83,9 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["body"]["next_message"], 2)
         self.assertEquals(content["body"]["previous_message"], None)
         self.assertEquals(content["body"]["total_messages"], 2)
-        self.assertEquals(content["body"]["text"]["value"]["message"],
-                          "Whatsapp Body 1")
+        self.assertEquals(
+            content["body"]["text"]["value"]["message"], "Whatsapp Body 1"
+        )
 
         # it should only return the second paragraph if 2nd message
         # is requested
@@ -92,29 +94,23 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["body"]["message"], 2)
         self.assertEquals(content["body"]["next_message"], None)
         self.assertEquals(content["body"]["previous_message"], 1)
-        self.assertEquals(content["body"]["text"]["value"]["message"],
-                          "whatsapp body2")
+        self.assertEquals(content["body"]["text"]["value"]["message"], "whatsapp body2")
 
         # it should return an appropriate error if requested message index
         # is out of range
         response = self.client.get("/api/v2/pages/4/?whatsapp=True&message=3")
         content = json.loads(response.content)
         self.assertEquals(response.status_code, 400)
-        self.assertEquals(
-            content, ['The requested message does not exist'])
+        self.assertEquals(content, ["The requested message does not exist"])
 
         # it should return an appropriate error if requested message is not
         # a positive integer value
-        response = self.client.get(
-            "/api/v2/pages/4/?whatsapp=True&message=notint")
+        response = self.client.get("/api/v2/pages/4/?whatsapp=True&message=notint")
         content = json.loads(response.content)
         self.assertEquals(response.status_code, 400)
         self.assertEquals(
             content,
-            [
-                'Please insert a positive integer '
-                'for message in the query string'
-            ]
+            ["Please insert a positive integer " "for message in the query string"],
         )
 
     def test_detail_view(self):

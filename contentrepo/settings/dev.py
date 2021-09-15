@@ -4,11 +4,9 @@ from .base import *  # noqa
 DEBUG = True
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY', DEFAULT_SECRET_KEY)
+SECRET_KEY = os.environ.get("SECRET_KEY", DEFAULT_SECRET_KEY)
 
 # SECURITY WARNING: define the correct hosts in production!
-ALLOWED_HOSTS = os.environ.get(
-    'ALLOWED_HOSTS', 'localhost')
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost")
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
