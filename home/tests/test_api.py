@@ -1,10 +1,37 @@
 import json
+from wagtail.core import blocks
 from django.test import TestCase, Client
-from home.models import ContentPage
+from home.models import ContentPage, HomePage
 from django.core.management import call_command
+from taggit.models import Tag
 
 
 class PaginationTestCase(TestCase):
+    def create_page(self, title="Test Title", parent=None, tags=[]):
+        block = blocks.StructBlock([
+            ('message', blocks.TextBlock()),
+        ])
+        block_value = block.to_python({'message': "test content WA"})
+        contentpage = ContentPage(
+            title=title,
+            subtitle="Test Subtitle",
+            body="The body",
+            enable_whatsapp=True,
+            whatsapp_title="WA Title",
+            whatsapp_body=[("Whatsapp_Message", block_value), ("Whatsapp_Message", block_value)],
+        )
+        for tag in tags:
+            created_tag, _ = Tag.objects.get_or_create(name=tag)
+            contentpage.tags.add(created_tag)
+        if parent:
+            parent = ContentPage.objects.filter(title=parent)[0]
+            parent.add_child(instance=contentpage)
+        else:
+            home_page = HomePage.objects.first()
+            home_page.add_child(instance=contentpage)
+        contentpage.save_revision()
+        return contentpage
+
     def test_tag_filtering(self):
         self.client = Client()
         # import content
@@ -86,3 +113,30 @@ class PaginationTestCase(TestCase):
                 'for message in the query string'
             ]
         )
+
+    def test_detail_view(self):
+        page = self.create_page(tags=["tag1", "tag2"])
+
+        # it should return the correct details
+        response = self.client.get(f"/api/v2/pages/{page.id}/")
+        content = response.json()
+
+        self.assertEquals(content["id"], page.id)
+        self.assertEquals(content["title"], page.title)
+        self.assertEquals(content["tags"], ["tag1", "tag2"])
+        self.assertFalse(content["has_children"])
+
+        # if there are children pages
+        self.create_page("child page", page.title)
+
+        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
+        content = response.json()
+
+        self.assertTrue(content["has_children"])
+
+        # if we select the whatsapp content
+        response = self.client.get(f"/api/v2/pages/{page.id}/whatsapp=true")
+        content = response.json()
+
+        self.assertEquals(content["title"], page.whatsapp_title)
+
