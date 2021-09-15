@@ -7,10 +7,10 @@ from taggit.models import Tag
 
 
 class Command(BaseCommand):
-    help = 'Imports content via CSV'
+    help = "Imports content via CSV"
 
     def add_arguments(self, parser):
-        parser.add_argument('path')
+        parser.add_argument("path")
 
     def handle(self, *args, **options):
         def get_rich_text_body(row):
@@ -18,7 +18,7 @@ class Command(BaseCommand):
             row = row.splitlines()
             for line in row:
                 if len(line) != 0:
-                    body = body + [('paragraph', RichText(line))]
+                    body = body + [("paragraph", RichText(line))]
             return body
 
         def get_text_body(raw):
@@ -26,10 +26,12 @@ class Command(BaseCommand):
             rows = raw.splitlines()
             for row in rows:
                 if row:
-                    block = blocks.StructBlock([
-                        ('message', blocks.TextBlock()),
-                    ])
-                    block_value = block.to_python({'message': row})
+                    block = blocks.StructBlock(
+                        [
+                            ("message", blocks.TextBlock()),
+                        ]
+                    )
+                    block_value = block.to_python({"message": row})
                     struct_blocks.append(("Whatsapp_Message", block_value))
             return struct_blocks
 
@@ -39,9 +41,9 @@ class Command(BaseCommand):
                 created_tag, _ = Tag.objects.get_or_create(name=tag)
                 page.tags.add(created_tag)
 
-        path = options['path']
+        path = options["path"]
         home_page = HomePage.objects.first()
-        with open(path, 'rt') as f:
+        with open(path, "rt") as f:
             reader = csv.reader(f)
             for row in reader:
                 contentpage = ContentPage(
@@ -59,5 +61,4 @@ class Command(BaseCommand):
                     home_page.add_child(instance=contentpage)
                 contentpage.save_revision()
 
-            self.stdout.write(self.style.SUCCESS(
-                'Successfully imported Content Pages'))
+            self.stdout.write(self.style.SUCCESS("Successfully imported Content Pages"))

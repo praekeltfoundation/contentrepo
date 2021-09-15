@@ -26,81 +26,83 @@ class MediaBlock(AbstractMediaChooserBlock):
 
 class WhatsappBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
-    document = DocumentChooserBlock(icon='document', required=False)
-    media = MediaBlock(icon='media', required=False)
+    document = DocumentChooserBlock(icon="document", required=False)
+    media = MediaBlock(icon="media", required=False)
     message = blocks.TextBlock(
-        max_lenth=4096,
-        help_text="each message cannot exceed 4096 characters."
+        max_lenth=4096, help_text="each message cannot exceed 4096 characters."
     )
 
     class Meta:
-        icon = 'user'
-        form_classname = 'whatsapp-message-block struct-block'
+        icon = "user"
+        form_classname = "whatsapp-message-block struct-block"
 
 
 class ViberBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
     message = blocks.TextBlock(
-        max_lenth=7000,
-        help_text="each message cannot exceed 7000 characters."
+        max_lenth=7000, help_text="each message cannot exceed 7000 characters."
     )
 
     class Meta:
-        icon = 'user'
-        form_classname = 'whatsapp-message-block struct-block'
+        icon = "user"
+        form_classname = "whatsapp-message-block struct-block"
 
 
 class MessengerBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
     message = blocks.TextBlock(
-        max_lenth=2000,
-        help_text="each message cannot exceed 2000 characters."
+        max_lenth=2000, help_text="each message cannot exceed 2000 characters."
     )
 
     class Meta:
-        icon = 'user'
-        form_classname = 'whatsapp-message-block struct-block'
+        icon = "user"
+        form_classname = "whatsapp-message-block struct-block"
 
 
 class HomePage(Page):
     subpage_types = [
-        'ContentPage',
+        "ContentPage",
     ]
 
 
 class ContentPageTag(TaggedItemBase):
     content_object = ParentalKey(
-        'ContentPage',
-        on_delete=models.CASCADE, related_name='tagged_items')
+        "ContentPage", on_delete=models.CASCADE, related_name="tagged_items"
+    )
 
 
 class ContentPage(Page, ContentImportMixin):
     parent_page_type = [
-        'HomePage',
+        "HomePage",
     ]
 
     # general page attributes
     tags = ClusterTaggableManager(through=ContentPageTag)
     enable_web = models.BooleanField(
-        default=False,
-        help_text='When enabled, the API will include the web content')
+        default=False, help_text="When enabled, the API will include the web content"
+    )
     enable_whatsapp = models.BooleanField(
         default=False,
-        help_text='When enabled, the API will include the whatsapp content')
+        help_text="When enabled, the API will include the whatsapp content",
+    )
     enable_messenger = models.BooleanField(
         default=False,
-        help_text='When enabled, the API will include the messenger content')
+        help_text="When enabled, the API will include the messenger content",
+    )
     enable_viber = models.BooleanField(
-        default=False,
-        help_text='When enabled, the API will include the viber content')
+        default=False, help_text="When enabled, the API will include the viber content"
+    )
 
     # Web page setup
     subtitle = models.CharField(max_length=200, blank=True, null=True)
-    body = StreamField([
-        ('paragraph', blocks.RichTextBlock()),
-        ('image', ImageChooserBlock()), ],
+    body = StreamField(
+        [
+            ("paragraph", blocks.RichTextBlock()),
+            ("image", ImageChooserBlock()),
+        ],
         blank=True,
-        null=True)
+        null=True,
+    )
 
     # Web panels
     web_panels = [
@@ -115,13 +117,19 @@ class ContentPage(Page, ContentImportMixin):
     ]
 
     # whatsapp page setup
-    whatsapp_title = models.CharField(
-        max_length=200, blank=True, null=True)
-    whatsapp_body = StreamField([(
-        'Whatsapp_Message',
-        WhatsappBlock(
-            help_text="Each message will be sent with the text and media")),
-    ], blank=True, null=True)
+    whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
+    whatsapp_body = StreamField(
+        [
+            (
+                "Whatsapp_Message",
+                WhatsappBlock(
+                    help_text="Each message will be sent with the text and media"
+                ),
+            ),
+        ],
+        blank=True,
+        null=True,
+    )
 
     # whatsapp panels
     whatsapp_panels = [
@@ -135,15 +143,21 @@ class ContentPage(Page, ContentImportMixin):
     ]
 
     # messenger page setup
-    messenger_title = models.CharField(
-        max_length=200, blank=True, null=True)
-    messenger_body = StreamField([(
-        'messenger_block',
-        MessengerBlock(
-            help_text="Each paragraph cannot extend "
-                      "over the messenger message "
-                      "limit of 2000 characters")),
-    ], blank=True, null=True)
+    messenger_title = models.CharField(max_length=200, blank=True, null=True)
+    messenger_body = StreamField(
+        [
+            (
+                "messenger_block",
+                MessengerBlock(
+                    help_text="Each paragraph cannot extend "
+                    "over the messenger message "
+                    "limit of 2000 characters"
+                ),
+            ),
+        ],
+        blank=True,
+        null=True,
+    )
 
     # messenger panels
     messenger_panels = [
@@ -157,15 +171,21 @@ class ContentPage(Page, ContentImportMixin):
     ]
 
     # viber page setup
-    viber_title = models.CharField(
-        max_length=200, blank=True, null=True)
-    viber_body = StreamField([(
-        'viber_message',
-        ViberBlock(
-            help_text="Each paragraph cannot extend "
-                      "over the viber message limit "
-                      "of 7000 characters")),
-    ], blank=True, null=True)
+    viber_title = models.CharField(max_length=200, blank=True, null=True)
+    viber_body = StreamField(
+        [
+            (
+                "viber_message",
+                ViberBlock(
+                    help_text="Each paragraph cannot extend "
+                    "over the viber message limit "
+                    "of 7000 characters"
+                ),
+            ),
+        ],
+        blank=True,
+        null=True,
+    )
 
     # viber panels
     viber_panels = [
@@ -179,7 +199,7 @@ class ContentPage(Page, ContentImportMixin):
     ]
 
     promote_panels = Page.promote_panels + [
-        FieldPanel('tags'),
+        FieldPanel("tags"),
     ]
     settings_panels = Page.settings_panels + [
         FieldPanel("enable_web"),
@@ -189,21 +209,21 @@ class ContentPage(Page, ContentImportMixin):
     ]
     edit_handler = TabbedInterface(
         [
-            ObjectList(web_panels, heading='Web'),
+            ObjectList(web_panels, heading="Web"),
             ObjectList(whatsapp_panels, heading="Whatsapp"),
             ObjectList(messenger_panels, heading="Messenger"),
             ObjectList(viber_panels, heading="Viber"),
-            ObjectList(promote_panels, heading='Promotional'),
-            ObjectList(settings_panels, heading='Settings'),
+            ObjectList(promote_panels, heading="Promotional"),
+            ObjectList(settings_panels, heading="Settings"),
         ]
     )
 
     api_fields = [
-        APIField('title'),
-        APIField('subtitle'),
-        APIField('body'),
-        APIField('tags'),
-        APIField('has_children'),
+        APIField("title"),
+        APIField("subtitle"),
+        APIField("body"),
+        APIField("tags"),
+        APIField("has_children"),
     ]
 
     @property
