@@ -138,7 +138,7 @@ class PaginationTestCase(TestCase):
         self.assertTrue(content["has_children"])
 
         # if we select the whatsapp content
-        response = self.client.get(f"/api/v2/pages/{page.id}/whatsapp=true")
+        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
         content = response.json()
 
         self.assertEquals(content["title"], page.whatsapp_title)
