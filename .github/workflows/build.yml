@@ -25,7 +25,7 @@ jobs:
       run: |
         # stop the build if there are Python syntax errors or undefined names
         black --check .
-        flake8 . --count --show-source --statistics --exclude=home/migrations/ --ignore=F405
+        flake8 . --count --show-source --statistics
     - name: Django Test
       run: |
         ./manage.py test --settings=contentrepo.settings.base
