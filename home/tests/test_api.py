@@ -18,7 +18,10 @@ class PaginationTestCase(TestCase):
             body="The body",
             enable_whatsapp=True,
             whatsapp_title="WA Title",
-            whatsapp_body=[("Whatsapp_Message", block_value), ("Whatsapp_Message", block_value)],
+            whatsapp_body=[
+                ("Whatsapp_Message", block_value),
+                ("Whatsapp_Message", block_value)
+            ],
         )
         for tag in tags:
             created_tag, _ = Tag.objects.get_or_create(name=tag)
@@ -139,4 +142,3 @@ class PaginationTestCase(TestCase):
         content = response.json()
 
         self.assertEquals(content["title"], page.whatsapp_title)
-
