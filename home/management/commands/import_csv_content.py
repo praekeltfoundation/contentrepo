@@ -36,26 +36,26 @@ class Command(BaseCommand):
             return struct_blocks
 
         def create_tags(row, page):
-            tags = row[12].split(" ")
+            tags = row["tags"].split(" ")
             for tag in tags:
                 created_tag, _ = Tag.objects.get_or_create(name=tag)
                 page.tags.add(created_tag)
 
         path = options["path"]
         home_page = HomePage.objects.first()
-        with open(path, "rt") as f:
-            reader = csv.reader(f)
+        with open(path, 'rt') as f:
+            reader = csv.DictReader(f)
             for row in reader:
                 contentpage = ContentPage(
-                    title=row[0],
-                    subtitle=row[1],
-                    body=get_rich_text_body(row[2]),
-                    whatsapp_title=row[3],
-                    whatsapp_body=get_text_body(row[5]),
+                    title=row["web_title"],
+                    subtitle=row["web_subtitle"],
+                    body=get_rich_text_body(row["web_body"]),
+                    whatsapp_title=row["whatsapp_title"],
+                    whatsapp_body=get_text_body(row["whatsapp_body"]),
                 )
                 create_tags(row, contentpage)
-                if row[13]:
-                    parent = ContentPage.objects.filter(title=row[13])[0]
+                if row["parent"]:
+                    parent = ContentPage.objects.filter(title=row["parent"])[0]
                     parent.add_child(instance=contentpage)
                 else:
                     home_page.add_child(instance=contentpage)
