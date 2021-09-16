@@ -86,11 +86,12 @@ class Command(BaseCommand):
                     title=row["web_title"],
                     subtitle=row["web_subtitle"],
                     body=get_rich_text_body(row["web_body"]),
+                    enable_whatsapp=True,
                     whatsapp_title=row["whatsapp_title"],
                     whatsapp_body=get_text_body(row["whatsapp_body"]),
                 )
                 create_tags(row, contentpage)
                 add_parent(row, contentpage, home_page)
-                contentpage.save_revision()
+                contentpage.save_revision().publish()
 
             self.stdout.write(self.style.SUCCESS("Successfully imported Content Pages"))

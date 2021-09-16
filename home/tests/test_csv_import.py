@@ -24,6 +24,9 @@ class CSVImportTestCase(TestCase):
         self.assertEquals(page_1.title, "Web Title 1")
         self.assertEquals(page_3.title, "Web Title 3")
 
+        self.assertTrue(page_1.enable_whatsapp)
+        self.assertTrue(page_3.enable_whatsapp)
+
         # assert parent linked correctly
         self.assertEquals(page_3.get_parent().title, "Web Title 1")
 

@@ -66,6 +66,8 @@ class PaginationTestCase(TestCase):
         self.content_page1 = ContentPage.objects.first()
 
         # it should return the web body if enable_whatsapp=false
+        self.content_page1.enable_whatsapp = False
+        self.content_page1.save_revision().publish()
         response = self.client.get("/api/v2/pages/4/?whatsapp=True")
         content = json.loads(response.content)
         self.assertNotEquals(content["body"]["text"], "Whatsapp Body 1")
