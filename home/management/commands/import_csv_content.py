@@ -62,7 +62,14 @@ class Command(BaseCommand):
                 home_page.add_child(instance=page)
 
         def clean_row(row):
-            for field in ("web_title", "web_subtitle", "web_body", "whatsapp_title", "whatsapp_body", "parent"):
+            for field in (
+                "web_title",
+                "web_subtitle",
+                "web_body",
+                "whatsapp_title",
+                "whatsapp_body",
+                "parent",
+            ):
                 if row[field]:
                     row[field] = str(row[field]).strip()
             return row
