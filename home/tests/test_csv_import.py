@@ -10,7 +10,7 @@ class CSVImportTestCase(TestCase):
         # assert no content pages exist
         self.assertEquals(ContentPage.objects.count(), 0)
 
-        args = ["home/tests/content2.csv"]
+        args = ["--path", "home/tests/content2.csv"]
         opts = {}
         call_command("import_csv_content", *args, **opts)
 

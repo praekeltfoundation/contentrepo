@@ -40,7 +40,7 @@ class PaginationTestCase(TestCase):
     def test_tag_filtering(self):
         self.client = Client()
         # import content
-        args = ["home/tests/content2.csv"]
+        args = ["--path", "home/tests/content2.csv"]
         opts = {}
         call_command("import_csv_content", *args, **opts)
         self.content_page1 = ContentPage.objects.first()
@@ -60,7 +60,7 @@ class PaginationTestCase(TestCase):
     def test_pagination(self):
         self.client = Client()
         # import content
-        args = ["home/tests/content2.csv"]
+        args = ["--path", "home/tests/content2.csv"]
         opts = {}
         call_command("import_csv_content", *args, **opts)
         self.content_page1 = ContentPage.objects.first()
