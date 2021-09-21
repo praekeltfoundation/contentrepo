@@ -36,6 +36,7 @@ def mainmenu(request):
         "menu": "\n".join(text),
         "ids": ",".join(ids),
         "titles": ",".join(titles),
+        "count": len(ids),
     }
     return Response(data, status=status.HTTP_200_OK)
 
@@ -56,10 +57,16 @@ def submenu(request):
         titles.append(child.title)
         index += 1
 
+    whatsapp_body = ""
+    if page.whatsapp_body._raw_data:
+        whatsapp_body = page.whatsapp_body._raw_data[0]["value"]["message"]
+
     data = {
         "menu": "\n".join(text),
         "ids": ",".join(ids),
         "titles": ",".join(titles),
+        "count": len(ids),
+        "blurb": whatsapp_body
     }
     return Response(data, status=status.HTTP_200_OK)
 
@@ -95,5 +102,6 @@ def randommenu(request):
         "menu": "\n".join(text),
         "ids": ",".join(ids),
         "titles": ",".join(titles),
+        "count": len(ids),
     }
     return Response(data, status=status.HTTP_200_OK)
