@@ -90,9 +90,9 @@ def randommenu(request):
     ids = []
     titles = []
     for page in pages.order_by("?"):
-        text.append(f"*{index}* - {page.title}")
+        text.append(f"*{index}* - {page.whatsapp_title}")
         ids.append(str(page.id))
-        titles.append(page.title)
+        titles.append(page.whatsapp_title)
         index += 1
 
         if index > max:
