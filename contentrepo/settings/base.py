@@ -188,7 +188,7 @@ WAGTAILCONTENTIMPORT_DEFAULT_MAPPER = "home.mappers.ContentMapper"
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",  # noqa
-    "PAGE_SIZE": 5,
+    "PAGE_SIZE": env.int("PAGE_SIZE", 5),
 }
 
 SPECTACULAR_SETTINGS = {
