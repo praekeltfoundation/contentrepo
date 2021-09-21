@@ -9,14 +9,14 @@ from home.models import ContentPage, ContentPageTag
 @api_view(("GET",))
 @renderer_classes((JSONRenderer,))
 def mainmenu(request):
-    tag = request.GET.get("tag", None)
+    tags = request.GET.get("tags", "").split(",")
     start = int(request.GET.get("start", 1))
 
     pages = ContentPage.objects.all()
-    if tag is not None:
+    if tags:
         ids = []
         for t in ContentPageTag.objects.all():
-            if t.tag.name == tag:
+            if t.tag.name in tags:
                 ids.append(t.content_object_id)
         pages = pages.filter(id__in=ids)
 
@@ -74,14 +74,14 @@ def submenu(request):
 @api_view(("GET",))
 @renderer_classes((JSONRenderer,))
 def randommenu(request):
-    tag = request.GET.get("tag", None)
+    tags = request.GET.get("tags", None)
     max = int(request.GET.get("max", 3))
 
     pages = ContentPage.objects.all()
-    if tag is not None:
+    if tags:
         ids = []
         for t in ContentPageTag.objects.all():
-            if t.tag.name == tag:
+            if t.tag.name in tags:
                 ids.append(t.content_object_id)
         pages = pages.filter(id__in=ids)
 
