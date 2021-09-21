@@ -18,6 +18,7 @@ ALLOWED_HOSTS = os.environ.get(
 INSTALLED_APPS = [
     "home",
     "search",
+    "menu",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.embeds",
