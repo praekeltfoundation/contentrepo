@@ -66,7 +66,7 @@ def submenu(request):
         "ids": ",".join(ids),
         "titles": ",".join(titles),
         "count": len(ids),
-        "blurb": whatsapp_body
+        "blurb": whatsapp_body,
     }
     return Response(data, status=status.HTTP_200_OK)
 
