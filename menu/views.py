@@ -99,7 +99,7 @@ def randommenu(request):
             break
 
     data = {
-        "menu": "\n".join(text),
+        "menu": "\n\n".join(text),
         "ids": ",".join(ids),
         "titles": ",".join(titles),
         "count": len(ids),
