@@ -74,7 +74,7 @@ def submenu(request):
 @api_view(("GET",))
 @renderer_classes((JSONRenderer,))
 def randommenu(request):
-    tags = request.GET.get("tags", None)
+    tags = request.GET.get("tags", "").split(",")
     max = int(request.GET.get("max", 3))
 
     pages = ContentPage.objects.all()
