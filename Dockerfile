@@ -24,7 +24,6 @@ RUN apt-get update --yes --quiet && apt-get install --yes --quiet --no-install-r
  && rm -rf /var/lib/apt/lists/*
 
 RUN pip install "gunicorn==20.0.4"
-RUN pip install "pylibmc"
 
 COPY requirements.txt /
 RUN pip install -r /requirements.txt
