@@ -18,7 +18,6 @@ RUN apt-get update --yes --quiet && apt-get install --yes --quiet --no-install-r
     libmemcached11 \
     libmemcachedutil2 \
     libmemcached-dev \
-    libmemcached \
     libz-dev \
     gcc
  && rm -rf /var/lib/apt/lists/*
