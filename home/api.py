@@ -21,11 +21,11 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
     @method_decorator(cache_page(60 * 60 * 2))
     def get(self, request, *args, **kwargs):
-        super(ContentPageViewSet, self).get(self, request, *args, **kwargs)
+        super(ContentPagesViewSet, self).get(self, request, *args, **kwargs)
 
     @method_decorator(cache_page(60 * 60 * 2))
     def list(self, request, *args, **kwargs):
-        super(ContentPageViewSet, self).list(self, request, *args, **kwargs)
+        super(ContentPagesViewSet, self).list(self, request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = super(ContentPagesViewSet, self).get_queryset()
