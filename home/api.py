@@ -28,6 +28,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
             queryset = queryset.filter(id__in=ids)
         return queryset
 
+
 class ContentPageIndexViewSet(PagesAPIViewSet):
     pagination_class = PageNumberPagination
 

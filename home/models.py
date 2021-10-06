@@ -64,10 +64,12 @@ class HomePage(Page):
         "ContentPageIndex",
     ]
 
+
 class ContentPageIndex(Page):
     subpage_types = [
         "ContentPage",
     ]
+
 
 class ContentPageTag(TaggedItemBase):
     content_object = ParentalKey(
