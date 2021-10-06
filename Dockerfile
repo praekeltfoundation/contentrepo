@@ -15,11 +15,9 @@ RUN apt-get update --yes --quiet && apt-get install --yes --quiet --no-install-r
     libjpeg62-turbo-dev \
     zlib1g-dev \
     libwebp-dev \
-    libmemcached11 \
-    libmemcachedutil2 \
-    libmemcached-dev \
     libz-dev \
-    gcc
+    redis \
+
  && rm -rf /var/lib/apt/lists/*
 
 RUN pip install "gunicorn==20.0.4"
