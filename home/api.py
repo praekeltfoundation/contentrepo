@@ -4,7 +4,7 @@ from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.images.api.v2.views import ImagesAPIViewSet
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
 from .serializers import ContentPageSerializer
-from .models import ContentPageTag
+from .models import ContentPageTag, ContentPageIndex
 
 
 class ContentPagesViewSet(PagesAPIViewSet):
@@ -28,9 +28,16 @@ class ContentPagesViewSet(PagesAPIViewSet):
             queryset = queryset.filter(id__in=ids)
         return queryset
 
+class ContentPageIndexViewSet(PagesAPIViewSet):
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        return ContentPageIndex.objects.live()
+
 
 api_router = WagtailAPIRouter("wagtailapi")
 
 api_router.register_endpoint("pages", ContentPagesViewSet)
+api_router.register_endpoint("indexes", ContentPageIndexViewSet)
 api_router.register_endpoint("images", ImagesAPIViewSet)
 api_router.register_endpoint("documents", DocumentsAPIViewSet)

@@ -61,9 +61,13 @@ class MessengerBlock(blocks.StructBlock):
 
 class HomePage(Page):
     subpage_types = [
-        "ContentPage",
+        "ContentPageIndex",
     ]
 
+class ContentPageIndex(Page):
+    subpage_types = [
+        "ContentPage",
+    ]
 
 class ContentPageTag(TaggedItemBase):
     content_object = ParentalKey(
@@ -73,7 +77,7 @@ class ContentPageTag(TaggedItemBase):
 
 class ContentPage(Page, ContentImportMixin):
     parent_page_type = [
-        "HomePage",
+        "ContentPageIndex",
     ]
 
     # general page attributes
@@ -103,6 +107,7 @@ class ContentPage(Page, ContentImportMixin):
         blank=True,
         null=True,
     )
+    include_in_footer = models.BooleanField(default=False)
 
     # Web panels
     web_panels = [
@@ -111,6 +116,7 @@ class ContentPage(Page, ContentImportMixin):
                 FieldPanel("title"),
                 FieldPanel("subtitle"),
                 StreamFieldPanel("body"),
+                FieldPanel("include_in_footer"),
             ],
             heading="Web",
         ),
