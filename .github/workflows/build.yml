@@ -18,7 +18,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        sudo apt-get install -y libmemcached
+        sudo apt-get install -y memcached
         sudo apt-get install -y gcc
         python -m pip install --upgrade pip
         pip install -r requirements.txt
