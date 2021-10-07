@@ -244,7 +244,9 @@ class ContentPage(Page, ContentImportMixin):
 
     @property
     def latest_revision_rating(self):
-        return self._calc_avg_rating(self.ratings.filter(revision=self.get_latest_revision()))
+        return self._calc_avg_rating(
+            self.ratings.filter(revision=self.get_latest_revision())
+        )
 
     def _calc_avg_rating(self, ratings):
         if ratings:
@@ -253,7 +255,7 @@ class ContentPage(Page, ContentImportMixin):
                 if rating.helpful:
                     helpful += 1
 
-            return int(helpful/ratings.count()*100)
+            return int(helpful / ratings.count() * 100)
 
 
 class ContentPageRating(models.Model):

@@ -2,6 +2,7 @@ from django.test import TestCase
 
 from .utils import create_page, create_page_rating
 
+
 class ContentPageTests(TestCase):
     def test_page_and_revision_rating(self):
         page = create_page()

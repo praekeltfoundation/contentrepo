@@ -2,6 +2,7 @@ from wagtail.core import blocks
 from home.models import ContentPage, ContentPageRating, HomePage
 from taggit.models import Tag
 
+
 def create_page(title="Test Title", parent=None, tags=[]):
     block = blocks.StructBlock(
         [
@@ -34,9 +35,11 @@ def create_page(title="Test Title", parent=None, tags=[]):
 
 
 def create_page_rating(page, helpful=True, comment=""):
-    return ContentPageRating.objects.create(**{
-        "page": page,
-        "revision": page.get_latest_revision(),
-        "helpful": helpful,
-        "comment": comment
-    })
+    return ContentPageRating.objects.create(
+        **{
+            "page": page,
+            "revision": page.get_latest_revision(),
+            "helpful": helpful,
+            "comment": comment,
+        }
+    )
