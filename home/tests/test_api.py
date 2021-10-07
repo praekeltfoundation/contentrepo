@@ -1,12 +1,15 @@
 import json
 from wagtail.core import blocks
 from django.test import TestCase, Client
-from home.models import ContentPage, HomePage
+from home.models import ContentPage, HomePage, ContentPageRating
+from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from taggit.models import Tag
+from rest_framework import status
+from rest_framework.test import APITestCase
 
 
-class PaginationTestCase(TestCase):
+class BaseEventTestCase(TestCase):
     def create_page(self, title="Test Title", parent=None, tags=[]):
         block = blocks.StructBlock(
             [
@@ -37,6 +40,8 @@ class PaginationTestCase(TestCase):
         contentpage.save_revision()
         return contentpage
 
+
+class PaginationTestCase(BaseEventTestCase):
     def test_tag_filtering(self):
         self.client = Client()
         # import content
@@ -140,3 +145,71 @@ class PaginationTestCase(TestCase):
         content = response.json()
 
         self.assertEquals(content["title"], page.whatsapp_title)
+
+
+class PageRatingTestCase(APITestCase, BaseEventTestCase):
+    url = "/api/v2/custom/ratings/"
+
+    def test_page_rating_success(self):
+        user = get_user_model().objects.create_user("test")
+        self.client.force_authenticate(user)
+
+        page = self.create_page()
+
+        response = self.client.post(
+            self.url,
+            {
+                "page": page.id,
+                "helpful": False,
+                "comment": "lekker comment",
+                "data": {"contact_uuid": "123"},
+            },
+            format="json",
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+        response_data = response.json()
+        response_data.pop("timestamp")
+        rating = ContentPageRating.objects.last()
+        self.assertEquals(
+            response.json(),
+            {
+                "id": rating.id,
+                "helpful": False,
+                "comment": "lekker comment",
+                "data": {"contact_uuid": "123"},
+                "page": page.id,
+                "revision": page.get_latest_revision().id,
+            },
+        )
+
+    def test_page_rating_required_fields(self):
+        user = get_user_model().objects.create_user("test")
+        self.client.force_authenticate(user)
+
+        response = self.client.post(self.url, {}, format="json")
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(
+            response.json(),
+            {
+                "helpful": ["This field is required."],
+                "page": ["This field is required."],
+                "revision": ["This field is required."],
+            },
+        )
+
+    def test_page_rating_invalid_page(self):
+        user = get_user_model().objects.create_user("test")
+        self.client.force_authenticate(user)
+
+        response = self.client.post(self.url, {"page": 123}, format="json")
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(
+            response.json(),
+            {
+                "page": ["Page matching query does not exist."],
+            },
+        )

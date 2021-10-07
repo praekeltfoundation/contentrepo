@@ -3,6 +3,8 @@ from django.urls import include, path
 from django.contrib import admin
 from django.conf.urls.i18n import i18n_patterns
 
+from rest_framework import routers
+
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
@@ -11,7 +13,7 @@ from wagtail_content_import import urls as wagtail_content_import_urls
 
 from search import views as search_views
 from menu import views as menu_views
-from home.api import api_router
+from home.api import api_router, ContentPageRatingViewSet
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -19,6 +21,8 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
+custom_v2router = routers.DefaultRouter()
+custom_v2router.register("ratings", ContentPageRatingViewSet)
 
 urlpatterns = [
     path("django-admin/", admin.site.urls),
@@ -56,6 +60,7 @@ urlpatterns = urlpatterns + [
     # Wagtail's page serving mechanism. This should be the last pattern in
     # the list:
     path("api/v2/", api_router.urls),
+    path("api/v2/custom/", include(custom_v2router.urls)),
     path("", include(wagtail_urls)),
     # Alternatively, if you want Wagtail pages to be served from a subpath
     # of your site, rather than the site root:

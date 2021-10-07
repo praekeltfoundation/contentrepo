@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "wagtailmedia",
     "wagtail.contrib.simple_translation",
     "rest_framework",
+    "rest_framework.authtoken",
     "modelcluster",
     "taggit",
     "django.contrib.admin",

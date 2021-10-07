@@ -3,7 +3,7 @@ from modelcluster.fields import ParentalKey
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from taggit.models import TaggedItemBase
 from wagtail.api import APIField
-from wagtail.core.models import Page
+from wagtail.core.models import Page, PageRevision
 from wagtail.core.fields import StreamField
 from wagtail.core import blocks
 from wagtail.images.blocks import ImageChooserBlock
@@ -237,3 +237,16 @@ class ContentPage(Page, ContentImportMixin):
     @property
     def has_children(self):
         return self.get_children_count() > 0
+
+
+class ContentPageRating(models.Model):
+    timestamp = models.DateTimeField(auto_now=True)
+    page = models.ForeignKey(
+        ContentPage, related_name="ratings", null=False, on_delete=models.CASCADE
+    )
+    revision = models.ForeignKey(
+        PageRevision, related_name="ratings", null=False, on_delete=models.CASCADE
+    )
+    helpful = models.BooleanField()
+    comment = models.TextField(blank=True, default="")
+    data = models.JSONField(default=dict, blank=True, null=True)
