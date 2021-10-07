@@ -238,6 +238,23 @@ class ContentPage(Page, ContentImportMixin):
     def has_children(self):
         return self.get_children_count() > 0
 
+    @property
+    def page_rating(self):
+        return self._calc_avg_rating(self.ratings.all())
+
+    @property
+    def latest_revision_rating(self):
+        return self._calc_avg_rating(self.ratings.filter(revision=self.get_latest_revision()))
+
+    def _calc_avg_rating(self, ratings):
+        if ratings:
+            helpful = 0
+            for rating in ratings:
+                if rating.helpful:
+                    helpful += 1
+
+            return int(helpful/ratings.count()*100)
+
 
 class ContentPageRating(models.Model):
     timestamp = models.DateTimeField(auto_now=True)

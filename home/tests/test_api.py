@@ -1,47 +1,15 @@
 import json
-from wagtail.core import blocks
 from django.test import TestCase, Client
-from home.models import ContentPage, HomePage, ContentPageRating
+from home.models import ContentPage, ContentPageRating
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
-from taggit.models import Tag
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-
-class BaseEventTestCase(TestCase):
-    def create_page(self, title="Test Title", parent=None, tags=[]):
-        block = blocks.StructBlock(
-            [
-                ("message", blocks.TextBlock()),
-            ]
-        )
-        block_value = block.to_python({"message": "test content WA"})
-        contentpage = ContentPage(
-            title=title,
-            subtitle="Test Subtitle",
-            body="The body",
-            enable_whatsapp=True,
-            whatsapp_title="WA Title",
-            whatsapp_body=[
-                ("Whatsapp_Message", block_value),
-                ("Whatsapp_Message", block_value),
-            ],
-        )
-        for tag in tags:
-            created_tag, _ = Tag.objects.get_or_create(name=tag)
-            contentpage.tags.add(created_tag)
-        if parent:
-            parent = ContentPage.objects.filter(title=parent)[0]
-            parent.add_child(instance=contentpage)
-        else:
-            home_page = HomePage.objects.first()
-            home_page.add_child(instance=contentpage)
-        contentpage.save_revision()
-        return contentpage
+from .utils import create_page
 
 
-class PaginationTestCase(BaseEventTestCase):
+class PaginationTestCase(TestCase):
     def test_tag_filtering(self):
         self.client = Client()
         # import content
@@ -121,7 +89,7 @@ class PaginationTestCase(BaseEventTestCase):
         )
 
     def test_detail_view(self):
-        page = self.create_page(tags=["tag1", "tag2"])
+        page = create_page(tags=["tag1", "tag2"])
 
         # it should return the correct details
         response = self.client.get(f"/api/v2/pages/{page.id}/")
@@ -133,7 +101,7 @@ class PaginationTestCase(BaseEventTestCase):
         self.assertFalse(content["has_children"])
 
         # if there are children pages
-        self.create_page("child page", page.title)
+        create_page("child page", page.title)
 
         response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
         content = response.json()
@@ -147,14 +115,14 @@ class PaginationTestCase(BaseEventTestCase):
         self.assertEquals(content["title"], page.whatsapp_title)
 
 
-class PageRatingTestCase(APITestCase, BaseEventTestCase):
+class PageRatingTestCase(APITestCase):
     url = "/api/v2/custom/ratings/"
 
     def test_page_rating_success(self):
         user = get_user_model().objects.create_user("test")
         self.client.force_authenticate(user)
 
-        page = self.create_page()
+        page = create_page()
 
         response = self.client.post(
             self.url,
