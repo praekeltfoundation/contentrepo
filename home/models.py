@@ -70,6 +70,18 @@ class ContentPageIndex(Page):
         "ContentPage",
     ]
 
+    include_in_homepage = models.BooleanField(default=False)
+
+    @property
+    def has_children(self):
+        return self.get_children_count() > 0
+
+    api_fields = [
+        APIField("title"),
+        APIField("include_in_homepage"),
+        APIField("has_children"),
+    ]
+
 
 class ContentPageTag(TaggedItemBase):
     content_object = ParentalKey(

@@ -13,6 +13,7 @@ from wagtail_content_import import urls as wagtail_content_import_urls
 
 from search import views as search_views
 from menu import views as menu_views
+from home import views as home_views
 from home.api import api_router, ContentPageRatingViewSet
 
 from drf_spectacular.views import (
@@ -32,6 +33,7 @@ urlpatterns = [
     path("search/", search_views.search, name="search"),
     path("mainmenu/", menu_views.mainmenu, name="mainmenu"),
     path("submenu/", menu_views.submenu, name="submenu"),
+    path("import/", home_views.upload_file, name="import"),
     path("randommenu/", menu_views.randommenu, name="randommenu"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
