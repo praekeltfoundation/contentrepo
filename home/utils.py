@@ -1,7 +1,5 @@
 import json
 import requests
-import willow
-from django.core.management.base import BaseCommand
 
 # from taggit.models import Tag
 from home.models import ContentPage, HomePage
@@ -45,10 +43,10 @@ def import_content(file):
             block_value = block.to_python({"message": message["answer"]})
             return block_value
 
-    def create_tags(tags, page):
-        for tag in tags:
-            created_tag, _ = Tag.objects.get_or_create(name=tag)
-            page.tags.add(created_tag)
+    # def create_tags(tags, page):
+    #     for tag in tags:
+    #         created_tag, _ = Tag.objects.get_or_create(name=tag)
+    #         page.tags.add(created_tag)
 
     ContentPage.objects.filter(id__lte=1000).delete()
     ContentPage.objects.filter(id__lte=2000).delete()
@@ -69,7 +67,7 @@ def import_content(file):
                 whatsapp_body=[("Whatsapp_Message", get_body(message))],
                 locale=home_page.locale,
             )
-            create_tags(article["tags"], contentpage)
+            # create_tags(article["tags"], contentpage)
             home_page.add_child(instance=contentpage)
             contentpage.save_revision().publish()
 
