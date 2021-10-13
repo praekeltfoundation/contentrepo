@@ -22,16 +22,19 @@ def import_content(file):
             except Exception:
                 uri = requests.get(message["attachment_uri"])
                 image_file = ImageFile(BytesIO(uri.content), name=title)
-                image = Image(title=title, file=image_file, width=image_file.width, height=image_file.height)
+                image = Image(
+                    title=title,
+                    file=image_file,
+                    width=image_file.width,
+                    height=image_file.height,
+                )
                 image.save()
                 im = image.id
 
             block = blocks.StructBlock(
                 [("message", blocks.TextBlock()), ("image", ImageChooserBlock())]
             )
-            block_value = block.to_python(
-                {"message": message["answer"], "image": im}
-            )
+            block_value = block.to_python({"message": message["answer"], "image": im})
             return block_value
         else:
             block = blocks.StructBlock(
@@ -42,12 +45,10 @@ def import_content(file):
             block_value = block.to_python({"message": message["answer"]})
             return block_value
 
-
     def create_tags(tags, page):
         for tag in tags:
             created_tag, _ = Tag.objects.get_or_create(name=tag)
             page.tags.add(created_tag)
-
 
     ContentPage.objects.filter(id__lte=1000).delete()
     ContentPage.objects.filter(id__lte=2000).delete()
@@ -72,9 +73,7 @@ def import_content(file):
             home_page.add_child(instance=contentpage)
             contentpage.save_revision().publish()
 
-            translations = ContentPage.objects.filter(
-                title__icontains=just_title
-            )
+            translations = ContentPage.objects.filter(title__icontains=just_title)
             if translations:
                 translation = translations.first()
                 if translation.pk != contentpage.pk:
@@ -84,4 +83,4 @@ def import_content(file):
         except Exception as e:
             print(e)
 
-    return("success")
+    return "success"
