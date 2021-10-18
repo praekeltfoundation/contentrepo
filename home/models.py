@@ -1,4 +1,3 @@
-from logging import PercentStyle
 from django.db import models
 from modelcluster.fields import ParentalKey
 from modelcluster.contrib.taggit import ClusterTaggableManager
@@ -20,7 +19,6 @@ from wagtailmedia.blocks import AbstractMediaChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 
 from .panels import PageRatingPanel
-
 
 
 class MediaBlock(AbstractMediaChooserBlock):
