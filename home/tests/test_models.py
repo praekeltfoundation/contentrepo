@@ -7,16 +7,16 @@ class ContentPageTests(TestCase):
     def test_page_and_revision_rating(self):
         page = create_page()
 
-        self.assertIsNone(page.page_rating)
-        self.assertIsNone(page.latest_revision_rating)
+        self.assertEquals(page.page_rating, "(no ratings yet)")
+        self.assertEquals(page.latest_revision_rating, "(no ratings yet)")
 
         create_page_rating(page)
         create_page_rating(page, False)
         create_page_rating(page)
 
-        self.assertEquals(page.page_rating, 66)
-        self.assertEquals(page.latest_revision_rating, 66)
+        self.assertEquals(page.page_rating, "2/3 (66%)")
+        self.assertEquals(page.latest_revision_rating, "2/3 (66%)")
 
         page.save_revision()
         create_page_rating(page)
-        self.assertEquals(page.latest_revision_rating, 100)
+        self.assertEquals(page.latest_revision_rating, "1/1 (100%)")
