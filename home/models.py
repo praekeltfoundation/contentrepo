@@ -18,6 +18,8 @@ from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 
+from .panels import PageRatingPanel
+
 
 class MediaBlock(AbstractMediaChooserBlock):
     def render_basic(self, value, context=None):
@@ -220,6 +222,7 @@ class ContentPage(Page, ContentImportMixin):
 
     promote_panels = Page.promote_panels + [
         FieldPanel("tags"),
+        PageRatingPanel("Rating"),
     ]
     settings_panels = Page.settings_panels + [
         FieldPanel("enable_web"),
@@ -267,7 +270,9 @@ class ContentPage(Page, ContentImportMixin):
                 if rating.helpful:
                     helpful += 1
 
-            return int(helpful / ratings.count() * 100)
+            percentage = int(helpful / ratings.count() * 100)
+            return f"{helpful}/{ratings.count()} ({percentage}%)"
+        return "(no ratings yet)"
 
 
 class ContentPageRating(models.Model):
