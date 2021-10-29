@@ -14,7 +14,7 @@ from wagtail_content_import import urls as wagtail_content_import_urls
 from search import views as search_views
 from menu import views as menu_views
 from home import views as home_views
-from home.api import api_router, ContentPageRatingViewSet
+from home.api import api_router, ContentPageRatingViewSet, LanguagesViewSet
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -24,6 +24,7 @@ from drf_spectacular.views import (
 
 custom_v2router = routers.DefaultRouter()
 custom_v2router.register("ratings", ContentPageRatingViewSet)
+custom_v2router.register("languages", LanguagesViewSet)
 
 urlpatterns = [
     path("django-admin/", admin.site.urls),

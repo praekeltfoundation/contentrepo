@@ -2,7 +2,7 @@ from rest_framework import serializers
 from wagtail.api.v2.serializers import PageSerializer
 from collections import OrderedDict
 from rest_framework.exceptions import ValidationError
-
+from wagtail.core.models import Locale
 from home.models import ContentPageRating
 
 
@@ -164,11 +164,7 @@ class BodyField(serializers.Field):
                     )
                 except IndexError:
                     raise ValidationError("The requested message does not exist")
-        return OrderedDict(
-            [
-                ("text", page.body._raw_data),
-            ]
-        )
+        return page.body
 
 
 class ContentPageSerializer(PageSerializer):
@@ -183,3 +179,21 @@ class ContentPageRatingSerializer(serializers.ModelSerializer):
         model = ContentPageRating
         fields = "__all__"
         read_only_fields = ("id", "timestamp")
+
+
+class DisplayName(serializers.Field):
+    """
+    Serializes the "DisplayName" field on Locale
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, instance):
+        return instance.get_display_name()
+
+class LanguagesSerializer(serializers.ModelSerializer):
+    display_name = DisplayName(read_only=True)
+    class Meta:
+        model = Locale
+        fields = ("language_code", "display_name")

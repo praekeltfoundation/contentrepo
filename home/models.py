@@ -4,9 +4,10 @@ from modelcluster.contrib.taggit import ClusterTaggableManager
 from taggit.models import TaggedItemBase
 from wagtail.api import APIField
 from wagtail.core.models import Page, PageRevision
-from wagtail.core.fields import StreamField
+from wagtail.core.fields import StreamField, RichTextField
 from wagtail.core import blocks
 from wagtail.images.blocks import ImageChooserBlock
+from wagtail.images.api.fields import ImageRenditionField
 from wagtail.admin.edit_handlers import (
     FieldPanel,
     MultiFieldPanel,
@@ -14,6 +15,7 @@ from wagtail.admin.edit_handlers import (
     ObjectList,
     TabbedInterface,
 )
+from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
@@ -113,14 +115,14 @@ class ContentPage(Page, ContentImportMixin):
 
     # Web page setup
     subtitle = models.CharField(max_length=200, blank=True, null=True)
-    body = StreamField(
-        [
-            ("paragraph", blocks.RichTextBlock()),
-            ("image", ImageChooserBlock()),
-        ],
-        blank=True,
+    feed_image = models.ForeignKey(
+        'wagtailimages.Image',
         null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
     )
+    body = RichTextField(blank=True, null=True)
     include_in_footer = models.BooleanField(default=False)
 
     # Web panels
@@ -129,6 +131,7 @@ class ContentPage(Page, ContentImportMixin):
             [
                 FieldPanel("title"),
                 FieldPanel("subtitle"),
+                ImageChooserPanel('feed_image'),
                 StreamFieldPanel("body"),
                 FieldPanel("include_in_footer"),
             ],
@@ -241,6 +244,7 @@ class ContentPage(Page, ContentImportMixin):
     api_fields = [
         APIField("title"),
         APIField("subtitle"),
+        APIField('feed_image_thumbnail', serializer=ImageRenditionField('fill-100x100', source='feed_image')),
         APIField("body"),
         APIField("tags"),
         APIField("has_children"),

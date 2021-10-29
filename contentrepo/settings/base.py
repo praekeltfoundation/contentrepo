@@ -12,7 +12,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY") or DEFAULT_SECRET_KEY
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
     [
-        "localhost",
+        "*",
     ],
 )
 INSTALLED_APPS = [

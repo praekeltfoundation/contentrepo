@@ -51,6 +51,14 @@ def import_content(file):
     ContentPage.objects.filter(id__lte=1000).delete()
     ContentPage.objects.filter(id__lte=2000).delete()
     ContentPage.objects.filter(id__lte=3000).delete()
+    ContentPage.objects.filter(id__lte=4500).delete()
+    ContentPage.objects.filter(id__lte=5300).delete()
+    ContentPage.objects.filter(id__lte=6000).delete()
+    ContentPage.objects.filter(id__lte=7000).delete()
+    ContentPage.objects.filter(id__lte=8000).delete()
+    ContentPage.objects.filter(id__lte=9000).delete()
+    ContentPage.objects.filter(id__lte=10000).delete()
+    ContentPage.objects.filter(id__lte=11000).delete()
     data = json.load(file)
 
     for message in data["data"]:
