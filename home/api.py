@@ -9,13 +9,7 @@ from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.images.api.v2.views import ImagesAPIViewSet
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
 from .serializers import ContentPageSerializer, ContentPageRatingSerializer
-from .models import (
-    ContentPage,
-    ContentPageTag,
-    ContentPageIndex,
-    ContentPageRating,
-    PageView,
-)
+from .models import ContentPage, ContentPageTag, ContentPageIndex, ContentPageRating
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 
