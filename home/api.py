@@ -9,7 +9,13 @@ from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.images.api.v2.views import ImagesAPIViewSet
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
 from .serializers import ContentPageSerializer, ContentPageRatingSerializer
-from .models import ContentPage, ContentPageTag, ContentPageIndex, ContentPageRating
+from .models import (
+    ContentPage,
+    ContentPageTag,
+    ContentPageIndex,
+    ContentPageRating,
+    PageView,
+)
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 
@@ -27,6 +33,14 @@ class ContentPagesViewSet(PagesAPIViewSet):
     @method_decorator(cache_page(60 * 60 * 2))
     def get(self, request, *args, **kwargs):
         super(ContentPagesViewSet, self).get(self, request, *args, **kwargs)
+
+    def detail_view(self, request, pk):
+        ContentPage.objects.get(id=pk).save_page_view(request.query_params)
+        return self._detail_view(request, pk)
+
+    @method_decorator(cache_page(60 * 60 * 2))
+    def _detail_view(self, request, pk):
+        return super().detail_view(request, pk)
 
     @method_decorator(cache_page(60 * 60 * 2))
     def list(self, request, *args, **kwargs):
