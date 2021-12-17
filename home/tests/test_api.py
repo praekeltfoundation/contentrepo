@@ -1,6 +1,6 @@
 import json
 from django.test import TestCase, Client
-from home.models import ContentPage, ContentPageRating
+from home.models import ContentPage, ContentPageRating, PageView
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from rest_framework import status
@@ -89,6 +89,8 @@ class PaginationTestCase(TestCase):
         )
 
     def test_detail_view(self):
+        self.assertEquals(PageView.objects.count(), 0)
+
         page = create_page(tags=["tag1", "tag2"])
 
         # it should return the correct details
@@ -100,6 +102,8 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["tags"], ["tag1", "tag2"])
         self.assertFalse(content["has_children"])
 
+        self.assertEquals(PageView.objects.count(), 1)
+
         # if there are children pages
         create_page("child page", page.title)
 
@@ -108,11 +112,15 @@ class PaginationTestCase(TestCase):
 
         self.assertTrue(content["has_children"])
 
+        self.assertEquals(PageView.objects.count(), 2)
+
         # if we select the whatsapp content
         response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
         content = response.json()
 
         self.assertEquals(content["title"], page.whatsapp_title)
+
+        self.assertEquals(PageView.objects.count(), 3)
 
 
 class PageRatingTestCase(APITestCase):

@@ -28,6 +28,10 @@ class ContentPagesViewSet(PagesAPIViewSet):
     def get(self, request, *args, **kwargs):
         super(ContentPagesViewSet, self).get(self, request, *args, **kwargs)
 
+    def detail_view(self, request, pk):
+        ContentPage.objects.get(id=pk).save_page_view(request.query_params)
+        return super().detail_view(request, pk)
+
     @method_decorator(cache_page(60 * 60 * 2))
     def list(self, request, *args, **kwargs):
         super(ContentPagesViewSet, self).list(self, request, *args, **kwargs)

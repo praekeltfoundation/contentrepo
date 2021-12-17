@@ -274,9 +274,23 @@ class ContentPage(Page, ContentImportMixin):
             return f"{helpful}/{ratings.count()} ({percentage}%)"
         return "(no ratings yet)"
 
+    def save_page_view(self, query_params):
+        data = {}
+        for param, value in query_params.items():
+            if param.startswith("data__"):
+                key = param.replace("data__", "")
+                data[key] = value
+
+        self.views.create(
+            **{
+                "revision": self.get_latest_revision(),
+                "data": data,
+            }
+        )
+
 
 class ContentPageRating(models.Model):
-    timestamp = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     page = models.ForeignKey(
         ContentPage, related_name="ratings", null=False, on_delete=models.CASCADE
     )
@@ -285,4 +299,15 @@ class ContentPageRating(models.Model):
     )
     helpful = models.BooleanField()
     comment = models.TextField(blank=True, default="")
+    data = models.JSONField(default=dict, blank=True, null=True)
+
+
+class PageView(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    page = models.ForeignKey(
+        ContentPage, related_name="views", null=False, on_delete=models.CASCADE
+    )
+    revision = models.ForeignKey(
+        PageRevision, related_name="views", null=False, on_delete=models.CASCADE
+    )
     data = models.JSONField(default=dict, blank=True, null=True)
