@@ -30,9 +30,6 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
     def detail_view(self, request, pk):
         ContentPage.objects.get(id=pk).save_page_view(request.query_params)
-        return self._detail_view(request, pk)
-
-    def _detail_view(self, request, pk):
         return super().detail_view(request, pk)
 
     @method_decorator(cache_page(60 * 60 * 2))
