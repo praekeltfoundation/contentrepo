@@ -290,7 +290,7 @@ class ContentPage(Page, ContentImportMixin):
 
 
 class ContentPageRating(models.Model):
-    timestamp = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     page = models.ForeignKey(
         ContentPage, related_name="ratings", null=False, on_delete=models.CASCADE
     )
@@ -303,7 +303,7 @@ class ContentPageRating(models.Model):
 
 
 class PageView(models.Model):
-    timestamp = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     page = models.ForeignKey(
         ContentPage, related_name="views", null=False, on_delete=models.CASCADE
     )
