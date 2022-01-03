@@ -4,13 +4,9 @@ from rest_framework.exceptions import ValidationError
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django_filters import rest_framework as filters
-from rest_framework import permissions
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.pagination import CursorPagination
-
-from home.serializers import PageViewSerializer
 
 from .forms import UploadFileForm
 from .models import ContentPage, ContentPageRating, PageView
