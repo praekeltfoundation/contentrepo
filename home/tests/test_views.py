@@ -1,6 +1,7 @@
 from urllib.parse import urlencode
 
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -10,7 +11,7 @@ from home.serializers import ContentPageRatingSerializer, PageViewSerializer
 
 
 class PageRatingTestCase(APITestCase):
-    url = "/api/v2/custom/ratings/"
+    url = reverse("contentpagerating-list")
 
     def test_page_rating_success(self):
         user = get_user_model().objects.create_user("test")
@@ -115,7 +116,7 @@ class PageRatingTestCase(APITestCase):
 
 
 class PageViewsTestCase(APITestCase):
-    url = "/api/v2/custom/pageviews/"
+    url = reverse("pageview-list")
 
     def test_get_list(self):
         """
