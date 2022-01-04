@@ -1,10 +1,7 @@
 import json
 from django.test import TestCase, Client
-from home.models import ContentPage, ContentPageRating, PageView
-from django.contrib.auth import get_user_model
+from home.models import ContentPage, PageView
 from django.core.management import call_command
-from rest_framework import status
-from rest_framework.test import APITestCase
 
 from .utils import create_page
 
@@ -121,71 +118,3 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["title"], page.whatsapp_title)
 
         self.assertEquals(PageView.objects.count(), 3)
-
-
-class PageRatingTestCase(APITestCase):
-    url = "/api/v2/custom/ratings/"
-
-    def test_page_rating_success(self):
-        user = get_user_model().objects.create_user("test")
-        self.client.force_authenticate(user)
-
-        page = create_page()
-
-        response = self.client.post(
-            self.url,
-            {
-                "page": page.id,
-                "helpful": False,
-                "comment": "lekker comment",
-                "data": {"contact_uuid": "123"},
-            },
-            format="json",
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-        response_data = response.json()
-        response_data.pop("timestamp")
-        rating = ContentPageRating.objects.last()
-        self.assertEquals(
-            response.json(),
-            {
-                "id": rating.id,
-                "helpful": False,
-                "comment": "lekker comment",
-                "data": {"contact_uuid": "123"},
-                "page": page.id,
-                "revision": page.get_latest_revision().id,
-            },
-        )
-
-    def test_page_rating_required_fields(self):
-        user = get_user_model().objects.create_user("test")
-        self.client.force_authenticate(user)
-
-        response = self.client.post(self.url, {}, format="json")
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
-            response.json(),
-            {
-                "helpful": ["This field is required."],
-                "page": ["This field is required."],
-                "revision": ["This field is required."],
-            },
-        )
-
-    def test_page_rating_invalid_page(self):
-        user = get_user_model().objects.create_user("test")
-        self.client.force_authenticate(user)
-
-        response = self.client.post(self.url, {"page": 123}, format="json")
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
-            response.json(),
-            {
-                "page": ["Page matching query does not exist."],
-            },
-        )

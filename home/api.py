@@ -1,15 +1,10 @@
-from rest_framework import permissions
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.mixins import CreateModelMixin
-from rest_framework.viewsets import GenericViewSet
 from wagtail.api.v2.views import PagesAPIViewSet
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.images.api.v2.views import ImagesAPIViewSet
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
-from .serializers import ContentPageSerializer, ContentPageRatingSerializer
-from .models import ContentPage, ContentPageTag, ContentPageIndex, ContentPageRating
+from .serializers import ContentPageSerializer
+from .models import ContentPage, ContentPageTag, ContentPageIndex
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 
@@ -53,23 +48,6 @@ class ContentPageIndexViewSet(PagesAPIViewSet):
 
     def get_queryset(self):
         return ContentPageIndex.objects.live()
-
-
-class ContentPageRatingViewSet(GenericViewSet, CreateModelMixin):
-    queryset = ContentPageRating.objects.all()
-    serializer_class = ContentPageRatingSerializer
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def create(self, request, *args, **kwargs):
-        if "page" in request.data:
-            try:
-                page = ContentPage.objects.get(id=request.data["page"])
-                request.data["revision"] = page.get_latest_revision().id
-            except ContentPage.DoesNotExist:
-                raise ValidationError({"page": ["Page matching query does not exist."]})
-
-        return super().create(request, *args, **kwargs)
 
 
 api_router = WagtailAPIRouter("wagtailapi")

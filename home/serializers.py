@@ -3,7 +3,7 @@ from wagtail.api.v2.serializers import PageSerializer
 from collections import OrderedDict
 from rest_framework.exceptions import ValidationError
 
-from home.models import ContentPageRating
+from home.models import ContentPageRating, PageView
 
 
 class TitleField(serializers.Field):
@@ -181,5 +181,12 @@ class ContentPageSerializer(PageSerializer):
 class ContentPageRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContentPageRating
+        fields = "__all__"
+        read_only_fields = ("id", "timestamp")
+
+
+class PageViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PageView
         fields = "__all__"
         read_only_fields = ("id", "timestamp")
