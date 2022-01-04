@@ -92,9 +92,7 @@ class PageRatingTestCase(APITestCase):
         rating_new = page.ratings.create(
             **{"revision": page.get_latest_revision(), "helpful": False}
         )
-        page.ratings.create(
-            **{"revision": page.get_latest_revision(), "helpful": True}
-        )
+        page.ratings.create(**{"revision": page.get_latest_revision(), "helpful": True})
         response = self.client.get(
             f"{self.url}?"
             f"{urlencode({'timestamp_gt': rating_old.timestamp.isoformat()})}"
