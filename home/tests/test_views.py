@@ -92,15 +92,18 @@ class PageRatingTestCase(APITestCase):
         rating_new = page.ratings.create(
             **{"revision": page.get_latest_revision(), "helpful": False}
         )
+        page.ratings.create(
+            **{"revision": page.get_latest_revision(), "helpful": True}
+        )
         response = self.client.get(
             f"{self.url}?"
             f"{urlencode({'timestamp_gt': rating_old.timestamp.isoformat()})}"
         )
         self.assertEqual(
-            response.json()["results"],
-            [ContentPageRatingSerializer(instance=rating_new).data],
+            response.json()["results"][0],
+            ContentPageRatingSerializer(instance=rating_new).data,
         )
-        [r] = response.json()["results"]
+        [r, _] = response.json()["results"]
         r.pop("timestamp")
         self.assertEqual(
             r,
@@ -137,15 +140,20 @@ class PageViewsTestCase(APITestCase):
                 "revision": page.get_latest_revision(),
             }
         )
+        page.views.create(
+            **{
+                "revision": page.get_latest_revision(),
+            }
+        )
         response = self.client.get(
             f"{self.url}?"
             f"{urlencode({'timestamp_gt': pageview_old.timestamp.isoformat()})}"
         )
         self.assertEqual(
-            response.json()["results"],
-            [PageViewSerializer(instance=pageview_new).data],
+            response.json()["results"][0],
+            PageViewSerializer(instance=pageview_new).data,
         )
-        [r] = response.json()["results"]
+        [r, _] = response.json()["results"]
         r.pop("timestamp")
         self.assertEqual(
             r,
