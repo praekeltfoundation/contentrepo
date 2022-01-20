@@ -1,5 +1,4 @@
 import csv
-from email.policy import default
 from wagtail.core import blocks
 from django.core.management.base import BaseCommand
 from home.models import ContentPage, HomePage
@@ -80,6 +79,7 @@ class Command(BaseCommand):
 
         if options["purge"] == "yes":
             ContentPage.objects.all().delete()
+
         path = options["path"]
         home_page = HomePage.objects.first()
         with open(path, "rt") as f:
