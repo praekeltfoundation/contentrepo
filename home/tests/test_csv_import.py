@@ -41,3 +41,25 @@ class CSVImportTestCase(TestCase):
 
         # assert handles empty csv field
         self.assertEquals(len(page_3.messenger_body), 0)
+
+    def test_import_csv_with_newline(self):
+        # Assert no content pages exist
+        self.assertEquals(ContentPage.objects.count(), 0)
+
+        args = ["--path", "home/tests/content_newlines.csv", "--newline", "===="]
+        opts = {}
+        call_command("import_csv_content", *args, **opts)
+
+        # Assert 1 content page was created
+        self.assertEquals(ContentPage.objects.count(), 1)
+        page = ContentPage.objects.first()
+
+        # Assert the title is correct
+        self.assertEquals(page.title, "Web Title 1")
+
+        # Assert whatsapp is enabled 
+        self.assertTrue(page.enable_whatsapp)
+
+        # Assert the first and second messages split between "===="
+        self.assertTrue(str(page.whatsapp_body[0].render()), "First whatsapp message")
+        self.assertTrue(str(page.whatsapp_body[1].render()), "second whatsapp message")
