@@ -13,6 +13,7 @@ class Command(BaseCommand):
         parser.add_argument("--path")
         parser.add_argument("--splitmessages", default="yes")
         parser.add_argument("--purge", default="no")
+        parser.add_argument("--newline", default=False)
 
     def handle(self, *args, **options):
         def get_rich_text_body(row):
@@ -26,7 +27,10 @@ class Command(BaseCommand):
         def get_text_body(raw):
             if options["splitmessages"] == "yes":
                 struct_blocks = []
-                rows = raw.splitlines()
+                if options["newline"]:
+                    rows = raw.split(options["newline"])
+                else:
+                    rows = raw.splitlines()
                 for row in rows:
                     if row:
                         block = blocks.StructBlock(
