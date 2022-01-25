@@ -57,7 +57,7 @@ class CSVImportTestCase(TestCase):
         # Assert the title is correct
         self.assertEquals(page.title, "Web Title 1")
 
-        # Assert whatsapp is enabled 
+        # Assert whatsapp is enabled
         self.assertTrue(page.enable_whatsapp)
 
         # Assert the first and second messages split between "===="
