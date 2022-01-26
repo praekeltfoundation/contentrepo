@@ -1,29 +1,43 @@
-{% extends "wagtailadmin/base.html" %}
-{% load i18n wagtailadmin_tags %}
+{% extends "wagtailadmin/generic/form.html" %}
+{% load i18n admin_urls static wagtailadmin_tags %}
 
-{% block content %}
-<div class="nice-padding">
-<ul class="breadcrumb">
-    {% trans 'Home' as home %}
-    <li class="home"><a href="{% url 'wagtailadmin_home' %}">{% icon name="home" class_name="home_icon" title=home %}{% icon name="arrow-right" class_name="arrow_right_icon" %}</a></li>
-    <li><a href="{{ view.index_url }}">{{ view.verbose_name_plural|capfirst }}</a></li>
-</ul>
-  <div class="row">
-             <div class="left">
-                 <div class="col header-title">
-                     <h1>
-                       {% icon name="form" class_name="header-title-icon" %}
-                       {% blocktrans %}Upload JSON file{% endblocktrans %}
-                     </h1>
-                 </div>
-             </div>
-   <div class="right">
-        <form action="/import/" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <input type="submit" class="button">
-        </form>
-    </div>
-    </div>
-    </div>
+{% block header %}
+  <header>
+      <div class="row nice-padding">
+        <div class="left header-left">
+          <div class="col header-title">
+            {% block h1 %}
+              <h1>
+                {% icon name="openquote" class_name="header-title-icon" %}
+                {% trans 'Upload Content' %}
+              </h1>
+            {% endblock %}
+          </div>
+        </div>
+      </div>
+  </header>
+{% endblock %}
+
+
+{% block main_content %}
+  <form action="/import/" method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <ul class="fields">
+          <li class="required {{ wrapper_classes }} {{ li_classes }} {% if field.errors %}error{% endif %}">
+            <div class="field">
+              <div class="field-content">
+                  <div class="input {{ input_classes }} ">
+                    {{ form.as_p }}
+                  </div>
+              </div>
+            </div>
+          </li>
+          <li>
+            {% block actions %}
+                <button type="submit" class="button">{% trans 'Upload' %}</button>
+            {% endblock %}
+          </li>
+        </ul>
+  </form>
+
 {% endblock %}
