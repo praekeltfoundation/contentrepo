@@ -1,14 +1,11 @@
 import csv
 import io
-import json
-import requests
 
 from home.models import ContentPage, HomePage
 from taggit.models import Tag
 from wagtail.core import blocks
+from wagtail.core.rich_text import RichText
 from wagtail.images.models import Image
-from io import BytesIO
-from django.core.files.images import ImageFile
 from wagtail.images.blocks import ImageChooserBlock
 
 

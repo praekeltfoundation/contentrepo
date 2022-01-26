@@ -3,7 +3,6 @@ import threading
 from rest_framework import permissions
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
-from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django_filters import rest_framework as filters
 from rest_framework.viewsets import GenericViewSet
@@ -13,7 +12,7 @@ from rest_framework.pagination import CursorPagination
 from .forms import UploadFileForm
 from .models import ContentPage, ContentPageRating, PageView
 from .serializers import PageViewSerializer, ContentPageRatingSerializer
-from .utils import import_content, import_content_csv
+from .utils import import_content_csv
 
 
 class ContentUploadThread(threading.Thread):
@@ -26,7 +25,7 @@ class ContentUploadThread(threading.Thread):
         super(ContentUploadThread, self).__init__(**kwargs)
 
     def run(self):
-        job = import_content_csv(
+        import_content_csv(
             self.file, self.splitlines, self.newline, self.purge, self.locale
         )
 
