@@ -1,3 +1,5 @@
+import threading
+
 from rest_framework import permissions
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
@@ -11,25 +13,40 @@ from rest_framework.pagination import CursorPagination
 from .forms import UploadFileForm
 from .models import ContentPage, ContentPageRating, PageView
 from .serializers import PageViewSerializer, ContentPageRatingSerializer
-from .utils import import_content
+from .utils import import_content, import_content_csv
+
+
+class ContentUploadThread(threading.Thread):
+    def __init__(self, file, splitlines, newline, purge, locale, **kwargs):
+        self.file = file
+        self.splitlines = splitlines
+        self.purge = purge
+        self.locale = locale
+        self.newline = newline
+        super(ContentUploadThread, self).__init__(**kwargs)
+
+    def run(self):
+        job = import_content_csv(
+            self.file, self.splitlines, self.newline, self.purge, self.locale
+        )
 
 
 def upload_file(request):
     if request.method == "POST":
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            job = handle_uploaded_file(request.FILES["file"])
-            if job == "success":
-                return HttpResponseRedirect("/admin/")
-            else:
-                form.add_error("file", "Unsuccessful.")
+            if form.cleaned_data["purge"] == "True":
+                ContentPage.objects.all().delete()
+            ContentUploadThread(
+                request.FILES["file"],
+                form.cleaned_data["split_messages"],
+                form.cleaned_data["newline"],
+                form.cleaned_data["purge"],
+                form.cleaned_data["locale"],
+            ).start()
     else:
         form = UploadFileForm()
     return render(request, "upload.html", {"form": form})
-
-
-def handle_uploaded_file(f):
-    import_content(f)
 
 
 def CursorPaginationFactory(field):
