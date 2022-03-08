@@ -22,7 +22,7 @@ class Command(BaseCommand):
                 page.tags.add(created_tag)
 
         def clean_row(row):
-            for field in ("web_title",):
+            for field in ("web_title", "whatsapp_title"):
                 if row[field]:
                     row[field] = str(row[field]).strip()
             return row
@@ -33,7 +33,9 @@ class Command(BaseCommand):
             for row in reader:
                 row = clean_row(row)
 
-                contentpage = ContentPage.objects.get(title=row["web_title"])
+                contentpage = ContentPage.objects.get(
+                    title=row["web_title"], whatsapp_title=row["whatsapp_title"]
+                )
 
                 update_tags(row, contentpage)
 
