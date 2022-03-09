@@ -36,9 +36,8 @@ class ContentPagesViewSet(PagesAPIViewSet):
         tag = self.request.query_params.get("tag")
         if tag is not None:
             ids = []
-            for t in ContentPageTag.objects.all():
-                if t.tag.name == tag:
-                    ids.append(t.content_object_id)
+            for t in ContentPageTag.objects.filter(tag__name=tag):
+                ids.append(t.content_object_id)
             queryset = queryset.filter(id__in=ids)
         return queryset
 
