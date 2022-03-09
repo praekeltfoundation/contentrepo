@@ -106,6 +106,7 @@ def randommenu(request):
     }
     return Response(data, status=status.HTTP_200_OK)
 
+
 @api_view(("GET",))
 @renderer_classes((JSONRenderer,))
 def faqmenu(request):
@@ -122,9 +123,11 @@ def faqmenu(request):
         for t in ContentPageTag.objects.filter(tag__name=faq_tag):
             page = ContentPage.objects.get(id=t.content_object_id)
 
-            pages.append({
-                "order": i,
-                "title": page.whatsapp_title,
-            })
+            pages.append(
+                {
+                    "order": i,
+                    "title": page.whatsapp_title,
+                }
+            )
 
     return Response(pages, status=status.HTTP_200_OK)
