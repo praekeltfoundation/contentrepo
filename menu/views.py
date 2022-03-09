@@ -105,3 +105,26 @@ def randommenu(request):
         "count": len(ids),
     }
     return Response(data, status=status.HTTP_200_OK)
+
+@api_view(("GET",))
+@renderer_classes((JSONRenderer,))
+def faqmenu(request):
+    tag = request.GET.get("tag", "")
+    viewed = request.GET.get("viewed", "").split(",")
+
+    pages = []
+    for i in range(1, 4):
+        faq_tag = f"{tag}_faq{i}"
+
+        if faq_tag in viewed:
+            continue
+
+        for t in ContentPageTag.objects.filter(tag__name=faq_tag):
+            page = ContentPage.objects.get(id=t.content_object_id)
+
+            pages.append({
+                "order": i,
+                "title": page.whatsapp_title,
+            })
+
+    return Response(pages, status=status.HTTP_200_OK)

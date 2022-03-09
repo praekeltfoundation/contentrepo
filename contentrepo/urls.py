@@ -36,6 +36,7 @@ urlpatterns = [
     path("submenu/", menu_views.submenu, name="submenu"),
     path("import/", home_views.upload_file, name="import"),
     path("randommenu/", menu_views.randommenu, name="randommenu"),
+    path("faqmenu/", menu_views.faqmenu, name="faqmenu"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/schema/swagger-ui/",
