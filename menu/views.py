@@ -120,7 +120,7 @@ def faqmenu(request):
         if faq_tag in viewed:
             continue
 
-        for t in ContentPageTag.objects.filter(tag__name=faq_tag):
+        for t in ContentPageTag.objects.filter(tag__name__iexact=faq_tag):
             page = ContentPage.objects.get(id=t.content_object_id)
 
             pages.append(
