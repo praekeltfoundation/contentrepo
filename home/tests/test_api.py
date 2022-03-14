@@ -18,6 +18,10 @@ class PaginationTestCase(TestCase):
         response = self.client.get("/api/v2/pages/?tag=tag1")
         content = json.loads(response.content)
         self.assertEquals(content["count"], 1)
+        # it should return 1 page for Uppercase tag
+        response = self.client.get("/api/v2/pages/?tag=Tag1")
+        content = json.loads(response.content)
+        self.assertEquals(content["count"], 1)
         # it should not return any pages for bogus tag
         response = self.client.get("/api/v2/pages/?tag=bogus")
         content = json.loads(response.content)
