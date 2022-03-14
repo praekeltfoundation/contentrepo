@@ -1,6 +1,5 @@
-from django.test import TestCase, Client
+from django.test import TestCase
 
-from home.models import ContentPage, HomePage
 from home.tests.utils import create_page
 
 
