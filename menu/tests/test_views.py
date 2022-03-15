@@ -53,3 +53,58 @@ class MainMenuTestCase(TestCase):
         self.assertEqual(result["ids"], ",".join(ids))
         self.assertEqual(result["titles"], ",".join(titles))
         self.assertEqual(result["count"], 2)
+
+
+class SubMenuTestCase(TestCase):
+    def test_submenu(self):
+        """
+        Should return all child pages of the parent id supplied
+        """
+        submenu = create_page(title="Sub Menu")
+        child1 = create_page(title="Sub menu 1", parent=submenu)
+        child2 = create_page(title="Sub menu 2", parent=submenu)
+
+        dummy = create_page(title="Dummy")
+        create_page(title="Dummy sub menu 1", parent=dummy)
+
+        response = self.client.get(f"/submenu/?parent={submenu.id}")
+
+        result = response.json()
+
+        menu = ["*1* - Sub menu 1", "*2* - Sub menu 2"]
+        ids = [str(child1.id), str(child2.id)]
+        titles = [child1.title, child2.title]
+
+        self.assertEqual(result["menu"], "\n".join(menu))
+        self.assertEqual(result["ids"], ",".join(ids))
+        self.assertEqual(result["titles"], ",".join(titles))
+        self.assertEqual(result["count"], 2)
+        self.assertEqual(result["blurb"], "test content WA")
+
+    def test_submenu_mqr_bcm(self):
+        """
+        Should return all child pages of the parent id supplied but only where
+        they have a tag that starts with bcm
+        """
+        submenu = create_page(title="Sub Menu")
+        child1 = create_page(
+            title="Sub menu 1", parent=submenu, tags=["bcm_week_pre16"]
+        )
+        create_page(title="Sub menu 2", parent=submenu)
+        child3 = create_page(
+            title="Sub menu 3", parent=submenu, tags=["bcm_week_pre16"]
+        )
+
+        response = self.client.get(f"/submenu/?parent={submenu.id}&bcm=True")
+
+        result = response.json()
+
+        menu = ["*1* - Sub menu 1", "*2* - Sub menu 3"]
+        ids = [str(child1.id), str(child3.id)]
+        titles = [child1.title, child3.title]
+
+        self.assertEqual(result["menu"], "\n".join(menu))
+        self.assertEqual(result["ids"], ",".join(ids))
+        self.assertEqual(result["titles"], ",".join(titles))
+        self.assertEqual(result["count"], 2)
+        self.assertEqual(result["blurb"], "test content WA")
