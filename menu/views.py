@@ -11,13 +11,22 @@ from home.models import ContentPage, ContentPageTag
 def mainmenu(request):
     tags = request.GET.get("tags", "").split(",")
     start = int(request.GET.get("start", 1))
+    bcm = bool(request.GET.get("bcm"))
+
+    ids = []
+    bcm_ids = []
 
     pages = ContentPage.objects.all()
     if tags:
-        ids = []
-        for t in ContentPageTag.objects.all():
-            if t.tag.name in tags:
-                ids.append(t.content_object_id)
+        for t in ContentPageTag.objects.filter(tag__name__in=tags):
+            ids.append(t.content_object_id)
+
+        if bcm:
+            for t in ContentPageTag.objects.filter(tag__name__icontains="bcm_"):
+                bcm_ids.append(t.content_object_id)
+
+            ids = list(set(ids).intersection(bcm_ids))
+
         pages = pages.filter(id__in=ids)
 
     text = []
@@ -27,6 +36,10 @@ def mainmenu(request):
         text.append(f"\n*{page.title}*")
 
         for child in page.get_children():
+
+            if bcm and child.id not in bcm_ids:
+                continue
+
             text.append(f"*{start}* - {child.title}")
             ids.append(str(child.id))
             titles.append(child.title)
