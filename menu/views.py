@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer
 
 from home.models import ContentPage, ContentPageTag
+from .utils import get_bcm_page_ids
 
 
 @api_view(("GET",))
@@ -22,9 +23,7 @@ def mainmenu(request):
             ids.append(t.content_object_id)
 
         if bcm:
-            for t in ContentPageTag.objects.filter(tag__name__icontains="bcm_"):
-                bcm_ids.append(t.content_object_id)
-
+            bcm_ids = get_bcm_page_ids()
             ids = list(set(ids).intersection(bcm_ids))
 
         pages = pages.filter(id__in=ids)
@@ -58,13 +57,22 @@ def mainmenu(request):
 @renderer_classes((JSONRenderer,))
 def submenu(request):
     parent_id = request.GET.get("parent")
+    bcm = bool(request.GET.get("bcm"))
+
     page = ContentPage.objects.get(id=parent_id)
+
+    bcm_ids = []
+    if bcm:
+        bcm_ids = get_bcm_page_ids()
 
     index = 1
     text = []
     ids = []
     titles = []
     for child in page.get_children():
+        if bcm and child.id not in bcm_ids:
+            continue
+
         text.append(f"*{index}* - {child.title}")
         ids.append(str(child.id))
         titles.append(child.title)
