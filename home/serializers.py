@@ -123,6 +123,7 @@ class BodyField(serializers.Field):
                             ),
                             ("total_messages", len(page.whatsapp_body._raw_data)),
                             ("text", page.whatsapp_body._raw_data[message]),
+                            ("revision", page.get_latest_revision().id),
                         ]
                     )
                 except IndexError:
