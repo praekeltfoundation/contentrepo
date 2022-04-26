@@ -60,6 +60,9 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["body"]["previous_message"], None)
         self.assertEquals(content["body"]["total_messages"], 2)
         self.assertEquals(
+            content["body"]["revision"], self.content_page1.get_latest_revision().id
+        )
+        self.assertEquals(
             content["body"]["text"]["value"]["message"], "Whatsapp Body 1"
         )
 
