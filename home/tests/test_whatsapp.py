@@ -14,7 +14,7 @@ class WhatsAppTests(TestCase):
             "language": "en_US",
             "components": [{"type": "BODY", "text": "Test Body"}],
         }
-        url = f"http://whatsapp/graph/v3.3/27121231234/message_templates"
+        url = "http://whatsapp/graph/v3.3/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
         create_whatsapp_template("test-template", "Test Body")
