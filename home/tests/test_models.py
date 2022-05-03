@@ -1,4 +1,5 @@
-from django.test import TestCase
+from django.test import override_settings, TestCase
+from unittest import mock
 
 from home.models import PageView
 from .utils import create_page, create_page_rating
@@ -35,3 +36,16 @@ class ContentPageTests(TestCase):
         self.assertEquals(view.page.id, page.id)
         self.assertEquals(view.revision.id, page.get_latest_revision().id)
         self.assertEquals(view.data, {"save": "this"})
+
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_create_on_save_deactivated(self, mock_create_whatsapp_template):
+        create_page(is_whatsapp_template=True)
+        mock_create_whatsapp_template.assert_not_called()
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_create_on_save(self, mock_create_whatsapp_template):
+        page = create_page(is_whatsapp_template=True)
+        mock_create_whatsapp_template.assert_called_with(
+            f"WA_Title_{page.get_latest_revision().id}", "Test WhatsApp Message 1"
+        )

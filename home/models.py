@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from modelcluster.fields import ParentalKey
 from modelcluster.contrib.taggit import ClusterTaggableManager
@@ -19,6 +20,7 @@ from wagtailmedia.blocks import AbstractMediaChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 
 from .panels import PageRatingPanel
+from .whatsapp import create_whatsapp_template
 
 
 class MediaBlock(AbstractMediaChooserBlock):
@@ -139,6 +141,7 @@ class ContentPage(Page, ContentImportMixin):
     ]
 
     # whatsapp page setup
+    is_whatsapp_template = models.BooleanField(default=False)
     whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
     whatsapp_body = StreamField(
         [
@@ -263,6 +266,15 @@ class ContentPage(Page, ContentImportMixin):
             self.ratings.filter(revision=self.get_latest_revision())
         )
 
+    @property
+    def whatsapp_template_name(self):
+        name = f"{self.whatsapp_title}_{self.get_latest_revision().id}"
+        return name.replace(" ", "_")
+
+    @property
+    def whatsapp_template_body(self):
+        return self.whatsapp_body.raw_data[0]["value"]["message"]
+
     def _calc_avg_rating(self, ratings):
         if ratings:
             helpful = 0
@@ -287,6 +299,31 @@ class ContentPage(Page, ContentImportMixin):
                 "data": data,
             }
         )
+
+    def save_revision(
+        self,
+        user=None,
+        submitted_for_moderation=False,
+        approved_go_live_at=None,
+        changed=True,
+        log_action=False,
+        previous_revision=None,
+        clean=True,
+    ):
+        response = super().save_revision(
+            user,
+            submitted_for_moderation,
+            approved_go_live_at,
+            changed,
+            log_action,
+            previous_revision,
+            clean,
+        )
+        if settings.WHATSAPP_CREATE_TEMPLATES and self.is_whatsapp_template:
+            create_whatsapp_template(
+                self.whatsapp_template_name, self.whatsapp_template_body
+            )
+        return response
 
 
 class ContentPageRating(models.Model):
