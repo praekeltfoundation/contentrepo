@@ -33,4 +33,4 @@ jobs:
         flake8 . --count --show-source --statistics
     - name: Django Test
       run: |
-        ./manage.py test --settings=contentrepo.settings.base
+        ./manage.py test --settings=contentrepo.settings.dev

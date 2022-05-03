@@ -3,23 +3,21 @@ from home.models import ContentPage, ContentPageRating, HomePage
 from taggit.models import Tag
 
 
-def create_page(title="Test Title", parent=None, tags=[]):
+def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=False):
     block = blocks.StructBlock(
         [
             ("message", blocks.TextBlock()),
         ]
     )
-    block_value = block.to_python({"message": "test content WA"})
+    block_value = block.to_python({"message": "Test WhatsApp Message 1"})
     contentpage = ContentPage(
         title=title,
         subtitle="Test Subtitle",
         body="The body",
         enable_whatsapp=True,
         whatsapp_title="WA Title",
-        whatsapp_body=[
-            ("Whatsapp_Message", block_value),
-            ("Whatsapp_Message", block_value),
-        ],
+        whatsapp_body=[("Whatsapp_Message", block_value)],
+        is_whatsapp_template=is_whatsapp_template,
     )
     for tag in tags:
         created_tag, _ = Tag.objects.get_or_create(name=tag)

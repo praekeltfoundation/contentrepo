@@ -10,3 +10,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", DEFAULT_SECRET_KEY)
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost")
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+WHATSAPP_API_URL = "http://whatsapp"
+WHATSAPP_ACCESS_TOKEN = "fake-access-token"
+FB_BUSINESS_ID = "27121231234"

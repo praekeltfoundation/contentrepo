@@ -79,7 +79,7 @@ class SubMenuTestCase(TestCase):
         self.assertEqual(result["ids"], ",".join(ids))
         self.assertEqual(result["titles"], ",".join(titles))
         self.assertEqual(result["count"], 2)
-        self.assertEqual(result["blurb"], "test content WA")
+        self.assertEqual(result["blurb"], "Test WhatsApp Message 1")
 
     def test_submenu_mqr_bcm(self):
         """
@@ -107,4 +107,4 @@ class SubMenuTestCase(TestCase):
         self.assertEqual(result["ids"], ",".join(ids))
         self.assertEqual(result["titles"], ",".join(titles))
         self.assertEqual(result["count"], 2)
-        self.assertEqual(result["blurb"], "test content WA")
+        self.assertEqual(result["blurb"], "Test WhatsApp Message 1")
