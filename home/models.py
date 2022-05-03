@@ -141,7 +141,7 @@ class ContentPage(Page, ContentImportMixin):
     ]
 
     # whatsapp page setup
-    is_whatsapp_template = models.BooleanField(default=False)
+    is_whatsapp_template = models.BooleanField("Is Template", default=False)
     whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
     whatsapp_body = StreamField(
         [
@@ -161,6 +161,7 @@ class ContentPage(Page, ContentImportMixin):
         MultiFieldPanel(
             [
                 FieldPanel("whatsapp_title"),
+                FieldPanel("is_whatsapp_template"),
                 StreamFieldPanel("whatsapp_body"),
             ],
             heading="Whatsapp",
