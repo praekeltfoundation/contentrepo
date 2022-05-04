@@ -17,7 +17,7 @@ def mainmenu(request):
     ids = []
     bcm_ids = []
 
-    pages = ContentPage.objects.all()
+    pages = ContentPage.objects.all().live()
     if tags:
         for t in ContentPageTag.objects.filter(tag__name__in=tags):
             ids.append(t.content_object_id)
@@ -34,7 +34,7 @@ def mainmenu(request):
     for page in pages:
         text.append(f"\n*{page.title}*")
 
-        for child in page.get_children():
+        for child in page.get_children().live():
 
             if bcm and child.id not in bcm_ids:
                 continue
@@ -69,7 +69,7 @@ def submenu(request):
     text = []
     ids = []
     titles = []
-    for child in page.get_children():
+    for child in page.get_children().live():
         if bcm and child.id not in bcm_ids:
             continue
 
@@ -98,7 +98,7 @@ def randommenu(request):
     tags = request.GET.get("tags", "").split(",")
     max = int(request.GET.get("max", 3))
 
-    pages = ContentPage.objects.all()
+    pages = ContentPage.objects.all().live()
     if tags:
         ids = []
         for t in ContentPageTag.objects.all():

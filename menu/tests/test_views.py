@@ -11,9 +11,14 @@ class MainMenuTestCase(TestCase):
         menu = create_page(title="Main Menu", tags=["mainmenu"])
         child1 = create_page(title="Sub menu 1", parent=menu)
         child2 = create_page(title="Sub menu 2", parent=menu)
+        child3 = create_page(title="Sub menu 3", parent=menu)
+        child3.unpublish()
 
         dummy = create_page(title="Dummy", tags=["dummy"])
         create_page(title="Dummy sub menu 1", parent=dummy)
+
+        menu2 = create_page(title="Main Menu 2", tags=["mainmenu"])
+        menu2.unpublish()
 
         response = self.client.get("/mainmenu/?tags=mainmenu")
 
@@ -63,6 +68,8 @@ class SubMenuTestCase(TestCase):
         submenu = create_page(title="Sub Menu")
         child1 = create_page(title="Sub menu 1", parent=submenu)
         child2 = create_page(title="Sub menu 2", parent=submenu)
+        child3 = create_page(title="Sub menu 3", parent=submenu)
+        child3.unpublish()
 
         dummy = create_page(title="Dummy")
         create_page(title="Dummy sub menu 1", parent=dummy)
