@@ -78,7 +78,6 @@ class Command(BaseCommand):
             return row
 
         def add_web(row):
-            # if 'web_title' not in row.keys():
             if "web_title" not in row.keys() or not row["web_title"]:
                 return
             page = ContentPage(
