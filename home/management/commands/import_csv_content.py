@@ -164,6 +164,6 @@ class Command(BaseCommand):
                 if contentpage:
                     create_tags(row, contentpage)
                     add_parent(row, contentpage, home_page)
-                    # contentpage.save_revision().publish()
+                    contentpage.save_revision().publish()
 
             self.stdout.write(self.style.SUCCESS("Successfully imported Content Pages"))
