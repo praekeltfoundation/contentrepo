@@ -65,7 +65,7 @@ class Command(BaseCommand):
         def create_tags(row, page):
             tags = row["tags"].split(",")
             if "translation_tag" in row:
-                tags.append(row["translation_tag"].split(","))
+                tags.extend(row["translation_tag"].split(","))
             for tag in tags:
                 created_tag, _ = Tag.objects.get_or_create(name=tag.strip())
                 page.tags.add(created_tag)
