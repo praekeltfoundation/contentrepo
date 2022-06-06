@@ -84,6 +84,10 @@ class Command(BaseCommand):
                 "web_body",
                 "whatsapp_title",
                 "whatsapp_body",
+                "viber_title",
+                "viber_body",
+                "messenger_title",
+                "messenger_body",
                 "parent",
             ):
                 if field in row and row[field]:
