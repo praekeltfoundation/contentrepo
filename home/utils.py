@@ -18,17 +18,17 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 body = body + [("paragraph", RichText(line))]
         return body
 
-    def get_body(raw, image_title=None):
+    def get_body(raw, type_of_message):
         struct_blocks = []
-        if image_title:
-            im = Image.objects.get(title=image_title).id
+        if "image_title" in raw and raw["image_title"]:
+            im = Image.objects.get(title=raw["image_title"]).id
             block = blocks.StructBlock(
                 [
                     ("image", ImageChooserBlock()),
                 ]
             )
             block_value = block.to_python({"image": im})
-            struct_blocks.append(("Whatsapp_Message", block_value))
+            struct_blocks.append((type_of_message, block_value))
         if splitmessages:
             if newline:
                 rows = raw.split(newline)
@@ -42,7 +42,7 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                         ]
                     )
                     block_value = block.to_python({"message": row})
-                    struct_blocks.append(("Whatsapp_Message", block_value))
+                    struct_blocks.append((type_of_message, block_value))
             return struct_blocks
         else:
             if raw:
@@ -52,11 +52,13 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                     ]
                 )
                 block_value = block.to_python({"message": raw})
-                struct_blocks.append(("Whatsapp_Message", block_value))
+                struct_blocks.append((type_of_message, block_value))
                 return struct_blocks
 
     def create_tags(row, page):
-        tags = row["translation_tag"].split(",")
+        tags = row["tags"].split(",")
+        if "translation_tag" in row:
+            tags.extend(row["translation_tag"].split(","))
         for tag in tags:
             created_tag, _ = Tag.objects.get_or_create(name=tag.strip())
             page.tags.add(created_tag)
@@ -77,34 +79,103 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
             "web_body",
             "whatsapp_title",
             "whatsapp_body",
-            "parent",
+            "viber_title",
+            "viber_body" "messenger_title",
+            "messenger_body" "parent",
         ):
-            if row[field]:
+            if field in row and row[field]:
                 row[field] = str(row[field]).strip()
         return row
+
+    def add_web(row):
+        if "web_title" not in row.keys() or not row["web_title"]:
+            return
+        page = ContentPage(
+            title=row["web_title"],
+            subtitle=row["web_subtitle"],
+            body=get_rich_text_body(row["web_body"]),
+            enable_web=True,
+            locale=home_page.locale,
+        )
+        return page
+
+    def add_whatsapp(row, page=None):
+        if "whatsapp_title" not in row.keys() or not row["whatsapp_title"]:
+            return page
+
+        if not page:
+            return ContentPage(
+                title=row["whatsapp_title"],
+                enable_whatsapp=True,
+                whatsapp_title=row["whatsapp_title"],
+                whatsapp_body=get_body(row["whatsapp_body"], "Whatsapp_Message"),
+                locale=home_page.locale,
+            )
+        else:
+            page.enable_whatsapp = True
+            page.whatsapp_title = row["whatsapp_title"]
+            page.whatsapp_body = get_body(row["whatsapp_body"], "Whatsapp_Message")
+            return page
+
+    def add_messenger(row, page=None):
+        if "messenger_title" not in row.keys() or not row["messenger_title"]:
+            return page
+
+        if not page:
+            return ContentPage(
+                title=row["messenger_title"],
+                enable_messenger=True,
+                messenger_title=row["messenger_title"],
+                messenger_body=get_body(row["messenger_body"], "messenger_block"),
+                locale=home_page.locale,
+            )
+        else:
+            page.enable_messenger = True
+            page.messenger_title = row["messenger_title"]
+            page.messenger_body = get_body(row["messenger_body"], "messenger_block")
+            return page
+
+    def add_viber(row, page=None):
+        if "viber_title" not in row.keys() or not row["viber_title"]:
+            return page
+
+        if not page:
+            return ContentPage(
+                title=row["viber_title"],
+                enable_viberr=True,
+                viber_title=row["viber_title"],
+                viber_body=get_body(row["viber_body"], "viber_message"),
+                locale=home_page.locale,
+            )
+        else:
+            page.enable_viber = True
+            page.viber_title = row["viber_title"]
+            page.viber_body = get_body(row["viber_body"], "viber_message")
+            return page
 
     home_page = HomePage.objects.get(locale__pk=locale.pk)
     csv_file = file.read().decode("utf-8")
     reader = csv.DictReader(io.StringIO(csv_file))
     for row in reader:
         row = clean_row(row)
-        contentpage = ContentPage(
-            title=row["web_title"],
-            subtitle=row["web_subtitle"],
-            body=get_rich_text_body(row["web_body"]),
-            enable_whatsapp=True,
-            whatsapp_title=row["whatsapp_title"],
-            whatsapp_body=get_body(row["whatsapp_body"], row["image_name"]),
-            locale=home_page.locale,
-        )
-        create_tags(row, contentpage)
-        add_parent(row, contentpage, home_page)
-        contentpage.save_revision().publish()
-        try:
-            pages = contentpage.tags.first().home_contentpagetag_items.all()
-            for page in pages:
-                if page.content_object.pk != contentpage.pk:
-                    contentpage.translation_key = page.content_object.translation_key
-                    contentpage.save_revision().publish()
-        except Exception as e:
-            print(e)
+        contentpage = add_web(row)
+        contentpage = add_whatsapp(row, contentpage)
+        contentpage = add_messenger(row, contentpage)
+        contentpage = add_viber(row, contentpage)
+
+        if contentpage:
+            create_tags(row, contentpage)
+            add_parent(row, contentpage, home_page)
+            contentpage.save_revision().publish()
+            try:
+                pages = contentpage.tags.first().home_contentpagetag_items.all()
+                for page in pages:
+                    if page.content_object.pk != contentpage.pk:
+                        contentpage.translation_key = (
+                            page.content_object.translation_key
+                        )
+                        contentpage.save_revision().publish()
+            except Exception as e:
+                print(e)
+        else:
+            print(f"Content page not created for {row}")
