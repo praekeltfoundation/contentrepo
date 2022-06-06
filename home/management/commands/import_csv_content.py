@@ -4,6 +4,8 @@ from django.core.management.base import BaseCommand
 from home.models import ContentPage, HomePage
 from wagtail.core.rich_text import RichText
 from taggit.models import Tag
+from wagtail.images.models import Image
+from wagtail.images.blocks import ImageChooserBlock
 
 
 class Command(BaseCommand):
@@ -27,6 +29,15 @@ class Command(BaseCommand):
         def get_text_body(raw, type_of_message):
             if options["splitmessages"] == "yes":
                 struct_blocks = []
+                if "image_title" in raw and raw["image_title"]:
+                    im = Image.objects.get(title=raw["image_title"]).id
+                    block = blocks.StructBlock(
+                        [
+                            ("image", ImageChooserBlock()),
+                        ]
+                    )
+                    block_value = block.to_python({"image": im})
+                    struct_blocks.append((type_of_message, block_value))
                 if options["newline"]:
                     rows = raw.split(options["newline"])
                 else:
