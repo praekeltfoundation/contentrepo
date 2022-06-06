@@ -166,6 +166,8 @@ class Command(BaseCommand):
                     add_parent(row, contentpage, home_page)
                     contentpage.save_revision().publish()
                 else:
-                    self.stdout.write(self.style.WARNING(f"Content page not created for {row}"))
+                    self.stdout.write(
+                        self.style.WARNING(f"Content page not created for {row}")
+                    )
 
             self.stdout.write(self.style.SUCCESS("Successfully imported Content Pages"))
