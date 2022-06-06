@@ -64,6 +64,8 @@ class Command(BaseCommand):
 
         def create_tags(row, page):
             tags = row["tags"].split(",")
+            if "translation_tag" in row:
+                tags.append(row["translation_tag"].split(","))
             for tag in tags:
                 created_tag, _ = Tag.objects.get_or_create(name=tag.strip())
                 page.tags.add(created_tag)
@@ -96,6 +98,7 @@ class Command(BaseCommand):
                 subtitle=row["web_subtitle"],
                 body=get_rich_text_body(row["web_body"]),
                 enable_web=True,
+                locale=home_page.locale,
             )
             return page
 
@@ -111,6 +114,7 @@ class Command(BaseCommand):
                     whatsapp_body=get_text_body(
                         row["whatsapp_body"], "Whatsapp_Message"
                     ),
+                    locale=home_page.locale,
                 )
             else:
                 page.enable_whatsapp = True
@@ -132,6 +136,7 @@ class Command(BaseCommand):
                     messenger_body=get_text_body(
                         row["messenger_body"], "messenger_block"
                     ),
+                    locale=home_page.locale,
                 )
             else:
                 page.enable_messenger = True
@@ -151,6 +156,7 @@ class Command(BaseCommand):
                     enable_viberr=True,
                     viber_title=row["viber_title"],
                     viber_body=get_text_body(row["viber_body"], "viber_message"),
+                    locale=home_page.locale,
                 )
             else:
                 page.enable_viber = True
@@ -176,6 +182,16 @@ class Command(BaseCommand):
                     create_tags(row, contentpage)
                     add_parent(row, contentpage, home_page)
                     contentpage.save_revision().publish()
+                    try:
+                        pages = contentpage.tags.first().home_contentpagetag_items.all()
+                        for page in pages:
+                            if page.content_object.pk != contentpage.pk:
+                                contentpage.translation_key = (
+                                    page.content_object.translation_key
+                                )
+                                contentpage.save_revision().publish()
+                    except Exception as e:
+                        print(e)
                 else:
                     self.stdout.write(
                         self.style.WARNING(f"Content page not created for {row}")
