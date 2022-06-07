@@ -5,6 +5,7 @@ from home.models import ContentPage, HomePage
 from taggit.models import Tag
 from wagtail.core import blocks
 from wagtail.core.rich_text import RichText
+from wagtail.core.models import Locale
 from wagtail.images.models import Image
 from wagtail.images.blocks import ImageChooserBlock
 
@@ -153,8 +154,14 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
             page.viber_body = get_body(row["viber_body"], "viber_message")
             return page
 
+    if isinstance(locale, str):
+        locale = Locale.objects.get(language_code=locale)
+
     home_page = HomePage.objects.get(locale__pk=locale.pk)
-    csv_file = file.read().decode("utf-8")
+    csv_file = file.read()
+    if isinstance(csv_file, bytes):
+        csv_file = csv_file.decode("utf-8")
+
     reader = csv.DictReader(io.StringIO(csv_file))
     for row in reader:
         row = clean_row(row)
