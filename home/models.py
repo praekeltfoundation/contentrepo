@@ -35,6 +35,9 @@ class WhatsappBlock(blocks.StructBlock):
     message = blocks.TextBlock(
         max_lenth=4096, help_text="each message cannot exceed 4096 characters."
     )
+    next_prompt = blocks.CharBlock(
+        max_length=20, help_text="prompt text for next message", required=False
+    )
 
     class Meta:
         icon = "user"
