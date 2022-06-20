@@ -162,7 +162,7 @@ class ContentPage(Page, ContentImportMixin):
         [
             ("quick_reply", blocks.CharBlock(label="Quick reply")),
         ],
-        block_counts={"quick_reply": {"max_num": 3}},
+        block_counts={"quick_reply": {"max_num": 10}},
         blank=True,
         null=True,
     )
