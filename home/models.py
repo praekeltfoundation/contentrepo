@@ -158,6 +158,14 @@ class ContentPage(Page, ContentImportMixin):
         blank=True,
         null=True,
     )
+    whatsapp_quick_replies = StreamField(
+        [
+            ("quick_reply", blocks.CharBlock(label="Quick reply")),
+        ],
+        block_counts={"quick_reply": {"max_num": 10}},
+        blank=True,
+        null=True,
+    )
 
     # whatsapp panels
     whatsapp_panels = [
@@ -166,6 +174,7 @@ class ContentPage(Page, ContentImportMixin):
                 FieldPanel("whatsapp_title"),
                 FieldPanel("is_whatsapp_template"),
                 StreamFieldPanel("whatsapp_body"),
+                StreamFieldPanel("whatsapp_quick_replies"),
             ],
             heading="Whatsapp",
         ),
@@ -187,6 +196,14 @@ class ContentPage(Page, ContentImportMixin):
         blank=True,
         null=True,
     )
+    messenger_quick_replies = StreamField(
+        [
+            ("quick_reply", blocks.CharBlock(label="Quick reply")),
+        ],
+        block_counts={"quick_reply": {"max_num": 13}},
+        blank=True,
+        null=True,
+    )
 
     # messenger panels
     messenger_panels = [
@@ -194,6 +211,7 @@ class ContentPage(Page, ContentImportMixin):
             [
                 FieldPanel("messenger_title"),
                 StreamFieldPanel("messenger_body"),
+                StreamFieldPanel("messenger_quick_replies"),
             ],
             heading="Messenger",
         ),
