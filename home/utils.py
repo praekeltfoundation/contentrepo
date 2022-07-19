@@ -156,6 +156,9 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
             page.viber_body = get_body(row["viber_body"], "viber_message")
             return page
 
+    if purge == "yes":
+        ContentPage.objects.all().delete()
+
     if isinstance(locale, str):
         locale = Locale.objects.get(language_code=locale)
 
