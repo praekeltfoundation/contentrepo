@@ -3,7 +3,7 @@ import dj_database_url
 from os.path import abspath, dirname, join
 
 
-DEBUG = True
+DEBUG = False
 
 PROJECT_ROOT = os.environ.get("PROJECT_ROOT") or dirname(dirname(abspath(__file__)))
 DATABASES = {
