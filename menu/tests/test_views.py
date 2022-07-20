@@ -127,7 +127,7 @@ class SuggestedContentTestCase(TestCase):
         excluded_parent = create_page(title="Excluded Parent")
         included_children = [
             create_page(title=f"Included Child {i}", parent=included_parent).id
-            for i in range(2)
+            for i in range(10)
         ]
         excluded_children = [
             create_page(title=f"Excluded Child {i}", parent=excluded_parent).id
