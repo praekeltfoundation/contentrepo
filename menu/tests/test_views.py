@@ -1,5 +1,6 @@
 from django.test import TestCase
 
+from home.models import ContentPage
 from home.tests.utils import create_page
 
 
@@ -115,3 +116,38 @@ class SubMenuTestCase(TestCase):
         self.assertEqual(result["titles"], ",".join(titles))
         self.assertEqual(result["count"], 2)
         self.assertEqual(result["blurb"], "Test WhatsApp Message 1")
+
+
+class SuggestedContentTestCase(TestCase):
+    def test_suggestedcontent(self):
+        """
+        Should return id and title of 3 random descendands of the page id provided.
+        """
+        included_parent = create_page(title="Included Parent")
+        excluded_parent = create_page(title="Excluded Parent")
+        included_children = [
+            create_page(title=f"Included Child {i}", parent=included_parent).id
+            for i in range(2)
+        ]
+        excluded_children = [
+            create_page(title=f"Excluded Child {i}", parent=excluded_parent).id
+            for i in range(5)
+        ]
+
+        response = self.client.get(
+            f"/suggestedcontent/?topics_viewed={included_parent.id}"
+        )
+        result = response.json()
+
+        self.assertEqual(len(result["suggested_pages"]), 3)
+
+        suggested_ids = []
+        for page in result["suggested_pages"]:
+            self.assertIn(page["id"], included_children)
+            self.assertEqual(
+                page["title"], ContentPage.objects.get(id=page["id"]).whatsapp_title
+            )
+            suggested_ids.append(page["id"])
+
+        for id in excluded_children:
+            self.assertNotIn(id, suggested_ids)

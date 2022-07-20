@@ -152,3 +152,25 @@ def faqmenu(request):
             )
 
     return Response(pages, status=status.HTTP_200_OK)
+
+
+@api_view(("GET",))
+@renderer_classes((JSONRenderer,))
+def suggestedcontent(request):
+    topics_viewed = request.GET.get("topics_viewed", "").split(",")
+
+    suggested_pages = (
+        ContentPage.objects.get(id__in=topics_viewed)
+        .get_descendants()
+        .filter(numchild=0)
+        .live()
+        .order_by("?")[:3]
+    )
+
+    data = {
+        "suggested_pages": [
+            {"id": page.id, "title": page.whatsapp_title} for page in suggested_pages
+        ]
+    }
+
+    return Response(data, status=status.HTTP_200_OK)
