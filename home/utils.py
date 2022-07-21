@@ -64,6 +64,14 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
             created_tag, _ = Tag.objects.get_or_create(name=tag.strip())
             page.tags.add(created_tag)
 
+    def add_quick_replies(row):
+        replies = row.split(",")
+        replies_body = []
+        for reply in replies:
+                replies_body = replies_body + [("quick_reply", reply)]
+        return replies_body
+
+
     def add_parent(row, page, home_page):
         if row["parent"]:
             parent = ContentPage.objects.filter(
@@ -112,6 +120,7 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 enable_whatsapp=True,
                 whatsapp_title=row["whatsapp_title"],
                 whatsapp_body=get_body(row["whatsapp_body"], "Whatsapp_Message"),
+                whatsapp_quick_replies=add_quick_replies(row['quick_replies']),
                 locale=home_page.locale,
             )
         else:
@@ -130,6 +139,7 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 enable_messenger=True,
                 messenger_title=row["messenger_title"],
                 messenger_body=get_body(row["messenger_body"], "messenger_block"),
+                messenger_quick_replies=add_quick_replies(row['quick_replies']),
                 locale=home_page.locale,
             )
         else:
@@ -148,6 +158,7 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 enable_viberr=True,
                 viber_title=row["viber_title"],
                 viber_body=get_body(row["viber_body"], "viber_message"),
+                viber_quick_replies=add_quick_replies(row['quick_replies']),
                 locale=home_page.locale,
             )
         else:
