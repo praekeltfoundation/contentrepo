@@ -297,6 +297,9 @@ class ContentPage(Page, ContentImportMixin):
     def whatsapp_template_body(self):
         return self.whatsapp_body.raw_data[0]["value"]["message"]
 
+    def get_descendants(self, inclusive=False):
+        return ContentPage.objects.descendant_of(self, inclusive)
+
     def _calc_avg_rating(self, ratings):
         if ratings:
             helpful = 0
