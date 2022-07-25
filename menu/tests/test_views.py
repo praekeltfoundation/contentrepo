@@ -139,10 +139,10 @@ class SuggestedContentTestCase(TestCase):
         )
         result = response.json()
 
-        self.assertEqual(len(result["suggested_pages"]), 3)
+        self.assertEqual(len(result["results"]), 3)
 
         suggested_ids = []
-        for page in result["suggested_pages"]:
+        for page in result["results"]:
             self.assertIn(page["id"], included_children)
             self.assertEqual(
                 page["title"], ContentPage.objects.get(id=page["id"]).whatsapp_title
