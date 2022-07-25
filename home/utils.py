@@ -3,9 +3,9 @@ import io
 
 from home.models import ContentPage, HomePage
 from taggit.models import Tag
-from wagtail.core import blocks
-from wagtail.core.rich_text import RichText
-from wagtail.core.models import Locale
+from wagtail import blocks
+from wagtail.rich_text import RichText
+from wagtail.models import Locale
 from wagtail.images.models import Image
 from wagtail.images.blocks import ImageChooserBlock
 

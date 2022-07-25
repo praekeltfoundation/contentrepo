@@ -1,4 +1,4 @@
-from wagtail.core import blocks
+from wagtail import blocks
 from home.models import ContentPage, ContentPageRating, HomePage
 from taggit.models import Tag
 

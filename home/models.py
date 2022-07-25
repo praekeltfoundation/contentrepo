@@ -2,16 +2,15 @@ from django.conf import settings
 from django.db import models
 from modelcluster.fields import ParentalKey
 from modelcluster.contrib.taggit import ClusterTaggableManager
-from taggit.models import TaggedItemBase
+from taggit.models import TaggedItemBase, TagBase, ItemBase
 from wagtail.api import APIField
-from wagtail.core.models import Page, PageRevision
-from wagtail.core.fields import StreamField
-from wagtail.core import blocks
+from wagtail.models import Page, PageRevision
+from wagtail.fields import StreamField
+from wagtail import blocks
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.admin.edit_handlers import (
+from wagtail.admin.panels import (
     FieldPanel,
     MultiFieldPanel,
-    StreamFieldPanel,
     ObjectList,
     TabbedInterface,
 )
@@ -96,6 +95,38 @@ class ContentPageTag(TaggedItemBase):
     )
 
 
+class ContentTrigger(TagBase):
+    class Meta:
+        verbose_name = "content trigger"
+        verbose_name_plural = "content triggers"
+
+
+class TriggeredContent(ItemBase):
+    tag = models.ForeignKey(
+        ContentTrigger, related_name="triggered_content", on_delete=models.CASCADE
+    )
+    content_object = ParentalKey(
+        to='home.ContentPage',
+        on_delete=models.CASCADE,
+        related_name='triggered_items')
+
+
+class ContentQuickReply(TagBase):
+    class Meta:
+        verbose_name = "quick reply"
+        verbose_name_plural = "quick replies"
+
+
+class QuickReplyContent(ItemBase):
+    tag = models.ForeignKey(
+        ContentQuickReply, related_name="quick_reply_content", on_delete=models.CASCADE
+    )
+    content_object = ParentalKey(
+        to='home.ContentPage',
+        on_delete=models.CASCADE,
+        related_name='quick_reply_items')
+
+
 class ContentPage(Page, ContentImportMixin):
     parent_page_type = [
         "ContentPageIndex",
@@ -103,6 +134,8 @@ class ContentPage(Page, ContentImportMixin):
 
     # general page attributes
     tags = ClusterTaggableManager(through=ContentPageTag)
+    triggers = ClusterTaggableManager(through='home.TriggeredContent', blank=True)
+    quick_replies = ClusterTaggableManager(through='home.QuickReplyContent', blank=True)
     enable_web = models.BooleanField(
         default=False, help_text="When enabled, the API will include the web content"
     )
@@ -127,6 +160,7 @@ class ContentPage(Page, ContentImportMixin):
         ],
         blank=True,
         null=True,
+        use_json_field=True,
     )
     include_in_footer = models.BooleanField(default=False)
 
@@ -136,7 +170,7 @@ class ContentPage(Page, ContentImportMixin):
             [
                 FieldPanel("title"),
                 FieldPanel("subtitle"),
-                StreamFieldPanel("body"),
+                FieldPanel("body"),
                 FieldPanel("include_in_footer"),
             ],
             heading="Web",
@@ -157,14 +191,7 @@ class ContentPage(Page, ContentImportMixin):
         ],
         blank=True,
         null=True,
-    )
-    whatsapp_quick_replies = StreamField(
-        [
-            ("quick_reply", blocks.CharBlock(label="Quick reply")),
-        ],
-        block_counts={"quick_reply": {"max_num": 10}},
-        blank=True,
-        null=True,
+        use_json_field=True
     )
 
     # whatsapp panels
@@ -173,8 +200,7 @@ class ContentPage(Page, ContentImportMixin):
             [
                 FieldPanel("whatsapp_title"),
                 FieldPanel("is_whatsapp_template"),
-                StreamFieldPanel("whatsapp_body"),
-                StreamFieldPanel("whatsapp_quick_replies"),
+                FieldPanel("whatsapp_body"),
             ],
             heading="Whatsapp",
         ),
@@ -195,14 +221,7 @@ class ContentPage(Page, ContentImportMixin):
         ],
         blank=True,
         null=True,
-    )
-    messenger_quick_replies = StreamField(
-        [
-            ("quick_reply", blocks.CharBlock(label="Quick reply")),
-        ],
-        block_counts={"quick_reply": {"max_num": 13}},
-        blank=True,
-        null=True,
+        use_json_field=True
     )
 
     # messenger panels
@@ -210,8 +229,7 @@ class ContentPage(Page, ContentImportMixin):
         MultiFieldPanel(
             [
                 FieldPanel("messenger_title"),
-                StreamFieldPanel("messenger_body"),
-                StreamFieldPanel("messenger_quick_replies"),
+                FieldPanel("messenger_body"),
             ],
             heading="Messenger",
         ),
@@ -232,6 +250,7 @@ class ContentPage(Page, ContentImportMixin):
         ],
         blank=True,
         null=True,
+        use_json_field=True
     )
 
     # viber panels
@@ -239,7 +258,7 @@ class ContentPage(Page, ContentImportMixin):
         MultiFieldPanel(
             [
                 FieldPanel("viber_title"),
-                StreamFieldPanel("viber_body"),
+                FieldPanel("viber_body"),
             ],
             heading="Viber",
         ),
@@ -247,13 +266,21 @@ class ContentPage(Page, ContentImportMixin):
 
     promote_panels = Page.promote_panels + [
         FieldPanel("tags"),
+        FieldPanel("triggers", heading="Triggers"),
+        FieldPanel("quick_replies", heading="Quick Replies"),
         PageRatingPanel("Rating"),
     ]
     settings_panels = Page.settings_panels + [
-        FieldPanel("enable_web"),
-        FieldPanel("enable_whatsapp"),
-        FieldPanel("enable_messenger"),
-        FieldPanel("enable_viber"),
+        MultiFieldPanel(
+            [
+                FieldPanel("enable_web"),
+                FieldPanel("enable_whatsapp"),
+                FieldPanel("enable_messenger"),
+                FieldPanel("enable_viber"),
+            ],
+            heading="API settings",
+        ),
+
     ]
     edit_handler = TabbedInterface(
         [
@@ -271,6 +298,8 @@ class ContentPage(Page, ContentImportMixin):
         APIField("subtitle"),
         APIField("body"),
         APIField("tags"),
+        APIField("triggers"),
+        APIField("quick_replies"),
         APIField("has_children"),
     ]
 

@@ -4,8 +4,8 @@ from django.db import migrations, models
 import django.db.models.deletion
 import modelcluster.contrib.taggit
 import modelcluster.fields
-import wagtail.core.blocks
-import wagtail.core.fields
+import wagtail.blocks
+import wagtail.fields
 import wagtail.images.blocks
 
 
@@ -26,13 +26,13 @@ class Migration(migrations.Migration):
                 ('enable_whatsapp', models.BooleanField(default=False, help_text='When enabled, the API will include the whatsapp content')),
                 ('enable_messenger', models.BooleanField(default=False, help_text='When enabled, the API will include the messenger content')),
                 ('subtitle', models.CharField(blank=True, max_length=200, null=True)),
-                ('body', wagtail.core.fields.StreamField([('paragraph', wagtail.core.blocks.RichTextBlock()), ('image', wagtail.images.blocks.ImageChooserBlock())], blank=True, null=True)),
+                ('body', wagtail.fields.StreamField([('paragraph', wagtail.blocks.RichTextBlock()), ('image', wagtail.images.blocks.ImageChooserBlock())], blank=True, null=True)),
                 ('whatsapp_title', models.CharField(blank=True, max_length=200, null=True)),
                 ('whatsapp_subtitle', models.CharField(blank=True, max_length=200, null=True)),
-                ('whatsapp_body', wagtail.core.fields.StreamField([('paragraph', wagtail.core.blocks.RichTextBlock()), ('image', wagtail.images.blocks.ImageChooserBlock())], blank=True, null=True)),
+                ('whatsapp_body', wagtail.fields.StreamField([('paragraph', wagtail.blocks.RichTextBlock()), ('image', wagtail.images.blocks.ImageChooserBlock())], blank=True, null=True)),
                 ('messenger_title', models.CharField(blank=True, max_length=200, null=True)),
                 ('messenger_subtitle', models.CharField(blank=True, max_length=200, null=True)),
-                ('messenger_body', wagtail.core.fields.StreamField([('paragraph', wagtail.core.blocks.RichTextBlock()), ('image', wagtail.images.blocks.ImageChooserBlock())], blank=True, null=True)),
+                ('messenger_body', wagtail.fields.StreamField([('paragraph', wagtail.blocks.RichTextBlock()), ('image', wagtail.images.blocks.ImageChooserBlock())], blank=True, null=True)),
             ],
             options={
                 'abstract': False,

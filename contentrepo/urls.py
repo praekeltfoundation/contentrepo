@@ -6,7 +6,7 @@ from django.conf.urls.i18n import i18n_patterns
 from rest_framework import routers
 
 from wagtail.admin import urls as wagtailadmin_urls
-from wagtail.core import urls as wagtail_urls
+from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
 from wagtail_content_import import urls as wagtail_content_import_urls

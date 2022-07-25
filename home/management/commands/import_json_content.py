@@ -2,7 +2,7 @@ import json
 from django.core.management.base import BaseCommand
 from taggit.models import Tag
 from home.models import ContentPage, HomePage
-from wagtail.core.rich_text import RichText
+from wagtail.rich_text import RichText
 
 
 class Command(BaseCommand):

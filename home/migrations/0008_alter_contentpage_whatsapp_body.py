@@ -2,8 +2,8 @@
 
 from django.db import migrations
 import home.models
-import wagtail.core.blocks
-import wagtail.core.fields
+import wagtail.blocks
+import wagtail.fields
 import wagtail.documents.blocks
 import wagtail.images.blocks
 
@@ -18,6 +18,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentpage',
             name='whatsapp_body',
-            field=wagtail.core.fields.StreamField([('Whatsapp_Message', wagtail.core.blocks.StructBlock([('image', wagtail.images.blocks.ImageChooserBlock(required=False)), ('document', wagtail.documents.blocks.DocumentChooserBlock(icon='document', required=False)), ('media', home.models.MediaBlock(icon='media', required=False)), ('message', wagtail.core.blocks.TextBlock(help_text='each message cannot exceed 4096 characters.', max_lenth=4096))], help_text='Each message will be sent with the text and media'))], blank=True, null=True),
+            field=wagtail.fields.StreamField([('Whatsapp_Message', wagtail.blocks.StructBlock([('image', wagtail.images.blocks.ImageChooserBlock(required=False)), ('document', wagtail.documents.blocks.DocumentChooserBlock(icon='document', required=False)), ('media', home.models.MediaBlock(icon='media', required=False)), ('message', wagtail.blocks.TextBlock(help_text='each message cannot exceed 4096 characters.', max_lenth=4096))], help_text='Each message will be sent with the text and media'))], blank=True, null=True),
         ),
     ]

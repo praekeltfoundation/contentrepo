@@ -1,5 +1,5 @@
 from django import forms
-from wagtail.core.models import Locale
+from wagtail.models import Locale
 
 
 class UploadFileForm(forms.Form):
