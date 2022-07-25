@@ -375,11 +375,17 @@ class ContentPageRating(models.Model):
 
 
 class PageView(models.Model):
-    platform = models.TextField(
-        verbose_name="platform",
+    platform = models.CharField(
+        choices=[
+            ("WHATSAPP", "whatsapp"),
+            ("VIBER", "viber"),
+            ("FACEBOOK", "facebook"),
+            ("WEB", "web"),
+        ],
         null=True,
         blank=True,
         default="web",
+        max_length=20,
     )
     timestamp = models.DateTimeField(auto_now_add=True)
     page = models.ForeignKey(
