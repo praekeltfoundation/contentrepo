@@ -106,9 +106,8 @@ class TriggeredContent(ItemBase):
         ContentTrigger, related_name="triggered_content", on_delete=models.CASCADE
     )
     content_object = ParentalKey(
-        to='home.ContentPage',
-        on_delete=models.CASCADE,
-        related_name='triggered_items')
+        to="home.ContentPage", on_delete=models.CASCADE, related_name="triggered_items"
+    )
 
 
 class ContentQuickReply(TagBase):
@@ -122,9 +121,10 @@ class QuickReplyContent(ItemBase):
         ContentQuickReply, related_name="quick_reply_content", on_delete=models.CASCADE
     )
     content_object = ParentalKey(
-        to='home.ContentPage',
+        to="home.ContentPage",
         on_delete=models.CASCADE,
-        related_name='quick_reply_items')
+        related_name="quick_reply_items",
+    )
 
 
 class ContentPage(Page, ContentImportMixin):
@@ -134,8 +134,8 @@ class ContentPage(Page, ContentImportMixin):
 
     # general page attributes
     tags = ClusterTaggableManager(through=ContentPageTag)
-    triggers = ClusterTaggableManager(through='home.TriggeredContent', blank=True)
-    quick_replies = ClusterTaggableManager(through='home.QuickReplyContent', blank=True)
+    triggers = ClusterTaggableManager(through="home.TriggeredContent", blank=True)
+    quick_replies = ClusterTaggableManager(through="home.QuickReplyContent", blank=True)
     enable_web = models.BooleanField(
         default=False, help_text="When enabled, the API will include the web content"
     )
@@ -191,7 +191,7 @@ class ContentPage(Page, ContentImportMixin):
         ],
         blank=True,
         null=True,
-        use_json_field=True
+        use_json_field=True,
     )
 
     # whatsapp panels
@@ -221,7 +221,7 @@ class ContentPage(Page, ContentImportMixin):
         ],
         blank=True,
         null=True,
-        use_json_field=True
+        use_json_field=True,
     )
 
     # messenger panels
@@ -250,7 +250,7 @@ class ContentPage(Page, ContentImportMixin):
         ],
         blank=True,
         null=True,
-        use_json_field=True
+        use_json_field=True,
     )
 
     # viber panels
@@ -280,7 +280,6 @@ class ContentPage(Page, ContentImportMixin):
             ],
             heading="API settings",
         ),
-
     ]
     edit_handler = TabbedInterface(
         [
