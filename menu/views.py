@@ -169,7 +169,8 @@ def suggestedcontent(request):
 
     data = {
         "results": [
-            {"id": page.id, "title": page.whatsapp_title} for page in suggested_pages
+            {"id": page.id, "title": page.whatsapp_title or page.title}
+            for page in suggested_pages
         ]
     }
 
