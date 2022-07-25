@@ -28,7 +28,7 @@ INSTALLED_APPS = [
     "wagtail_content_import.pickers.google",
     "wagtail_content_import.pickers.local",
     "wagtail.admin",
-    "wagtail.core",
+    "wagtail",
     "wagtail.locales",
     "wagtail.api.v2",
     "wagtailmedia",
@@ -168,7 +168,7 @@ WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
 # Base URL to use when referring to full URLs
 # within the Wagtail admin backend
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
-BASE_URL = os.environ.get("BASE_URL", "http://example.com")
+WAGTAILADMIN_BASE_URL = os.environ.get("BASE_URL", "http://example.com")
 
 WAGTAILCONTENTIMPORT_DEFAULT_MAPPER = "home.mappers.ContentMapper"
 

@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 
 # from taggit.models import Tag
 from home.models import ContentPage, HomePage
-from wagtail.core import blocks
+from wagtail import blocks
 from wagtail.images.models import Image
 from io import BytesIO
 from django.core.files.images import ImageFile

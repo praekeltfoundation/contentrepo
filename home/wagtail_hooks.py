@@ -1,4 +1,4 @@
-from wagtail.core import hooks
+from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 
 

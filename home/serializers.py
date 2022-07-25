@@ -124,7 +124,6 @@ class BodyField(serializers.Field):
                             ("total_messages", len(page.whatsapp_body._raw_data)),
                             ("text", page.whatsapp_body._raw_data[message]),
                             ("revision", page.get_latest_revision().id),
-                            ("quick_replies", page.whatsapp_quick_replies._raw_data),
                         ]
                     )
                 except IndexError:
@@ -145,7 +144,6 @@ class BodyField(serializers.Field):
                             ),
                             ("total_messages", len(page.messenger_body._raw_data)),
                             ("text", page.messenger_body._raw_data[message]["value"]),
-                            ("quick_replies", page.messenger_quick_replies._raw_data),
                         ]
                     )
                 except IndexError:

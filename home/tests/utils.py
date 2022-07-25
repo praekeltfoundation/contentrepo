@@ -1,4 +1,4 @@
-from wagtail.core import blocks
+from wagtail import blocks
 from home.models import ContentPage, ContentPageRating, HomePage
 from taggit.models import Tag
 
@@ -13,7 +13,6 @@ def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=F
     contentpage = ContentPage(
         title=title,
         subtitle="Test Subtitle",
-        body="The body",
         enable_whatsapp=True,
         whatsapp_title="WA Title",
         whatsapp_body=[("Whatsapp_Message", block_value)],
