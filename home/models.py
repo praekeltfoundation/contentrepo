@@ -379,7 +379,7 @@ class PageView(models.Model):
         choices=[
             ("WHATSAPP", "whatsapp"),
             ("VIBER", "viber"),
-            ("FACEBOOK", "facebook"),
+            ("MESSENGER", "messenger"),
             ("WEB", "web"),
         ],
         null=True,
