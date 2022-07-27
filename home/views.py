@@ -39,7 +39,12 @@ class StaleContentReportView(PageReportView):
     header_icon = "time"
     title = "Stale Content Pages"
     template_name = "reports/stale_content_report.html"
-    list_export = PageReportView.list_export
+    list_export = PageReportView.list_export + ["last_published_at", "view_counter"]
+    export_headings = dict(
+        last_published_at="Last Published",
+        view_counter="View Count",
+        **PageReportView.export_headings
+    )
     filterset_class = StaleContentReportFilterSet
     export_headings = PageReportView.export_headings
 
