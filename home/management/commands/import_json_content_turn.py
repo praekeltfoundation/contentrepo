@@ -1,14 +1,15 @@
 import json
+from io import BytesIO
+
 import requests
+from django.core.files.images import ImageFile
 from django.core.management.base import BaseCommand
+from wagtail import blocks
+from wagtail.images.blocks import ImageChooserBlock
+from wagtail.images.models import Image
 
 # from taggit.models import Tag
 from home.models import ContentPage, HomePage
-from wagtail import blocks
-from wagtail.images.models import Image
-from io import BytesIO
-from django.core.files.images import ImageFile
-from wagtail.images.blocks import ImageChooserBlock
 
 
 class Command(BaseCommand):

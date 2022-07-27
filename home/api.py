@@ -1,12 +1,14 @@
-from rest_framework.pagination import PageNumberPagination
-from wagtail.api.v2.views import PagesAPIViewSet
-from wagtail.api.v2.router import WagtailAPIRouter
-from wagtail.images.api.v2.views import ImagesAPIViewSet
-from wagtail.documents.api.v2.views import DocumentsAPIViewSet
-from .serializers import ContentPageSerializer
-from .models import ContentPage, ContentPageTag, ContentPageIndex, TriggeredContent
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from rest_framework.pagination import PageNumberPagination
+from wagtail.api.v2.router import WagtailAPIRouter
+from wagtail.api.v2.views import PagesAPIViewSet
+from wagtail.documents.api.v2.views import DocumentsAPIViewSet
+from wagtail.images.api.v2.views import ImagesAPIViewSet
+
+from .models import (ContentPage, ContentPageIndex, ContentPageTag,
+                     TriggeredContent)
+from .serializers import ContentPageSerializer
 
 
 class ContentPagesViewSet(PagesAPIViewSet):

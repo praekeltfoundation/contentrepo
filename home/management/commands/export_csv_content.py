@@ -1,7 +1,9 @@
 import csv
 import sys
+
 from django.core.management.base import BaseCommand
-from home.models import ContentPage, HomePage, ContentPageTag
+
+from home.models import ContentPage, ContentPageTag, HomePage
 
 
 class Command(BaseCommand):

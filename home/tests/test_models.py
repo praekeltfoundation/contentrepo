@@ -1,7 +1,9 @@
-from django.test import override_settings, TestCase
 from unittest import mock
 
+from django.test import TestCase, override_settings
+
 from home.models import PageView
+
 from .utils import create_page, create_page_rating
 
 
