@@ -160,5 +160,6 @@ class PageViewsTestCase(APITestCase):
                 "page": page.id,
                 "revision": page.get_latest_revision().id,
                 "data": {},
+                "platform": "web",
             },
         )

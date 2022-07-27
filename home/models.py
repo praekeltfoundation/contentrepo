@@ -339,7 +339,16 @@ class ContentPage(Page, ContentImportMixin):
             return f"{helpful}/{ratings.count()} ({percentage}%)"
         return "(no ratings yet)"
 
-    def save_page_view(self, query_params):
+    def save_page_view(self, query_params, platform=None):
+        if not platform and query_params:
+            if "whatsapp" in query_params:
+                platform = "whatsapp"
+            elif "messenger" in query_params:
+                platform = "messenger"
+            elif "viber" in query_params:
+                platform = "viber"
+            else:
+                platform = "web"
         data = {}
         for param, value in query_params.items():
             if param.startswith("data__"):
@@ -350,6 +359,7 @@ class ContentPage(Page, ContentImportMixin):
             **{
                 "revision": self.get_latest_revision(),
                 "data": data,
+                "platform": f"{platform}",
             }
         )
 
@@ -393,6 +403,18 @@ class ContentPageRating(models.Model):
 
 
 class PageView(models.Model):
+    platform = models.CharField(
+        choices=[
+            ("WHATSAPP", "whatsapp"),
+            ("VIBER", "viber"),
+            ("MESSENGER", "messenger"),
+            ("WEB", "web"),
+        ],
+        null=True,
+        blank=True,
+        default="web",
+        max_length=20,
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
     page = models.ForeignKey(
         ContentPage, related_name="views", null=False, on_delete=models.CASCADE
