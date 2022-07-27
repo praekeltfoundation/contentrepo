@@ -12,7 +12,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.pagination import CursorPagination
 from rest_framework.viewsets import GenericViewSet
-from wagtail.admin.filters import ContentTypeFilter, WagtailFilterSet
+from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.views.reports import PageReportView
 from wagtail.admin.widgets import AdminDateInput
 
