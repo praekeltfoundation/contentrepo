@@ -1,6 +1,7 @@
-from wagtail import blocks
-from home.models import ContentPage, ContentPageRating, HomePage
 from taggit.models import Tag
+from wagtail import blocks
+
+from home.models import ContentPage, ContentPageRating, HomePage
 
 
 def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=False):

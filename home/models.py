@@ -1,22 +1,22 @@
 from django.conf import settings
 from django.db import models
-from modelcluster.fields import ParentalKey
 from modelcluster.contrib.taggit import ClusterTaggableManager
-from taggit.models import TaggedItemBase, TagBase, ItemBase
-from wagtail.api import APIField
-from wagtail.models import Page, PageRevision
-from wagtail.fields import StreamField
+from modelcluster.fields import ParentalKey
+from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
-from wagtail.images.blocks import ImageChooserBlock
 from wagtail.admin.panels import (
     FieldPanel,
     MultiFieldPanel,
     ObjectList,
     TabbedInterface,
 )
+from wagtail.api import APIField
+from wagtail.documents.blocks import DocumentChooserBlock
+from wagtail.fields import StreamField
+from wagtail.images.blocks import ImageChooserBlock
+from wagtail.models import Page, PageRevision
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
-from wagtail.documents.blocks import DocumentChooserBlock
 
 from .panels import PageRatingPanel
 from .whatsapp import create_whatsapp_template
@@ -309,6 +309,10 @@ class ContentPage(Page, ContentImportMixin):
     @property
     def page_rating(self):
         return self._calc_avg_rating(self.ratings.all())
+
+    @property
+    def view_count(self):
+        return self.views.count()
 
     @property
     def latest_revision_rating(self):

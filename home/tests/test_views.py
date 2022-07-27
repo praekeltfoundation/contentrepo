@@ -5,9 +5,10 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .utils import create_page
 from home.models import ContentPageRating
 from home.serializers import ContentPageRatingSerializer, PageViewSerializer
+
+from .utils import create_page
 
 
 class PageRatingTestCase(APITestCase):

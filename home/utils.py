@@ -1,13 +1,14 @@
 import csv
 import io
 
-from home.models import ContentPage, HomePage
 from taggit.models import Tag
 from wagtail import blocks
-from wagtail.rich_text import RichText
-from wagtail.models import Locale
-from wagtail.images.models import Image
 from wagtail.images.blocks import ImageChooserBlock
+from wagtail.images.models import Image
+from wagtail.models import Locale
+from wagtail.rich_text import RichText
+
+from home.models import ContentPage, HomePage
 
 
 def import_content_csv(file, splitmessages=True, newline=None, purge=True, locale="en"):

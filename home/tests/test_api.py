@@ -1,7 +1,9 @@
 import json
-from django.test import TestCase, Client
-from home.models import ContentPage, PageView
+
 from django.core.management import call_command
+from django.test import Client, TestCase
+
+from home.models import ContentPage, PageView
 
 from .utils import create_page
 

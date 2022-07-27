@@ -1,18 +1,57 @@
 import threading
 
+import django_filters
+from django.db.models import Count
+from django.forms.widgets import NumberInput
+from django.shortcuts import render
+from django.utils.translation import gettext_lazy as _
+from django_filters import rest_framework as filters
 from rest_framework import permissions
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
-from django.shortcuts import render
-from django_filters import rest_framework as filters
-from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.pagination import CursorPagination
+from rest_framework.viewsets import GenericViewSet
+from wagtail.admin.filters import WagtailFilterSet
+from wagtail.admin.views.reports import PageReportView
+from wagtail.admin.widgets import AdminDateInput
 
 from .forms import UploadFileForm
 from .models import ContentPage, ContentPageRating, PageView
-from .serializers import PageViewSerializer, ContentPageRatingSerializer
+from .serializers import ContentPageRatingSerializer, PageViewSerializer
 from .utils import import_content_csv
+
+
+class StaleContentReportFilterSet(WagtailFilterSet):
+    last_published_at = django_filters.DateTimeFilter(
+        label=_("Last published before"), lookup_expr="lte", widget=AdminDateInput
+    )
+    view_counter = django_filters.NumericRangeFilter(
+        label=_("View count"), lookup_expr="lte", widget=NumberInput
+    )
+
+    class Meta:
+        model = ContentPage
+        fields = ["live", "last_published_at"]
+
+
+class StaleContentReportView(PageReportView):
+    header_icon = "time"
+    title = "Stale Content Pages"
+    template_name = "reports/stale_content_report.html"
+    list_export = PageReportView.list_export + ["last_published_at", "view_counter"]
+    export_headings = dict(
+        last_published_at="Last Published",
+        view_counter="View Count",
+        **PageReportView.export_headings
+    )
+    filterset_class = StaleContentReportFilterSet
+    export_headings = PageReportView.export_headings
+
+    def get_queryset(self):
+        return ContentPage.objects.annotate(view_counter=Count("views")).filter(
+            view_counter__lte=10
+        )
 
 
 class ContentUploadThread(threading.Thread):
