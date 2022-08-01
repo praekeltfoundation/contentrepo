@@ -1,0 +1,49 @@
+{% extends "wagtailadmin/base.html" %}
+{{ page.extra_scripts|safe }}
+{% block titletag %}{{ page_view_data }} page_view_data {% endblock %}
+
+
+{% block content %}
+{% include "wagtailadmin/shared/header.html" with title="Page views per day over all articles" icon="doc-empty" %}
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js">
+</script>
+<div class="nice-padding">
+<body>
+    <canvas id="pageViewsPerMonth" style="width:100%;max-width:700px"></canvas>
+    <script>
+        var data_old = JSON.parse("{{page_view_data|escapejs}}");
+        var labels = data_old['labels']
+        var data = data_old['data']
+        console.log(data)
+        console.log(labels)
+        new Chart("pageViewsPerMonth", {
+            type: 'line',
+            data: {
+                datasets: [{
+                  pointRadius: 3,
+                  pointBackgroundColor: "rgb(0,0,255)",
+                  data: data
+                }],
+                labels: labels,
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                            beginAtZero: true,
+                            min: 0
+                        },
+                    x: {
+                        type: 'time'
+                    },
+                }
+            }
+        }
+    });
+    </script>
+</body>
+</div>
+{% endblock content %}
+
+
+
