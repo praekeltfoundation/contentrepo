@@ -19,8 +19,6 @@ import json
 from django.db.models.functions import TruncMonth
 from django.views.generic.base import TemplateView
 
-from pageview_graphs.views import get_views_data
-
 from .forms import UploadFileForm
 from .models import ContentPage, ContentPageRating, PageView
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
@@ -63,14 +61,7 @@ class PageViewReportView(TemplateView):
     title = "Page views"
     template_name = "reports/page_view_report.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["page_view_data"] = json.dumps(
-            get_views_data(), indent=4, sort_keys=True, default=str
-        )
-        return context
-
-    def get_views_data():
+    def get_views_data(self):
         view_per_month = list(
             PageView.objects.annotate(month=TruncMonth("timestamp"))
             .values("month")
@@ -79,6 +70,13 @@ class PageViewReportView(TemplateView):
         )
         labels = [item["x"].date() for item in view_per_month]
         return {"data": view_per_month, "labels": labels}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_view_data"] = json.dumps(
+            self.get_views_data(), indent=4, sort_keys=True, default=str
+        )
+        return context
 
 
 class ContentUploadThread(threading.Thread):
