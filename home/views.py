@@ -1,7 +1,7 @@
 import threading
 
 import django_filters
-from django.db.models import Count
+from django.db.models import Count, F
 from django.forms.widgets import NumberInput
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
@@ -15,6 +15,11 @@ from rest_framework.viewsets import GenericViewSet
 from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.views.reports import PageReportView
 from wagtail.admin.widgets import AdminDateInput
+import json
+from django.db.models.functions import TruncMonth
+from django.views.generic.base import TemplateView
+
+from pageview_graphs.views import get_views_data
 
 from .forms import UploadFileForm
 from .models import ContentPage, ContentPageRating, PageView
@@ -52,6 +57,28 @@ class StaleContentReportView(PageReportView):
         return ContentPage.objects.annotate(view_counter=Count("views")).filter(
             view_counter__lte=10
         )
+
+
+class PageViewReportView(TemplateView):
+    title = "Page views"
+    template_name = "reports/page_view_report.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_view_data"] = json.dumps(
+            get_views_data(), indent=4, sort_keys=True, default=str
+        )
+        return context
+
+    def get_views_data():
+        view_per_month = list(
+            PageView.objects.annotate(month=TruncMonth("timestamp"))
+            .values("month")
+            .annotate(x=F("month"), y=Count("id"))
+            .values("x", "y")
+        )
+        labels = [item["x"].date() for item in view_per_month]
+        return {"data": view_per_month, "labels": labels}
 
 
 class ContentUploadThread(threading.Thread):

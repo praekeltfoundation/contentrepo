@@ -3,7 +3,7 @@ from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 
-from .views import StaleContentReportView
+from .views import StaleContentReportView, PageViewReportView
 
 
 @hooks.register("register_page_listing_buttons")
@@ -30,5 +30,26 @@ def register_stale_content_report_url():
             "reports/stale-content/",
             StaleContentReportView.as_view(),
             name="stale_content_report",
+        ),
+    ]
+
+
+@hooks.register("register_reports_menu_item")
+def register_page_views_report_menu_item():
+    return AdminOnlyMenuItem(
+        "Page Views",
+        reverse("page_view_report"),
+        classnames="icon icon-doc-empty",
+        order=700,
+    )
+
+
+@hooks.register("register_admin_urls")
+def register_page_views_report_url():
+    return [
+        path(
+            "reports/page-views/",
+            PageViewReportView.as_view(),
+            name="page_view_report",
         ),
     ]
