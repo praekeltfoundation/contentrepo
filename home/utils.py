@@ -20,7 +20,7 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 body = body + [("paragraph", RichText(line))]
         return body
 
-    def get_body(raw, type_of_message):
+    def get_body(raw, body_field, type_of_message):
         struct_blocks = []
         if "image_title" in raw and raw["image_title"]:
             im = Image.objects.get(title=raw["image_title"]).id
@@ -31,29 +31,40 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
             )
             block_value = block.to_python({"image": im})
             struct_blocks.append((type_of_message, block_value))
+
+        message_body = raw[body_field]
         if splitmessages:
             if newline:
-                rows = raw.split(newline)
+                rows = message_body.split(newline)
+                next_prompts = raw.get("next_prompt", "").split(newline)
             else:
-                rows = raw.splitlines()
-            for row in rows:
+                rows = message_body.splitlines()
+                next_prompts = raw.get("next_prompt", "").splitlines()
+            for i, row in enumerate(rows):
+                data = {"message": row.strip()}
+                msg_blocks = [("message", blocks.TextBlock())]
+
+                if type_of_message == "Whatsapp_Message":
+                    if len(next_prompts) > i:
+                        data["next_prompt"] = next_prompts[i]
+                        msg_blocks.append(("next_prompt", blocks.TextBlock()))
+                    elif len(next_prompts) == 1:
+                        data["next_prompt"] = next_prompts[0]
+                        msg_blocks.append(("next_prompt", blocks.TextBlock()))
+
                 if row:
-                    block = blocks.StructBlock(
-                        [
-                            ("message", blocks.TextBlock()),
-                        ]
-                    )
-                    block_value = block.to_python({"message": row})
+                    block = blocks.StructBlock(msg_blocks)
+                    block_value = block.to_python(data)
                     struct_blocks.append((type_of_message, block_value))
             return struct_blocks
         else:
-            if raw:
+            if message_body:
                 block = blocks.StructBlock(
                     [
                         ("message", blocks.TextBlock()),
                     ]
                 )
-                block_value = block.to_python({"message": raw})
+                block_value = block.to_python({"message": message_body})
                 struct_blocks.append((type_of_message, block_value))
                 return struct_blocks
 
@@ -88,6 +99,7 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
             "web_body",
             "whatsapp_title",
             "whatsapp_body",
+            "next_prompt",
             "viber_title",
             "viber_body",
             "messenger_title",
@@ -119,14 +131,14 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 title=row["whatsapp_title"],
                 enable_whatsapp=True,
                 whatsapp_title=row["whatsapp_title"],
-                whatsapp_body=get_body(row["whatsapp_body"], "Whatsapp_Message"),
-                whatsapp_quick_replies=add_quick_replies(row["quick_replies"]),
+                whatsapp_body=get_body(row, "whatsapp_body", "Whatsapp_Message"),
+                quick_replies=add_quick_replies(row["quick_replies"]),
                 locale=home_page.locale,
             )
         else:
             page.enable_whatsapp = True
             page.whatsapp_title = row["whatsapp_title"]
-            page.whatsapp_body = get_body(row["whatsapp_body"], "Whatsapp_Message")
+            page.whatsapp_body = get_body(row, "whatsapp_body", "Whatsapp_Message")
             return page
 
     def add_messenger(row, page=None):
@@ -138,14 +150,14 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 title=row["messenger_title"],
                 enable_messenger=True,
                 messenger_title=row["messenger_title"],
-                messenger_body=get_body(row["messenger_body"], "messenger_block"),
+                messenger_body=get_body(row, "messenger_body", "messenger_block"),
                 messenger_quick_replies=add_quick_replies(row["quick_replies"]),
                 locale=home_page.locale,
             )
         else:
             page.enable_messenger = True
             page.messenger_title = row["messenger_title"]
-            page.messenger_body = get_body(row["messenger_body"], "messenger_block")
+            page.messenger_body = get_body(row, "messenger_body", "messenger_block")
             return page
 
     def add_viber(row, page=None):
@@ -157,14 +169,14 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 title=row["viber_title"],
                 enable_viberr=True,
                 viber_title=row["viber_title"],
-                viber_body=get_body(row["viber_body"], "viber_message"),
+                viber_body=get_body(row, "viber_body", "viber_message"),
                 viber_quick_replies=add_quick_replies(row["quick_replies"]),
                 locale=home_page.locale,
             )
         else:
             page.enable_viber = True
             page.viber_title = row["viber_title"]
-            page.viber_body = get_body(row["viber_body"], "viber_message")
+            page.viber_body = get_body(row, "viber_body", "viber_message")
             return page
 
     if purge == "yes":

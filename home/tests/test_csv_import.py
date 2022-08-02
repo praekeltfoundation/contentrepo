@@ -61,6 +61,11 @@ class CSVImportTestCase(TestCase):
         # Assert whatsapp is enabled
         self.assertTrue(page.enable_whatsapp)
 
+        raw_data = page.whatsapp_body._raw_data
         # Assert the first and second messages split between "===="
-        self.assertTrue(str(page.whatsapp_body[0].render()), "First whatsapp message")
-        self.assertTrue(str(page.whatsapp_body[1].render()), "second whatsapp message")
+        self.assertEquals(raw_data[0]["value"]["message"], "First whatsapp message")
+        self.assertEquals(raw_data[1]["value"]["message"], "second whatsapp message")
+
+        # Assert the first and second next prompts split between "===="
+        self.assertEquals(raw_data[0]["value"]["next_prompt"], "Go Next")
+        self.assertEquals(raw_data[1]["value"]["next_prompt"], "again")
