@@ -6,6 +6,7 @@ from django.forms.widgets import NumberInput
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
+from django.forms import MultiWidget
 from rest_framework import permissions
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
@@ -38,6 +39,16 @@ class StaleContentReportFilterSet(WagtailFilterSet):
         fields = ["live", "last_published_at"]
 
 
+class PageViewFilterSet(WagtailFilterSet):
+    timestamp = django_filters.DateTimeFromToRangeFilter(
+        label=_("Date Range"), widget=MultiWidget(widgets=[AdminDateInput, AdminDateInput])
+    )
+
+    class Meta:
+        model = ContentPage
+        fields = ["timestamp"]
+
+
 class StaleContentReportView(PageReportView):
     header_icon = "time"
     title = "Stale Content Pages"
@@ -57,9 +68,13 @@ class StaleContentReportView(PageReportView):
         )
 
 
-class PageViewReportView(TemplateView):
+class PageViewReportView(PageReportView):
     title = "Page views"
     template_name = "reports/page_view_report.html"
+    filterset_class = PageViewFilterSet
+    
+    def get_queryset(self):
+        return PageView.objects.all()
 
     def get_views_data(self):
         view_per_month = list(
