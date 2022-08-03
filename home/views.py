@@ -14,11 +14,10 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.pagination import CursorPagination
 from rest_framework.viewsets import GenericViewSet
 from wagtail.admin.filters import WagtailFilterSet
-from wagtail.admin.views.reports import PageReportView
+from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 import json
 from django.db.models.functions import TruncMonth
-from django.views.generic.base import TemplateView
 
 from .forms import UploadFileForm
 from .models import ContentPage, ContentPageRating, PageView
@@ -41,11 +40,12 @@ class StaleContentReportFilterSet(WagtailFilterSet):
 
 class PageViewFilterSet(WagtailFilterSet):
     timestamp = django_filters.DateTimeFromToRangeFilter(
-        label=_("Date Range"), widget=MultiWidget(widgets=[AdminDateInput, AdminDateInput])
+        label=_("Date Range"),
+        widget=MultiWidget(widgets=[AdminDateInput, AdminDateInput]),
     )
 
     class Meta:
-        model = ContentPage
+        model = PageView
         fields = ["timestamp"]
 
 
@@ -68,17 +68,21 @@ class StaleContentReportView(PageReportView):
         )
 
 
-class PageViewReportView(PageReportView):
+class PageViewReportView(ReportView):
     title = "Page views"
     template_name = "reports/page_view_report.html"
     filterset_class = PageViewFilterSet
-    
+
     def get_queryset(self):
         return PageView.objects.all()
 
+    def get_filtered_queryset(self):
+        return self.filter_queryset(self.get_queryset())
+
     def get_views_data(self):
         view_per_month = list(
-            PageView.objects.annotate(month=TruncMonth("timestamp"))
+            self.get_filtered_queryset()
+            .annotate(month=TruncMonth("timestamp"))
             .values("month")
             .annotate(x=F("month"), y=Count("id"))
             .values("x", "y")
