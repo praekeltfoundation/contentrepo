@@ -1,3 +1,4 @@
+import random
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, renderer_classes
@@ -159,18 +160,20 @@ def faqmenu(request):
 def suggestedcontent(request):
     topics_viewed = request.GET.get("topics_viewed", "").split(",")
 
-    suggested_pages = (
-        ContentPage.objects.get(id__in=topics_viewed)
-        .get_descendants()
-        .filter(numchild=0)
-        .live()
-        .order_by("?")[:3]
-    )
+    suggested_pages = []
+    for topic_id in topics_viewed:
+        for page in (
+            ContentPage.objects.get(id=topic_id)
+            .get_descendants()
+            .filter(numchild=0)
+            .live()
+        ):
+            suggested_pages.append(page)
 
     data = {
         "results": [
             {"id": page.id, "title": page.whatsapp_title or page.title}
-            for page in suggested_pages
+            for page in random.sample(suggested_pages, 3)
         ]
     }
 
