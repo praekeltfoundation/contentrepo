@@ -124,6 +124,7 @@ class SuggestedContentTestCase(TestCase):
         Should return id and title of 3 random descendands of the page id provided.
         """
         included_parent = create_page(title="Included Parent")
+        included_parent2 = create_page(title="Included Parent 2")
         excluded_parent = create_page(title="Excluded Parent")
         included_children = [
             create_page(title=f"Included Child {i}", parent=included_parent).id
@@ -135,12 +136,11 @@ class SuggestedContentTestCase(TestCase):
         ]
 
         response = self.client.get(
-            f"/suggestedcontent/?topics_viewed={included_parent.id}"
+            f"/suggestedcontent/?topics_viewed={included_parent.id},{included_parent2.id}"
         )
         result = response.json()
 
         self.assertEqual(len(result["results"]), 3)
-
         suggested_ids = []
         for page in result["results"]:
             self.assertIn(page["id"], included_children)
