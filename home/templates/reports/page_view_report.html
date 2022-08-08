@@ -2,42 +2,43 @@
 {{ page.extra_scripts|safe }}
 {% block titletag %} Page views {% endblock %}
 
-{% block content %}
-{% include "wagtailadmin/shared/header.html" with title="Page views per day over all articles" icon="doc-empty" %}
-<script
-src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js">
-</script>
-<div class="nice-padding">
-<body>
-    <canvas id="pageViewsPerMonth" style="width:100%;max-width:700px"></canvas>
+{% block listing %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+    <canvas id="pageViewsPerMonth"></canvas>
     <script>
         var data_old = JSON.parse("{{page_view_data|escapejs}}");
         var labels = data_old['labels']
-        var data = data_old['data']
+        var dataa = data_old['data']
         new Chart("pageViewsPerMonth", {
             type: 'line',
             data: {
                 datasets: [{
-                  pointRadius: 3,
+                  pointRadius: 5,
                   pointBackgroundColor: "rgb(0,0,255)",
-                  data: data
+                  data: dataa
                 }],
-                labels: labels,
+            },
             options: {
                 responsive: true,
                 scales: {
-                    y: {
-                            beginAtZero: true,
-                            min: 0
-                        },
-                    x: {
-                        type: 'time'
-                    },
+                   y: {
+                        beginAtZero: true,
+                        type: 'linear',
+                   },
+                   x: {
+                        type: 'time',
+                        time: {
+                            unit: 'month'
+                        }
+                   }
+                },
+                plugins: {
+                  legend: false
                 }
             }
-        }
+
     });
     </script>
-</body>
-</div>
-{% endblock content %}
+{% endblock listing %}

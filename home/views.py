@@ -6,6 +6,7 @@ from django.forms.widgets import NumberInput
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
+from django.forms import MultiWidget
 from rest_framework import permissions
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
@@ -13,11 +14,10 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.pagination import CursorPagination
 from rest_framework.viewsets import GenericViewSet
 from wagtail.admin.filters import WagtailFilterSet
-from wagtail.admin.views.reports import PageReportView
+from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 import json
 from django.db.models.functions import TruncMonth
-from django.views.generic.base import TemplateView
 
 from .forms import UploadFileForm
 from .models import ContentPage, ContentPageRating, PageView
@@ -36,6 +36,17 @@ class StaleContentReportFilterSet(WagtailFilterSet):
     class Meta:
         model = ContentPage
         fields = ["live", "last_published_at"]
+
+
+class PageViewFilterSet(WagtailFilterSet):
+    timestamp = django_filters.DateTimeFromToRangeFilter(
+        label=_("Date Range"),
+        widget=MultiWidget(widgets=[AdminDateInput, AdminDateInput]),
+    )
+
+    class Meta:
+        model = PageView
+        fields = ["timestamp"]
 
 
 class StaleContentReportView(PageReportView):
@@ -57,13 +68,21 @@ class StaleContentReportView(PageReportView):
         )
 
 
-class PageViewReportView(TemplateView):
+class PageViewReportView(ReportView):
     title = "Page views"
     template_name = "reports/page_view_report.html"
+    filterset_class = PageViewFilterSet
+
+    def get_queryset(self):
+        return PageView.objects.all()
+
+    def get_filtered_queryset(self):
+        return self.filter_queryset(self.get_queryset())
 
     def get_views_data(self):
         view_per_month = list(
-            PageView.objects.annotate(month=TruncMonth("timestamp"))
+            self.get_filtered_queryset()
+            .annotate(month=TruncMonth("timestamp"))
             .values("month")
             .annotate(x=F("month"), y=Count("id"))
             .values("x", "y")
