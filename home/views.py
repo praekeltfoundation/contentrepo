@@ -81,7 +81,7 @@ class PageViewReportView(ReportView):
 
     def get_views_data(self):
         view_per_month = list(
-            self.get_filtered_queryset()
+            self.get_filtered_queryset()[1]
             .annotate(month=TruncMonth("timestamp"))
             .values("month")
             .annotate(x=F("month"), y=Count("id"))
