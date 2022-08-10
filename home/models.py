@@ -136,6 +136,14 @@ class ContentPage(Page, ContentImportMixin):
     tags = ClusterTaggableManager(through=ContentPageTag)
     triggers = ClusterTaggableManager(through="home.TriggeredContent", blank=True)
     quick_replies = ClusterTaggableManager(through="home.QuickReplyContent", blank=True)
+    related_pages = StreamField(
+        [
+            ("related_page", blocks.PageChooserBlock()),
+        ],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
     enable_web = models.BooleanField(
         default=False, help_text="When enabled, the API will include the web content"
     )
@@ -269,6 +277,7 @@ class ContentPage(Page, ContentImportMixin):
         FieldPanel("triggers", heading="Triggers"),
         FieldPanel("quick_replies", heading="Quick Replies"),
         PageRatingPanel("Rating"),
+        FieldPanel("related_pages"),
     ]
     settings_panels = Page.settings_panels + [
         MultiFieldPanel(
