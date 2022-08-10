@@ -76,6 +76,7 @@ class ContentPageAdmin(ModelAdmin):
         "related_pages",
         "parental",
     )
+    list_filter = ("locale",)
     search_fields = ("title", "body")
 
     def replies(self, obj):
@@ -94,10 +95,7 @@ class ContentPageAdmin(ModelAdmin):
     tag.short_description = "Tags"
 
     def wa_body(self, obj):
-        body = ""
-        for message in obj.whatsapp_body:
-            body = body + message.value["message"]
-        return body
+        return [m.value['message'] for m in obj.whatsapp_body]
 
     wa_body.short_description = "Whatsapp Body"
 
