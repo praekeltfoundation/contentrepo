@@ -308,6 +308,7 @@ class ContentPage(Page, ContentImportMixin):
         APIField("tags"),
         APIField("triggers"),
         APIField("quick_replies"),
+        APIField("related_pages"),
         APIField("has_children"),
     ]
 
