@@ -4,8 +4,6 @@ from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
-from wagtail.admin.panels import (FieldPanel, MultiFieldPanel, ObjectList,
-                                  TabbedInterface)
 from wagtail.api import APIField
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
@@ -16,6 +14,14 @@ from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
 from .whatsapp import create_whatsapp_template
+
+from wagtail.admin.panels import (  # isort:skip
+    FieldPanel,
+    MultiFieldPanel,
+    ObjectList,
+    TabbedInterface,
+)
+
 
 
 class MediaBlock(AbstractMediaChooserBlock):
