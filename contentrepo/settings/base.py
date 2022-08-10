@@ -1,4 +1,5 @@
 import os
+
 import environ
 
 env = environ.Env()
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "drf_spectacular",
+    "wagtail.contrib.modeladmin",
 ]
 
 MIDDLEWARE = [

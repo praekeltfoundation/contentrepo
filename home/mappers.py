@@ -1,4 +1,7 @@
-from wagtail_content_import.mappers.converters import ImageConverter, RichTextConverter
+from wagtail_content_import.mappers.converters import (  # isort:skip
+    ImageConverter,
+    RichTextConverter,
+)
 from wagtail_content_import.mappers.streamfield import StreamFieldMapper
 
 

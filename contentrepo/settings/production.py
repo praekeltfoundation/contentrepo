@@ -1,7 +1,8 @@
-from .base import *  # noqa
-import dj_database_url
 from os.path import abspath, dirname, join
 
+import dj_database_url
+
+from .base import *  # noqa
 
 DEBUG = True
 
