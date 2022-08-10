@@ -1,26 +1,19 @@
 from django.conf import settings
-from django.urls import include, path
-from django.contrib import admin
 from django.conf.urls.i18n import i18n_patterns
-
+from django.contrib import admin
+from django.urls import include, path
+from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
+                                   SpectacularSwaggerView)
 from rest_framework import routers
-
-from wagtail.admin import urls as wagtailadmin_urls
 from wagtail import urls as wagtail_urls
+from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
-
 from wagtail_content_import import urls as wagtail_content_import_urls
 
-from search import views as search_views
-from menu import views as menu_views
 from home import views as home_views
 from home.api import api_router
-
-from drf_spectacular.views import (
-    SpectacularAPIView,
-    SpectacularRedocView,
-    SpectacularSwaggerView,
-)
+from menu import views as menu_views
+from search import views as search_views
 
 custom_v2router = routers.DefaultRouter()
 custom_v2router.register("ratings", home_views.ContentPageRatingViewSet)

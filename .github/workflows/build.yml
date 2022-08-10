@@ -31,6 +31,7 @@ jobs:
         # stop the build if there are Python syntax errors or undefined names
         black --check .
         flake8 . --count --show-source --statistics
+        isort -c .
     - name: Django Test
       run: |
         ./manage.py test --settings=contentrepo.settings.dev

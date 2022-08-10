@@ -1,10 +1,12 @@
 import random
-from rest_framework.response import Response
+
 from rest_framework import status
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer
+from rest_framework.response import Response
 
 from home.models import ContentPage, ContentPageTag
+
 from .utils import get_bcm_page_ids
 
 

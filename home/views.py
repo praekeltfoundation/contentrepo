@@ -1,12 +1,14 @@
+import json
 import threading
 
 import django_filters
 from django.db.models import Count, F
+from django.db.models.functions import TruncMonth
+from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
-from django.forms import MultiWidget
 from rest_framework import permissions
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
@@ -16,8 +18,6 @@ from rest_framework.viewsets import GenericViewSet
 from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
-import json
-from django.db.models.functions import TruncMonth
 
 from .forms import UploadFileForm
 from .models import ContentPage, ContentPageRating, PageView
