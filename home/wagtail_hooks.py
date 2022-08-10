@@ -95,7 +95,7 @@ class ContentPageAdmin(ModelAdmin):
     tag.short_description = "Tags"
 
     def wa_body(self, obj):
-        return [m.value['message'] for m in obj.whatsapp_body]
+        return [m.value["message"] for m in obj.whatsapp_body]
 
     wa_body.short_description = "Whatsapp Body"
 
