@@ -32,6 +32,13 @@ class StaleContentReportFilterSet(WagtailFilterSet):
     view_counter = django_filters.NumberFilter(
         label=_("View count"), lookup_expr="lte", widget=NumberInput
     )
+    o = django_filters.OrderingFilter(
+        # tuple-mapping retains order
+        fields=(
+            ("view_counter", "View Count"),
+            ("last_published_at", "Latest published"),
+        ),
+    )
 
     class Meta:
         model = ContentPage
@@ -49,9 +56,9 @@ class PageViewFilterSet(WagtailFilterSet):
         fields = ["timestamp"]
 
 
-class StaleContentReportView(ReportView):
+class ContentPageReportView(ReportView):
     header_icon = "time"
-    title = "Stale Content Pages"
+    title = "Content Pages"
     template_name = "reports/stale_content_report.html"
     filterset_class = StaleContentReportFilterSet
     list_export = PageReportView.list_export + ["last_published_at", "view_counter"]
