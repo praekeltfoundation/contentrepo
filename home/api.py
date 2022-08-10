@@ -12,7 +12,7 @@ from .models import (  # isort:skip
     ContentPage,
     ContentPageIndex,
     ContentPageTag,
-    TriggeredContent
+    TriggeredContent,
 )
 
 

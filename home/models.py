@@ -23,7 +23,6 @@ from wagtail.admin.panels import (  # isort:skip
 )
 
 
-
 class MediaBlock(AbstractMediaChooserBlock):
     def render_basic(self, value, context=None):
         pass
