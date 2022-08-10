@@ -29,7 +29,7 @@ class StaleContentReportFilterSet(WagtailFilterSet):
     last_published_at = django_filters.DateTimeFilter(
         label=_("Last published before"), lookup_expr="lte", widget=AdminDateInput
     )
-    view_counter = django_filters.NumericRangeFilter(
+    view_counter = django_filters.NumberFilter(
         label=_("View count"), lookup_expr="lte", widget=NumberInput
     )
 
@@ -49,23 +49,20 @@ class PageViewFilterSet(WagtailFilterSet):
         fields = ["timestamp"]
 
 
-class StaleContentReportView(PageReportView):
+class StaleContentReportView(ReportView):
     header_icon = "time"
     title = "Stale Content Pages"
     template_name = "reports/stale_content_report.html"
+    filterset_class = StaleContentReportFilterSet
     list_export = PageReportView.list_export + ["last_published_at", "view_counter"]
     export_headings = dict(
         last_published_at="Last Published",
         view_counter="View Count",
         **PageReportView.export_headings
     )
-    filterset_class = StaleContentReportFilterSet
-    export_headings = PageReportView.export_headings
 
     def get_queryset(self):
-        return ContentPage.objects.annotate(view_counter=Count("views")).filter(
-            view_counter__lte=10
-        )
+        return ContentPage.objects.annotate(view_counter=Count("views")).all()
 
 
 class PageViewReportView(ReportView):
