@@ -296,7 +296,7 @@ def export_content_csv():
         return dict_row
 
     rows = []
-    for page in ContentPage.objects.filter(id=1194).all():
+    for page in ContentPage.objects.all():
         rows.append(get_rows(page))
 
     write_rows(rows)
