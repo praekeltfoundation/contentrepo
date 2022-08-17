@@ -364,19 +364,23 @@ class ContentPage(Page, ContentImportMixin):
                 platform = "viber"
             else:
                 platform = "web"
+
         data = {}
         for param, value in query_params.items():
             if param.startswith("data__"):
                 key = param.replace("data__", "")
                 data[key] = value
 
-        self.views.create(
-            **{
-                "revision": self.get_latest_revision(),
-                "data": data,
-                "platform": f"{platform}",
-            }
-        )
+        page_view = {
+            "revision": self.get_latest_revision(),
+            "data": data,
+            "platform": f"{platform}",
+        }
+
+        if "message" in query_params and query_params["message"].isdigit():
+            page_view["message"] = query_params["message"]
+
+        self.views.create(**page_view)
 
     def save_revision(
         self,
@@ -437,4 +441,5 @@ class PageView(models.Model):
     revision = models.ForeignKey(
         PageRevision, related_name="views", null=False, on_delete=models.CASCADE
     )
+    message = models.IntegerField(blank=True, default=None, null=True)
     data = models.JSONField(default=dict, blank=True, null=True)
