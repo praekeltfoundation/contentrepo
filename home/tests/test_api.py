@@ -2,6 +2,7 @@ import json
 
 from django.core.management import call_command
 from django.test import Client, TestCase
+from wagtail import blocks
 
 from home.models import ContentPage, PageView
 
@@ -93,6 +94,24 @@ class PaginationTestCase(TestCase):
             content,
             ["Please insert a positive integer " "for message in the query string"],
         )
+
+        body = []
+        for i in range(15):
+            block = blocks.StructBlock([("message", blocks.TextBlock())])
+            block_value = block.to_python({"message": f"WA Message {i+1}"})
+            body.append(("Whatsapp_Message", block_value))
+
+        self.content_page1.whatsapp_body = body
+        self.content_page1.save_revision().publish()
+
+        # it should only return the 11th paragraph if 11th message
+        # is requested
+        response = self.client.get("/api/v2/pages/4/?whatsapp=True&message=11")
+        content = json.loads(response.content)
+        self.assertEquals(content["body"]["message"], 11)
+        self.assertEquals(content["body"]["next_message"], 12)
+        self.assertEquals(content["body"]["previous_message"], 10)
+        self.assertEquals(content["body"]["text"]["value"]["message"], "WA Message 11")
 
     def test_detail_view(self):
         self.assertEquals(PageView.objects.count(), 0)

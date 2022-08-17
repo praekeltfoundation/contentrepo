@@ -100,7 +100,7 @@ class BodyField(serializers.Field):
         request = self.context["request"]
         if "message" in request.GET:
             try:
-                message = int(request.GET["message"][0]) - 1
+                message = int(request.GET["message"]) - 1
             except ValueError:
                 raise ValidationError(
                     "Please insert a positive integer for message in "
