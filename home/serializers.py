@@ -97,7 +97,6 @@ class BodyField(serializers.Field):
         return instance
 
     def to_representation(self, page):
-
         request = self.context["request"]
         if "message" in request.GET:
             try:
@@ -109,8 +108,6 @@ class BodyField(serializers.Field):
                 )
         else:
             message = 0
-        print(self.context["request"].GET)
-        print(">>>", message)
         if "whatsapp" in request.GET and page.enable_whatsapp is True:
             if page.whatsapp_body != []:
                 try:
