@@ -138,11 +138,15 @@ class PaginationTestCase(TestCase):
         self.assertTrue(content["has_children"])
 
         self.assertEquals(PageView.objects.count(), 2)
+        view = PageView.objects.last()
+        self.assertEquals(view.message, None)
 
         # if we select the whatsapp content
-        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
         content = response.json()
 
         self.assertEquals(content["title"], page.whatsapp_title)
 
         self.assertEquals(PageView.objects.count(), 3)
+        view = PageView.objects.last()
+        self.assertEquals(view.message, 1)
