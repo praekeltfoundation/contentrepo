@@ -111,9 +111,7 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["body"]["message"], 11)
         self.assertEquals(content["body"]["next_message"], 12)
         self.assertEquals(content["body"]["previous_message"], 10)
-        self.assertEquals(
-            content["body"]["text"]["value"]["message"], "WA Message 11"
-        )
+        self.assertEquals(content["body"]["text"]["value"]["message"], "WA Message 11")
 
     def test_detail_view(self):
         self.assertEquals(PageView.objects.count(), 0)
