@@ -145,7 +145,7 @@ class SuggestedContentTestCase(TestCase):
         for page in result["results"]:
             self.assertIn(page["id"], included_children)
             self.assertEqual(
-                page["title"], ContentPage.objects.get(id=page["id"]).whatsapp_title
+                page["title"], ContentPage.objects.get(id=page["id"]).title
             )
             suggested_ids.append(page["id"])
 
