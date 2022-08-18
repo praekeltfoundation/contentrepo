@@ -174,7 +174,7 @@ def suggestedcontent(request):
 
     data = {
         "results": [
-            {"id": page.id, "title": page.whatsapp_title or page.title}
+            {"id": page.id, "title": page.title}
             for page in random.sample(suggested_pages, 3)
         ]
     }
