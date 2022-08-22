@@ -4,7 +4,7 @@ from home import utils
 
 
 class Command(BaseCommand):
-    help = "Export content to CSV"
+    help = "Export content to XLSX"
 
     def handle(self, *args, **options):
-        utils.export_csv_content()
+        utils.export_xlsx_content()
