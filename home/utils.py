@@ -1,7 +1,7 @@
 import csv
 import io
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, List
 
 from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
 from openpyxl.workbook import Workbook
@@ -248,7 +248,7 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
             print(f"Content page not created for {row}")
 
 
-def get_messages(platform_body: blocks.StreamValue) -> list[dict]:
+def get_messages(platform_body: blocks.StreamValue) -> List[dict]:
     """Formats the platform body objects into a list of dictionaries"""
     msgs = []
     for msg in platform_body:
@@ -266,7 +266,7 @@ def get_messages(platform_body: blocks.StreamValue) -> list[dict]:
     return msgs
 
 
-def get_related_pages(page: ContentPage) -> list[str]:
+def get_related_pages(page: ContentPage) -> List[str]:
     """Formats the related pages as a list of strings"""
     related_pages = []
     for related_page in page.related_pages:
@@ -280,7 +280,7 @@ def get_parent_page(page: ContentPage) -> str:
         return page.get_parent().title
 
 
-def format_list_from_query_set(unformatted_query: PageQuerySet) -> list[str]:
+def format_list_from_query_set(unformatted_query: PageQuerySet) -> List[str]:
     "Return list of str from a PageQuerySet"
     list_delimiter = ", "
     return list_delimiter.join(str(x) for x in unformatted_query if str(x) != "")
@@ -405,7 +405,7 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
     return wb, sheet
 
 
-def set_level_numbers(rows: list[list]) -> list[list]:
+def set_level_numbers(rows: List[list]) -> List[list]:
     """Sets the level number in the side panel to indicate depth of the page in a visual way"""
     menu = 0
     sub_1 = 0
@@ -456,7 +456,7 @@ def set_level_numbers(rows: list[list]) -> list[list]:
     return rows
 
 
-def get_rows(page: ContentPage) -> list[list]:
+def get_rows(page: ContentPage) -> List[list]:
     """Sets up row for each page including the side panel.
     Each page is returned as a list of rows"""
     actual_depth = (
@@ -531,7 +531,7 @@ def get_rows(page: ContentPage) -> list[list]:
     return rows
 
 
-def add_children(temp_sheet: list[list], children: PageQuerySet) -> list[list]:
+def add_children(temp_sheet: List[list], children: PageQuerySet) -> List[list]:
     """Recursive function that traverses the children of a page with a depth first search algorithm"""
     for child in children:
         content_page = ContentPage.objects.filter(id=child.id).first()
@@ -542,7 +542,7 @@ def add_children(temp_sheet: list[list], children: PageQuerySet) -> list[list]:
     return temp_sheet
 
 
-def get_content_sheet() -> list[list]:
+def get_content_sheet() -> List[list]:
     content_sheet = []
     headings = [1, 2, 3, 4, 5, "Message"] + fieldnames
     content_sheet.append(headings)
@@ -557,7 +557,7 @@ def get_content_sheet() -> list[list]:
     return set_level_numbers(content_sheet)
 
 
-def remove_content_sheet_sidebar(content_sheet: list[list]) -> list[list]:
+def remove_content_sheet_sidebar(content_sheet: List[list]) -> List[list]:
     for row in content_sheet:
         del row[:6]
     return content_sheet
