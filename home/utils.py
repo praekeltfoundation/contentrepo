@@ -1,7 +1,7 @@
 import csv
 import io
 from datetime import datetime
-from typing import Tuple, List
+from typing import List, Tuple
 
 from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
 from openpyxl.workbook import Workbook
