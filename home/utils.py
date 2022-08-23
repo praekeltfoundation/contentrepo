@@ -1,9 +1,12 @@
+import copy
 import csv
 import io
-from datetime import datetime
+from math import ceil
 from typing import List, Tuple
 
+from django.http import HttpResponse
 from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
+from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from taggit.models import Tag
@@ -18,7 +21,7 @@ from wagtailmedia.models import Media
 
 from home.models import ContentPage, HomePage
 
-fieldnames = [
+FIELDNAMES = [
     "parent",
     "web_title",
     "web_subtitle",
@@ -40,7 +43,6 @@ fieldnames = [
     "media_link",
     "related_pages",
 ]
-export_filename = f'exported_content_{datetime.now().strftime("%Y%m%d")}'
 
 
 def import_content_csv(file, splitmessages=True, newline=None, purge=True, locale="en"):
@@ -286,19 +288,25 @@ def format_list_from_query_set(unformatted_query: PageQuerySet) -> List[str]:
     return list_delimiter.join(str(x) for x in unformatted_query if str(x) != "")
 
 
+def find_first_match(
+    messenging_platform_messages: dict, index: int, attachment: str
+) -> str:
+    for platform_messages in messenging_platform_messages.values():
+        if (
+            platform_messages
+            and len(platform_messages) < index - 1
+            and platform_messages[index][attachment]
+        ):
+            return platform_messages[index][attachment]
+    return ""
+
+
 def get_image_link(messenging_platform_messages: dict, index: int) -> str:
     """Iterate over a dict of all whatsapp, messenger and viber messages to find a valid image,
     if an image is found in any of the platforms, the url will be saved to the sheet.
     This will take the one found, can be extended to a list of urls
     """
-    image_names = []
-    for platform_messages in messenging_platform_messages.values():
-        if platform_messages and len(platform_messages) < index - 1:
-            image_names.append(platform_messages[index]["med"])
-
-    image_name = next(
-        (image_name for image_name in image_names if image_name is not None), None
-    )
+    image_name = find_first_match(messenging_platform_messages, index, "img")
     image = Image.objects.filter(title=image_name).first()
     if image:
         return image.usage_url
@@ -310,14 +318,7 @@ def get_doc_link(messenging_platform_messages: dict, index: int) -> str:
     if a document is found in any of the platforms, the url will be saved to the sheet
     This will take the one found, can be extended to a list of urls
     """
-    doc_names = []
-    for platform_messages in messenging_platform_messages.values():
-        if platform_messages and len(platform_messages) < index - 1:
-            doc_names.append(platform_messages[index]["doc"])
-
-    document_name = next(
-        (doc_name for doc_name in doc_names if doc_name is not None), None
-    )
+    document_name = find_first_match(messenging_platform_messages, index, "doc")
     document = Document.objects.filter(title=document_name).first()
     if document:
         return document.usage_url
@@ -329,14 +330,7 @@ def get_media_link(messenging_platform_messages: dict, index: int) -> str:
     if a media is found in any of the platforms, the url will be saved to the sheet
     This will take the one found, can be extended to a list of urls
     """
-    med_names = []
-    for platform_messages in messenging_platform_messages.values():
-        if platform_messages and len(platform_messages) < index - 1:
-            med_names.append(platform_messages[index]["med"])
-
-    media_name = next(
-        (med_name for med_name in med_names if med_name is not None), None
-    )
+    media_name = find_first_match(messenging_platform_messages, index, "med")
     media = Media.objects.filter(title=media_name).first()
     if media:
         return media.usage_url
@@ -348,14 +342,7 @@ def get_next_prompts(messenging_platform_messages: dict, index: int) -> str:
     if a next prompt is found in any of the platforms, the url will be saved to the sheet
     This will take the one found, can be extended to a list of urls
     """
-    next_prompts = []
-    for platform_messages in messenging_platform_messages.values():
-        if platform_messages and len(platform_messages) < index - 1:
-            next_prompts.append(platform_messages[index]["next_prompt"])
-
-    next_prompt = next(
-        (next_prompt for next_prompt in next_prompts if next_prompt is not None), None
-    )
+    next_prompt = find_first_match(messenging_platform_messages, index, "next_prompt")
     if next_prompt:
         return next_prompt
     return ""
@@ -365,6 +352,46 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
     """Sets the style for the workbook adding any formatting that will make the sheet more aesthetically pleasing"""
     # Padding
     sheet.insert_cols(1)
+
+    # Set columns based on best size
+    adjustment = 7
+    column_widths_in_pts = {
+        "padding": 35,
+        "1": 47,
+        "2": 35,
+        "3": 35,
+        "4": 44,
+        "5": 54,
+        "Message": 110,
+        "parent": 110,
+        "web_title": 110,
+        "web_subtitle": 110,
+        "web_body": 370,
+        "whatsapp_title": 118,
+        "whatsapp_body": 370,
+        "messenger_title": 118,
+        "messenger_body": 370,
+        "viber_title": 118,
+        "viber_body": 370,
+        "translation_tag": 118,
+        "tags": 118,
+        "quick_replies": 118,
+        "triggers": 118,
+        "locale": 118,
+        "next_prompt": 118,
+        "image_link": 118,
+        "doc_link": 118,
+        "media_link": 118,
+        "related": 118,
+    }
+
+    for index, column_width in enumerate(column_widths_in_pts.values(), 1):
+        sheet.column_dimensions[get_column_letter(index)].width = ceil(
+            column_width / adjustment
+        )
+
+    # Freeze heading row and side panel
+    sheet.freeze_panes = sheet["H3"]
 
     # Colours
     blue = Color(rgb="0099CCFF")
@@ -380,13 +407,15 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
     menu_style = NamedStyle(name="menu_style")
 
     # Set attributes to styles
-    header_style.font = Font(bold=True, size=12)
+    header_style.font = Font(bold=True, size=10)
     menu_style.fill = blue_fill
     menu_style.font = Font(bold=True, size=10)
 
     # Add named styles to wb
     wb.add_named_style(header_style)
     wb.add_named_style(menu_style)
+
+    # column widths
 
     # Set menu style for any "Menu" row
     for row in sheet.iter_rows():
@@ -402,6 +431,17 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
     # Set dividing border for side panel
     for cell in sheet["G:G"]:
         cell.border = right_border
+
+    # set font on all cells initially to 10pt and row height
+    general_font = Font(size=10)
+    for index, row in enumerate(sheet.iter_rows()):
+        if index > 2:
+            sheet.row_dimensions[index].height = 60
+        for cell in row:
+            cell.font = general_font
+            alignment = copy.copy(cell.alignment)
+            alignment.wrapText = True
+            cell.alignment = alignment
     return wb, sheet
 
 
@@ -512,7 +552,7 @@ def get_rows(page: ContentPage) -> List[list]:
         if message_index == 0:
             row = basic_row
         else:
-            row = padding + [""] * len(fieldnames)
+            row = padding + [""] * len(FIELDNAMES)
             row[21] = get_next_prompts(messenging_platform_messages, message_index)
             row[22] = get_image_link(messenging_platform_messages, message_index)
             row[23] = get_doc_link(messenging_platform_messages, message_index)
@@ -531,29 +571,35 @@ def get_rows(page: ContentPage) -> List[list]:
     return rows
 
 
-def add_children(temp_sheet: List[list], children: PageQuerySet) -> List[list]:
+def add_children(
+    temp_sheet: List[list], children: PageQuerySet, queryset: PageQuerySet
+) -> List[list]:
     """Recursive function that traverses the children of a page with a depth first search algorithm"""
     for child in children:
         content_page = ContentPage.objects.filter(id=child.id).first()
         row = get_rows(content_page)
         temp_sheet.extend(row)
         if content_page.has_children:
-            add_children(temp_sheet, content_page.get_children())
+            add_children(temp_sheet, content_page.get_children(), queryset)
     return temp_sheet
 
 
-def get_content_sheet() -> List[list]:
+def get_content_sheet(queryset: PageQuerySet) -> List[list]:
     content_sheet = []
-    headings = [1, 2, 3, 4, 5, "Message"] + fieldnames
+    headings = [1, 2, 3, 4, 5, "Message"] + FIELDNAMES
     content_sheet.append(headings)
-    home = HomePage.objects.filter(locale_id=1).first()
-    main_menu_pages = home.get_children()
+    for locale in Locale.objects.all():
+        home = HomePage.objects.filter(locale_id=locale.id).first()
+        main_menu_pages = home.get_children()
 
-    for page in main_menu_pages:
-        content_page = ContentPage.objects.filter(id=page.id).first()
-        content_sheet.extend(get_rows(content_page))
-        if content_page.has_children:
-            content_sheet = add_children(content_sheet, content_page.get_children())
+        for page in main_menu_pages:
+            content_page = queryset.filter(id=page.id).first()
+            if content_page:
+                content_sheet.extend(get_rows(content_page))
+                if content_page.has_children:
+                    content_sheet = add_children(
+                        content_sheet, content_page.get_children(), queryset
+                    )
     return set_level_numbers(content_sheet)
 
 
@@ -563,23 +609,24 @@ def remove_content_sheet_sidebar(content_sheet: List[list]) -> List[list]:
     return content_sheet
 
 
-def export_xlsx_content() -> None:
-    """Export all the contentpages to an xlsx"""
-    wb = Workbook()
-    worksheet = wb.active
+def export_xlsx_content(queryset: PageQuerySet, response: HttpResponse) -> None:
+    """Export contentpages within the queryset to an xlsx"""
+    workbook = Workbook()
+    worksheet = workbook.active
     worksheet.merge_cells("B1:F1")
     cell = worksheet.cell(row=1, column=2)
     cell.value = "Structure"
-    content_sheet = get_content_sheet()
+    content_sheet = get_content_sheet(queryset)
     for row in content_sheet:
         worksheet.append(row)
-    wb, worksheet = style_sheet(wb, worksheet)
-    wb.save(f"{export_filename}.xlsx")
+    workbook, worksheet = style_sheet(workbook, worksheet)
+    workbook.save(response)
 
 
-def export_csv_content() -> None:
-    content_sheet = get_content_sheet()
+def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
+    """Export contentpages within the queryset to a csv"""
+    content_sheet = get_content_sheet(queryset)
     content_sheet = remove_content_sheet_sidebar(content_sheet)
-    with open(f"{export_filename}.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerows(content_sheet)
+    writer = csv.writer(response)
+    for row in content_sheet:
+        writer.writerow(row)
