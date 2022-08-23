@@ -25,6 +25,15 @@ from .serializers import ContentPageRatingSerializer, PageViewSerializer
 from .utils import import_content_csv
 
 
+from wagtail.contrib.modeladmin.views import IndexView
+from wagtail.contrib.modeladmin.options import ModelAdmin
+from .mixins import SpreadsheetExportMixin
+
+
+class CustomIndexView(SpreadsheetExportMixin, IndexView):
+    pass
+
+
 class StaleContentReportFilterSet(WagtailFilterSet):
     last_published_at = django_filters.DateTimeFilter(
         label=_("Last published before"), lookup_expr="lte", widget=AdminDateInput
