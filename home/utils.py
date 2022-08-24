@@ -492,14 +492,20 @@ class ContentSheetRow:
             content_sheet_row.messenger_title = page.messenger_title
             content_sheet_row.viber_title = page.viber_title
             content_sheet_row.translation_tag = str(page.translation_key)
-            content_sheet_row.tags = content_sheet_row._format_list_from_query_set(page.tags.all())
-            content_sheet_row.quick_replies = content_sheet_row._format_list_from_query_set(
-                page.quick_replies.all()
+            content_sheet_row.tags = content_sheet_row._format_list_from_query_set(
+                page.tags.all()
             )
-            content_sheet_row.triggers = content_sheet_row._format_list_from_query_set(page.triggers.all())
+            content_sheet_row.quick_replies = (
+                content_sheet_row._format_list_from_query_set(page.quick_replies.all())
+            )
+            content_sheet_row.triggers = content_sheet_row._format_list_from_query_set(
+                page.triggers.all()
+            )
             content_sheet_row.locale = str(page.locale)
-            content_sheet_row.related_pages = content_sheet_row._format_list_from_query_set(
-                content_sheet_row._get_related_pages(page)
+            content_sheet_row.related_pages = (
+                content_sheet_row._format_list_from_query_set(
+                    content_sheet_row._get_related_pages(page)
+                )
             )
         return content_sheet_row
 
@@ -634,9 +640,7 @@ class ContentSheetRow:
                     new_row.viber_body = messaging_platform_messages["viber"][
                         message_index
                     ]["msg"]
-                new_row.next_prompt = self._get_next_prompt(
-                    messaging_platform_messages
-                )
+                new_row.next_prompt = self._get_next_prompt(messaging_platform_messages)
                 new_row.doc_link = self._get_doc_link(messaging_platform_messages)
                 new_row.image_link = self._get_image_link(messaging_platform_messages)
                 new_row.media_link = self._get_media_link(messaging_platform_messages)
@@ -668,9 +672,7 @@ class ContentSheetRow:
                 return platform_messages[index][attachment_type]
         return ""
 
-    def _get_image_link(
-        self, messaging_platform_messages: dict, index: int = 0
-    ) -> str:
+    def _get_image_link(self, messaging_platform_messages: dict, index: int = 0) -> str:
         """Iterate over a dict of whatsapp, messenger and viber messages to find a valid image for that message level,
         if an image is found in any of the platforms, the url will be saved to the sheet.
         This will take the first one found, can be extended to a list of urls
@@ -694,9 +696,7 @@ class ContentSheetRow:
             return document.usage_url
         return ""
 
-    def _get_media_link(
-        self, messaging_platform_messages: dict, index: int = 0
-    ) -> str:
+    def _get_media_link(self, messaging_platform_messages: dict, index: int = 0) -> str:
         """Iterate over a dict of all whatsapp, messenger and viber messages to find a valid media,
         if a media is found in any of the platforms, the url will be saved to the sheet
         This will take the first one found, can be extended to a list of urls
