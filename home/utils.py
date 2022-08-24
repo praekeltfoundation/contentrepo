@@ -590,16 +590,17 @@ def get_content_sheet(queryset: PageQuerySet) -> List[list]:
     content_sheet.append(headings)
     for locale in Locale.objects.all():
         home = HomePage.objects.filter(locale_id=locale.id).first()
-        main_menu_pages = home.get_children()
+        if home:
+            main_menu_pages = home.get_children()
 
-        for page in main_menu_pages:
-            content_page = queryset.filter(id=page.id).first()
-            if content_page:
-                content_sheet.extend(get_rows(content_page))
-                if content_page.has_children:
-                    content_sheet = add_children(
-                        content_sheet, content_page.get_children(), queryset
-                    )
+            for page in main_menu_pages:
+                content_page = queryset.filter(id=page.id).first()
+                if content_page:
+                    content_sheet.extend(get_rows(content_page))
+                    if content_page.has_children:
+                        content_sheet = add_children(
+                            content_sheet, content_page.get_children(), queryset
+                        )
     return set_level_numbers(content_sheet)
 
 
