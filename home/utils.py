@@ -353,7 +353,7 @@ def get_rows(page: ContentPage, structure_string: str) -> List[list]:
     """Sets up row for each page including the side panel.
     Each page is returned as a list of rows, this accounts for pages with multiple messages"""
     rows = []
-    base_row = ContentSheetRow(page, structure_string)
+    base_row = ContentSheetRow.from_page(page, structure_string)
     rows.append(base_row.get_row())
     if base_row.tuple_of_extra_rows:
         for extra_row in base_row.tuple_of_extra_rows:
@@ -464,41 +464,44 @@ class ContentSheetRow:
     related_pages: str = ""
     tuple_of_extra_rows: tuple = ()
 
-    def __init__(
-        self,
+    @classmethod
+    def from_page(
+        cls,
         page: ContentPage,
         structure_string: str,
         side_panel_message_number: int = 0,
-    ) -> None:
+    ):
+        content_sheet_row = cls()
         messaging_platform_messages = {
-            "whatsapp": self.__get_messages(page.whatsapp_body),
-            "viber": self.__get_messages(page.viber_body),
-            "messenger": self.__get_messages(page.messenger_body),
+            "whatsapp": content_sheet_row._get_messages(page.whatsapp_body),
+            "viber": content_sheet_row._get_messages(page.viber_body),
+            "messenger": content_sheet_row._get_messages(page.messenger_body),
         }
 
-        self.__set_messages(
+        content_sheet_row._set_messages(
             page, side_panel_message_number, messaging_platform_messages
         )
-        self.__set_structure(structure_string)
+        content_sheet_row._set_structure(structure_string)
 
         if side_panel_message_number == 0:
-            self.parent = self.__get_parent_page(page)
-            self.web_title = page.title
-            self.web_subtitle = page.subtitle
-            self.web_body = str(page.body)
-            self.whatsapp_title = page.whatsapp_title
-            self.messenger_title = page.messenger_title
-            self.viber_title = page.viber_title
-            self.translation_tag = str(page.translation_key)
-            self.tags = self.__format_list_from_query_set(page.tags.all())
-            self.quick_replies = self.__format_list_from_query_set(
+            content_sheet_row.parent = content_sheet_row._get_parent_page(page)
+            content_sheet_row.web_title = page.title
+            content_sheet_row.web_subtitle = page.subtitle
+            content_sheet_row.web_body = str(page.body)
+            content_sheet_row.whatsapp_title = page.whatsapp_title
+            content_sheet_row.messenger_title = page.messenger_title
+            content_sheet_row.viber_title = page.viber_title
+            content_sheet_row.translation_tag = str(page.translation_key)
+            content_sheet_row.tags = content_sheet_row._format_list_from_query_set(page.tags.all())
+            content_sheet_row.quick_replies = content_sheet_row._format_list_from_query_set(
                 page.quick_replies.all()
             )
-            self.triggers = self.__format_list_from_query_set(page.triggers.all())
-            self.locale = str(page.locale)
-            self.related_pages = self.__format_list_from_query_set(
-                self.__get_related_pages(page)
+            content_sheet_row.triggers = content_sheet_row._format_list_from_query_set(page.triggers.all())
+            content_sheet_row.locale = str(page.locale)
+            content_sheet_row.related_pages = content_sheet_row._format_list_from_query_set(
+                content_sheet_row._get_related_pages(page)
             )
+        return content_sheet_row
 
     def get_row(self):
         """Returns object as an exportable row"""
@@ -531,16 +534,19 @@ class ContentSheetRow:
             self.related_pages,
         ]
 
-    def __format_list_from_query_set(self, unformatted_query: PageQuerySet) -> str:
+    @staticmethod
+    def _format_list_from_query_set(unformatted_query: PageQuerySet) -> str:
         list_delimiter = ", "
         return list_delimiter.join(str(x) for x in unformatted_query if str(x) != "")
 
-    def __get_parent_page(self, page: ContentPage) -> str:
+    @staticmethod
+    def _get_parent_page(page: ContentPage) -> str:
         """Get parent page title as string"""
         if not HomePage.objects.filter(id=page.get_parent().id).exists():
             return page.get_parent().title
 
-    def __get_messages(self, platform_body: blocks.StreamValue) -> List[dict]:
+    @staticmethod
+    def _get_messages(platform_body: blocks.StreamValue) -> List[dict]:
         """Formats the platform body objects into a list of dictionaries"""
         msgs = []
         for msg in platform_body:
@@ -559,7 +565,7 @@ class ContentSheetRow:
             )
         return msgs
 
-    def __set_structure(self, structure_string: str):
+    def _set_structure(self, structure_string: str):
         """Sets the sidebar Menu/Sub level based on structure string length,
         for example, Sub 1.2.1 is a level 3 message"""
         if "menu" in structure_string.lower():
@@ -573,7 +579,7 @@ class ContentSheetRow:
         elif len(structure_string) == 13:
             self.side_panel_column_5 = structure_string
 
-    def __set_messages(
+    def _set_messages(
         self,
         page: ContentPage,
         side_panel_message_number: int,
@@ -606,16 +612,16 @@ class ContentSheetRow:
         ):
             self.viber_body = messaging_platform_messages["viber"][0]["msg"]
 
-        self.next_prompt = self.__get_next_prompts(messaging_platform_messages)
-        self.doc_link = self.__get_doc_link(messaging_platform_messages)
-        self.image_link = self.__get_image_link(messaging_platform_messages)
-        self.media_link = self.__get_media_link(messaging_platform_messages)
+        self.next_prompt = self._get_next_prompt(messaging_platform_messages)
+        self.doc_link = self._get_doc_link(messaging_platform_messages)
+        self.image_link = self._get_image_link(messaging_platform_messages)
+        self.media_link = self._get_media_link(messaging_platform_messages)
 
         temp_rows = []
         if side_panel_message_number == 0 and most_messages > 1:
             # Set tuple_of_extra_rows rows to account for multiple messages
             for message_index in range(1, most_messages):
-                new_row = ContentSheetRow(page, "", message_index)
+                new_row = ContentSheetRow.from_page(page, "", message_index)
                 if message_index < len(messaging_platform_messages["whatsapp"]):
                     new_row.whatsapp_body = messaging_platform_messages["whatsapp"][
                         message_index
@@ -628,24 +634,25 @@ class ContentSheetRow:
                     new_row.viber_body = messaging_platform_messages["viber"][
                         message_index
                     ]["msg"]
-                new_row.next_prompt = self.__get_next_prompts(
+                new_row.next_prompt = self._get_next_prompt(
                     messaging_platform_messages
                 )
-                new_row.doc_link = self.__get_doc_link(messaging_platform_messages)
-                new_row.image_link = self.__get_image_link(messaging_platform_messages)
-                new_row.media_link = self.__get_media_link(messaging_platform_messages)
+                new_row.doc_link = self._get_doc_link(messaging_platform_messages)
+                new_row.image_link = self._get_image_link(messaging_platform_messages)
+                new_row.media_link = self._get_media_link(messaging_platform_messages)
                 temp_rows.append(new_row)
             self.tuple_of_extra_rows = tuple(temp_rows)
 
-    def __get_related_pages(self, page: ContentPage) -> List[str]:
+    @staticmethod
+    def _get_related_pages(page: ContentPage) -> List[str]:
         """Returns a list of strings of the related page titles"""
         related_pages = []
         for related_page in page.related_pages:
             related_pages.append(related_page.value.title)
         return related_pages
 
-    def __find_first_match(
-        self,
+    @staticmethod
+    def _find_first_match(
         messaging_platform_messages: dict,
         index: int,
         attachment_type: str,
@@ -661,25 +668,25 @@ class ContentSheetRow:
                 return platform_messages[index][attachment_type]
         return ""
 
-    def __get_image_link(
+    def _get_image_link(
         self, messaging_platform_messages: dict, index: int = 0
     ) -> str:
         """Iterate over a dict of whatsapp, messenger and viber messages to find a valid image for that message level,
         if an image is found in any of the platforms, the url will be saved to the sheet.
         This will take the first one found, can be extended to a list of urls
         """
-        image_name = self.__find_first_match(messaging_platform_messages, index, "img")
+        image_name = self._find_first_match(messaging_platform_messages, index, "img")
         image = Image.objects.filter(title=image_name).first()
         if image:
             return image.usage_url
         return ""
 
-    def __get_doc_link(self, messaging_platform_messages: dict, index: int = 0) -> str:
+    def _get_doc_link(self, messaging_platform_messages: dict, index: int = 0) -> str:
         """Iterate over a dict of all whatsapp, messenger and viber messages to find a valid document,
         if a document is found in any of the platforms, the url will be saved to the sheet
         This will take the first one found, can be extended to a list of urls
         """
-        document_name = self.__find_first_match(
+        document_name = self._find_first_match(
             messaging_platform_messages, index, "doc"
         )
         document = Document.objects.filter(title=document_name).first()
@@ -687,27 +694,27 @@ class ContentSheetRow:
             return document.usage_url
         return ""
 
-    def __get_media_link(
+    def _get_media_link(
         self, messaging_platform_messages: dict, index: int = 0
     ) -> str:
         """Iterate over a dict of all whatsapp, messenger and viber messages to find a valid media,
         if a media is found in any of the platforms, the url will be saved to the sheet
         This will take the first one found, can be extended to a list of urls
         """
-        media_name = self.__find_first_match(messaging_platform_messages, index, "med")
+        media_name = self._find_first_match(messaging_platform_messages, index, "med")
         media = Media.objects.filter(title=media_name).first()
         if media:
             return media.usage_url
         return ""
 
-    def __get_next_prompts(
+    def _get_next_prompt(
         self, messaging_platform_messages: dict, index: int = 0
     ) -> str:
         """Iterate over a dict of all whatsapp, messenger and viber messages to find next prompts,
         if a next prompt is found in any of the platforms, the url will be saved to the sheet
         This will take the one found, can be extended to a list of urls
         """
-        next_prompt = self.__find_first_match(
+        next_prompt = self._find_first_match(
             messaging_platform_messages, index, "next_prompt"
         )
         if next_prompt:
