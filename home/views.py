@@ -18,11 +18,17 @@ from rest_framework.viewsets import GenericViewSet
 from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
+from wagtail.contrib.modeladmin.views import IndexView
 
 from .forms import UploadFileForm
+from .mixins import SpreadsheetExportMixin
 from .models import ContentPage, ContentPageRating, PageView
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
 from .utils import import_content_csv
+
+
+class CustomIndexView(SpreadsheetExportMixin, IndexView):
+    pass
 
 
 class StaleContentReportFilterSet(WagtailFilterSet):

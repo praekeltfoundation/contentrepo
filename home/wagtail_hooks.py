@@ -5,7 +5,7 @@ from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
 from .models import ContentPage
-from .views import ContentPageReportView, PageViewReportView
+from .views import ContentPageReportView, CustomIndexView, PageViewReportView
 
 
 @hooks.register("register_page_listing_buttons")
@@ -64,6 +64,7 @@ class ContentPageAdmin(ModelAdmin):
     menu_order = 200
     add_to_settings_menu = False
     exclude_from_explorer = False
+    index_view_class = CustomIndexView
     list_display = (
         "title",
         "web_body",
@@ -78,6 +79,7 @@ class ContentPageAdmin(ModelAdmin):
     )
     list_filter = ("locale",)
     search_fields = ("title", "body")
+    list_export = ("locale", "title")
 
     def replies(self, obj):
         return [x for x in obj.quick_replies.all()]
