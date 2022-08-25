@@ -172,12 +172,39 @@ class BodyField(serializers.Field):
             ]
         )
 
+class RelatedPagesField(serializers.Field):
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        request = self.context["request"]
+        related_pages = []
+        for related in page.related_pages:
+            related_page = related.value
+            title = related_page.title
+            if "whatsapp" in request.GET and related_page.enable_whatsapp is True:
+                if related_page.whatsapp_title:
+                    title = related_page.whatsapp_title
+            elif "messenger" in request.GET and related_page.enable_messenger is True:
+                if related_page.messenger_title:
+                    title = related_page.messenger_title
+            elif "viber" in request.GET and related_page.enable_viber is True:
+                if related_page.viber_title:
+                    title = related_page.viber_title
+
+            related_pages.append({
+                "id": related.id,
+                "value": related_page.id,
+                "title": title,
+            })
+        return related_pages
 
 class ContentPageSerializer(PageSerializer):
     title = TitleField(read_only=True)
     subtitle = SubtitleField(read_only=True)
     body = BodyField(read_only=True)
     has_children = HasChildrenField(read_only=True)
+    related_pages = RelatedPagesField(read_only=True)
 
 
 class ContentPageRatingSerializer(serializers.ModelSerializer):
