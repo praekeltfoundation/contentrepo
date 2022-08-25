@@ -460,7 +460,7 @@ class Message:
         message.document_name = (
             platform_body_element.value["document"]
             if "document" in platform_body_element.value
-            else None,
+            else None
         )
         message.media_name = (
             platform_body_element.value["media"]
