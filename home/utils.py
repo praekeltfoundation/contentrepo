@@ -436,14 +436,16 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
 
 @dataclass
 class Message:
-    body: str = ''
+    body: str = ""
     image_name: str = None
     media_name: str = None
     document_name: str = None
     next_prompt: str = None
 
     @classmethod
-    def from_platform_body_element(cls, platform_body_element: blocks.StreamValue.StreamChild):
+    def from_platform_body_element(
+        cls, platform_body_element: blocks.StreamValue.StreamChild
+    ):
         message = cls()
         message.body = (
             platform_body_element.value["message"].strip()
@@ -451,7 +453,9 @@ class Message:
             else None
         )
         message.image_name = (
-            platform_body_element.value["image"] if "image" in platform_body_element.value else None
+            platform_body_element.value["image"]
+            if "image" in platform_body_element.value
+            else None
         )
         message.document_name = (
             platform_body_element.value["document"]
@@ -459,7 +463,9 @@ class Message:
             else None,
         )
         message.media_name = (
-            platform_body_element.value["media"] if "media" in platform_body_element.value else None
+            platform_body_element.value["media"]
+            if "media" in platform_body_element.value
+            else None
         )
         message.next_prompt = (
             platform_body_element.value["next_prompt"]
@@ -501,13 +507,35 @@ class MessageContainer:
         return ""
 
     @staticmethod
-    def message_from_platform_body_element(platform_body_element: blocks.StreamValue.StreamChild):
+    def message_from_platform_body_element(
+        platform_body_element: blocks.StreamValue.StreamChild,
+    ):
         message = {}
-        message['message'] = platform_body_element.value["message"].strip() if "message" in platform_body_element.value else None
-        message['image_name'] = platform_body_element.value["image_name"].strip() if "image_name" in platform_body_element.value else None
-        message['document_name'] = platform_body_element.value["document_name"].strip() if "document_name" in platform_body_element.value else None
-        message['media_name'] = platform_body_element.value["media_name"].strip() if "media_name" in platform_body_element.value else None
-        message['next_prompt'] = platform_body_element.value["next_prompt"].strip() if "next_prompt" in platform_body_element.value else None
+        message["message"] = (
+            platform_body_element.value["message"].strip()
+            if "message" in platform_body_element.value
+            else None
+        )
+        message["image_name"] = (
+            platform_body_element.value["image_name"].strip()
+            if "image_name" in platform_body_element.value
+            else None
+        )
+        message["document_name"] = (
+            platform_body_element.value["document_name"].strip()
+            if "document_name" in platform_body_element.value
+            else None
+        )
+        message["media_name"] = (
+            platform_body_element.value["media_name"].strip()
+            if "media_name" in platform_body_element.value
+            else None
+        )
+        message["next_prompt"] = (
+            platform_body_element.value["next_prompt"].strip()
+            if "next_prompt" in platform_body_element.value
+            else None
+        )
 
         return message
 
@@ -658,25 +686,22 @@ class ContentSheetRow:
                 len(message_container.whatsapp),
                 len(message_container.messenger),
                 len(message_container.viber),
-                len(page.body)
+                len(page.body),
             ]
         )
 
         if len(message_container.whatsapp) == 1 or (
-            side_panel_message_number == 0
-            and len(message_container.whatsapp) > 1
+            side_panel_message_number == 0 and len(message_container.whatsapp) > 1
         ):
             self.whatsapp_body = message_container.whatsapp[0].body
 
         if len(message_container.messenger) == 1 or (
-            side_panel_message_number == 0
-            and len(message_container.messenger) > 1
+            side_panel_message_number == 0 and len(message_container.messenger) > 1
         ):
             self.messenger_body = message_container.messenger[0].body
 
         if len(message_container.viber) == 1 or (
-            side_panel_message_number == 0
-            and len(message_container.viber) > 1
+            side_panel_message_number == 0 and len(message_container.viber) > 1
         ):
             self.viber_body = message_container.viber[0].body
 
@@ -699,13 +724,17 @@ class ContentSheetRow:
                         message_index
                     ].body
                 if message_index < len(message_container.viber):
-                    new_row.viber_body = message_container.viber[
-                        message_index
-                    ].body
-                new_row.next_prompt = self._get_next_prompt(message_container, message_index)
+                    new_row.viber_body = message_container.viber[message_index].body
+                new_row.next_prompt = self._get_next_prompt(
+                    message_container, message_index
+                )
                 new_row.doc_link = self._get_doc_link(message_container, message_index)
-                new_row.image_link = self._get_image_link(message_container, message_index)
-                new_row.media_link = self._get_media_link(message_container, message_index)
+                new_row.image_link = self._get_image_link(
+                    message_container, message_index
+                )
+                new_row.media_link = self._get_media_link(
+                    message_container, message_index
+                )
                 temp_rows.append(new_row)
             self.tuple_of_extra_rows = tuple(temp_rows)
 
@@ -717,7 +746,9 @@ class ContentSheetRow:
             related_pages.append(related_page.value.title)
         return related_pages
 
-    def _get_image_link(self, message_container: MessageContainer, index: int = 0) -> str:
+    def _get_image_link(
+        self, message_container: MessageContainer, index: int = 0
+    ) -> str:
         """Iterate over a dict of whatsapp, messenger and viber messages to find a valid image for that message level,
         if an image is found in any of the platforms, the url will be saved to the sheet.
         This will take the first one found, can be extended to a list of urls
@@ -739,7 +770,9 @@ class ContentSheetRow:
             return document.usage_url
         return ""
 
-    def _get_media_link(self, message_container: MessageContainer, index: int = 0) -> str:
+    def _get_media_link(
+        self, message_container: MessageContainer, index: int = 0
+    ) -> str:
         """Iterate over a dict of all whatsapp, messenger and viber messages to find a valid media,
         if a media is found in any of the platforms, the url will be saved to the sheet
         This will take the first one found, can be extended to a list of urls
