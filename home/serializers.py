@@ -172,6 +172,7 @@ class BodyField(serializers.Field):
             ]
         )
 
+
 class RelatedPagesField(serializers.Field):
     def get_attribute(self, instance):
         return instance
@@ -192,12 +193,15 @@ class RelatedPagesField(serializers.Field):
                 if related_page.viber_title:
                     title = related_page.viber_title
 
-            related_pages.append({
-                "id": related.id,
-                "value": related_page.id,
-                "title": title,
-            })
+            related_pages.append(
+                {
+                    "id": related.id,
+                    "value": related_page.id,
+                    "title": title,
+                }
+            )
         return related_pages
+
 
 class ContentPageSerializer(PageSerializer):
     title = TitleField(read_only=True)
