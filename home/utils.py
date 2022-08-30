@@ -3,7 +3,7 @@ import csv
 import io
 from dataclasses import dataclass
 from math import ceil
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from django.http import HttpResponse
 from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
@@ -20,7 +20,7 @@ from wagtail.query import PageQuerySet
 from wagtail.rich_text import RichText
 from wagtailmedia.models import Media
 
-from home.models import ContentPage, HomePage
+from home.models import ContentPage, ContentPageIndex, HomePage
 
 EXPORT_FIELDNAMES = [
     "parent",
@@ -349,7 +349,9 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
     return wb, sheet
 
 
-def get_rows(page: ContentPage, structure_string: str) -> List[list]:
+def get_rows(
+    page: Union[ContentPage, ContentPageIndex], structure_string: str
+) -> List[list]:
     """Sets up row for each page including the side panel.
     Each page is returned as a list of rows, this accounts for pages with multiple messages"""
     rows = []
@@ -369,7 +371,7 @@ def add_children(
 ) -> List[list]:
     """Recursive function that traverses the children of a page with a depth first search algorithm"""
     for index, child in enumerate(children, 1):
-        content_page = ContentPage.objects.filter(id=child.id).first()
+        content_page = get_page(child, queryset)
         structure_string = f"{parent_structure.replace('Menu','Sub')}.{index}"
         row = get_rows(content_page, structure_string)
         if row:
@@ -381,6 +383,15 @@ def add_children(
     return temp_sheet
 
 
+def get_page(page: Union[ContentPage, ContentPageIndex], queryset: PageQuerySet = None):
+    if page.content_type.name == "content page index":
+        return ContentPageIndex.objects.filter(id=page.id).first()
+    elif page.content_type.name == "content page" and queryset:
+        return queryset.filter(id=page.id).first()
+    else:
+        return ContentPage.objects.filter(id=page.id).first()
+
+
 def get_content_sheet(queryset: PageQuerySet) -> List[list]:
     content_sheet = []
     headings = [1, 2, 3, 4, 5, "Message"] + EXPORT_FIELDNAMES
@@ -390,9 +401,9 @@ def get_content_sheet(queryset: PageQuerySet) -> List[list]:
         if home:
             main_menu_pages = home.get_children()
             for index, page in enumerate(main_menu_pages, 1):
-                content_page = queryset.filter(id=page.id).first()
+                structure_string = f"Menu {index}"
+                content_page = get_page(page, queryset)
                 if content_page:
-                    structure_string = f"Menu {index}"
                     row = get_rows(content_page, structure_string)
                     content_sheet.extend(row)
                     if content_page.has_children:
@@ -577,6 +588,20 @@ class ContentSheetRow:
         structure_string: str,
         side_panel_message_number: int = 0,
     ):
+        if isinstance(page, ContentPage):
+            return cls.from_content_page(
+                page, structure_string, side_panel_message_number
+            )
+        if isinstance(page, ContentPageIndex):
+            return cls.from_index_page(page, structure_string)
+
+    @classmethod
+    def from_content_page(
+        cls,
+        page: ContentPage,
+        structure_string: str,
+        side_panel_message_number: int = 0,
+    ):
         content_sheet_row = cls()
         message_container = MessageContainer.from_platform_body(
             page.whatsapp_body,
@@ -613,6 +638,20 @@ class ContentSheetRow:
                     content_sheet_row._get_related_pages(page)
                 )
             )
+        return content_sheet_row
+
+    @classmethod
+    def from_index_page(
+        cls,
+        page: ContentPageIndex,
+        structure_string: str,
+    ):
+        content_sheet_row = cls()
+        content_sheet_row._set_structure(structure_string)
+        content_sheet_row.parent = content_sheet_row._get_parent_page(page)
+        content_sheet_row.web_title = page.title
+        content_sheet_row.translation_tag = str(page.translation_key)
+        content_sheet_row.locale = str(page.locale)
         return content_sheet_row
 
     def get_row(self):
@@ -714,7 +753,7 @@ class ContentSheetRow:
         if side_panel_message_number == 0 and most_messages > 1:
             # Set tuple_of_extra_rows rows to account for multiple messages
             for message_index in range(1, most_messages):
-                new_row = ContentSheetRow.from_page(page, "", message_index)
+                new_row = ContentSheetRow.from_content_page(page, "", message_index)
                 if message_index < len(message_container.whatsapp):
                     new_row.whatsapp_body = message_container.whatsapp[
                         message_index
