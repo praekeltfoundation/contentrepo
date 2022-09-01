@@ -52,14 +52,23 @@ class StaleContentReportFilterSet(WagtailFilterSet):
 
 
 class PageViewFilterSet(WagtailFilterSet):
+    page_choices = [(page.id, page.title) for page in ContentPage.objects.all()]
+    platform_choices = [
+        ("web", "Web"),
+        ("whatsapp", "Whatsapp"),
+        ("messenger", "Messenger"),
+        ("viber", "Viber"),
+    ]
     timestamp = django_filters.DateTimeFromToRangeFilter(
         label=_("Date Range"),
         widget=MultiWidget(widgets=[AdminDateInput, AdminDateInput]),
     )
+    page_id = django_filters.ChoiceFilter(choices=page_choices)
+    platform = django_filters.ChoiceFilter(choices=platform_choices)
 
     class Meta:
         model = PageView
-        fields = ["timestamp"]
+        fields = ["timestamp", "page_id", "platform"]
 
 
 class ContentPageReportView(ReportView):
@@ -71,7 +80,7 @@ class ContentPageReportView(ReportView):
     export_headings = dict(
         last_published_at="Last Published",
         view_counter="View Count",
-        **PageReportView.export_headings
+        **PageReportView.export_headings,
     )
 
     def get_queryset(self):
@@ -94,7 +103,7 @@ class PageViewReportView(ReportView):
             self.get_filtered_queryset()[1]
             .annotate(month=TruncMonth("timestamp"))
             .values("month")
-            .annotate(x=F("month"), y=Count("id"))
+            .annotate(x=F("month"), y=Count("page_id"))
             .values("x", "y")
         )
         labels = [item["x"].date() for item in view_per_month]
