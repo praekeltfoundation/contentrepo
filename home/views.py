@@ -4,10 +4,10 @@ import threading
 import django_filters
 from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
+from django.db.utils import OperationalError
 from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
 from django.shortcuts import render
-from django.db.utils import OperationalError
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from rest_framework import permissions
