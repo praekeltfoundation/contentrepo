@@ -4,6 +4,7 @@ import threading
 import django_filters
 from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
+from django.db.utils import OperationalError
 from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
 from django.shortcuts import render
@@ -52,7 +53,10 @@ class StaleContentReportFilterSet(WagtailFilterSet):
 
 
 class PageViewFilterSet(WagtailFilterSet):
-    page_choices = [(page.id, page.title) for page in ContentPage.objects.all()]
+    try:
+        page_choices = [(page.id, page.title) for page in ContentPage.objects.all()]
+    except OperationalError:
+        page_choices = []
     platform_choices = [
         ("web", "Web"),
         ("whatsapp", "Whatsapp"),
