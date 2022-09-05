@@ -7,6 +7,7 @@ from django.db.models.functions import TruncMonth
 from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
 from django.shortcuts import render
+from django.db.utils import OperationalError
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from rest_framework import permissions
@@ -52,7 +53,10 @@ class StaleContentReportFilterSet(WagtailFilterSet):
 
 
 class PageViewFilterSet(WagtailFilterSet):
-    page_choices = [(page.id, page.title) for page in ContentPage.objects.all()]
+    try:
+        page_choices = [(page.id, page.title) for page in ContentPage.objects.all()]
+    except OperationalError:
+        page_choices = []
     platform_choices = [
         ("web", "Web"),
         ("whatsapp", "Whatsapp"),
