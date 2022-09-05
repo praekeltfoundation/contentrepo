@@ -34,5 +34,5 @@ jobs:
         isort -c .
     - name: Django Test
       run: |
-        ./manage.py migrate --run-syncdb 
+        ./manage.py migrate --run-syncdb --settings=contentrepo.settings.dev
         ./manage.py test --settings=contentrepo.settings.dev
