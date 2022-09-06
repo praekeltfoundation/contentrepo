@@ -12,7 +12,8 @@ from .utils import create_page
 
 
 class PageRatingTestCase(APITestCase):
-    url = reverse("contentpagerating-list")
+    def setUp(self):
+        self.url = reverse("contentpagerating-list")
 
     def test_page_rating_success(self):
         user = get_user_model().objects.create_user("test")
@@ -118,7 +119,8 @@ class PageRatingTestCase(APITestCase):
 
 
 class PageViewsTestCase(APITestCase):
-    url = reverse("pageview-list")
+    def setUp(self):
+        self.url = reverse("pageview-list")
 
     def test_get_list(self):
         """
