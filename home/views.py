@@ -4,7 +4,6 @@ import threading
 import django_filters
 from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
-from django.db.utils import OperationalError
 from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
 from django.shortcuts import render
@@ -53,10 +52,6 @@ class StaleContentReportFilterSet(WagtailFilterSet):
 
 
 class PageViewFilterSet(WagtailFilterSet):
-    try:
-        page_choices = [(page.id, page.title) for page in ContentPage.objects.all()]
-    except OperationalError:
-        page_choices = []
     platform_choices = [
         ("web", "Web"),
         ("whatsapp", "Whatsapp"),
@@ -67,12 +62,12 @@ class PageViewFilterSet(WagtailFilterSet):
         label=_("Date Range"),
         widget=MultiWidget(widgets=[AdminDateInput, AdminDateInput]),
     )
-    page_id = django_filters.ChoiceFilter(choices=page_choices)
     platform = django_filters.ChoiceFilter(choices=platform_choices)
+    page = django_filters.ModelChoiceFilter(queryset=ContentPage.objects)
 
     class Meta:
         model = PageView
-        fields = ["timestamp", "page_id", "platform"]
+        fields = ["timestamp", "platform", "page"]
 
 
 class ContentPageReportView(ReportView):
