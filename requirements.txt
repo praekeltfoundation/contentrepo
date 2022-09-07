@@ -1,5 +1,5 @@
-Django>=4.0,<4.1
-wagtail==3.0.1
+Django>=4.1,<4.2
+wagtail==4.0.1
 wagtailmedia
 psycopg2-binary
 wagtail-content-import
@@ -10,3 +10,4 @@ django-treebeard==4.5.1
 django-redis
 boto3
 django-storages
+responses

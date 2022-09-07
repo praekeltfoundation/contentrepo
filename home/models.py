@@ -8,7 +8,7 @@ from wagtail.api import APIField
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import Page, PageRevision
+from wagtail.models import Page, Revision
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
@@ -414,7 +414,7 @@ class ContentPageRating(models.Model):
         ContentPage, related_name="ratings", null=False, on_delete=models.CASCADE
     )
     revision = models.ForeignKey(
-        PageRevision, related_name="ratings", null=False, on_delete=models.CASCADE
+        Revision, related_name="ratings", null=False, on_delete=models.CASCADE
     )
     helpful = models.BooleanField()
     comment = models.TextField(blank=True, default="")
@@ -439,7 +439,7 @@ class PageView(models.Model):
         ContentPage, related_name="views", null=False, on_delete=models.CASCADE
     )
     revision = models.ForeignKey(
-        PageRevision, related_name="views", null=False, on_delete=models.CASCADE
+        Revision, related_name="views", null=False, on_delete=models.CASCADE
     )
     message = models.IntegerField(blank=True, default=None, null=True)
     data = models.JSONField(default=dict, blank=True, null=True)
