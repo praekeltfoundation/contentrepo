@@ -356,10 +356,11 @@ def get_rows(
     Each page is returned as a list of rows, this accounts for pages with multiple messages"""
     rows = []
     base_row = ContentSheetRow.from_page(page, structure_string)
-    rows.append(base_row.get_row())
-    if base_row.tuple_of_extra_rows:
-        for extra_row in base_row.tuple_of_extra_rows:
-            rows.append(extra_row.get_row())
+    if base_row:
+        rows.append(base_row.get_row())
+        if base_row.tuple_of_extra_rows:
+            for extra_row in base_row.tuple_of_extra_rows:
+                rows.append(extra_row.get_row())
     return rows
 
 
@@ -376,7 +377,7 @@ def add_children(
         row = get_rows(content_page, structure_string)
         if row:
             temp_sheet.extend(row)
-        if content_page.has_children:
+        if content_page and content_page.has_children:
             add_children(
                 temp_sheet, content_page.get_children(), queryset, structure_string
             )
