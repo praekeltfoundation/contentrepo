@@ -87,6 +87,7 @@ class ContentPageReportView(ReportView):
 
 
 class PageViewReportView(ReportView):
+    header_icon = "doc-empty"
     title = "Page views"
     template_name = "reports/page_view_report.html"
     filterset_class = PageViewFilterSet
