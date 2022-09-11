@@ -6,10 +6,10 @@ from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
 from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from django.views import View
-from django.http import HttpResponse
 from django_filters import rest_framework as filters
 from rest_framework import permissions
 from rest_framework.authentication import TokenAuthentication
@@ -118,9 +118,7 @@ class ContentUploadThread(threading.Thread):
         super(ContentUploadThread, self).__init__(**kwargs)
 
     def run(self):
-        import_content_csv(
-            self.file, self.purge, self.locale
-        )
+        import_content_csv(self.file, self.purge, self.locale)
 
 
 class UploadView(View):
@@ -129,7 +127,7 @@ class UploadView(View):
 
     def get(self, request, *args, **kwargs):
         loading = "ContentUploadThread" in [th.name for th in threading.enumerate()]
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
             return HttpResponse(loading)
         form = self.form_class()
         return render(request, self.template_name, {"form": form, "loading": loading})
