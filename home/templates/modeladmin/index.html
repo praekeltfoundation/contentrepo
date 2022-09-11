@@ -1,0 +1,28 @@
+{% extends "modeladmin/index.html" %}
+{% load i18n modeladmin_tags wagtailadmin_tags %}
+
+
+{% block header_extra %}
+    <div class="right header-right">
+        {% if view.list_export or user_can_create %}
+            <div class="actionbutton">
+                {% if user_can_create %}
+                    {% include 'modeladmin/includes/button.html' with button=view.button_helper.add_button %}
+                {% endif %}
+                    <div class="dropdown dropdown-button match-width col">
+                        <a href="?export=xlsx&{{ request.GET.urlencode }}" class="button bicolor button--icon">{% icon name="download" wrapped=1 %}{% trans 'Download XLSX' %}</a>
+                        <div class="dropdown-toggle">{% icon name="arrow-down" %}</div>
+                        <ul>
+                            <li><a  class="button bicolor button--icon" href="?export=csv&{{ request.GET.urlencode }}">{% icon name="download" wrapped=1 %}{% trans 'Download CSV' %}</a></li>
+                        </ul>
+                    </div>
+            </div>
+            <div class="actionbutton">
+                    <div class="dropdown dropdown-button match-width col">
+                        <a href="/import/" class="button bicolor button--icon">{% icon name="download" wrapped=1 %}{% trans 'Import' %}</a>
+                    </div>
+            </div>
+
+        {% endif %}
+    </div>
+{% endblock %}

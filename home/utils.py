@@ -19,7 +19,8 @@ from wagtail.query import PageQuerySet
 from wagtail.rich_text import RichText
 from wagtailmedia.models import Media
 
-from home.models import ContentPage, HomePage
+from home.models import (ContentPage, ContentPageIndex, ContentQuickReply,
+                         ContentTrigger, HomePage, Page)
 
 FIELDNAMES = [
     "parent",
@@ -45,7 +46,7 @@ FIELDNAMES = [
 ]
 
 
-def import_content_csv(file, splitmessages=True, newline=None, purge=True, locale="en"):
+def import_content_csv(file, purge=True, locale="en"):
     def get_rich_text_body(row):
         body = []
         row = row.splitlines()
@@ -54,44 +55,20 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 body = body + [("paragraph", RichText(line))]
         return body
 
-    def get_body(raw, body_field, type_of_message):
+    def get_body(messages, type_of_message):
         struct_blocks = []
-        if "image_title" in raw and raw["image_title"]:
-            im = Image.objects.get(title=raw["image_title"]).id
-            block = blocks.StructBlock(
-                [
-                    ("image", ImageChooserBlock()),
-                ]
-            )
-            block_value = block.to_python({"image": im})
-            struct_blocks.append((type_of_message, block_value))
+        for raw in messages:
+            if "image_title" in raw and raw["image_title"]:
+                im = Image.objects.get(title=raw["image_title"]).id
+                block = blocks.StructBlock(
+                    [
+                        ("image", ImageChooserBlock()),
+                    ]
+                )
+                block_value = block.to_python({"image": im})
+                struct_blocks.append((type_of_message, block_value))
 
-        message_body = raw[body_field]
-        if splitmessages:
-            if newline:
-                rows = message_body.split(newline)
-                next_prompts = raw.get("next_prompt", "").split(newline)
-            else:
-                rows = message_body.splitlines()
-                next_prompts = raw.get("next_prompt", "").splitlines()
-            for i, row in enumerate(rows):
-                data = {"message": row.strip()}
-                msg_blocks = [("message", blocks.TextBlock())]
-
-                if type_of_message == "Whatsapp_Message":
-                    if len(next_prompts) > i:
-                        data["next_prompt"] = next_prompts[i]
-                        msg_blocks.append(("next_prompt", blocks.TextBlock()))
-                    elif len(next_prompts) == 1:
-                        data["next_prompt"] = next_prompts[0]
-                        msg_blocks.append(("next_prompt", blocks.TextBlock()))
-
-                if row:
-                    block = blocks.StructBlock(msg_blocks)
-                    block_value = block.to_python(data)
-                    struct_blocks.append((type_of_message, block_value))
-            return struct_blocks
-        else:
+            message_body = raw
             if message_body:
                 block = blocks.StructBlock(
                     [
@@ -100,7 +77,7 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 )
                 block_value = block.to_python({"message": message_body})
                 struct_blocks.append((type_of_message, block_value))
-                return struct_blocks
+        return struct_blocks
 
     def create_tags(row, page):
         tags = row["tags"].split(",")
@@ -110,18 +87,21 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
             created_tag, _ = Tag.objects.get_or_create(name=tag.strip())
             page.tags.add(created_tag)
 
-    def add_quick_replies(row):
-        replies = row.split(",")
-        replies_body = []
+    def add_quick_replies(row, page):
+        replies = row["quick_replies"].split(",")
         for reply in replies:
-            replies_body = replies_body + [("quick_reply", reply)]
-        return replies_body
+            created_tag, _ = ContentQuickReply.objects.get_or_create(name=reply.strip())
+            page.quick_replies.add(created_tag)
+
+    def add_triggers(row, page):
+        triggers = row["triggers"].split(",")
+        for trigger in triggers:
+            created_tag, _ = ContentTrigger.objects.get_or_create(name=trigger.strip())
+            page.triggers.add(created_tag)
 
     def add_parent(row, page, home_page):
         if row["parent"]:
-            parent = ContentPage.objects.filter(
-                title=row["parent"], locale=page.locale
-            ).last()
+            parent = Page.objects.filter(title=row["parent"], locale=page.locale).last()
             parent.add_child(instance=page)
         else:
             home_page.add_child(instance=page)
@@ -147,16 +127,15 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
     def add_web(row):
         if "web_title" not in row.keys() or not row["web_title"]:
             return
-        page = ContentPage(
+        return ContentPage(
             title=row["web_title"],
             subtitle=row["web_subtitle"],
             body=get_rich_text_body(row["web_body"]),
             enable_web=True,
             locale=home_page.locale,
         )
-        return page
 
-    def add_whatsapp(row, page=None):
+    def add_whatsapp(row, whatsapp_messages, page=None):
         if "whatsapp_title" not in row.keys() or not row["whatsapp_title"]:
             return page
 
@@ -165,17 +144,20 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 title=row["whatsapp_title"],
                 enable_whatsapp=True,
                 whatsapp_title=row["whatsapp_title"],
-                whatsapp_body=get_body(row, "whatsapp_body", "Whatsapp_Message"),
-                quick_replies=add_quick_replies(row["quick_replies"]),
+                whatsapp_body=get_body(
+                    whatsapp_messages, "whatsapp_body", "Whatsapp_Message"
+                ),
                 locale=home_page.locale,
             )
         else:
             page.enable_whatsapp = True
             page.whatsapp_title = row["whatsapp_title"]
-            page.whatsapp_body = get_body(row, "whatsapp_body", "Whatsapp_Message")
+            page.whatsapp_body = get_body(
+                whatsapp_messages, "whatsapp_body", "Whatsapp_Message"
+            )
             return page
 
-    def add_messenger(row, page=None):
+    def add_messenger(row, messenger_messages, page=None):
         if "messenger_title" not in row.keys() or not row["messenger_title"]:
             return page
 
@@ -184,17 +166,21 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 title=row["messenger_title"],
                 enable_messenger=True,
                 messenger_title=row["messenger_title"],
-                messenger_body=get_body(row, "messenger_body", "messenger_block"),
+                messenger_body=get_body(
+                    messenger_messages, "messenger_body", "messenger_block"
+                ),
                 messenger_quick_replies=add_quick_replies(row["quick_replies"]),
                 locale=home_page.locale,
             )
         else:
             page.enable_messenger = True
             page.messenger_title = row["messenger_title"]
-            page.messenger_body = get_body(row, "messenger_body", "messenger_block")
+            page.messenger_body = get_body(
+                messenger_messages, "messenger_body", "messenger_block"
+            )
             return page
 
-    def add_viber(row, page=None):
+    def add_viber(row, viber_messages, page=None):
         if "viber_title" not in row.keys() or not row["viber_title"]:
             return page
 
@@ -203,18 +189,19 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
                 title=row["viber_title"],
                 enable_viberr=True,
                 viber_title=row["viber_title"],
-                viber_body=get_body(row, "viber_body", "viber_message"),
+                viber_body=get_body(viber_messages, "viber_body", "viber_message"),
                 viber_quick_replies=add_quick_replies(row["quick_replies"]),
                 locale=home_page.locale,
             )
         else:
             page.enable_viber = True
             page.viber_title = row["viber_title"]
-            page.viber_body = get_body(row, "viber_body", "viber_message")
+            page.viber_body = get_body(viber_messages, "viber_body", "viber_message")
             return page
 
     if purge == "yes":
         ContentPage.objects.all().delete()
+        ContentPageIndex.objects.all().delete()
 
     if isinstance(locale, str):
         locale = Locale.objects.get(language_code=locale)
@@ -225,15 +212,50 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
         csv_file = csv_file.decode("utf-8")
 
     reader = csv.DictReader(io.StringIO(csv_file))
-    for row in reader:
+    lines = []
+    for dictionary in reader:
+        lines.append(dictionary)
+    for index, row in enumerate(lines):
+        if (
+            row["parent"] == ""
+            and row["web_body"] == ""
+            and row["whatsapp_body"] == ""
+            and row["messenger_body"] == ""
+        ):
+            cpi = ContentPageIndex(title=row["web_title"])
+            home_page.add_child(instance=cpi)
+            cpi.save_revision().publish()
+            continue
+        if row["web_title"] == "":
+            continue
         row = clean_row(row)
-        contentpage = add_web(row)
-        contentpage = add_whatsapp(row, contentpage)
-        contentpage = add_messenger(row, contentpage)
-        contentpage = add_viber(row, contentpage)
+        whatsapp_messages = [row["whatsapp_body"]]
+        messenger_messages = [row["messenger_body"]]
+        viber_messages = [row["viber_body"]]
+        counter = 1
+        while True:
+            try:
+                next_row = lines[index + counter]
+            except:
+                break
+            if next_row["web_title"] != "":
+                break
+            if next_row["whatsapp_body"] != "":
+                whatsapp_messages.append(next_row["whatsapp_body"])
+            if next_row["messenger_body"] != "":
+                messenger_messages.append(next_row["messenger_body"])
+            if next_row["viber_body"] != "":
+                viber_messages.append(next_row["viber_body"])
+            counter += 1
 
+        contentpage = add_web(row)
+        contentpage = add_whatsapp(row, whatsapp_messages, contentpage)
+        contentpage = add_messenger(row, messenger_messages, contentpage)
+        contentpage = add_viber(row, viber_messages, contentpage)
         if contentpage:
             create_tags(row, contentpage)
+            add_quick_replies(row, contentpage)
+            add_triggers(row, contentpage)
             add_parent(row, contentpage, home_page)
             contentpage.save_revision().publish()
             try:

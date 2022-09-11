@@ -8,6 +8,8 @@ from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
+from django.views import View
+from django.http import HttpResponse
 from django_filters import rest_framework as filters
 from rest_framework import permissions
 from rest_framework.authentication import TokenAuthentication
@@ -109,36 +111,44 @@ class PageViewReportView(ReportView):
 
 
 class ContentUploadThread(threading.Thread):
-    def __init__(self, file, splitlines, newline, purge, locale, **kwargs):
+    def __init__(self, file, purge, locale, **kwargs):
         self.file = file
-        self.splitlines = splitlines
         self.purge = purge
         self.locale = locale
-        self.newline = newline
         super(ContentUploadThread, self).__init__(**kwargs)
 
     def run(self):
         import_content_csv(
-            self.file, self.splitlines, self.newline, self.purge, self.locale
+            self.file, self.purge, self.locale
         )
 
 
-def upload_file(request):
-    if request.method == "POST":
-        form = UploadFileForm(request.POST, request.FILES)
+class UploadView(View):
+    form_class = UploadFileForm
+    template_name = "upload.html"
+
+    def get(self, request, *args, **kwargs):
+        loading = "ContentUploadThread" in [th.name for th in threading.enumerate()]
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return HttpResponse(loading)
+        form = self.form_class()
+        return render(request, self.template_name, {"form": form, "loading": loading})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, request.FILES)
         if form.is_valid():
             if form.cleaned_data["purge"] == "True":
                 ContentPage.objects.all().delete()
             ContentUploadThread(
                 request.FILES["file"],
-                form.cleaned_data["split_messages"],
-                form.cleaned_data["newline"],
                 form.cleaned_data["purge"],
                 form.cleaned_data["locale"],
+                name="ContentUploadThread",
             ).start()
-    else:
-        form = UploadFileForm()
-    return render(request, "upload.html", {"form": form})
+            loading = "ContentUploadThread" in [th.name for th in threading.enumerate()]
+            return render(
+                request, self.template_name, {"form": form, "loading": loading}
+            )
 
 
 def CursorPaginationFactory(field):
