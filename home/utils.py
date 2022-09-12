@@ -21,7 +21,7 @@ from wagtail.query import PageQuerySet
 from wagtail.rich_text import RichText
 from wagtailmedia.models import Media
 
-from home.models import (
+from home.models import (  # isort:skip
     ContentPage,
     ContentPageIndex,
     ContentQuickReply,
