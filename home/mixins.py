@@ -24,7 +24,6 @@ class SpreadsheetExportMixin:
             self.get_filename()
         )
         export_xlsx_content(queryset, response)
-        print(response)
         return response
 
     def write_csv_response(self, queryset):
