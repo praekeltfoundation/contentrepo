@@ -26,7 +26,7 @@ from .forms import UploadFileForm
 from .mixins import SpreadsheetExportMixin
 from .models import ContentPage, ContentPageRating, PageView
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
-from .utils import import_content_csv
+from .utils import import_content
 
 
 class CustomIndexView(SpreadsheetExportMixin, IndexView):
@@ -111,14 +111,15 @@ class PageViewReportView(ReportView):
 
 
 class ContentUploadThread(threading.Thread):
-    def __init__(self, file, purge, locale, **kwargs):
+    def __init__(self, file, file_type, purge, locale, **kwargs):
         self.file = file
+        self.file_type = file_type
         self.purge = purge
         self.locale = locale
         super(ContentUploadThread, self).__init__(**kwargs)
 
     def run(self):
-        import_content_csv(self.file, self.purge, self.locale)
+        import_content(self.file, self.file_type, self.purge, self.locale)
 
 
 class UploadView(View):
@@ -139,6 +140,7 @@ class UploadView(View):
                 ContentPage.objects.all().delete()
             ContentUploadThread(
                 request.FILES["file"],
+                form.cleaned_data["file_type"],
                 form.cleaned_data["purge"],
                 form.cleaned_data["locale"],
                 name="ContentUploadThread",

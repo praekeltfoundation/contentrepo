@@ -1,10 +1,12 @@
 import copy
 import csv
 import io
+from io import BytesIO
 from math import ceil
 from typing import List, Tuple
 
 from django.http import HttpResponse
+from openpyxl import load_workbook
 from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
@@ -19,8 +21,14 @@ from wagtail.query import PageQuerySet
 from wagtail.rich_text import RichText
 from wagtailmedia.models import Media
 
-from home.models import (ContentPage, ContentPageIndex, ContentQuickReply,
-                         ContentTrigger, HomePage, Page)
+from home.models import (
+    ContentPage,
+    ContentPageIndex,
+    ContentQuickReply,
+    ContentTrigger,
+    HomePage,
+    Page,
+)
 
 FIELDNAMES = [
     "parent",
@@ -46,14 +54,15 @@ FIELDNAMES = [
 ]
 
 
-def import_content_csv(file, purge=True, locale="en"):
-    def get_rich_text_body(row):
-        body = []
-        row = row.splitlines()
-        for line in row:
-            if len(line) != 0:
-                body = body + [("paragraph", RichText(line))]
-        return body
+def import_content(file, filetype, purge=True, locale="en"):
+    def get_rich_text_body(text=None):
+        if text:
+            body = []
+            lines = text.splitlines()
+            for line in lines:
+                if len(line) != 0:
+                    body = body + [("paragraph", RichText(line))]
+            return body
 
     def get_body(messages, type_of_message):
         struct_blocks = []
@@ -80,49 +89,43 @@ def import_content_csv(file, purge=True, locale="en"):
         return struct_blocks
 
     def create_tags(row, page):
-        tags = row["tags"].split(",")
-        if "translation_tag" in row:
-            tags.extend(row["translation_tag"].split(","))
-        for tag in tags:
-            created_tag, _ = Tag.objects.get_or_create(name=tag.strip())
-            page.tags.add(created_tag)
+        if row["tags"]:
+            tags = row["tags"].split(",")
+            if "translation_tag" in row:
+                tags.extend(row["translation_tag"].split(","))
+            for tag in tags:
+                created_tag, _ = Tag.objects.get_or_create(name=tag.strip())
+                page.tags.add(created_tag)
 
     def add_quick_replies(row, page):
-        replies = row["quick_replies"].split(",")
-        for reply in replies:
-            created_tag, _ = ContentQuickReply.objects.get_or_create(name=reply.strip())
-            page.quick_replies.add(created_tag)
+        if row["quick_replies"]:
+            replies = row["quick_replies"].split(",")
+            for reply in replies:
+                created_tag, _ = ContentQuickReply.objects.get_or_create(
+                    name=reply.strip()
+                )
+                page.quick_replies.add(created_tag)
 
     def add_triggers(row, page):
-        triggers = row["triggers"].split(",")
-        for trigger in triggers:
-            created_tag, _ = ContentTrigger.objects.get_or_create(name=trigger.strip())
-            page.triggers.add(created_tag)
+        if row["triggers"]:
+            triggers = row["triggers"].split(",")
+            for trigger in triggers:
+                created_tag, _ = ContentTrigger.objects.get_or_create(
+                    name=trigger.strip()
+                )
+                page.triggers.add(created_tag)
 
     def add_parent(row, page, home_page):
         if row["parent"]:
-            parent = Page.objects.filter(title=row["parent"], locale=page.locale).last()
-            parent.add_child(instance=page)
+            try:
+                parent = Page.objects.filter(
+                    title=row["parent"], locale=page.locale
+                ).last()
+                parent.add_child(instance=page)
+            except:
+                print("Cannot find parent")
         else:
             home_page.add_child(instance=page)
-
-    def clean_row(row):
-        for field in (
-            "web_title",
-            "web_subtitle",
-            "web_body",
-            "whatsapp_title",
-            "whatsapp_body",
-            "next_prompt",
-            "viber_title",
-            "viber_body",
-            "messenger_title",
-            "messenger_body",
-            "parent",
-        ):
-            if field in row and row[field]:
-                row[field] = str(row[field]).strip()
-        return row
 
     def add_web(row):
         if "web_title" not in row.keys() or not row["web_title"]:
@@ -144,17 +147,13 @@ def import_content_csv(file, purge=True, locale="en"):
                 title=row["whatsapp_title"],
                 enable_whatsapp=True,
                 whatsapp_title=row["whatsapp_title"],
-                whatsapp_body=get_body(
-                    whatsapp_messages, "whatsapp_body", "Whatsapp_Message"
-                ),
+                whatsapp_body=get_body(whatsapp_messages, "Whatsapp_Message"),
                 locale=home_page.locale,
             )
         else:
             page.enable_whatsapp = True
             page.whatsapp_title = row["whatsapp_title"]
-            page.whatsapp_body = get_body(
-                whatsapp_messages, "whatsapp_body", "Whatsapp_Message"
-            )
+            page.whatsapp_body = get_body(whatsapp_messages, "Whatsapp_Message")
             return page
 
     def add_messenger(row, messenger_messages, page=None):
@@ -166,18 +165,14 @@ def import_content_csv(file, purge=True, locale="en"):
                 title=row["messenger_title"],
                 enable_messenger=True,
                 messenger_title=row["messenger_title"],
-                messenger_body=get_body(
-                    messenger_messages, "messenger_body", "messenger_block"
-                ),
+                messenger_body=get_body(messenger_messages, "messenger_block"),
                 messenger_quick_replies=add_quick_replies(row["quick_replies"]),
                 locale=home_page.locale,
             )
         else:
             page.enable_messenger = True
             page.messenger_title = row["messenger_title"]
-            page.messenger_body = get_body(
-                messenger_messages, "messenger_body", "messenger_block"
-            )
+            page.messenger_body = get_body(messenger_messages, "messenger_block")
             return page
 
     def add_viber(row, viber_messages, page=None):
@@ -189,15 +184,33 @@ def import_content_csv(file, purge=True, locale="en"):
                 title=row["viber_title"],
                 enable_viberr=True,
                 viber_title=row["viber_title"],
-                viber_body=get_body(viber_messages, "viber_body", "viber_message"),
+                viber_body=get_body(viber_messages, "viber_message"),
                 viber_quick_replies=add_quick_replies(row["quick_replies"]),
                 locale=home_page.locale,
             )
         else:
             page.enable_viber = True
             page.viber_title = row["viber_title"]
-            page.viber_body = get_body(viber_messages, "viber_body", "viber_message")
+            page.viber_body = get_body(viber_messages, "viber_message")
             return page
+
+    def clean_row(row):
+        for field in (
+            "web_title",
+            "web_subtitle",
+            "web_body",
+            "whatsapp_title",
+            "whatsapp_body",
+            "next_prompt",
+            "viber_title",
+            "viber_body",
+            "messenger_title",
+            "messenger_body",
+            "parent",
+        ):
+            if field in row and row[field]:
+                row[field] = str(row[field]).strip()
+        return row
 
     if purge == "yes":
         ContentPage.objects.all().delete()
@@ -207,26 +220,36 @@ def import_content_csv(file, purge=True, locale="en"):
         locale = Locale.objects.get(language_code=locale)
 
     home_page = HomePage.objects.get(locale__pk=locale.pk)
-    csv_file = file.read()
-    if isinstance(csv_file, bytes):
-        csv_file = csv_file.decode("utf-8")
-
-    reader = csv.DictReader(io.StringIO(csv_file))
+    file = file.read()
     lines = []
-    for dictionary in reader:
-        lines.append(dictionary)
+    if filetype == "XLSX":
+        wb = load_workbook(filename=BytesIO(file))
+        ws = wb.active
+        ws.delete_cols(1, 7)
+        ws.delete_rows(1, 2)
+        for row in ws.iter_rows():
+            row_dict = {}
+            for index, x in enumerate(row):
+                row_dict[FIELDNAMES[index]] = x.value
+            lines.append(row_dict)
+    else:
+        if isinstance(file, bytes):
+            file = file.decode("utf-8")
+        reader = csv.DictReader(io.StringIO(file))
+        for dictionary in reader:
+            lines.append(dictionary)
     for index, row in enumerate(lines):
         if (
-            row["parent"] == ""
-            and row["web_body"] == ""
-            and row["whatsapp_body"] == ""
-            and row["messenger_body"] == ""
+            row["parent"] in ["", None]
+            and row["web_body"] in ["", None]
+            and row["whatsapp_body"] in ["", None]
+            and row["messenger_body"] in ["", None]
         ):
             cpi = ContentPageIndex(title=row["web_title"])
             home_page.add_child(instance=cpi)
             cpi.save_revision().publish()
             continue
-        if row["web_title"] == "":
+        if row["web_title"] in ["", None]:
             continue
         row = clean_row(row)
         whatsapp_messages = [row["whatsapp_body"]]
@@ -238,13 +261,13 @@ def import_content_csv(file, purge=True, locale="en"):
                 next_row = lines[index + counter]
             except:
                 break
-            if next_row["web_title"] != "":
+            if next_row["web_title"] not in ["", None]:
                 break
-            if next_row["whatsapp_body"] != "":
+            if next_row["whatsapp_body"] not in ["", None]:
                 whatsapp_messages.append(next_row["whatsapp_body"])
-            if next_row["messenger_body"] != "":
+            if next_row["messenger_body"] not in ["", None]:
                 messenger_messages.append(next_row["messenger_body"])
-            if next_row["viber_body"] != "":
+            if next_row["viber_body"] not in ["", None]:
                 viber_messages.append(next_row["viber_body"])
             counter += 1
 
