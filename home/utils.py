@@ -117,13 +117,8 @@ def import_content(file, filetype, purge=True, locale="en"):
 
     def add_parent(row, page, home_page):
         if row["parent"]:
-            try:
-                parent = Page.objects.filter(
-                    title=row["parent"], locale=page.locale
-                ).last()
-                parent.add_child(instance=page)
-            except:
-                print("Cannot find parent")
+            parent = Page.objects.filter(title=row["parent"], locale=page.locale).last()
+            parent.add_child(instance=page)
         else:
             home_page.add_child(instance=page)
 
@@ -259,7 +254,7 @@ def import_content(file, filetype, purge=True, locale="en"):
         while True:
             try:
                 next_row = lines[index + counter]
-            except:
+            except Exception:
                 break
             if next_row["web_title"] not in ["", None]:
                 break
