@@ -251,22 +251,26 @@ def import_content_csv(file, splitmessages=True, newline=None, purge=True, local
             print(f"Content page not created for {row}")
 
 
-def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
+def style_sheet(
+    wb: Workbook, sheet: Worksheet, panel_width: int
+) -> Tuple[Workbook, Worksheet]:
     """Sets the style for the workbook adding any formatting that will make the sheet more aesthetically pleasing"""
-    # Padding
-    sheet.insert_cols(1)
-
-    # Set columns based on best size
     # Adjustment is because the size in openxlsx and google sheets are not equivalent
     adjustment = 7
+    # Padding
+    sheet.insert_cols(1)
+    panel_width += 1
+
+    for index in range(1, panel_width + 1):
+        sheet.column_dimensions[get_column_letter(index)].width = ceil((35 + (index + 10) * 2) / adjustment)
+
+    # Add Message column to panel
+    panel_width += 1
+
+    # Set columns based on best size
+
     column_widths_in_pts = {
-        "padding": 35,
-        "1": 47,
-        "2": 35,
-        "3": 35,
-        "4": 44,
-        "5": 54,
-        "Message": 110,
+        "Message": 70,
         "parent": 110,
         "web_title": 110,
         "web_subtitle": 110,
@@ -289,19 +293,20 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
         "related": 118,
     }
 
-    for index, column_width in enumerate(column_widths_in_pts.values(), 1):
+    for index, column_width in enumerate(column_widths_in_pts.values(), panel_width):
         sheet.column_dimensions[get_column_letter(index)].width = ceil(
             column_width / adjustment
         )
 
-    # Freeze heading row and side panel
-    sheet.freeze_panes = sheet["H3"]
+    # Freeze heading row and side panel, 1 added because it freezes before the column
+    panel_column = get_column_letter(panel_width + 1)
+    sheet.freeze_panes = sheet[f"{panel_column}3"]
 
     # Colours
     blue = Color(rgb="0099CCFF")
 
     # Boarders
-    right_border = Border(right=Side(border_style="thin", color="FF000000"))
+    left_border = Border(left=Side(border_style="thin", color="FF000000"))
 
     # Fills
     blue_fill = PatternFill(patternType="solid", fgColor=blue)
@@ -333,8 +338,8 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
             cell.style = header_style
 
     # Set dividing border for side panel
-    for cell in sheet["G:G"]:
-        cell.border = right_border
+    for cell in sheet[f"{panel_column}:{panel_column}"]:
+        cell.border = left_border
 
     # set font on all cells initially to 10pt and row height
     general_font = Font(size=10)
@@ -350,12 +355,14 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
 
 
 def get_rows(
-    page: Union[ContentPage, ContentPageIndex], structure_string: str
+    page: Union[ContentPage, ContentPageIndex],
+    structure_string: str,
+    side_panel_width: int,
 ) -> List[list]:
     """Sets up row for each page including the side panel.
     Each page is returned as a list of rows, this accounts for pages with multiple messages"""
     rows = []
-    base_row = ContentSheetRow.from_page(page, structure_string)
+    base_row = ContentSheetRow.from_page(page, structure_string, side_panel_width)
     if base_row:
         rows.append(base_row.get_row())
         if base_row.tuple_of_extra_rows:
@@ -369,17 +376,22 @@ def add_children(
     children: PageQuerySet,
     queryset: PageQuerySet,
     parent_structure: str,
+    side_panel_width: int,
 ) -> List[list]:
     """Recursive function that traverses the children of a page with a depth first search algorithm"""
     for index, child in enumerate(children, 1):
         content_page = get_page(child, queryset)
         structure_string = f"{parent_structure.replace('Menu','Sub')}.{index}"
-        row = get_rows(content_page, structure_string)
+        row = get_rows(content_page, structure_string, side_panel_width)
         if row:
             temp_sheet.extend(row)
         if content_page and content_page.has_children:
             add_children(
-                temp_sheet, content_page.get_children(), queryset, structure_string
+                temp_sheet,
+                content_page.get_children(),
+                queryset,
+                structure_string,
+                side_panel_width,
             )
     return temp_sheet
 
@@ -393,9 +405,16 @@ def get_page(page: Union[ContentPage, ContentPageIndex], queryset: PageQuerySet 
         return ContentPage.objects.filter(id=page.id).first()
 
 
+def get_content_depth(queryset: PageQuerySet) -> list[int]:
+    distance = max([x.depth for x in queryset]) - 1
+    headings = [x for x in range(1, distance)]
+    return headings, headings[-1]
+
+
 def get_content_sheet(queryset: PageQuerySet) -> List[list]:
     content_sheet = []
-    headings = [1, 2, 3, 4, 5, "Message"] + EXPORT_FIELDNAMES
+    side_panel_headings, side_panel_width = get_content_depth(queryset)
+    headings = side_panel_headings + ["Message"] + EXPORT_FIELDNAMES
     content_sheet.append(headings)
     for locale in Locale.objects.all():
         home = HomePage.objects.filter(locale_id=locale.id).first()
@@ -405,7 +424,9 @@ def get_content_sheet(queryset: PageQuerySet) -> List[list]:
                 structure_string = f"Menu {index}"
                 content_page = get_page(page, queryset)
                 if content_page:
-                    row = get_rows(content_page, structure_string)
+                    row = get_rows(
+                        content_page, structure_string, side_panel_width
+                    )
                     content_sheet.extend(row)
                     if content_page.has_children:
                         content_sheet = add_children(
@@ -413,13 +434,15 @@ def get_content_sheet(queryset: PageQuerySet) -> List[list]:
                             content_page.get_children(),
                             queryset,
                             structure_string,
+                            side_panel_width,
                         )
     return content_sheet
 
 
 def remove_content_sheet_sidebar(content_sheet: List[list]) -> List[list]:
+    index = content_sheet[0].index("parent")
     for row in content_sheet:
-        del row[:6]
+        del row[:index]
     return content_sheet
 
 
@@ -427,13 +450,16 @@ def export_xlsx_content(queryset: PageQuerySet, response: HttpResponse) -> None:
     """Export contentpages within the queryset to an xlsx"""
     workbook = Workbook()
     worksheet = workbook.active
-    worksheet.merge_cells("B1:F1")
+    _, panel_width = get_content_depth(queryset)
+    panel_column = get_column_letter(panel_width + 1)
+    worksheet.merge_cells(f"B1:{panel_column}1")
     cell = worksheet.cell(row=1, column=2)
     cell.value = "Structure"
+
     content_sheet = get_content_sheet(queryset)
     for row in content_sheet:
         worksheet.append(row)
-    workbook, worksheet = style_sheet(workbook, worksheet)
+    workbook, worksheet = style_sheet(workbook, worksheet, panel_width)
     workbook.save(response)
 
 
@@ -554,11 +580,7 @@ class MessageContainer:
 
 @dataclass
 class ContentSheetRow:
-    side_panel_column_1: str = ""
-    side_panel_column_2: str = ""
-    side_panel_column_3: str = ""
-    side_panel_column_4: str = ""
-    side_panel_column_5: str = ""
+    side_panel_depth: tuple = ("",)
     side_panel_message_number: int = 0
     parent: str = ""
     web_title: str = ""
@@ -587,20 +609,22 @@ class ContentSheetRow:
         cls,
         page: ContentPage,
         structure_string: str,
+        side_panel_width: int,
         side_panel_message_number: int = 0,
     ):
         if isinstance(page, ContentPage):
             return cls.from_content_page(
-                page, structure_string, side_panel_message_number
+                page, structure_string, side_panel_width, side_panel_message_number
             )
         if isinstance(page, ContentPageIndex):
-            return cls.from_index_page(page, structure_string)
+            return cls.from_index_page(page, structure_string, side_panel_width)
 
     @classmethod
     def from_content_page(
         cls,
         page: ContentPage,
         structure_string: str,
+        side_panel_width: int,
         side_panel_message_number: int = 0,
     ):
         content_sheet_row = cls()
@@ -610,10 +634,10 @@ class ContentSheetRow:
             page.viber_body,
         )
         content_sheet_row._set_messages(
-            page, side_panel_message_number, message_container
+            page, side_panel_message_number, side_panel_width, message_container
         )
 
-        content_sheet_row._set_structure(structure_string)
+        content_sheet_row._set_structure(structure_string, side_panel_width)
 
         if side_panel_message_number == 0:
             content_sheet_row.parent = content_sheet_row._get_parent_page(page)
@@ -646,9 +670,10 @@ class ContentSheetRow:
         cls,
         page: ContentPageIndex,
         structure_string: str,
+        side_panel_width: int,
     ):
         content_sheet_row = cls()
-        content_sheet_row._set_structure(structure_string)
+        content_sheet_row._set_structure(structure_string, side_panel_width)
         content_sheet_row.parent = content_sheet_row._get_parent_page(page)
         content_sheet_row.web_title = page.title
         content_sheet_row.translation_tag = str(page.translation_key)
@@ -657,12 +682,7 @@ class ContentSheetRow:
 
     def get_row(self):
         """Returns object as an exportable row"""
-        return [
-            self.side_panel_column_1,
-            self.side_panel_column_2,
-            self.side_panel_column_3,
-            self.side_panel_column_4,
-            self.side_panel_column_5,
+        return list(self.side_panel_depth) + [
             self.side_panel_message_number,
             self.parent,
             self.web_title,
@@ -697,24 +717,24 @@ class ContentSheetRow:
         if not HomePage.objects.filter(id=page.get_parent().id).exists():
             return page.get_parent().title
 
-    def _set_structure(self, structure_string: str):
+    def _set_structure(self, structure_string: str, side_panel_width: int):
         """Sets the sidebar Menu/Sub level based on structure string length,
         for example, Sub 1.2.1 is a level 3 message"""
-        if "menu" in structure_string.lower():
-            self.side_panel_column_1 = structure_string
-        elif len(structure_string) == 7:
-            self.side_panel_column_2 = structure_string
-        elif len(structure_string) == 9:
-            self.side_panel_column_3 = structure_string
-        elif len(structure_string) == 11:
-            self.side_panel_column_4 = structure_string
-        elif len(structure_string) == 13:
-            self.side_panel_column_5 = structure_string
+        temp = [""] * side_panel_width
+        if not structure_string:
+            pass
+        elif "menu" in structure_string.lower():
+            temp[0] = structure_string
+        else:
+            index = int((len(structure_string) - 5) / 2)
+            temp[index] = structure_string
+        self.side_panel_depth = tuple(temp)
 
     def _set_messages(
         self,
         page: ContentPage,
         side_panel_message_number: int,
+        side_panel_width: int,
         message_container: MessageContainer,
     ):
         """Sets all message level content, including any message level content such as documents, images, next prompts and media.
@@ -754,7 +774,12 @@ class ContentSheetRow:
         if side_panel_message_number == 0 and most_messages > 1:
             # Set tuple_of_extra_rows rows to account for multiple messages
             for message_index in range(1, most_messages):
-                new_row = ContentSheetRow.from_content_page(page, "", message_index)
+                new_row = ContentSheetRow.from_page(
+                    page,
+                    "",
+                    side_panel_width,
+                    message_index,
+                )
                 if message_index < len(message_container.whatsapp):
                     new_row.whatsapp_body = message_container.whatsapp[
                         message_index
