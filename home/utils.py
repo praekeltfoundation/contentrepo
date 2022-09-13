@@ -28,6 +28,7 @@ from home.models import (  # isort:skip
     ContentQuickReply,
     ContentTrigger,
     HomePage,
+    MediaBlock,
     Page,
 )
 
@@ -69,24 +70,38 @@ def import_content(file, filetype, purge=True, locale="en"):
     def get_body(messages, type_of_message):
         struct_blocks = []
         for raw in messages:
-            if "image_title" in raw and raw["image_title"]:
-                im = Image.objects.get(title=raw["image_title"]).id
-                block = blocks.StructBlock(
-                    [
-                        ("image", ImageChooserBlock()),
-                    ]
-                )
-                block_value = block.to_python({"image": im})
-                struct_blocks.append((type_of_message, block_value))
-
+            im = None
+            doc = None
+            media = None
+            split_body = raw.split("/n")
+            for line in split_body:
+                if "image_link:" in line:
+                    link = raw[raw.index(":") + 1 :]
+                    im = Image.objects.get(url=link).id
+                if "doc_link:" in line:
+                    link = raw[raw.index(":") + 1 :]
+                    doc = Document.objects.get(url=link).id
+                if "media_link:" in line:
+                    link = raw[raw.index(":") + 1 :]
+                    doc = Media.objects.get(url=link).id
             message_body = raw
             if message_body:
                 block = blocks.StructBlock(
                     [
                         ("message", blocks.TextBlock()),
+                        ("image", blocks.ImageChooserBlock()),
+                        ("document", blocks.DocumentChooserBlock()),
+                        ("media", MediaBlock()),
                     ]
                 )
-                block_value = block.to_python({"message": message_body})
+                block_value = block.to_python(
+                    {
+                        "message": message_body,
+                        "image": im,
+                        "document": doc,
+                        "media": media,
+                    }
+                )
                 struct_blocks.append((type_of_message, block_value))
         return struct_blocks
 
@@ -252,12 +267,7 @@ def import_content(file, filetype, purge=True, locale="en"):
         whatsapp_messages = [row["whatsapp_body"]]
         messenger_messages = [row["messenger_body"]]
         viber_messages = [row["viber_body"]]
-        counter = 1
-        while True:
-            try:
-                next_row = lines[index + counter]
-            except Exception:
-                break
+        for next_row in lines[index + 1 :]:
             if next_row["web_title"] not in ["", None]:
                 break
             if next_row["whatsapp_body"] not in ["", None]:
@@ -266,7 +276,6 @@ def import_content(file, filetype, purge=True, locale="en"):
                 messenger_messages.append(next_row["messenger_body"])
             if next_row["viber_body"] not in ["", None]:
                 viber_messages.append(next_row["viber_body"])
-            counter += 1
 
         contentpage = add_web(row)
         contentpage = add_whatsapp(row, whatsapp_messages, contentpage)
