@@ -262,7 +262,9 @@ def style_sheet(
     panel_width += 1
 
     for index in range(1, panel_width + 1):
-        sheet.column_dimensions[get_column_letter(index)].width = ceil((35 + (index + 10) * 2) / adjustment)
+        sheet.column_dimensions[get_column_letter(index)].width = ceil(
+            (35 + (index + 10) * 2) / adjustment
+        )
 
     # Add Message column to panel
     panel_width += 1
@@ -424,9 +426,7 @@ def get_content_sheet(queryset: PageQuerySet) -> List[list]:
                 structure_string = f"Menu {index}"
                 content_page = get_page(page, queryset)
                 if content_page:
-                    row = get_rows(
-                        content_page, structure_string, side_panel_width
-                    )
+                    row = get_rows(content_page, structure_string, side_panel_width)
                     content_sheet.extend(row)
                     if content_page.has_children:
                         content_sheet = add_children(
