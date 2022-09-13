@@ -76,13 +76,13 @@ def import_content(file, filetype, purge=True, locale="en"):
             split_body = raw.split("/n")
             for line in split_body:
                 if "image_link:" in line:
-                    link = raw[raw.index(":") + 1 :]
+                    link = raw[raw.index(":") + 1:]
                     im = Image.objects.get(url=link).id
                 if "doc_link:" in line:
-                    link = raw[raw.index(":") + 1 :]
+                    link = raw[raw.index(":") + 1:]
                     doc = Document.objects.get(url=link).id
                 if "media_link:" in line:
-                    link = raw[raw.index(":") + 1 :]
+                    link = raw[raw.index(":") + 1:]
                     doc = Media.objects.get(url=link).id
             message_body = raw
             if message_body:
@@ -275,7 +275,7 @@ def import_content(file, filetype, purge=True, locale="en"):
         whatsapp_messages = [row["whatsapp_body"]]
         messenger_messages = [row["messenger_body"]]
         viber_messages = [row["viber_body"]]
-        for next_row in lines[index + 1 :]:
+        for next_row in lines[index + 1:]:
             if next_row["web_title"] not in ["", None]:
                 break
             if next_row["whatsapp_body"] not in ["", None]:
