@@ -15,7 +15,6 @@ from openpyxl.worksheet.worksheet import Worksheet
 from taggit.models import Tag
 from wagtail import blocks
 from wagtail.documents.models import Document
-from wagtail.images.blocks import ImageChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.images.models import Image
 from wagtail.models import Locale
