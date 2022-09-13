@@ -134,7 +134,7 @@ class ContentPage(Page, ContentImportMixin):
     ]
 
     # general page attributes
-    tags = ClusterTaggableManager(through=ContentPageTag)
+    tags = ClusterTaggableManager(through=ContentPageTag, blank=True)
     triggers = ClusterTaggableManager(through="home.TriggeredContent", blank=True)
     quick_replies = ClusterTaggableManager(through="home.QuickReplyContent", blank=True)
     related_pages = StreamField(

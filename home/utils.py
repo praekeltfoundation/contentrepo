@@ -16,12 +16,13 @@ from taggit.models import Tag
 from wagtail import blocks
 from wagtail.documents.models import Document
 from wagtail.images.blocks import ImageChooserBlock
+from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.images.models import Image
 from wagtail.models import Locale
 from wagtail.query import PageQuerySet
 from wagtail.rich_text import RichText
 from wagtailmedia.models import Media
-
+from wagtail.images.blocks import ImageChooserBlock
 from home.models import (  # isort:skip
     ContentPage,
     ContentPageIndex,
@@ -86,22 +87,30 @@ def import_content(file, filetype, purge=True, locale="en"):
                     doc = Media.objects.get(url=link).id
             message_body = raw
             if message_body:
-                block = blocks.StructBlock(
-                    [
-                        ("message", blocks.TextBlock()),
-                        ("image", blocks.ImageChooserBlock()),
-                        ("document", blocks.DocumentChooserBlock()),
+                body_blocks = [
+                    ("message", blocks.TextBlock()),
+                ]
+                if im:
+                    body_blocks.append(("image", ImageChooserBlock()))
+                if doc:
+                    body_blocks.append(
+                        ("document", DocumentChooserBlock()),
+                    )
+                if media:
+                    body_blocks.append(
                         ("media", MediaBlock()),
-                    ]
-                )
-                block_value = block.to_python(
-                    {
-                        "message": message_body,
-                        "image": im,
-                        "document": doc,
-                        "media": media,
-                    }
-                )
+                    )
+                block = blocks.StructBlock(body_blocks)
+                body_values = {
+                    "message": message_body,
+                }
+                if im:
+                    body_values["image"] = im
+                if doc:
+                    body_values["document"] = doc
+                if media:
+                    body_values["media"] = media
+                block_value = block.to_python(body_values)
                 struct_blocks.append((type_of_message, block_value))
         return struct_blocks
 
