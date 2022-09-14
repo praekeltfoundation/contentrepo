@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from wagtail.admin.panels import Panel
 
 
@@ -11,6 +12,6 @@ class PageRatingPanel(Panel):
                 context["page_value"] = self.instance.page_rating
                 context["revision_value"] = self.instance.latest_revision_rating
             else:
-                context["page_value"] = "(No ratings yet)"
-                context["revision_value"] = "(No revisions yet)"
+                context["page_value"] = _("(No ratings yet)")
+                context["revision_value"] = _("(No revisions yet)")
             return context
