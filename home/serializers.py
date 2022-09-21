@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from wagtail.api.v2.serializers import PageSerializer
 
-from home.models import ContentPageRating, PageView
+from home.models import ContentPage, ContentPageRating, PageView
 
 
 class TitleField(serializers.Field):
@@ -177,11 +177,15 @@ class RelatedPagesField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
+    def get_related_page_as_content_page(self, page):
+        if page.id:
+            return ContentPage.objects.filter(id=page.id).first()
+
     def to_representation(self, page):
         request = self.context["request"]
         related_pages = []
         for related in page.related_pages:
-            related_page = related.value
+            related_page = self.get_related_page_as_content_page(related.value)
             title = related_page.title
             if "whatsapp" in request.GET and related_page.enable_whatsapp is True:
                 if related_page.whatsapp_title:
