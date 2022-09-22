@@ -40,6 +40,10 @@ class WhatsappBlock(blocks.StructBlock):
         max_length=20, help_text="prompt text for next message", required=False
     )
 
+    class Meta:
+        icon = "user"
+        form_classname = "whatsapp-message-block struct-block"
+
 
 class ViberBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
