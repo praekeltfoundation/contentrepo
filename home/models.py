@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
@@ -339,6 +340,29 @@ class ContentPage(Page, ContentImportMixin):
     @property
     def whatsapp_template_body(self):
         return self.whatsapp_body.raw_data[0]["value"]["message"]
+
+    def clean(self):
+        message_with_media_length = 1024
+        errors = []
+        for message in self.whatsapp_body:
+            if (
+                (
+                    "image" in message.value
+                    and "document" in message.value
+                    and "media" in message.value
+                )
+                and (
+                    message.value["image"]
+                    or message.value["document"]
+                    or message.value["media"]
+                )
+                and len(message.value["message"]) > message_with_media_length
+            ):
+                errors.append(
+                    f"A WhatsApp message with media cannot be longer than {message_with_media_length} characters long, your message is {len(message.value['message'])} characters long"
+                )
+        if errors:
+            raise ValidationError(errors)
 
     def get_descendants(self, inclusive=False):
         return ContentPage.objects.descendant_of(self, inclusive)

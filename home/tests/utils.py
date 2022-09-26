@@ -1,16 +1,28 @@
 from taggit.models import Tag
 from wagtail import blocks
+from wagtail.documents.blocks import DocumentChooserBlock
+from wagtail.images.blocks import ImageChooserBlock
 
-from home.models import ContentPage, ContentPageRating, HomePage
+from home.models import ContentPage, ContentPageRating, HomePage, MediaBlock
 
 
 def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=False):
     block = blocks.StructBlock(
         [
             ("message", blocks.TextBlock()),
+            ("image", ImageChooserBlock()),
+            ("media", MediaBlock()),
+            ("document", DocumentChooserBlock()),
         ]
     )
-    block_value = block.to_python({"message": "Test WhatsApp Message 1"})
+    block_value = block.to_python(
+        {
+            "message": "Test WhatsApp Message 1",
+            "image": None,
+            "media": None,
+            "document": None,
+        }
+    )
     contentpage = ContentPage(
         title=title,
         subtitle="Test Subtitle",
