@@ -9,7 +9,11 @@
             {% block h1 %}
               <h1>
                 {% icon name="openquote" class_name="header-title-icon" %}
-                {% trans 'Upload Content' %}
+                  {% if loading %}
+                    {% trans 'Uploading Content...' %}
+                  {% else %}
+                    {% trans 'Upload Content' %}
+                  {% endif %}
               </h1>
             {% endblock %}
           </div>
@@ -20,24 +24,34 @@
 
 
 {% block main_content %}
-  <form action="/import/" method="POST" enctype="multipart/form-data">
-      {% csrf_token %}
-      <ul class="fields">
-          <li class="required {{ wrapper_classes }} {{ li_classes }} {% if field.errors %}error{% endif %}">
-            <div class="field">
-              <div class="field-content">
-                  <div class="input {{ input_classes }} ">
-                    {{ form.as_p }}
+    {% if loading %}
+        <div class="meter animate" id="meter">
+            <span id="loadingBar" style="width: 50%"><span></span></span>
+        </div>
+    {% else %}
+      <form action="/import/" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <ul class="fields">
+              <li class="required {{ wrapper_classes }} {{ li_classes }} {% if field.errors %}error{% endif %}">
+                <div class="field">
+                  <div class="field-content">
+                      <div class="input {{ input_classes }} ">
+                        {{ form.as_p }}
+                      </div>
                   </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            {% block actions %}
-                <button type="submit" class="button">{% trans 'Upload' %}</button>
-            {% endblock %}
-          </li>
-        </ul>
-  </form>
+                </div>
+              </li>
+              <li>
+                {% block actions %}
+                    <button type="submit" class="button">{% trans 'Upload' %}</button>
+                {% endblock %}
+              </li>
+            </ul>
+      </form>
+    {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript" src="{% static 'js/contentrepo.js' %}"></script>
 {% endblock %}
