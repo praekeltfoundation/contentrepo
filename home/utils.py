@@ -14,14 +14,15 @@ from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from taggit.models import Tag
 from wagtail import blocks
-from wagtail.documents.models import Document
 from wagtail.documents.blocks import DocumentChooserBlock
+from wagtail.documents.models import Document
+from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.models import Image
 from wagtail.models import Locale
 from wagtail.query import PageQuerySet
 from wagtail.rich_text import RichText
 from wagtailmedia.models import Media
-from wagtail.images.blocks import ImageChooserBlock
+
 from home.models import (  # isort:skip
     ContentPage,
     ContentPageIndex,

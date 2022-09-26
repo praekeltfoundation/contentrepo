@@ -1,12 +1,13 @@
 import json
+from pathlib import Path
 
 from django.test import Client, TestCase
 from wagtail import blocks
-from pathlib import Path
+
 from home.models import ContentPage, PageView
+from home.utils import import_content
 
 from .utils import create_page
-from home.utils import import_content
 
 
 class PaginationTestCase(TestCase):
