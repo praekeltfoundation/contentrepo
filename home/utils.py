@@ -257,7 +257,8 @@ def import_content(file, filetype, purge=True, locale="en"):
         wb = load_workbook(filename=BytesIO(file))
         ws = wb.active
         side_pannel = get_side_panel_width(ws, "Message")
-        ws.delete_cols(1, side_pannel)
+        if side_pannel:
+            ws.delete_cols(1, side_pannel)
         ws.delete_rows(1, 2)
         for row in ws.iter_rows():
             row_dict = {}
