@@ -233,6 +233,16 @@ def import_content(file, filetype, purge=True, locale="en"):
                 row[field] = str(row[field]).strip()
         return row
 
+    def get_side_panel_width(ws, column_heading):
+        column_lookup = {}
+        iterator = 1
+        for column in ws.iter_cols(1, ws.max_column):
+            column_lookup[column[1].value] = iterator
+            iterator += 1
+        if column_heading in column_lookup:
+            return column_lookup[column_heading]
+        raise KeyError(f"{column_heading} not found in column headings {column_lookup}")
+
     if purge == "yes":
         ContentPage.objects.all().delete()
         ContentPageIndex.objects.all().delete()
@@ -246,7 +256,9 @@ def import_content(file, filetype, purge=True, locale="en"):
     if filetype == "XLSX":
         wb = load_workbook(filename=BytesIO(file))
         ws = wb.active
-        ws.delete_cols(1, 7)
+        side_pannel = get_side_panel_width(ws, "Message")
+        if side_pannel:
+            ws.delete_cols(1, side_pannel)
         ws.delete_rows(1, 2)
         for row in ws.iter_rows():
             row_dict = {}
@@ -467,9 +479,12 @@ def get_page(page: Union[ContentPage, ContentPageIndex], queryset: PageQuerySet 
 
 
 def get_content_depth(queryset: PageQuerySet) -> list[int]:
-    distance = max([x.depth for x in queryset]) - 1
-    headings = [x for x in range(1, distance)]
-    return headings, headings[-1]
+    if queryset:
+        distance = max([x.depth for x in queryset]) - 1
+        headings = [x for x in range(1, distance)]
+        return headings, headings[-1]
+    else:
+        return [1, 2, 3, 4, 5], 5
 
 
 def get_content_sheet(queryset: PageQuerySet) -> List[list]:
