@@ -479,9 +479,12 @@ def get_page(page: Union[ContentPage, ContentPageIndex], queryset: PageQuerySet 
 
 
 def get_content_depth(queryset: PageQuerySet) -> list[int]:
-    distance = max([x.depth for x in queryset]) - 1
-    headings = [x for x in range(1, distance)]
-    return headings, headings[-1]
+    if queryset:
+        distance = max([x.depth for x in queryset]) - 1
+        headings = [x for x in range(1, distance)]
+        return headings, headings[-1]
+    else:
+        return [1, 2, 3, 4, 5], 5
 
 
 def get_content_sheet(queryset: PageQuerySet) -> List[list]:
