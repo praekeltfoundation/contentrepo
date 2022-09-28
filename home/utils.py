@@ -892,7 +892,7 @@ class ContentSheetRow:
         if an image is found in any of the platforms, the url will be saved to the sheet.
         This will take the first one found, can be extended to a list of urls
         """
-        image_name = message_container.find_first_attachment(index, "media_name")
+        image_name = message_container.find_first_attachment(index, "image_name")
         image = Image.objects.filter(title=image_name).first()
         if image:
             return image.usage_url
