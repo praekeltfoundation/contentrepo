@@ -74,6 +74,8 @@ def import_content(file, filetype, purge=True, locale="en"):
             im = None
             doc = None
             media = None
+            if not raw:
+                return struct_blocks
             split_body = raw.split("/n")
             for line in split_body:
                 if "image_link:" in line:
