@@ -74,6 +74,8 @@ def import_content(file, filetype, purge=True, locale="en"):
             im = None
             doc = None
             media = None
+            if not raw:
+                return struct_blocks
             split_body = raw.split("/n")
             for line in split_body:
                 if "image_link:" in line:
@@ -243,19 +245,11 @@ def import_content(file, filetype, purge=True, locale="en"):
             return column_lookup[column_heading]
         raise KeyError(f"{column_heading} not found in column headings {column_lookup}")
 
-    if purge == "yes":
-        ContentPage.objects.all().delete()
-        ContentPageIndex.objects.all().delete()
-
-    if isinstance(locale, str):
-        locale = Locale.objects.get(language_code=locale)
-
-    home_page = HomePage.objects.get(locale__pk=locale.pk)
     file = file.read()
     lines = []
     if filetype == "XLSX":
         wb = load_workbook(filename=BytesIO(file))
-        ws = wb.active
+        ws = wb.worksheets[0]
         side_pannel = get_side_panel_width(ws, "Message")
         if side_pannel:
             ws.delete_cols(1, side_pannel)
@@ -271,7 +265,19 @@ def import_content(file, filetype, purge=True, locale="en"):
         reader = csv.DictReader(io.StringIO(file))
         for dictionary in reader:
             lines.append(dictionary)
+
+    if purge in ["True", "yes", True]:
+        ContentPage.objects.all().delete()
+        ContentPageIndex.objects.all().delete()
+
+    if isinstance(locale, str):
+        locale = Locale.objects.get(language_code=locale)
+
+    home_page = HomePage.objects.get(locale__pk=locale.pk)
+
     for index, row in enumerate(lines):
+        if row["web_title"] in ["", None]:
+            continue
         if (
             row["parent"] in ["", None]
             and row["web_body"] in ["", None]
@@ -281,8 +287,6 @@ def import_content(file, filetype, purge=True, locale="en"):
             cpi = ContentPageIndex(title=row["web_title"])
             home_page.add_child(instance=cpi)
             cpi.save_revision().publish()
-            continue
-        if row["web_title"] in ["", None]:
             continue
         row = clean_row(row)
         whatsapp_messages = [row["whatsapp_body"]]
