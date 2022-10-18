@@ -108,6 +108,7 @@ class PageViewReportView(ReportView):
             .annotate(x=F("month"), y=Count("page_id"))
             .values("x", "y")
         )
+        view_per_month.sort(key=lambda item: item["x"])
         labels = [item["x"].date() for item in view_per_month]
         return {"data": view_per_month, "labels": labels}
 
