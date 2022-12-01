@@ -42,10 +42,12 @@ class MediaBlock(AbstractMediaChooserBlock):
 
 
 def get_choices():
-    return [
-        (choice, choice)
-        for choice in SiteSettings.objects.first().content_variations_options
-    ]
+    if SiteSettings.objects.first():
+        return [
+            (choice, choice)
+            for choice in SiteSettings.objects.first().content_variations_options
+        ]
+    return []
 
 
 class VariationBlock(blocks.StructBlock):
@@ -53,6 +55,7 @@ class VariationBlock(blocks.StructBlock):
         required=False,
         choices=get_choices,
         default=None,
+        help_text="Add variation fields to the site settings if you'd like to see them here",
     )
     message = blocks.TextBlock(
         max_lenth=4096, help_text="each message cannot exceed 4096 characters."
