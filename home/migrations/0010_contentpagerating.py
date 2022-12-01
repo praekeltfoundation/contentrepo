@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('comment', models.TextField(blank=True, default='')),
                 ('data', models.JSONField(blank=True, default=dict, null=True)),
                 ('page', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ratings', to='home.contentpage')),
-                ('revision', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ratings', to='wagtailcore.pagerevision')),
+                ('revision', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ratings', to='wagtailcore.revision')),
             ],
         ),
     ]
