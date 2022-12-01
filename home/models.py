@@ -12,6 +12,7 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Page, Revision
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
+from wagtail.contrib.settings.models import BaseSetting, register_setting
 
 from .panels import PageRatingPanel
 from .whatsapp import create_whatsapp_template
@@ -24,9 +25,35 @@ from wagtail.admin.panels import (  # isort:skip
 )
 
 
+@register_setting
+class SiteSettings(BaseSetting):
+    content_variations_options = StreamField(
+        [
+            ("content_variations_options", blocks.CharBlock()),
+        ],
+        blank=True,
+        null=True,
+    )
+
+
 class MediaBlock(AbstractMediaChooserBlock):
     def render_basic(self, value, context=None):
         pass
+
+
+def get_choices():
+    return [(choice, choice) for choice in SiteSettings.objects.first().content_variations_options]
+
+
+class VariationBlock(blocks.StructBlock):
+    variation_message = blocks.ChoiceBlock(
+        required=False,
+        choices=get_choices,
+        default=None,
+    )
+    message = blocks.TextBlock(
+        max_lenth=4096, help_text="each message cannot exceed 4096 characters."
+    )
 
 
 class WhatsappBlock(blocks.StructBlock):
@@ -36,6 +63,7 @@ class WhatsappBlock(blocks.StructBlock):
     message = blocks.TextBlock(
         max_lenth=4096, help_text="each message cannot exceed 4096 characters."
     )
+    variation_messages = blocks.ListBlock(VariationBlock())
     next_prompt = blocks.CharBlock(
         max_length=20, help_text="prompt text for next message", required=False
     )
