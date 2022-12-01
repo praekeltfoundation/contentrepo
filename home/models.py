@@ -6,13 +6,13 @@ from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
 from wagtail.api import APIField
+from wagtail.contrib.settings.models import BaseSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Page, Revision
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
-from wagtail.contrib.settings.models import BaseSetting, register_setting
 
 from .panels import PageRatingPanel
 from .whatsapp import create_whatsapp_template
@@ -42,7 +42,10 @@ class MediaBlock(AbstractMediaChooserBlock):
 
 
 def get_choices():
-    return [(choice, choice) for choice in SiteSettings.objects.first().content_variations_options]
+    return [
+        (choice, choice)
+        for choice in SiteSettings.objects.first().content_variations_options
+    ]
 
 
 class VariationBlock(blocks.StructBlock):
