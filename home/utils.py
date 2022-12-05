@@ -75,7 +75,6 @@ def import_content(file, filetype, purge=True, locale="en"):
             im = None
             doc = None
             media = None
-            variations = None
             if not raw:
                 return struct_blocks
             split_body = raw.split("/n")
