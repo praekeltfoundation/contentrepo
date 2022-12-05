@@ -83,9 +83,15 @@ class PaginationTestCase(TestCase):
 
         body = []
         for i in range(15):
-            block = blocks.StructBlock([("message", blocks.TextBlock()), 
-            ("variation_messages", blocks.ListBlock(VariationBlock()))])
-            block_value = block.to_python({"message": f"WA Message {i+1}", "variation_messages":[]})
+            block = blocks.StructBlock(
+                [
+                    ("message", blocks.TextBlock()),
+                    ("variation_messages", blocks.ListBlock(VariationBlock())),
+                ]
+            )
+            block_value = block.to_python(
+                {"message": f"WA Message {i+1}", "variation_messages": []}
+            )
             body.append(("Whatsapp_Message", block_value))
 
         self.content_page1.whatsapp_body = body

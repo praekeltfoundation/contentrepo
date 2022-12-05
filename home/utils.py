@@ -105,7 +105,9 @@ def import_content(file, filetype, purge=True, locale="en"):
                         ("media", MediaBlock()),
                     )
                 if type_of_message == "Whatsapp_Message":
-                    body_blocks.append(("variation_messages", blocks.ListBlock(VariationBlock())))
+                    body_blocks.append(
+                        ("variation_messages", blocks.ListBlock(VariationBlock()))
+                    )
                 block = blocks.StructBlock(body_blocks)
                 body_values = {
                     "message": message_body,

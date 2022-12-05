@@ -93,7 +93,8 @@ class VariationBlock(blocks.StructBlock):
         use_json_field=True,
     )
     message = blocks.TextBlock(
-        max_lenth=4096, help_text="each message cannot exceed 4096 characters.",
+        max_lenth=4096,
+        help_text="each message cannot exceed 4096 characters.",
     )
 
 
