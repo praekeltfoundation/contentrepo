@@ -4,7 +4,7 @@ from pathlib import Path
 from django.test import Client, TestCase
 from wagtail import blocks
 
-from home.models import ContentPage, PageView
+from home.models import ContentPage, PageView, VariationBlock
 from home.utils import import_content
 
 from .utils import create_page
@@ -83,8 +83,9 @@ class PaginationTestCase(TestCase):
 
         body = []
         for i in range(15):
-            block = blocks.StructBlock([("message", blocks.TextBlock())])
-            block_value = block.to_python({"message": f"WA Message {i+1}"})
+            block = blocks.StructBlock([("message", blocks.TextBlock()), 
+            ("variation_messages", blocks.ListBlock(VariationBlock()))])
+            block_value = block.to_python({"message": f"WA Message {i+1}", "variation_messages":[]})
             body.append(("Whatsapp_Message", block_value))
 
         self.content_page1.whatsapp_body = body
