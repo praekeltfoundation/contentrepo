@@ -15,7 +15,7 @@ from wagtail.models import Page, Revision
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
-from .constants import GENDER_CHOICES, HEALTH_LITERACY_LEVEL_CHOICES
+from .constants import AGE_CHOICES, GENDER_CHOICES, RELATIONSHIP_STATUS_CHOICES
 from .panels import PageRatingPanel
 from .whatsapp import create_whatsapp_template
 
@@ -38,9 +38,15 @@ class SiteSettings(BaseSetting):
                 ),
             ),
             (
-                "health_literacy_level",
+                "age",
                 blocks.MultipleChoiceBlock(
-                    choices=HEALTH_LITERACY_LEVEL_CHOICES, widget=CheckboxSelectMultiple
+                    choices=AGE_CHOICES, widget=CheckboxSelectMultiple
+                ),
+            ),
+            (
+                "relationship",
+                blocks.MultipleChoiceBlock(
+                    choices=RELATIONSHIP_STATUS_CHOICES, widget=CheckboxSelectMultiple
                 ),
             ),
         ],
@@ -56,35 +62,39 @@ class MediaBlock(AbstractMediaChooserBlock):
         pass
 
 
-def get_profile_field_choices(field):
+def get_valid_profile_values(field):
     if SiteSettings.objects.first():
         profile_values = {}
         for profile_block in SiteSettings.objects.first().profile_field_options:
-            profile_values[profile_block.block_type] = [
-                (b, b) for b in profile_block.value
-            ]
+            profile_values[profile_block.block_type] = [b for b in profile_block.value]
         return profile_values[field]
     return []
 
 
 def get_gender_choices():
     # Wrapper for get_profile_field_choices that can be passed as a callable
-    return get_profile_field_choices("gender")
+    choices = {k: v for k, v in GENDER_CHOICES}
+    return [(g, choices[g]) for g in get_valid_profile_values("gender")]
 
 
-def get_health_lit_lvl_choices():
+def get_age_choices():
     # Wrapper for get_profile_field_choices that can be passed as a callable
-    return get_profile_field_choices("health_literacy_level")
+    choices = {k: v for k, v in AGE_CHOICES}
+    return [(a, choices[a]) for a in get_valid_profile_values("age")]
+
+
+def get_relationship_choices():
+    # Wrapper for get_profile_field_choices that can be passed as a callable
+    choices = {k: v for k, v in RELATIONSHIP_STATUS_CHOICES}
+    return [(r, choices[r]) for r in get_valid_profile_values("relationship")]
 
 
 class VariationBlock(blocks.StructBlock):
     variation_restrictions = blocks.StreamBlock(
         [
             ("gender", blocks.ChoiceBlock(choices=get_gender_choices)),
-            (
-                "health_literacy_level",
-                blocks.ChoiceBlock(choices=get_health_lit_lvl_choices),
-            ),
+            ("age", blocks.ChoiceBlock(choices=get_age_choices)),
+            ("relationship", blocks.ChoiceBlock(choices=get_relationship_choices)),
         ],
         required=False,
         min_num=1,
