@@ -12,7 +12,7 @@ from home.models import (  # isort:skip
 )
 
 
-def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=False):
+def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=False, add_variation=False):
     block = blocks.StructBlock(
         [
             ("message", blocks.TextBlock()),
@@ -22,13 +22,22 @@ def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=F
             ("variation_messages", blocks.ListBlock(VariationBlock())),
         ]
     )
+    variation_messages = []
+    if add_variation:
+        variation_messages = [{
+            "variation_restrictions": [{
+                "type": "gender",
+                "value": "female"
+            }],
+            "message": f"{title} - female variation",
+        }]
     block_value = block.to_python(
         {
             "message": "Test WhatsApp Message 1",
             "image": None,
             "media": None,
             "document": None,
-            "variation_messages": [],
+            "variation_messages": variation_messages,
         }
     )
     contentpage = ContentPage(

@@ -144,3 +144,23 @@ class PaginationTestCase(TestCase):
         self.assertEquals(PageView.objects.count(), 3)
         view = PageView.objects.last()
         self.assertEquals(view.message, 1)
+
+    def test_detail_view_with_variations(self):
+        ContentPage.objects.all().delete()
+        self.assertEquals(PageView.objects.count(), 0)
+
+        # variations should be in the whatsapp content
+        page = create_page(tags=["tag1", "tag2"], add_variation=True)
+
+        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
+        content = response.json()
+
+        var_content = content["body"]["text"]["value"]["variation_messages"]
+        self.assertEquals(1, len(var_content))
+        self.assertEquals(var_content[0]["profile_field"], "gender")
+        self.assertEquals(var_content[0]["value"], "female")
+        self.assertEquals(var_content[0]["message"], "Test Title - female variation")
+
+        self.assertEquals(PageView.objects.count(), 1)
+        view = PageView.objects.last()
+        self.assertEquals(view.message, 1)
