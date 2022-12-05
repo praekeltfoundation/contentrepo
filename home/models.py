@@ -89,9 +89,10 @@ class VariationBlock(blocks.StructBlock):
         min_num=1,
         max_num=1,
         help_text="Restrict this variation to users with this profile value. Valid values must be added to the Site Settings",
+        use_json_field=True,
     )
     message = blocks.TextBlock(
-        max_lenth=4096, help_text="each message cannot exceed 4096 characters."
+        max_lenth=4096, help_text="each message cannot exceed 4096 characters.",
     )
 
 
