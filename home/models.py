@@ -47,6 +47,7 @@ class SiteSettings(BaseSetting):
         blank=True,
         null=True,
         help_text="Fields that may be used to restrict content to certain user segments",
+        use_json_field=True,
     )
 
 
