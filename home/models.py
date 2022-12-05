@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.forms import CheckboxSelectMultiple
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
@@ -14,6 +15,7 @@ from wagtail.models import Page, Revision
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
+from .constants import GENDER_CHOICES, HEALTH_LITERACY_LEVEL_CHOICES
 from .panels import PageRatingPanel
 from .whatsapp import create_whatsapp_template
 
@@ -27,12 +29,24 @@ from wagtail.admin.panels import (  # isort:skip
 
 @register_setting
 class SiteSettings(BaseSetting):
-    content_variations_options = StreamField(
+    profile_field_options = StreamField(
         [
-            ("content_variations_options", blocks.CharBlock()),
+            (
+                "gender",
+                blocks.MultipleChoiceBlock(
+                    choices=GENDER_CHOICES, widget=CheckboxSelectMultiple
+                ),
+            ),
+            (
+                "health_literacy_level",
+                blocks.MultipleChoiceBlock(
+                    choices=HEALTH_LITERACY_LEVEL_CHOICES, widget=CheckboxSelectMultiple
+                ),
+            ),
         ],
         blank=True,
         null=True,
+        help_text="Fields that may be used to restrict content to certain user segments",
     )
 
 
@@ -41,21 +55,40 @@ class MediaBlock(AbstractMediaChooserBlock):
         pass
 
 
-def get_choices():
+def get_profile_field_choices(field):
     if SiteSettings.objects.first():
-        return [
-            (choice, choice)
-            for choice in SiteSettings.objects.first().content_variations_options
-        ]
+        profile_values = {}
+        for profile_block in SiteSettings.objects.first().profile_field_options:
+            profile_values[profile_block.block_type] = [
+                (b, b) for b in profile_block.value
+            ]
+        return profile_values[field]
     return []
 
 
+def get_gender_choices():
+    # Wrapper for get_profile_field_choices that can be passed as a callable
+    return get_profile_field_choices("gender")
+
+
+def get_health_lit_lvl_choices():
+    # Wrapper for get_profile_field_choices that can be passed as a callable
+    return get_profile_field_choices("health_literacy_level")
+
+
 class VariationBlock(blocks.StructBlock):
-    variation_message = blocks.ChoiceBlock(
+    variation_restrictions = blocks.StreamBlock(
+        [
+            ("gender", blocks.ChoiceBlock(choices=get_gender_choices)),
+            (
+                "health_literacy_level",
+                blocks.ChoiceBlock(choices=get_health_lit_lvl_choices),
+            ),
+        ],
         required=False,
-        choices=get_choices,
-        default=None,
-        help_text="Add variation fields to the site settings if you'd like to see them here",
+        min_num=1,
+        max_num=1,
+        help_text="Restrict this variation to users with this profile value. Valid values must be added to the Site Settings",
     )
     message = blocks.TextBlock(
         max_lenth=4096, help_text="each message cannot exceed 4096 characters."
