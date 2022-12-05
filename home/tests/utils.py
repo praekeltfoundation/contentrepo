@@ -3,7 +3,7 @@ from wagtail import blocks
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.images.blocks import ImageChooserBlock
 
-from home.models import ContentPage, ContentPageRating, HomePage, MediaBlock
+from home.models import ContentPage, ContentPageRating, HomePage, MediaBlock, VariationBlock
 
 
 def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=False):
@@ -13,6 +13,7 @@ def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=F
             ("image", ImageChooserBlock()),
             ("media", MediaBlock()),
             ("document", DocumentChooserBlock()),
+            ("variation_messages", blocks.ListBlock(VariationBlock())),
         ]
     )
     block_value = block.to_python(
@@ -21,6 +22,7 @@ def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=F
             "image": None,
             "media": None,
             "document": None,
+            "variation_messages": [],
         }
     )
     contentpage = ContentPage(
