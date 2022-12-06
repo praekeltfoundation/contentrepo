@@ -67,7 +67,10 @@ def get_valid_profile_values(field):
         profile_values = {}
         for profile_block in SiteSettings.objects.first().profile_field_options:
             profile_values[profile_block.block_type] = [b for b in profile_block.value]
-        return profile_values[field]
+        try:
+            return profile_values[field]
+        except KeyError:
+            return []
     return []
 
 
