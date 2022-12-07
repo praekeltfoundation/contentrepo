@@ -56,10 +56,10 @@ class SiteSettings(BaseSetting):
         help_text="Fields that may be used to restrict content to certain user segments",
         use_json_field=True,
         block_counts={
-            'gender': {'max_num': 1},
-            'age': {'max_num': 1},
-            'relationship': {'max_num': 1},
-        }
+            "gender": {"max_num": 1},
+            "age": {"max_num": 1},
+            "relationship": {"max_num": 1},
+        },
     )
 
 
