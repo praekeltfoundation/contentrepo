@@ -1,5 +1,5 @@
 Django>=4.1,<4.2
-wagtail==4.0.1
+wagtail==4.1.1
 wagtailmedia
 psycopg2-binary
 wagtail-content-import
