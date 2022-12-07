@@ -12,6 +12,7 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Page, Revision
+from wagtail.models.sites import Site
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
@@ -68,9 +69,11 @@ class MediaBlock(AbstractMediaChooserBlock):
 
 
 def get_valid_profile_values(field):
-    if SiteSettings.objects.first():
+    sitesettings = Site.objects.filter(is_default_site=True).first().sitesettings
+    if sitesettings:
         profile_values = {}
-        for profile_block in SiteSettings.objects.first().profile_field_options:
+
+        for profile_block in sitesettings.profile_field_options:
             profile_values[profile_block.block_type] = [b for b in profile_block.value]
         try:
             return profile_values[field]
