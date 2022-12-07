@@ -6,6 +6,7 @@ from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
 from wagtail.api import APIField
+from wagtail.contrib.settings.models import BaseSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
@@ -24,9 +25,41 @@ from wagtail.admin.panels import (  # isort:skip
 )
 
 
+@register_setting
+class SiteSettings(BaseSetting):
+    content_variations_options = StreamField(
+        [
+            ("content_variations_options", blocks.CharBlock()),
+        ],
+        blank=True,
+        null=True,
+    )
+
+
 class MediaBlock(AbstractMediaChooserBlock):
     def render_basic(self, value, context=None):
         pass
+
+
+def get_choices():
+    if SiteSettings.objects.first():
+        return [
+            (choice, choice)
+            for choice in SiteSettings.objects.first().content_variations_options
+        ]
+    return []
+
+
+class VariationBlock(blocks.StructBlock):
+    variation_message = blocks.ChoiceBlock(
+        required=False,
+        choices=get_choices,
+        default=None,
+        help_text="Add variation fields to the site settings if you'd like to see them here",
+    )
+    message = blocks.TextBlock(
+        max_lenth=4096, help_text="each message cannot exceed 4096 characters."
+    )
 
 
 class WhatsappBlock(blocks.StructBlock):
@@ -36,6 +69,7 @@ class WhatsappBlock(blocks.StructBlock):
     message = blocks.TextBlock(
         max_lenth=4096, help_text="each message cannot exceed 4096 characters."
     )
+    variation_messages = blocks.ListBlock(VariationBlock())
     next_prompt = blocks.CharBlock(
         max_length=20, help_text="prompt text for next message", required=False
     )

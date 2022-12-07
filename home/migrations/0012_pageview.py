@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('timestamp', models.DateTimeField(auto_now=True)),
                 ('data', models.JSONField(blank=True, default=dict, null=True)),
                 ('page', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='views', to='home.contentpage')),
-                ('revision', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='views', to='wagtailcore.pagerevision')),
+                ('revision', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='views', to='wagtailcore.revision')),
             ],
         ),
     ]
