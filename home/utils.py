@@ -31,6 +31,7 @@ from home.models import (  # isort:skip
     HomePage,
     MediaBlock,
     Page,
+    VariationBlock,
 )
 
 
@@ -102,6 +103,10 @@ def import_content(file, filetype, purge=True, locale="en"):
                     body_blocks.append(
                         ("media", MediaBlock()),
                     )
+                if type_of_message == "Whatsapp_Message":
+                    body_blocks.append(
+                        ("variation_messages", blocks.ListBlock(VariationBlock()))
+                    )
                 block = blocks.StructBlock(body_blocks)
                 body_values = {
                     "message": message_body,
@@ -112,6 +117,8 @@ def import_content(file, filetype, purge=True, locale="en"):
                     body_values["document"] = doc
                 if media:
                     body_values["media"] = media
+                if type_of_message == "Whatsapp_Message":
+                    body_values["variation_messages"] = []
                 block_value = block.to_python(body_values)
                 struct_blocks.append((type_of_message, block_value))
         return struct_blocks
