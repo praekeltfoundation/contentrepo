@@ -264,7 +264,9 @@ def import_content(file, filetype, purge=True, locale="en"):
         for row in ws.iter_rows():
             row_dict = {}
             for index, x in enumerate(row):
-                row_dict[EXPORT_FIELDNAMES[index]] = x.value
+                row_dict[EXPORT_FIELDNAMES[index]] = (
+                    x.value.replace("_x000D_", "") if x.value else None
+                )
             lines.append(row_dict)
     else:
         if isinstance(file, bytes):
