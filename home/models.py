@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.forms import CheckboxSelectMultiple
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
@@ -11,9 +12,11 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Page, Revision
+from wagtail.models.sites import Site
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
+from .constants import AGE_CHOICES, GENDER_CHOICES, RELATIONSHIP_STATUS_CHOICES
 from .panels import PageRatingPanel
 from .whatsapp import create_whatsapp_template
 
@@ -27,12 +30,36 @@ from wagtail.admin.panels import (  # isort:skip
 
 @register_setting
 class SiteSettings(BaseSetting):
-    content_variations_options = StreamField(
+    profile_field_options = StreamField(
         [
-            ("content_variations_options", blocks.CharBlock()),
+            (
+                "gender",
+                blocks.MultipleChoiceBlock(
+                    choices=GENDER_CHOICES, widget=CheckboxSelectMultiple
+                ),
+            ),
+            (
+                "age",
+                blocks.MultipleChoiceBlock(
+                    choices=AGE_CHOICES, widget=CheckboxSelectMultiple
+                ),
+            ),
+            (
+                "relationship",
+                blocks.MultipleChoiceBlock(
+                    choices=RELATIONSHIP_STATUS_CHOICES, widget=CheckboxSelectMultiple
+                ),
+            ),
         ],
         blank=True,
         null=True,
+        help_text="Fields that may be used to restrict content to certain user segments",
+        use_json_field=True,
+        block_counts={
+            "gender": {"max_num": 1},
+            "age": {"max_num": 1},
+            "relationship": {"max_num": 1},
+        },
     )
 
 
@@ -41,24 +68,54 @@ class MediaBlock(AbstractMediaChooserBlock):
         pass
 
 
-def get_choices():
-    if SiteSettings.objects.first():
-        return [
-            (choice, choice)
-            for choice in SiteSettings.objects.first().content_variations_options
-        ]
+def get_valid_profile_values(field):
+    site = Site.objects.get(is_default_site=True)
+    if site and site.sitesettings:
+        profile_values = {}
+
+        for profile_block in site.sitesettings.profile_field_options:
+            profile_values[profile_block.block_type] = [b for b in profile_block.value]
+        try:
+            return profile_values[field]
+        except KeyError:
+            return []
     return []
 
 
+def get_gender_choices():
+    # Wrapper for get_profile_field_choices that can be passed as a callable
+    choices = {k: v for k, v in GENDER_CHOICES}
+    return [(g, choices[g]) for g in get_valid_profile_values("gender")]
+
+
+def get_age_choices():
+    # Wrapper for get_profile_field_choices that can be passed as a callable
+    choices = {k: v for k, v in AGE_CHOICES}
+    return [(a, choices[a]) for a in get_valid_profile_values("age")]
+
+
+def get_relationship_choices():
+    # Wrapper for get_profile_field_choices that can be passed as a callable
+    choices = {k: v for k, v in RELATIONSHIP_STATUS_CHOICES}
+    return [(r, choices[r]) for r in get_valid_profile_values("relationship")]
+
+
 class VariationBlock(blocks.StructBlock):
-    variation_message = blocks.ChoiceBlock(
+    variation_restrictions = blocks.StreamBlock(
+        [
+            ("gender", blocks.ChoiceBlock(choices=get_gender_choices)),
+            ("age", blocks.ChoiceBlock(choices=get_age_choices)),
+            ("relationship", blocks.ChoiceBlock(choices=get_relationship_choices)),
+        ],
         required=False,
-        choices=get_choices,
-        default=None,
-        help_text="Add variation fields to the site settings if you'd like to see them here",
+        min_num=1,
+        max_num=1,
+        help_text="Restrict this variation to users with this profile value. Valid values must be added to the Site Settings",
+        use_json_field=True,
     )
     message = blocks.TextBlock(
-        max_lenth=4096, help_text="each message cannot exceed 4096 characters."
+        max_lenth=4096,
+        help_text="each message cannot exceed 4096 characters.",
     )
 
 

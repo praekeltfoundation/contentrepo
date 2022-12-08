@@ -3,24 +3,46 @@ from wagtail import blocks
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.images.blocks import ImageChooserBlock
 
-from home.models import ContentPage, ContentPageRating, HomePage, MediaBlock
+from home.models import (  # isort:skip
+    ContentPage,
+    ContentPageRating,
+    HomePage,
+    MediaBlock,
+    VariationBlock,
+)
 
 
-def create_page(title="Test Title", parent=None, tags=[], is_whatsapp_template=False):
+def create_page(
+    title="Test Title",
+    parent=None,
+    tags=[],
+    is_whatsapp_template=False,
+    add_variation=False,
+):
     block = blocks.StructBlock(
         [
             ("message", blocks.TextBlock()),
             ("image", ImageChooserBlock()),
             ("media", MediaBlock()),
             ("document", DocumentChooserBlock()),
+            ("variation_messages", blocks.ListBlock(VariationBlock())),
         ]
     )
+    variation_messages = []
+    if add_variation:
+        variation_messages = [
+            {
+                "variation_restrictions": [{"type": "gender", "value": "female"}],
+                "message": f"{title} - female variation",
+            }
+        ]
     block_value = block.to_python(
         {
             "message": "Test WhatsApp Message 1",
             "image": None,
             "media": None,
             "document": None,
+            "variation_messages": variation_messages,
         }
     )
     contentpage = ContentPage(
