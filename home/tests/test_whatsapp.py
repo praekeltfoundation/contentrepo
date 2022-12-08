@@ -18,7 +18,7 @@ class WhatsAppTests(TestCase):
         url = "http://whatsapp/graph/v3.3/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
-        create_whatsapp_template("test-template", "Test Body")
+        create_whatsapp_template("Test-Template", "Test Body")
 
         request = responses.calls[0].request
 

@@ -16,7 +16,7 @@ def create_whatsapp_template(name, body):
     }
     data = {
         "category": "ACCOUNT_UPDATE",
-        "name": name,
+        "name": name.lower(),
         "language": "en_US",
         "components": [{"type": "BODY", "text": body}],
     }
