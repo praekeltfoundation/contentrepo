@@ -126,7 +126,7 @@ class WhatsappBlock(blocks.StructBlock):
     message = blocks.TextBlock(
         max_lenth=4096, help_text="each message cannot exceed 4096 characters."
     )
-    variation_messages = blocks.ListBlock(VariationBlock())
+    variation_messages = blocks.ListBlock(VariationBlock(), default=[])
     next_prompt = blocks.CharBlock(
         max_length=20, help_text="prompt text for next message", required=False
     )

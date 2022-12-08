@@ -82,7 +82,7 @@ def has_previous_message(message_index, content_page, platform):
 def format_whatsapp_message(message_index, content_page, platform):
     # Flattens the variation_messages field in the whatsapp message
     text = content_page.whatsapp_body._raw_data[message_index]
-    variation_messages = text["value"]["variation_messages"]
+    variation_messages = text["value"].get("variation_messages", [])
     new_var_messages = []
     for var in variation_messages:
         new_var_messages.append(
