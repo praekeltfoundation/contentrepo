@@ -13,6 +13,7 @@ from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Page, Revision
 from wagtail.models.sites import Site
+from wagtail.snippets.models import register_snippet
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
@@ -521,6 +522,54 @@ class ContentPage(Page, ContentImportMixin):
                 self.whatsapp_template_name, self.whatsapp_template_body
             )
         return response
+
+
+@register_snippet
+class OrderedContentSet(models.Model):
+    name = models.CharField(max_length=255)
+    profile_fields = StreamField(
+        [
+            ("gender", blocks.ChoiceBlock(choices=get_gender_choices)),
+            ("age", blocks.ChoiceBlock(choices=get_age_choices)),
+            ("relationship", blocks.ChoiceBlock(choices=get_relationship_choices)),
+        ],
+        help_text="Restrict this ordered set to users with these profile values. Valid values must be added to the Site Settings",
+        use_json_field=True,
+        block_counts={
+            "gender": {"max_num": 1},
+            "age": {"max_num": 1},
+            "relationship": {"max_num": 1},
+        },
+        default=[],
+    )
+    pages = StreamField(
+        [
+            ("pages", blocks.PageChooserBlock()),
+        ],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
+
+    panels = [
+        FieldPanel("name"),
+        FieldPanel("profile_fields"),
+        FieldPanel("pages"),
+    ]
+
+    api_fields = [
+        APIField("name"),
+        APIField("profile_fields"),
+        APIField("pages"),
+    ]
+
+    def __str__(self):
+        """String repr of this snippet."""
+        return self.name
+
+    class Meta:  # noqa
+        verbose_name = "Ordered Content Set"
+        verbose_name_plural = "Ordered Content Sets"
 
 
 class ContentPageRating(models.Model):

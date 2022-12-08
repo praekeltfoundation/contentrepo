@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from wagtail.api.v2.serializers import PageSerializer
+from wagtail.api.v2.serializers import BaseSerializer, PageSerializer
 
 from home.models import ContentPage, ContentPageRating, PageView
 
@@ -249,3 +249,73 @@ class PageViewSerializer(serializers.ModelSerializer):
         model = PageView
         fields = "__all__"
         read_only_fields = ("id", "timestamp")
+
+
+class NameField(serializers.Field):
+    """
+    Serializes the "name" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, instance):
+        return instance.name
+
+
+class PagesField(serializers.Field):
+    def get_attribute(self, instance):
+        return instance
+
+    def get_page_as_content_page(self, page):
+        if page.id:
+            return ContentPage.objects.filter(id=page.id).first()
+
+    def to_representation(self, instance):
+        request = self.context["request"]
+        pages = []
+        for member in instance.pages:
+            page = self.get_page_as_content_page(member.value)
+            title = page.title
+            if "whatsapp" in request.GET and page.enable_whatsapp is True:
+                if page.whatsapp_title:
+                    title = page.whatsapp_title
+            elif "messenger" in request.GET and page.enable_messenger is True:
+                if page.messenger_title:
+                    title = page.messenger_title
+            elif "viber" in request.GET and page.enable_viber is True:
+                if page.viber_title:
+                    title = page.viber_title
+            pages.append(
+                {
+                    "id": page.id,
+                    "title": title,
+                }
+            )
+        return pages
+
+
+class ProfileFieldsField(serializers.Field):
+    """
+    Serializes the "profile_fields" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, instance):
+        text = []
+        for field in instance.profile_fields.raw_data:
+            text.append(
+                {
+                    "profile_field": field["type"],
+                    "value": field["value"],
+                }
+            )
+        return text
+
+
+class OrderedContentSetSerializer(BaseSerializer):
+    name = NameField(read_only=True)
+    pages = PagesField(read_only=True)
+    profile_fields = ProfileFieldsField(read_only=True)
