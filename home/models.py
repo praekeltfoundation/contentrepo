@@ -533,7 +533,6 @@ class OrderedContentSet(models.Model):
             ("age", blocks.ChoiceBlock(choices=get_age_choices)),
             ("relationship", blocks.ChoiceBlock(choices=get_relationship_choices)),
         ],
-        # required=True,
         help_text="Restrict this ordered set to users with these profile values. Valid values must be added to the Site Settings",
         use_json_field=True,
         block_counts={
@@ -563,6 +562,14 @@ class OrderedContentSet(models.Model):
         APIField("profile_fields"),
         APIField("pages"),
     ]
+
+    def __str__(self):
+        """String repr of this snippet."""
+        return self.name
+
+    class Meta:  # noqa
+        verbose_name = "Ordered Content Set"
+        verbose_name_plural = "Ordered Content Sets"
 
 
 class ContentPageRating(models.Model):
