@@ -79,6 +79,24 @@ def has_previous_message(message_index, content_page, platform):
         return message_index
 
 
+def format_whatsapp_message(message_index, content_page, platform):
+    # Flattens the variation_messages field in the whatsapp message
+    text = content_page.whatsapp_body._raw_data[message_index]
+    variation_messages = text["value"]["variation_messages"]
+    new_var_messages = []
+    for var in variation_messages:
+        new_var_messages.append(
+            {
+                "profile_field": var["value"]["variation_restrictions"][0]["type"],
+                "value": var["value"]["variation_restrictions"][0]["value"],
+                "message": var["value"]["message"],
+            }
+        )
+    text["value"]["variation_messages"] = new_var_messages
+
+    return text
+
+
 class BodyField(serializers.Field):
     """
     Serializes the "body" field.
@@ -108,6 +126,7 @@ class BodyField(serializers.Field):
                 )
         else:
             message = 0
+
         if "whatsapp" in request.GET and page.enable_whatsapp is True:
             if page.whatsapp_body != []:
                 try:
@@ -123,7 +142,10 @@ class BodyField(serializers.Field):
                                 has_previous_message(message, page, "whatsapp"),
                             ),
                             ("total_messages", len(page.whatsapp_body._raw_data)),
-                            ("text", page.whatsapp_body._raw_data[message]),
+                            (
+                                "text",
+                                format_whatsapp_message(message, page, "whatsapp"),
+                            ),
                             ("revision", page.get_latest_revision().id),
                         ]
                     )

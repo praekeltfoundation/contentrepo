@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                                                 (
                                                     "variation_message",
                                                     wagtail.blocks.ChoiceBlock(
-                                                        choices=home.models.get_choices,
+                                                        choices=home.models.get_gender_choices,
                                                         help_text="Add variation fields to the site settings if you'd like to see them here",
                                                         required=False,
                                                     ),

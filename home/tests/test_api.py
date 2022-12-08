@@ -4,7 +4,7 @@ from pathlib import Path
 from django.test import Client, TestCase
 from wagtail import blocks
 
-from home.models import ContentPage, PageView
+from home.models import ContentPage, PageView, VariationBlock
 from home.utils import import_content
 
 from .utils import create_page
@@ -83,8 +83,15 @@ class PaginationTestCase(TestCase):
 
         body = []
         for i in range(15):
-            block = blocks.StructBlock([("message", blocks.TextBlock())])
-            block_value = block.to_python({"message": f"WA Message {i+1}"})
+            block = blocks.StructBlock(
+                [
+                    ("message", blocks.TextBlock()),
+                    ("variation_messages", blocks.ListBlock(VariationBlock())),
+                ]
+            )
+            block_value = block.to_python(
+                {"message": f"WA Message {i+1}", "variation_messages": []}
+            )
             body.append(("Whatsapp_Message", block_value))
 
         self.content_page1.whatsapp_body = body
@@ -135,5 +142,25 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["title"], page.whatsapp_title)
 
         self.assertEquals(PageView.objects.count(), 3)
+        view = PageView.objects.last()
+        self.assertEquals(view.message, 1)
+
+    def test_detail_view_with_variations(self):
+        ContentPage.objects.all().delete()
+        self.assertEquals(PageView.objects.count(), 0)
+
+        # variations should be in the whatsapp content
+        page = create_page(tags=["tag1", "tag2"], add_variation=True)
+
+        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
+        content = response.json()
+
+        var_content = content["body"]["text"]["value"]["variation_messages"]
+        self.assertEquals(1, len(var_content))
+        self.assertEquals(var_content[0]["profile_field"], "gender")
+        self.assertEquals(var_content[0]["value"], "female")
+        self.assertEquals(var_content[0]["message"], "Test Title - female variation")
+
+        self.assertEquals(PageView.objects.count(), 1)
         view = PageView.objects.last()
         self.assertEquals(view.message, 1)
