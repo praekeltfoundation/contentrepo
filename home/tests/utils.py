@@ -6,8 +6,10 @@ from wagtail.images.blocks import ImageChooserBlock
 from home.models import (  # isort:skip
     ContentPage,
     ContentPageRating,
+    ContentQuickReply,
     HomePage,
     MediaBlock,
+    QuickReplyContent,
     VariationBlock,
 )
 
@@ -18,6 +20,7 @@ def create_page(
     tags=[],
     is_whatsapp_template=False,
     add_variation=False,
+    has_quick_replies=False,
 ):
     block = blocks.StructBlock(
         [
@@ -45,6 +48,11 @@ def create_page(
             "variation_messages": variation_messages,
         }
     )
+    # Option 1
+    # quick_replies = []
+    # if has_quick_replies:
+    #     quick_replies = ["tag 1", "tag 2"]
+
     contentpage = ContentPage(
         title=title,
         subtitle="Test Subtitle",
@@ -52,7 +60,14 @@ def create_page(
         whatsapp_title="WA Title",
         whatsapp_body=[("Whatsapp_Message", block_value)],
         is_whatsapp_template=is_whatsapp_template,
+        # quick_replies = quick_replies, #Option 1 continued
     )
+    # Option 2
+    # if has_quick_replies:
+    #     tag1 = ContentQuickReply(name="tag 1")
+    #     tag2 = ContentQuickReply(name="tag 2")
+    #     QuickReplyContent(tag=tag1, content_object=contentpage)
+    #     QuickReplyContent(tag=tag2, content_object=contentpage)
     for tag in tags:
         created_tag, _ = Tag.objects.get_or_create(name=tag)
         contentpage.tags.add(created_tag)
