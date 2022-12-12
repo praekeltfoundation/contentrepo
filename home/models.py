@@ -520,8 +520,8 @@ class ContentPage(Page, ContentImportMixin):
         if settings.WHATSAPP_CREATE_TEMPLATES and self.is_whatsapp_template:
             quick_reply_buttons = []
             if self.quick_reply_items.count() > 0:
-                quick_reply_buttons = self.quick_reply_items.all().values_list(
-                    "tag__name", flat=True
+                quick_reply_buttons = list(
+                    self.quick_reply_items.all().values_list("tag__name", flat=True)
                 )
             create_whatsapp_template(
                 self.whatsapp_template_name,

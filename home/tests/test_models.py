@@ -59,5 +59,5 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_with(
             f"WA_Title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
-            ["tag 1", "tag 2"],
+            ["button 1", "button 2"],
         )

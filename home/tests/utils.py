@@ -9,7 +9,6 @@ from home.models import (  # isort:skip
     ContentQuickReply,
     HomePage,
     MediaBlock,
-    QuickReplyContent,
     VariationBlock,
 )
 
@@ -48,10 +47,6 @@ def create_page(
             "variation_messages": variation_messages,
         }
     )
-    # Option 1
-    # quick_replies = []
-    # if has_quick_replies:
-    #     quick_replies = ["tag 1", "tag 2"]
 
     contentpage = ContentPage(
         title=title,
@@ -60,14 +55,13 @@ def create_page(
         whatsapp_title="WA Title",
         whatsapp_body=[("Whatsapp_Message", block_value)],
         is_whatsapp_template=is_whatsapp_template,
-        # quick_replies = quick_replies, #Option 1 continued
     )
-    # Option 2
-    # if has_quick_replies:
-    #     tag1 = ContentQuickReply(name="tag 1")
-    #     tag2 = ContentQuickReply(name="tag 2")
-    #     QuickReplyContent(tag=tag1, content_object=contentpage)
-    #     QuickReplyContent(tag=tag2, content_object=contentpage)
+
+    if has_quick_replies:
+        created_qr, _ = ContentQuickReply.objects.get_or_create(name="button 1")
+        contentpage.quick_replies.add(created_qr)
+        created_qr, _ = ContentQuickReply.objects.get_or_create(name="button 2")
+        contentpage.quick_replies.add(created_qr)
     for tag in tags:
         created_tag, _ = Tag.objects.get_or_create(name=tag)
         contentpage.tags.add(created_tag)
