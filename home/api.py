@@ -1,5 +1,6 @@
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
@@ -72,6 +73,8 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
         "profile_fields",
     ]
     pagination_class = PageNumberPagination
+    search_fields = ["name", "profile_fields"]
+    filter_backends = (SearchFilter,)
 
     @method_decorator(cache_page(60 * 60 * 2))
     def get(self, request, *args, **kwargs):
