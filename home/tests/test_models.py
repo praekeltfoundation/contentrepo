@@ -49,5 +49,15 @@ class ContentPageTests(TestCase):
     def test_template_create_on_save(self, mock_create_whatsapp_template):
         page = create_page(is_whatsapp_template=True)
         mock_create_whatsapp_template.assert_called_with(
-            f"WA_Title_{page.get_latest_revision().id}", "Test WhatsApp Message 1"
+            f"WA_Title_{page.get_latest_revision().id}", "Test WhatsApp Message 1", []
+        )
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_create_with_buttons_on_save(self, mock_create_whatsapp_template):
+        page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        mock_create_whatsapp_template.assert_called_with(
+            f"WA_Title_{page.get_latest_revision().id}",
+            "Test WhatsApp Message 1",
+            ["button 1", "button 2"],
         )
