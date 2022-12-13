@@ -67,11 +67,10 @@ class ContentPageIndexViewSet(PagesAPIViewSet):
 class OrderedContentSetViewSet(BaseAPIViewSet):
     model = OrderedContentSet
     base_serializer_class = OrderedContentSetSerializer
-    known_query_parameters = set(
-        [
-            "name",
-        ]
-    )
+    listing_default_fields = BaseAPIViewSet.listing_default_fields + [
+        "name",
+        "profile_fields",
+    ]
     pagination_class = PageNumberPagination
 
     @method_decorator(cache_page(60 * 60 * 2))
