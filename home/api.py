@@ -72,6 +72,7 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
         "name",
         "profile_fields",
     ]
+    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["page"])
     pagination_class = PageNumberPagination
     search_fields = ["name", "profile_fields"]
     filter_backends = (SearchFilter,)
