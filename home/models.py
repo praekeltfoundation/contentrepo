@@ -548,6 +548,7 @@ class OrderedContentSet(models.Model):
             "relationship": {"max_num": 1},
         },
         default=[],
+        blank=True,
     )
     pages = StreamField(
         [
