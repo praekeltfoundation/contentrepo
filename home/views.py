@@ -206,6 +206,14 @@ class PageViewViewSet(GenericListViewset):
     serializer_class = PageViewSerializer
     filterset_class = PageViewFilter
 
+    def get_queryset(self):
+        # filter the queryset by data jsonfield:
+        queryset = self.queryset
+        for key, value in self.request.GET.items():
+            if "data__" in key:
+                queryset = queryset.filter(**{key: value})
+        return queryset
+
 
 class ContentPageRatingViewSet(GenericListViewset, CreateModelMixin):
     queryset = ContentPageRating.objects.all()
