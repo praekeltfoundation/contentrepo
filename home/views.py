@@ -213,11 +213,11 @@ class PageViewViewSet(GenericListViewset):
         for key, value in self.request.GET.items():
             if "data__" in key:
                 queryset = queryset.filter(**{key: value})
-        
+
         # Only return unique pages
         if self.request.GET.get("unique_pages", False) == "true":
             if db_connection.vendor == "postgresql":
-                queryset = queryset.distinct('page')
+                queryset = queryset.distinct("page")
             else:
                 raise ValidationError({"unique_pages": ["This query is not supported"]})
 
