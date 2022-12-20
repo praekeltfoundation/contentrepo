@@ -217,6 +217,8 @@ class PageViewViewSet(GenericListViewset):
         # Only return unique pages
         if self.request.GET.get("unique_pages", False) == "true":
             if db_connection.vendor == "postgresql":
+                # Fields used for "distinct" must be the first thing we order by
+                self.pagination_class.ordering="page"
                 queryset = queryset.distinct("page")
             else:
                 raise ValidationError({"unique_pages": ["This query is not supported"]})
