@@ -2,6 +2,7 @@ import json
 import threading
 
 import django_filters
+from django.db import connection as db_connection
 from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
 from django.forms import MultiWidget
@@ -205,6 +206,22 @@ class PageViewViewSet(GenericListViewset):
     queryset = PageView.objects.all()
     serializer_class = PageViewSerializer
     filterset_class = PageViewFilter
+
+    def get_queryset(self):
+        # filter the queryset by data jsonfield:
+        queryset = self.queryset
+        for key, value in self.request.GET.items():
+            if "data__" in key:
+                queryset = queryset.filter(**{key: value})
+
+        # Only return unique pages
+        if self.request.GET.get("unique_pages", False) == "true":
+            if db_connection.vendor == "postgresql":
+                queryset = queryset.distinct("page")
+            else:
+                raise ValidationError({"unique_pages": ["This query is not supported"]})
+
+        return queryset
 
 
 class ContentPageRatingViewSet(GenericListViewset, CreateModelMixin):
