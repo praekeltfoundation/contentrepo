@@ -404,6 +404,7 @@ class ContentPage(Page, ContentImportMixin):
         APIField("quick_replies"),
         APIField("related_pages"),
         APIField("has_children"),
+        APIField("quick_replies_by_id"),
     ]
 
     @property

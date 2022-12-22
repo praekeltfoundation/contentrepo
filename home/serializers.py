@@ -229,12 +229,22 @@ class RelatedPagesField(serializers.Field):
         return related_pages
 
 
+class QuickRepliesByIdField(serializers.Field):
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        quick_replies = page.quick_reply_items.all()
+        return {r.pk: r.tag.name for r in quick_replies}
+
+
 class ContentPageSerializer(PageSerializer):
     title = TitleField(read_only=True)
     subtitle = SubtitleField(read_only=True)
     body = BodyField(read_only=True)
     has_children = HasChildrenField(read_only=True)
     related_pages = RelatedPagesField(read_only=True)
+    quick_replies_by_id = QuickRepliesByIdField(read_only=True)
 
 
 class ContentPageRatingSerializer(serializers.ModelSerializer):
