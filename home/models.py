@@ -526,7 +526,7 @@ class ContentPage(Page, ContentImportMixin):
             create_whatsapp_template(
                 self.whatsapp_template_name,
                 self.whatsapp_template_body,
-                quick_reply_buttons,
+                sorted(quick_reply_buttons),
             )
         return response
 
