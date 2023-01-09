@@ -13,6 +13,7 @@ from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Page, Revision
 from wagtail.models.sites import Site
+from wagtail.search import index
 from wagtail.snippets.models import register_snippet
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
@@ -532,7 +533,7 @@ class ContentPage(Page, ContentImportMixin):
 
 
 @register_snippet
-class OrderedContentSet(models.Model):
+class OrderedContentSet(index.Indexed, models.Model):
     name = models.CharField(max_length=255)
     profile_fields = StreamField(
         [
@@ -550,6 +551,9 @@ class OrderedContentSet(models.Model):
         default=[],
         blank=True,
     )
+    search_fields = [
+        index.SearchField("name", partial_match=True),
+    ]
     pages = StreamField(
         [
             ("pages", blocks.PageChooserBlock()),
