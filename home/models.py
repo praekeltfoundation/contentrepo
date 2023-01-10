@@ -535,6 +535,22 @@ class ContentPage(Page, ContentImportMixin):
 @register_snippet
 class OrderedContentSet(index.Indexed, models.Model):
     name = models.CharField(max_length=255)
+
+    def get_gender(self):
+        for item in self.profile_fields.raw_data:
+            if item["type"] == "gender":
+                return item["value"]
+
+    def get_age(self):
+        for item in self.profile_fields.raw_data:
+            if item["type"] == "age":
+                return item["value"]
+
+    def get_relationship(self):
+        for item in self.profile_fields.raw_data:
+            if item["type"] == "relationship":
+                return item["value"]
+
     profile_fields = StreamField(
         [
             ("gender", blocks.ChoiceBlock(choices=get_gender_choices)),
@@ -553,6 +569,9 @@ class OrderedContentSet(index.Indexed, models.Model):
     )
     search_fields = [
         index.SearchField("name", partial_match=True),
+        index.SearchField("get_gender", partial_match=True),
+        index.SearchField("get_age", partial_match=True),
+        index.SearchField("get_relationship", partial_match=True),
     ]
     pages = StreamField(
         [
