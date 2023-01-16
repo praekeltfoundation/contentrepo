@@ -443,7 +443,7 @@ def get_rows(
     """Sets up row for each page including the side panel.
     Each page is returned as a list of rows, this accounts for pages with multiple messages"""
     rows = []
-    base_row = ContentSheetRow.from_page(page, structure_string)
+    base_row = ContentSheetRow.from_page(page=page, structure_string=structure_string)
     if base_row:
         rows.append(base_row.get_row())
         if base_row.variation_messages_rows:
@@ -501,7 +501,6 @@ def get_content_depth(queryset: PageQuerySet) -> list[int]:
 
 def get_content_sheet(queryset: PageQuerySet) -> List[list]:
     content_sheet = []
-    # side_panel_headings = get_content_depth(queryset)
     headings = ["Structure", "Message"] + EXPORT_FIELDNAMES
     content_sheet.append(headings)
     for locale in Locale.objects.all():
@@ -697,7 +696,7 @@ class MessageContainer:
 
 @dataclass
 class ContentSheetRow:
-    structure: str = ("",)
+    structure: str = ""
     side_panel_message_number: int = 0
     parent: str = ""
     web_title: str = ""
@@ -756,7 +755,7 @@ class ContentSheetRow:
             page, side_panel_message_number, message_container
         )
 
-        content_sheet_row._set_structure(structure_string)
+        content_sheet_row.structure = structure_string
         content_sheet_row.page_id = page.id
 
         if side_panel_message_number == 0:
@@ -792,7 +791,7 @@ class ContentSheetRow:
         structure_string: str,
     ):
         content_sheet_row = cls()
-        content_sheet_row._set_structure(structure_string)
+        content_sheet_row.structure = structure_string
         content_sheet_row.parent = content_sheet_row._get_parent_page(page)
         content_sheet_row.web_title = page.title
         content_sheet_row.translation_tag = str(page.translation_key)
@@ -811,7 +810,6 @@ class ContentSheetRow:
         content_sheet_row.page_id = page.id
         content_sheet_row.side_panel_message_number = side_panel_message_number + 1
         content_sheet_row.variation_title = variation_title
-        content_sheet_row.structure = ""
         content_sheet_row.variation_body = variation_body
         return content_sheet_row
 
@@ -855,17 +853,6 @@ class ContentSheetRow:
         """Get parent page title as string"""
         if not HomePage.objects.filter(id=page.get_parent().id).exists():
             return page.get_parent().title
-
-    def _set_structure(self, structure_string: str):
-        """Sets the sidebar Menu/Sub level based on structure string length,
-        for example, Sub 1.2.1 is a level 3 message"""
-        if not structure_string:
-            pass
-        elif "menu" in structure_string.lower():
-            structure_string = structure_string
-        else:
-            structure_string = structure_string
-        self.structure = structure_string
 
     def _set_messages(
         self,
@@ -960,10 +947,10 @@ class ContentSheetRow:
         for variation in message_container.variation_messages[message_index].variations:
             temp_rows.append(
                 ContentSheetRow.from_variation_message(
-                    page,
-                    variation.title,
-                    message_index,
-                    variation.body,
+                    page=page,
+                    variation_title=variation.title,
+                    side_panel_message_number=message_index,
+                    variation_body=variation.body,
                 )
             )
         return temp_rows
@@ -1024,29 +1011,3 @@ class ContentSheetRow:
         if next_prompt:
             return next_prompt
         return ""
-
-    def _get_list_of_variation_messages(
-        self,
-        platform_body_element: blocks.StreamValue.StreamChild,
-        side_panel_message_number: int,
-    ):
-        variation_messages = []
-        if platform_body_element:
-            for variation in platform_body_element.raw_data[side_panel_message_number][
-                "value"
-            ]["variation_messages"]:
-                profile_fields = []
-                for profile_field in variation["value"]["variation_restrictions"]:
-                    profile_fields.append(
-                        f"{profile_field['type']}: {profile_field['value']}".replace(
-                            "_", " "
-                        )
-                    )
-                variation_messages.append(
-                    {
-                        "message": variation["value"]["message"],
-                        "title": f'{", ".join(profile_fields)}',
-                    }
-                )
-        if variation_messages:
-            return tuple(variation_messages)
