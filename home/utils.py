@@ -36,12 +36,15 @@ from home.models import (  # isort:skip
 
 
 EXPORT_FIELDNAMES = [
+    "page_id",
     "parent",
     "web_title",
     "web_subtitle",
     "web_body",
     "whatsapp_title",
     "whatsapp_body",
+    "variation_title",
+    "variation_body",
     "messenger_title",
     "messenger_body",
     "viber_title",
@@ -335,34 +338,27 @@ def import_content(file, filetype, purge=True, locale="en"):
             print(f"Content page not created for {row}")
 
 
-def style_sheet(
-    wb: Workbook, sheet: Worksheet, panel_width: int
-) -> Tuple[Workbook, Worksheet]:
+def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
     """Sets the style for the workbook adding any formatting that will make the sheet more aesthetically pleasing"""
     # Adjustment is because the size in openxlsx and google sheets are not equivalent
     adjustment = 7
     # Padding
     sheet.insert_cols(1)
-    panel_width += 1
-
-    for index in range(1, panel_width + 1):
-        sheet.column_dimensions[get_column_letter(index)].width = ceil(
-            (35 + (index + 10) * 2) / adjustment
-        )
-
-    # Add Message column to panel
-    panel_width += 1
 
     # Set columns based on best size
 
     column_widths_in_pts = {
+        "Structure": 110,
         "Message": 70,
+        "page_id": 110,
         "parent": 110,
         "web_title": 110,
         "web_subtitle": 110,
         "web_body": 370,
         "whatsapp_title": 118,
         "whatsapp_body": 370,
+        "variation_title": 118,
+        "variation_body": 370,
         "messenger_title": 118,
         "messenger_body": 370,
         "viber_title": 118,
@@ -379,14 +375,14 @@ def style_sheet(
         "related": 118,
     }
 
-    for index, column_width in enumerate(column_widths_in_pts.values(), panel_width):
+    for index, column_width in enumerate(column_widths_in_pts.values(), 2):
         sheet.column_dimensions[get_column_letter(index)].width = ceil(
             column_width / adjustment
         )
 
     # Freeze heading row and side panel, 1 added because it freezes before the column
-    panel_column = get_column_letter(panel_width + 1)
-    sheet.freeze_panes = sheet[f"{panel_column}3"]
+    panel_column = get_column_letter(5)
+    sheet.freeze_panes = sheet[f"{panel_column}2"]
 
     # Colours
     blue = Color(rgb="0099CCFF")
@@ -443,17 +439,22 @@ def style_sheet(
 def get_rows(
     page: Union[ContentPage, ContentPageIndex],
     structure_string: str,
-    side_panel_width: int,
 ) -> List[list]:
     """Sets up row for each page including the side panel.
     Each page is returned as a list of rows, this accounts for pages with multiple messages"""
     rows = []
-    base_row = ContentSheetRow.from_page(page, structure_string, side_panel_width)
+    base_row = ContentSheetRow.from_page(page, structure_string)
     if base_row:
         rows.append(base_row.get_row())
+        if base_row.variation_messages_rows:
+            for variation_row in base_row.variation_messages_rows:
+                rows.append(variation_row.get_row())
         if base_row.tuple_of_extra_rows:
             for extra_row in base_row.tuple_of_extra_rows:
                 rows.append(extra_row.get_row())
+                if extra_row.variation_messages_rows:
+                    for variation_row in extra_row.variation_messages_rows:
+                        rows.append(variation_row.get_row())
     return rows
 
 
@@ -462,13 +463,12 @@ def add_children(
     children: PageQuerySet,
     queryset: PageQuerySet,
     parent_structure: str,
-    side_panel_width: int,
 ) -> List[list]:
     """Recursive function that traverses the children of a page with a depth first search algorithm"""
     for index, child in enumerate(children, 1):
         content_page = get_page(child, queryset)
         structure_string = f"{parent_structure.replace('Menu','Sub')}.{index}"
-        row = get_rows(content_page, structure_string, side_panel_width)
+        row = get_rows(content_page, structure_string)
         if row:
             temp_sheet.extend(row)
         if content_page and content_page.has_children:
@@ -477,7 +477,6 @@ def add_children(
                 content_page.get_children(),
                 queryset,
                 structure_string,
-                side_panel_width,
             )
     return temp_sheet
 
@@ -495,15 +494,15 @@ def get_content_depth(queryset: PageQuerySet) -> list[int]:
     if queryset:
         distance = max([x.depth for x in queryset]) - 1
         headings = [x for x in range(1, distance)]
-        return headings, headings[-1]
+        return headings
     else:
-        return [1, 2, 3, 4, 5], 5
+        return [1, 2, 3, 4, 5]
 
 
 def get_content_sheet(queryset: PageQuerySet) -> List[list]:
     content_sheet = []
-    side_panel_headings, side_panel_width = get_content_depth(queryset)
-    headings = side_panel_headings + ["Message"] + EXPORT_FIELDNAMES
+    # side_panel_headings = get_content_depth(queryset)
+    headings = ["Structure", "Message"] + EXPORT_FIELDNAMES
     content_sheet.append(headings)
     for locale in Locale.objects.all():
         home = HomePage.objects.filter(locale_id=locale.id).first()
@@ -513,7 +512,7 @@ def get_content_sheet(queryset: PageQuerySet) -> List[list]:
                 structure_string = f"Menu {index}"
                 content_page = get_page(page, queryset)
                 if content_page:
-                    row = get_rows(content_page, structure_string, side_panel_width)
+                    row = get_rows(content_page, structure_string)
                     content_sheet.extend(row)
                     if content_page.has_children:
                         content_sheet = add_children(
@@ -521,7 +520,6 @@ def get_content_sheet(queryset: PageQuerySet) -> List[list]:
                             content_page.get_children(),
                             queryset,
                             structure_string,
-                            side_panel_width,
                         )
     return content_sheet
 
@@ -537,16 +535,11 @@ def export_xlsx_content(queryset: PageQuerySet, response: HttpResponse) -> None:
     """Export contentpages within the queryset to an xlsx"""
     workbook = Workbook()
     worksheet = workbook.active
-    _, panel_width = get_content_depth(queryset)
-    panel_column = get_column_letter(panel_width + 1)
-    worksheet.merge_cells(f"B1:{panel_column}1")
-    cell = worksheet.cell(row=1, column=2)
-    cell.value = "Structure"
 
     content_sheet = get_content_sheet(queryset)
     for row in content_sheet:
         worksheet.append(row)
-    workbook, worksheet = style_sheet(workbook, worksheet, panel_width)
+    workbook, worksheet = style_sheet(workbook, worksheet)
     workbook.save(response)
 
 
@@ -601,25 +594,62 @@ class Message:
 
 
 @dataclass
+class VariationMessage:
+    body: str = ""
+    title: str = ""
+
+    @classmethod
+    def from_variation(cls, variation: blocks.StreamValue.StreamChild):
+        message = cls()
+        message.body = variation.get("message")
+        profile_fields = []
+        for profile_field in variation.get("variation_restrictions").raw_data:
+            profile_fields.append(f"{profile_field['type']}: {profile_field['value']}")
+        message.title = ", ".join(profile_fields)
+        return message
+
+
+@dataclass
+class VariationMessageList:
+    variations: Tuple[VariationMessage]
+
+    @classmethod
+    def from_platform_body_element(cls, whatsapp_msg: blocks.StreamValue.StreamChild):
+        variations = []
+        for variation in whatsapp_msg.value["variation_messages"]:
+            variations.append(VariationMessage.from_variation(variation=variation))
+        return cls(variations)
+
+    def __iter__(self):
+        for value in self.__dict__.values():
+            yield value
+
+
+@dataclass
 class MessageContainer:
     whatsapp: Tuple[Message]
     messenger: Tuple[Message]
     viber: Tuple[Message]
+    variation_messages: Tuple[VariationMessage]
 
     @classmethod
     def from_platform_body(cls, whatsapp_body, messenger_body, viber_body):
         whatsapp = []
+        whatsapp_variation_messages = []
         messenger = []
         viber = []
         for whatsapp_msg in whatsapp_body:
             whatsapp.append(Message.from_platform_body_element(whatsapp_msg))
+            whatsapp_variation_messages.append(
+                VariationMessageList.from_platform_body_element(whatsapp_msg)
+            )
 
         for messenger_msg in messenger_body:
             messenger.append(Message.from_platform_body_element(messenger_msg))
 
         for viber_msg in viber_body:
             viber.append(Message.from_platform_body_element(viber_msg))
-        return cls(whatsapp, messenger, viber)
+        return cls(whatsapp, messenger, viber, whatsapp_variation_messages)
 
     def find_first_attachment(self, index: int, attachment_type: str) -> str:
         for message_list in [self.whatsapp, self.messenger, self.viber]:
@@ -667,7 +697,7 @@ class MessageContainer:
 
 @dataclass
 class ContentSheetRow:
-    side_panel_depth: tuple = ("",)
+    structure: str = ("",)
     side_panel_message_number: int = 0
     parent: str = ""
     web_title: str = ""
@@ -689,29 +719,31 @@ class ContentSheetRow:
     doc_link: str = ""
     media_link: str = ""
     related_pages: str = ""
+    variation_body: str = ""
+    variation_title: str = ""
     tuple_of_extra_rows: tuple = ()
+    variation_messages_rows: tuple = ()
+    page_id: int = 0
 
     @classmethod
     def from_page(
         cls,
         page: ContentPage,
         structure_string: str,
-        side_panel_width: int,
         side_panel_message_number: int = 0,
     ):
         if isinstance(page, ContentPage):
             return cls.from_content_page(
-                page, structure_string, side_panel_width, side_panel_message_number
+                page, structure_string, side_panel_message_number
             )
         if isinstance(page, ContentPageIndex):
-            return cls.from_index_page(page, structure_string, side_panel_width)
+            return cls.from_index_page(page, structure_string)
 
     @classmethod
     def from_content_page(
         cls,
         page: ContentPage,
         structure_string: str,
-        side_panel_width: int,
         side_panel_message_number: int = 0,
     ):
         content_sheet_row = cls()
@@ -721,10 +753,11 @@ class ContentSheetRow:
             page.viber_body,
         )
         content_sheet_row._set_messages(
-            page, side_panel_message_number, side_panel_width, message_container
+            page, side_panel_message_number, message_container
         )
 
-        content_sheet_row._set_structure(structure_string, side_panel_width)
+        content_sheet_row._set_structure(structure_string)
+        content_sheet_row.page_id = page.id
 
         if side_panel_message_number == 0:
             content_sheet_row.parent = content_sheet_row._get_parent_page(page)
@@ -757,26 +790,45 @@ class ContentSheetRow:
         cls,
         page: ContentPageIndex,
         structure_string: str,
-        side_panel_width: int,
     ):
         content_sheet_row = cls()
-        content_sheet_row._set_structure(structure_string, side_panel_width)
+        content_sheet_row._set_structure(structure_string)
         content_sheet_row.parent = content_sheet_row._get_parent_page(page)
         content_sheet_row.web_title = page.title
         content_sheet_row.translation_tag = str(page.translation_key)
         content_sheet_row.locale = str(page.locale)
         return content_sheet_row
 
+    @classmethod
+    def from_variation_message(
+        cls,
+        page,
+        variation_title,
+        side_panel_message_number,
+        variation_body,
+    ):
+        content_sheet_row = cls()
+        content_sheet_row.page_id = page.id
+        content_sheet_row.side_panel_message_number = side_panel_message_number + 1
+        content_sheet_row.variation_title = variation_title
+        content_sheet_row.structure = ""
+        content_sheet_row.variation_body = variation_body
+        return content_sheet_row
+
     def get_row(self):
         """Returns object as an exportable row"""
-        return list(self.side_panel_depth) + [
+        return [
+            self.structure,
             self.side_panel_message_number,
+            self.page_id,
             self.parent,
             self.web_title,
             self.web_subtitle,
             self.web_body,
             self.whatsapp_title,
             self.whatsapp_body,
+            self.variation_title,
+            self.variation_body,
             self.messenger_title,
             self.messenger_body,
             self.viber_title,
@@ -804,24 +856,21 @@ class ContentSheetRow:
         if not HomePage.objects.filter(id=page.get_parent().id).exists():
             return page.get_parent().title
 
-    def _set_structure(self, structure_string: str, side_panel_width: int):
+    def _set_structure(self, structure_string: str):
         """Sets the sidebar Menu/Sub level based on structure string length,
         for example, Sub 1.2.1 is a level 3 message"""
-        temp = [""] * side_panel_width
         if not structure_string:
             pass
         elif "menu" in structure_string.lower():
-            temp[0] = structure_string
+            structure_string = structure_string
         else:
-            index = int((len(structure_string) - 5) / 2)
-            temp[index] = structure_string
-        self.side_panel_depth = tuple(temp)
+            structure_string = structure_string
+        self.structure = structure_string
 
     def _set_messages(
         self,
         page: ContentPage,
         side_panel_message_number: int,
-        side_panel_width: int,
         message_container: MessageContainer,
     ):
         """Sets all message level content, including any message level content such as documents, images, next prompts and media.
@@ -836,11 +885,16 @@ class ContentSheetRow:
                 len(page.body),
             ]
         )
+        variation_messages = []
 
         if len(message_container.whatsapp) == 1 or (
             side_panel_message_number == 0 and len(message_container.whatsapp) > 1
         ):
             self.whatsapp_body = message_container.whatsapp[0].body
+            if message_container.variation_messages:
+                variation_messages.extend(
+                    self._make_variation_rows(page, message_container, 0)
+                )
 
         if len(message_container.messenger) == 1 or (
             side_panel_message_number == 0 and len(message_container.messenger) > 1
@@ -861,34 +915,58 @@ class ContentSheetRow:
         if side_panel_message_number == 0 and most_messages > 1:
             # Set tuple_of_extra_rows rows to account for multiple messages
             for message_index in range(1, most_messages):
-                new_row = ContentSheetRow.from_page(
-                    page,
-                    "",
-                    side_panel_width,
-                    message_index,
+                new_content_sheet_row = ContentSheetRow.from_page(
+                    page=page,
+                    structure_string="",
+                    side_panel_message_number=message_index,
                 )
                 if message_index < len(message_container.whatsapp):
-                    new_row.whatsapp_body = message_container.whatsapp[
+                    new_content_sheet_row.whatsapp_body = message_container.whatsapp[
                         message_index
                     ].body
+                    if message_container.variation_messages:
+                        new_content_sheet_row.variation_messages_rows = (
+                            self._make_variation_rows(
+                                page, message_container, message_index
+                            )
+                        )
+
                 if message_index < len(message_container.messenger):
-                    new_row.messenger_body = message_container.messenger[
+                    new_content_sheet_row.messenger_body = message_container.messenger[
                         message_index
                     ].body
                 if message_index < len(message_container.viber):
-                    new_row.viber_body = message_container.viber[message_index].body
-                new_row.next_prompt = self._get_next_prompt(
+                    new_content_sheet_row.viber_body = message_container.viber[
+                        message_index
+                    ].body
+                new_content_sheet_row.next_prompt = self._get_next_prompt(
                     message_container, message_index
                 )
-                new_row.doc_link = self._get_doc_link(message_container, message_index)
-                new_row.image_link = self._get_image_link(
+                new_content_sheet_row.doc_link = self._get_doc_link(
                     message_container, message_index
                 )
-                new_row.media_link = self._get_media_link(
+                new_content_sheet_row.image_link = self._get_image_link(
                     message_container, message_index
                 )
-                temp_rows.append(new_row)
+                new_content_sheet_row.media_link = self._get_media_link(
+                    message_container, message_index
+                )
+                temp_rows.append(new_content_sheet_row)
             self.tuple_of_extra_rows = tuple(temp_rows)
+            self.variation_messages_rows = tuple(variation_messages)
+
+    def _make_variation_rows(self, page, message_container, message_index):
+        temp_rows = []
+        for variation in message_container.variation_messages[message_index].variations:
+            temp_rows.append(
+                ContentSheetRow.from_variation_message(
+                    page,
+                    variation.title,
+                    message_index,
+                    variation.body,
+                )
+            )
+        return temp_rows
 
     @staticmethod
     def _get_related_pages(page: ContentPage) -> List[str]:
@@ -946,3 +1024,29 @@ class ContentSheetRow:
         if next_prompt:
             return next_prompt
         return ""
+
+    def _get_list_of_variation_messages(
+        self,
+        platform_body_element: blocks.StreamValue.StreamChild,
+        side_panel_message_number: int,
+    ):
+        variation_messages = []
+        if platform_body_element:
+            for variation in platform_body_element.raw_data[side_panel_message_number][
+                "value"
+            ]["variation_messages"]:
+                profile_fields = []
+                for profile_field in variation["value"]["variation_restrictions"]:
+                    profile_fields.append(
+                        f"{profile_field['type']}: {profile_field['value']}".replace(
+                            "_", " "
+                        )
+                    )
+                variation_messages.append(
+                    {
+                        "message": variation["value"]["message"],
+                        "title": f'{", ".join(profile_fields)}',
+                    }
+                )
+        if variation_messages:
+            return tuple(variation_messages)
