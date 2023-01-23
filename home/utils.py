@@ -19,6 +19,7 @@ from wagtail.documents.models import Document
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.models import Image
 from wagtail.models import Locale
+from wagtail.models.sites import Site
 from wagtail.query import PageQuerySet
 from wagtail.rich_text import RichText
 from wagtailmedia.models import Media
@@ -72,9 +73,9 @@ def import_content(file, filetype, purge=True, locale="en"):
                     body = body + [("paragraph", RichText(line))]
             return body
 
-    def get_body(messages, type_of_message):
+    def get_body(messages, type_of_message, variation_messages=[]):
         struct_blocks = []
-        for raw in messages:
+        for message_number, raw in enumerate(messages, 1):
             im = None
             doc = None
             media = None
@@ -120,8 +121,29 @@ def import_content(file, filetype, purge=True, locale="en"):
                     body_values["document"] = doc
                 if media:
                     body_values["media"] = media
-                if type_of_message == "Whatsapp_Message":
-                    body_values["variation_messages"] = []
+
+                if type_of_message == "Whatsapp_Message" and variation_messages:
+                    variation_blocks = []
+                    for variation_message in variation_messages:
+                        if variation_message['message_number'] == str(message_number):
+                            profile_field, profile_field_value = variation_message['variation_title'].split(": ")
+                            site = Site.objects.get(is_default_site=True)
+                            for profile_block in site.sitesettings.profile_field_options:
+                                # tried getting the profile fields and use those as the blocks for variation restrictions
+                                # this does not work because it is a StreamChild
+                                if profile_block.block_type == profile_field:
+                                    variation_blocks.append(("variation_restrictions", profile_block))
+                            variation_blocks.append(
+                                ("message", blocks.TextBlock())
+                            )
+
+                            variation_values = {
+                                "message": variation_message['variation_body']
+                            }
+                            variation_block = blocks.StructBlock(variation_blocks)
+                            variation_values = variation_block.to_python(variation_values)
+
+                        body_values["variation_messages"] = variation_block.to_python(variation_values)
                 block_value = block.to_python(body_values)
                 struct_blocks.append((type_of_message, block_value))
         return struct_blocks
@@ -171,7 +193,7 @@ def import_content(file, filetype, purge=True, locale="en"):
             locale=home_page.locale,
         )
 
-    def add_whatsapp(row, whatsapp_messages, page=None):
+    def add_whatsapp(row, whatsapp_messages, page=None, variation_messages=[]):
         if "whatsapp_title" not in row.keys() or not row["whatsapp_title"]:
             return page
 
@@ -180,13 +202,13 @@ def import_content(file, filetype, purge=True, locale="en"):
                 title=row["whatsapp_title"],
                 enable_whatsapp=True,
                 whatsapp_title=row["whatsapp_title"],
-                whatsapp_body=get_body(whatsapp_messages, "Whatsapp_Message"),
+                whatsapp_body=get_body(whatsapp_messages, "Whatsapp_Message", variation_messages),
                 locale=home_page.locale,
             )
         else:
             page.enable_whatsapp = True
             page.whatsapp_title = row["whatsapp_title"]
-            page.whatsapp_body = get_body(whatsapp_messages, "Whatsapp_Message")
+            page.whatsapp_body = get_body(whatsapp_messages, "Whatsapp_Message", variation_messages)
             return page
 
     def add_messenger(row, messenger_messages, page=None):
@@ -234,6 +256,8 @@ def import_content(file, filetype, purge=True, locale="en"):
             "web_body",
             "whatsapp_title",
             "whatsapp_body",
+            "variation_title",
+            "variation_body",
             "next_prompt",
             "viber_title",
             "viber_body",
@@ -301,6 +325,8 @@ def import_content(file, filetype, purge=True, locale="en"):
             cpi.save_revision().publish()
             continue
         row = clean_row(row)
+        variation_messages = []
+        whatsapp_messages = [row["whatsapp_body"]]
         whatsapp_messages = [row["whatsapp_body"]]
         messenger_messages = [row["messenger_body"]]
         viber_messages = [row["viber_body"]]
@@ -309,13 +335,19 @@ def import_content(file, filetype, purge=True, locale="en"):
                 break
             if next_row["whatsapp_body"] not in ["", None]:
                 whatsapp_messages.append(next_row["whatsapp_body"])
+            if next_row["variation_body"] not in ["", None]:
+                variation_messages.append({
+                    "variation_body": next_row["variation_body"],
+                    "variation_title": next_row["variation_title"],
+                    "message_number": next_row["Message"],
+                })
             if next_row["messenger_body"] not in ["", None]:
                 messenger_messages.append(next_row["messenger_body"])
             if next_row["viber_body"] not in ["", None]:
                 viber_messages.append(next_row["viber_body"])
 
         contentpage = add_web(row)
-        contentpage = add_whatsapp(row, whatsapp_messages, contentpage)
+        contentpage = add_whatsapp(row, whatsapp_messages, contentpage, variation_messages)
         contentpage = add_messenger(row, messenger_messages, contentpage)
         contentpage = add_viber(row, viber_messages, contentpage)
         if contentpage:
