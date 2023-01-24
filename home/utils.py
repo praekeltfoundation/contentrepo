@@ -187,7 +187,7 @@ def import_content(file, filetype, purge=True, locale="en"):
         else:
             home_page.add_child(instance=page)
 
-    def add_web(row, page, pk=None):
+    def add_web(row, page, pk):
         if "web_title" not in row.keys() or not row["web_title"]:
             return
         if page:
@@ -207,7 +207,7 @@ def import_content(file, filetype, purge=True, locale="en"):
             locale=home_page.locale,
         )
 
-    def add_whatsapp(row, whatsapp_messages, page=None, variation_messages=[], pk=None):
+    def add_whatsapp(row, whatsapp_messages, pk, page=None, variation_messages=[]):
         if "whatsapp_title" not in row.keys() or not row["whatsapp_title"]:
             return page
 
@@ -230,7 +230,7 @@ def import_content(file, filetype, purge=True, locale="en"):
             )
             return page
 
-    def add_messenger(row, messenger_messages, page=None, pk=None):
+    def add_messenger(row, messenger_messages, pk, page=None):
         if "messenger_title" not in row.keys() or not row["messenger_title"]:
             return page
 
@@ -249,7 +249,7 @@ def import_content(file, filetype, purge=True, locale="en"):
             page.messenger_body = get_body(messenger_messages, "messenger_block")
             return page
 
-    def add_viber(row, viber_messages, page=None, pk=None):
+    def add_viber(row, viber_messages, pk, page=None):
         if "viber_title" not in row.keys() or not row["viber_title"]:
             return page
 
@@ -303,7 +303,7 @@ def import_content(file, filetype, purge=True, locale="en"):
     if filetype == "XLSX":
         wb = load_workbook(filename=BytesIO(file))
         ws = wb.worksheets[0]
-        side_pannel = get_side_panel_width(ws, "Message")
+        side_pannel = get_side_panel_width(ws, "message")
         if side_pannel:
             ws.delete_cols(1, side_pannel)
         ws.delete_rows(1, 2)
@@ -364,7 +364,7 @@ def import_content(file, filetype, purge=True, locale="en"):
                     {
                         "variation_body": next_row["variation_body"],
                         "variation_title": next_row["variation_title"],
-                        "message_number": next_row["Message"],
+                        "message_number": next_row["message"],
                     }
                 )
 
@@ -373,15 +373,21 @@ def import_content(file, filetype, purge=True, locale="en"):
             if next_row["viber_body"] not in ["", None]:
                 viber_messages.append(next_row["viber_body"])
         exiting_contentpage = ContentPage.objects.filter(pk=pk).first()
-        if exiting_contentpage:
-            contentpage = exiting_contentpage
 
-        contentpage = add_web(row, contentpage)
+        contentpage = add_web(row=row, pk=pk, page=exiting_contentpage)
         contentpage = add_whatsapp(
-            row, whatsapp_messages, contentpage, variation_messages
+            row=row,
+            whatsapp_messages=whatsapp_messages,
+            pk=pk,
+            page=contentpage,
+            variation_messages=variation_messages,
         )
-        contentpage = add_messenger(row, messenger_messages, contentpage)
-        contentpage = add_viber(row, viber_messages, contentpage)
+        contentpage = add_messenger(
+            row=row, messenger_messages=messenger_messages, pk=pk, page=contentpage
+        )
+        contentpage = add_viber(
+            row=row, viber_messages=viber_messages, pk=pk, page=contentpage
+        )
         if contentpage:
             create_tags(row, contentpage)
             add_quick_replies(row, contentpage)
@@ -413,8 +419,8 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
     # Set columns based on best size
 
     column_widths_in_pts = {
-        "Structure": 110,
-        "Message": 70,
+        "structure": 110,
+        "message": 70,
         "page_id": 110,
         "parent": 110,
         "web_title": 110,
@@ -566,7 +572,7 @@ def get_content_depth(queryset: PageQuerySet) -> list[int]:
 
 def get_content_sheet(queryset: PageQuerySet) -> List[list]:
     content_sheet = []
-    headings = ["Structure", "Message"] + EXPORT_FIELDNAMES
+    headings = ["structure", "message"] + EXPORT_FIELDNAMES
     content_sheet.append(headings)
     for locale in Locale.objects.all():
         home = HomePage.objects.filter(locale_id=locale.id).first()
@@ -588,13 +594,6 @@ def get_content_sheet(queryset: PageQuerySet) -> List[list]:
     return content_sheet
 
 
-def remove_content_sheet_sidebar(content_sheet: List[list]) -> List[list]:
-    index = content_sheet[0].index("parent")
-    for row in content_sheet:
-        del row[:index]
-    return content_sheet
-
-
 def export_xlsx_content(queryset: PageQuerySet, response: HttpResponse) -> None:
     """Export contentpages within the queryset to an xlsx"""
     workbook = Workbook()
@@ -610,7 +609,6 @@ def export_xlsx_content(queryset: PageQuerySet, response: HttpResponse) -> None:
 def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
     """Export contentpages within the queryset to a csv"""
     content_sheet = get_content_sheet(queryset)
-    content_sheet = remove_content_sheet_sidebar(content_sheet)
     writer = csv.writer(response)
     for row in content_sheet:
         writer.writerow(row)
@@ -856,6 +854,7 @@ class ContentSheetRow:
         structure_string: str,
     ):
         content_sheet_row = cls()
+        content_sheet_row.page_id = page.id
         content_sheet_row.structure = structure_string
         content_sheet_row.parent = content_sheet_row._get_parent_page(page)
         content_sheet_row.web_title = page.title
