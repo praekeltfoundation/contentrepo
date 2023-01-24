@@ -107,7 +107,7 @@ def import_content(file, filetype, purge=True, locale="en"):
                     body_blocks.append(
                         ("media", MediaBlock()),
                     )
-                if type_of_message == "Whatsapp_Message":
+                if type_of_message == "Whatsapp_Message" and variation_messages:
                     body_blocks.append(
                         ("variation_messages", blocks.ListBlock(VariationBlock()))
                     )
@@ -125,25 +125,30 @@ def import_content(file, filetype, purge=True, locale="en"):
                 if type_of_message == "Whatsapp_Message" and variation_messages:
                     variation_blocks = []
                     for variation_message in variation_messages:
-                        if variation_message['message_number'] == str(message_number):
-                            profile_field, profile_field_value = variation_message['variation_title'].split(": ")
+                        if variation_message["message_number"] == str(message_number):
+                            profile_field, profile_field_value = variation_message[
+                                "variation_title"
+                            ].split(": ")
                             site = Site.objects.get(is_default_site=True)
-                            for profile_block in site.sitesettings.profile_field_options:
-                                # tried getting the profile fields and use those as the blocks for variation restrictions
-                                # this does not work because it is a StreamChild
+                            for (
+                                profile_block
+                            ) in site.sitesettings.profile_field_options:
                                 if profile_block.block_type == profile_field:
-                                    variation_blocks.append(("variation_restrictions", profile_block))
-                            variation_blocks.append(
-                                ("message", blocks.TextBlock())
-                            )
-
-                            variation_values = {
-                                "message": variation_message['variation_body']
-                            }
-                            variation_block = blocks.StructBlock(variation_blocks)
-                            variation_values = variation_block.to_python(variation_values)
-
-                        body_values["variation_messages"] = variation_block.to_python(variation_values)
+                                    variation_blocks.append(
+                                        {
+                                            "variation_restrictions": [
+                                                {
+                                                    "type": profile_field,
+                                                    "value": profile_field_value,
+                                                }
+                                            ],
+                                            "message": variation_message[
+                                                "variation_body"
+                                            ],
+                                        }
+                                    )
+                                    break
+                        body_values["variation_messages"] = variation_blocks
                 block_value = block.to_python(body_values)
                 struct_blocks.append((type_of_message, block_value))
         return struct_blocks
@@ -202,13 +207,17 @@ def import_content(file, filetype, purge=True, locale="en"):
                 title=row["whatsapp_title"],
                 enable_whatsapp=True,
                 whatsapp_title=row["whatsapp_title"],
-                whatsapp_body=get_body(whatsapp_messages, "Whatsapp_Message", variation_messages),
+                whatsapp_body=get_body(
+                    whatsapp_messages, "Whatsapp_Message", variation_messages
+                ),
                 locale=home_page.locale,
             )
         else:
             page.enable_whatsapp = True
             page.whatsapp_title = row["whatsapp_title"]
-            page.whatsapp_body = get_body(whatsapp_messages, "Whatsapp_Message", variation_messages)
+            page.whatsapp_body = get_body(
+                whatsapp_messages, "Whatsapp_Message", variation_messages
+            )
             return page
 
     def add_messenger(row, messenger_messages, page=None):
@@ -327,7 +336,6 @@ def import_content(file, filetype, purge=True, locale="en"):
         row = clean_row(row)
         variation_messages = []
         whatsapp_messages = [row["whatsapp_body"]]
-        whatsapp_messages = [row["whatsapp_body"]]
         messenger_messages = [row["messenger_body"]]
         viber_messages = [row["viber_body"]]
         for next_row in lines[index + 1 :]:
@@ -336,18 +344,23 @@ def import_content(file, filetype, purge=True, locale="en"):
             if next_row["whatsapp_body"] not in ["", None]:
                 whatsapp_messages.append(next_row["whatsapp_body"])
             if next_row["variation_body"] not in ["", None]:
-                variation_messages.append({
-                    "variation_body": next_row["variation_body"],
-                    "variation_title": next_row["variation_title"],
-                    "message_number": next_row["Message"],
-                })
+                variation_messages.append(
+                    {
+                        "variation_body": next_row["variation_body"],
+                        "variation_title": next_row["variation_title"],
+                        "message_number": next_row["Message"],
+                    }
+                )
+
             if next_row["messenger_body"] not in ["", None]:
                 messenger_messages.append(next_row["messenger_body"])
             if next_row["viber_body"] not in ["", None]:
                 viber_messages.append(next_row["viber_body"])
 
         contentpage = add_web(row)
-        contentpage = add_whatsapp(row, whatsapp_messages, contentpage, variation_messages)
+        contentpage = add_whatsapp(
+            row, whatsapp_messages, contentpage, variation_messages
+        )
         contentpage = add_messenger(row, messenger_messages, contentpage)
         contentpage = add_viber(row, viber_messages, contentpage)
         if contentpage:

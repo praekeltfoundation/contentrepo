@@ -1,12 +1,12 @@
-parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,messenger_title,messenger_body,viber_title,viber_body,translation_tag,tags,quick_replies,triggers,locale,next_prompt,image_link,doc_link,media_link,related_pages
-,Main Menu,,,,,,,,,9742cfbf-9adf-403e-9a68-53c1e50c3ba8,,,,English,,,,,
+parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,variation_body,variation_title,messenger_title,messenger_body,viber_title,viber_body,translation_tag,tags,quick_replies,triggers,locale,next_prompt,image_link,doc_link,media_link,related_pages
+,Main Menu,,,,,,,,,,,9742cfbf-9adf-403e-9a68-53c1e50c3ba8,,,,English,,,,,
 Main Menu,main menu first time user,,,main menu first time user,"*Welcome to HealthAlert* 🌍
 
 This is a messaging service created by the _*World Health Organization*_ *(WHO)* that provides information on COVID-19 as well as emergency resources for disease outbreaks, natural, and man-made disasters.
 
 _You can return to this main menu at any time by replying *0*_ 🏠
 
-Choose what you'd like to know more about by tapping a button below ⬇️",main menu first time user,"Welcome to HealthAlert 🌍
+Choose what you'd like to know more about by tapping a button below ⬇️",,,main menu first time user,"Welcome to HealthAlert 🌍
 
 This is a messaging service created by the World Health Organization (WHO) that provides information on COVID-19 as well as emergency resources for disease outbreaks, natural, and man-made disasters.
 
@@ -15,7 +15,7 @@ You can return to this main menu at any time by replying 🏠
 Choose what you'd like to know more about by tapping a button below ⬇️",,,392f39d0-38ed-4d6f-80da-a65f0bb31bba,menu,"Settings⚙️, Health Info🏥, Self-help🌬️",Main menu🏠,English,,,,,
 main menu first time user,health info,,,health info,"*Health information* 🏥
 
-Get information and advice from WHO by tapping on a button below ⬇️",health info,"*Health information* 🏥
+Get information and advice from WHO by tapping on a button below ⬇️",,,health info,"*Health information* 🏥
 
 Get information and advice from WHO by tapping on a button below ⬇️",,,4657caef-d09d-4711-9c23-01a2771fd45b,health info,,,English,,,,,
 main menu first time user,self-help,,,self-help,"*Self-help programs* 🌬️
@@ -25,7 +25,7 @@ Reply with a number to take part in a *free* self-help program created by WHO.
 1. Quit tobacco 🚭
 _Stop smoking with the help of a guided, 42-day program._
 2. Manage your stress 🧘🏽‍♀️
-_Learn how to cope with stress and improve your wellbeing._",self-help,"*Self-help programs* 🌬️
+_Learn how to cope with stress and improve your wellbeing._",,,self-help,"*Self-help programs* 🌬️
 
 Reply with a number to take part in a *free* self-help program created by WHO.
 
@@ -37,14 +37,14 @@ Main Menu,main menu return user,,,main menu return user,"*HealthAlert main menu*
 
 _You can return to this main menu at any time by replying *0*_ 🏠
 
-Choose what you'd like to know more about by tapping a button below ⬇️",main menu return user,"HealthAlert main menu 🌍
+Choose what you'd like to know more about by tapping a button below ⬇️",,,main menu return user,"HealthAlert main menu 🌍
 
 You can return to this main menu at any time by replying 0 🏠 
 
 Choose what you'd like to know more about by tapping a button below ⬇️",,,dbc77f28-01dc-4864-84bc-21b75d6c4aa2,menu-return,"Settings⚙️, Health Info🏥, Self-help🌬️",Main menu🏠,English,,,,,
 main menu return user,health info,,,health info,"*Health information* 🏥
 
-Get information and advice from WHO by tapping on a button below ⬇️",health info,"Health information 🏥
+Get information and advice from WHO by tapping on a button below ⬇️",,,health info,"Health information 🏥
 
 Get information and advice from WHO by tapping on a button below ⬇️",,,4aa13c3c-f2ed-4ef7-8afd-e5a1cb47bdd8,health-info,"Main menu🏠, COVID-19 info🦠, Be healthy🌞",Health Info🏥,English,,,,,
 health info,improve your health,,,improve your health,"*Improve your health* 🌞
@@ -53,7 +53,7 @@ Maintaining your physical and mental health is important.
 
 _Reply *0* to return to the main menu_ 🏠
 
-Get information and advice on the topics below by tapping on a button ⬇️",improve your health,"Improve your health 🌞
+Get information and advice on the topics below by tapping on a button ⬇️",,,improve your health,"Improve your health 🌞
 
 Maintaining your physical and mental health is important.
 
@@ -64,7 +64,7 @@ improve your health,mental health,,,mental health,"*Your mental health matters* 
 
 If you’re experiencing stress, anxiety or depression, you're not alone.
 
-Tap on the 'Options' button below to get mental health tips and info ⬇️",mental health,"Your mental health matters 💛
+Tap on the 'Options' button below to get mental health tips and info ⬇️",,,mental health,"Your mental health matters 💛
 
 If you’re experiencing stress, anxiety or depression, you're not alone.
 
@@ -75,7 +75,7 @@ mental health,stress,,,stress,"*Stress* 😧
 
 Stress can be due to major threats, such as family violence, illness or no school. Or it can be due to smaller problems, such as arguments with your family or uncertainty about your future.
 
-Everyone experiences stress at times. A little bit of stress is not a problem but very high stress often affects the body.",stress,"Stress 😧
+Everyone experiences stress at times. A little bit of stress is not a problem but very high stress often affects the body.",,,stress,"Stress 😧
 
 “Stress” means feeling troubled or threatened by life.
 
@@ -90,7 +90,7 @@ Stress can cause:
 - back pain
 - a heavy chest
 - tight muscles or
-- an upset stomach.",,"Physical symptoms
+- an upset stomach.",,,,"Physical symptoms
 Stress can cause:
 - headaches
 - neck and shoulder pain
@@ -109,7 +109,7 @@ When stressed, many people:
 - worry
 - cry
 - feel very tired or
-- have changes in appetite",,"Emotional signs of stress
+- have changes in appetite",,,,"Emotional signs of stress
 When stressed, many people:
 - cannot focus
 - get angry easily
@@ -120,12 +120,12 @@ When stressed, many people:
 - cry
 - feel very tired or
 - have changes in appetite",,,,,,,,,,,,
-,,,,,💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.,,💡 Learn how to cope with stress and improve your wellbeing with a free WHO stress management program by tapping on the 'Manage stress' button below.,,,,,,,,,,,,
+,,,,,💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.,,,,💡 Learn how to cope with stress and improve your wellbeing with a free WHO stress management program by tapping on the 'Manage stress' button below.,,,,,,,,,,,,
 mental health,depression,,,depression,"*Depression* 🥺
 
 Depression is a common mental disorder that affects more than 264 million people of all ages globally.
 
-If you are concerned that you or someone you know may suffer from depression, contact a health professional.",depression,"Depression 🥺
+If you are concerned that you or someone you know may suffer from depression, contact a health professional.",,,depression,"Depression 🥺
 
 Depression is a common mental disorder that affects more than 264 million people of all ages globally.
 
@@ -140,7 +140,7 @@ Features of depression are seen over a long time (more than two weeks) and inclu
 • guilt or low self-worth
 • poor concentration
 • sleep more or less than usual
-• eating more or less than usual",,"Symptoms and signs
+• eating more or less than usual",,,,"Symptoms and signs
 Features of depression are seen over a long time (more than two weeks) and include:
 • persistent sadness
 • low mood
@@ -157,7 +157,7 @@ A person with a mild depressive episode may have some difficulty in continuing w
 During a severe depressive episode, the person is unlikely to be able to continue with social, work or day-to-day activities.
 
 *Diagnosis and treatment*
-There are effective treatments for depression. Therapy can help for mild, moderate and severe depression. Medication can be effective in treating moderate and severe depression.",,"Severity
+There are effective treatments for depression. Therapy can help for mild, moderate and severe depression. Medication can be effective in treating moderate and severe depression.",,,,"Severity
 A depressive episode can be mild, moderate or severe.
 A person with a mild depressive episode may have some difficulty in continuing with work and social activities. They will probably not stop these activities completely.
 During a severe depressive episode, the person is unlikely to be able to continue with social, work or day-to-day activities.
@@ -170,7 +170,7 @@ There are effective treatments for depression. Therapy can help for mild, modera
 • Keep up with activities that you normally enjoy
 • Stay connected with friends and family
 • Stick to regular eating and sleeping habits
-• Be kind to yourself",,"What can you do if you have depression?
+• Be kind to yourself",,,,"What can you do if you have depression?
 • Talk to someone you trust about how you feel
 • Seek professional help
 • Keep up with activities that you normally enjoy
@@ -182,7 +182,7 @@ There are effective treatments for depression. Therapy can help for mild, modera
 
 To get the facts about depression visit https://www.who.int/news-room/fact-sheets/detail/depression
 
-💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.",,"Living with someone with depression
+💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.",,,,"Living with someone with depression
 ""Living with a black dog"" is a guide for partners, carers and sufferers of depression. Watch the video to learn about living with and caring for people with depression: https://www.youtube.com/watch?v=2VRRx7Mtep8
 
 To get the facts about depression visit https://www.who.int/news-room/fact-sheets/detail/depression
@@ -197,7 +197,7 @@ Take some slow breaths in through your nose, then slowly breathe out.
 
 Slow breathing is one of the best ways to lower stress because it signals to your brain to relax your body.
 
-Notice how you are feeling and what you are thinking, without judgment. Instead of responding or reacting to those thoughts or feelings, note them, and then let them go.",tips and info,"Tips for mental wellbeing 📝
+Notice how you are feeling and what you are thinking, without judgment. Instead of responding or reacting to those thoughts or feelings, note them, and then let them go.",,,tips and info,"Tips for mental wellbeing 📝
 
 Here are some things you can do during the COVID-19 pandemic to improve your mental health.
 
@@ -223,7 +223,7 @@ Talking to people you trust can help. Keep in regular contact with people close 
 
 ✅ Make time to do things you enjoy.
 
-✅ Take regular breaks from on-screen activities.",,"Connect with others
+✅ Take regular breaks from on-screen activities.",,,,"Connect with others
 Talking to people you trust can help. Keep in regular contact with people close to you. Tell them how you are feeling and share any concerns.
 
 Keep to a healthy routine
@@ -248,7 +248,7 @@ Don’t expect too much of yourself on difficult days. Accept that some days you
 *Manage your news intake*
 Keep informed. Listen to advice and recommendations from your national and local authorities. Follow trusted news channels.
 
-Manage how much you watch, read or listen to news that makes you feel anxious or distressed. Seek the latest information from reliable sources at specific times of the day.",,"🚫 Don’t use alcohol and drugs as a way of dealing with fear, anxiety, boredom or social isolation.
+Manage how much you watch, read or listen to news that makes you feel anxious or distressed. Seek the latest information from reliable sources at specific times of the day.",,,,"🚫 Don’t use alcohol and drugs as a way of dealing with fear, anxiety, boredom or social isolation.
 
 Be kind to yourself
 Don’t expect too much of yourself on difficult days. Accept that some days you may be more productive than others.
@@ -263,7 +263,7 @@ Helping others can be good for you too. If you are able to, offer support to peo
 *Reach out for help if you need it*
 Seek professional help if you think you need it! A good place to start is your local health worker. Helplines can also be a source of support.
 
-💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.",,"Help others
+💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.",,,,"Help others
 Helping others can be good for you too. If you are able to, offer support to people in your community who may need it. Phone your neighbors to check in. Be empathetic to those around you.
 
 Reach out for help if you need it
@@ -276,7 +276,7 @@ Caring for yourself and others during emergencies such as the COVID-19 pandemic 
 
 Read tips on maintaining your everyday health by tapping on a button below.
 
-_Reply *0* to return to the main menu_ 🏠",everyday health,"Everyday health 🍏
+_Reply *0* to return to the main menu_ 🏠",,,everyday health,"Everyday health 🍏
 
 Caring for yourself and others during emergencies such as the COVID-19 pandemic can be difficult, but it's important.
 
@@ -291,7 +291,7 @@ Take care of yourself so you can take care of your children.
 
 💕 Praise is powerful. Praise your child or teenager for something they have done well. They may not show their appreciation, but you’ll see them doing that good thing again.
 
-🗒️ Routine up! A structured day helps kids feel secure and makes it easier to manage them. Make a timetable, with schoolwork, games, free time, exercise and handwashing.",parenting tips,"Tips for parents👨‍👦‍👦
+🗒️ Routine up! A structured day helps kids feel secure and makes it easier to manage them. Make a timetable, with schoolwork, games, free time, exercise and handwashing.",,,parenting tips,"Tips for parents👨‍👦‍👦
 
 Take care of yourself so you can take care of your children.
 
@@ -306,14 +306,14 @@ Take care of yourself so you can take care of your children.
 
 💬 Discuss COVID-19 with your children in an honest way, using age-appropriate language.
 
-😖 Help children express their feelings in a positive way. Sometimes engaging in a creative activity, such as playing or drawing, can help you with this process.",,"🧘🏿‍♂ Kids driving you crazy? Give yourself a 1 minute pause. Breathe in and out five times. Then respond to the kids.
+😖 Help children express their feelings in a positive way. Sometimes engaging in a creative activity, such as playing or drawing, can help you with this process.",,,,"🧘🏿‍♂ Kids driving you crazy? Give yourself a 1 minute pause. Breathe in and out five times. Then respond to the kids.
 
 💆🏻‍♂ Crowded house? Looking after kids 24-7 during COVID-19 isn’t easy. Share your feelings. Remind yourself of what you did well today. Think about the good moments.
 
 💬 Discuss COVID-19 with your children in an honest way, using age-appropriate language.
 
 😖 Help children express their feelings in a positive way. Sometimes engaging in a creative activity, such as playing or drawing, can help you with this process.",,,,,,,,,,,,
-,,,,,💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.,,💡 Learn how to cope with stress and improve your wellbeing with a free WHO stress management program by tapping on the 'Manage stress' button below.,,,,,,,,,,,,
+,,,,,💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.,,,,💡 Learn how to cope with stress and improve your wellbeing with a free WHO stress management program by tapping on the 'Manage stress' button below.,,,,,,,,,,,,
 everyday health,older adults tips,,,older adults tips,"*Tips for older adults* 🧓
 
 Older people are at risk of severe COVID-19 symptoms and need to be cautious. This could lead to isolation and inactivity.
@@ -324,7 +324,7 @@ To stay well while keeping safe:
 
 ✅ Keep regular routines and schedules as much as possible for eating, sleeping and activities you enjoy.
 
-✅ Learn simple daily physical exercises to do at home when in quarantine so you can maintain mobility.",older adults tips,"Tips for older adults 🧓
+✅ Learn simple daily physical exercises to do at home when in quarantine so you can maintain mobility.",,,older adults tips,"Tips for older adults 🧓
 
 Older people are at risk of severe COVID-19 symptoms and need to be cautious. This could lead to isolation and inactivity.
 
@@ -341,7 +341,7 @@ To stay well while keeping safe:
 
 ✅ Don’t be afraid to ask family members, friends or neighbours for support if you need it.
 
-💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.",,"✅ Find out how to get practical help if needed, like calling a taxi, having food delivered or asking for medical care.
+💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.",,,,"✅ Find out how to get practical help if needed, like calling a taxi, having food delivered or asking for medical care.
 
 ✅ Make sure you have a one-month supply or longer of your regular medicines.
 
@@ -359,7 +359,7 @@ Some behaviors can make us healthier, including boosting our immune systems.
 - Get enough sleep
 
 🏃 *Be active*
-Take time out and be active to help relax and de-stress. Adults should do at least 150 minutes of moderate-intensity aerobic physical activity each week.",lifestyle tips,"Lifestyle tips 🍏
+Take time out and be active to help relax and de-stress. Adults should do at least 150 minutes of moderate-intensity aerobic physical activity each week.",,,lifestyle tips,"Lifestyle tips 🍏
 
 Some behaviors can make us healthier, including boosting our immune systems.
 
@@ -383,7 +383,7 @@ At home, it could be tempting to eat more sugary foods.
 - Try drinking water instead of soda or soft drinks.
 - Reduce sugar in your tea and coffee.
 
-Eat less than 1 level teaspoon (5 g or less) of salt each day; too much salt is a major cause of high blood pressure.",,"Working from home? Get up every 30 minutes to avoid sitting for too long.
+Eat less than 1 level teaspoon (5 g or less) of salt each day; too much salt is a major cause of high blood pressure.",,,,"Working from home? Get up every 30 minutes to avoid sitting for too long.
 1. Walk up and down the stairs
 2. Do some stretching exercise
 3. Dance to music for a few minutes
@@ -396,17 +396,17 @@ At home, it could be tempting to eat more sugary foods.
 - Reduce sugar in your tea and coffee.
 
 Eat less than 1 level teaspoon (5 g or less) of salt each day; too much salt is a major cause of high blood pressure.",,,,,,,,,,,,
-,,,,,💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.,,💡 Learn how to cope with stress and improve your wellbeing with a free WHO stress management program by tapping on the 'Manage stress' button below.,,,,,,,,,,,,
+,,,,,💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by tapping on the 'Manage stress' button below.,,,,💡 Learn how to cope with stress and improve your wellbeing with a free WHO stress management program by tapping on the 'Manage stress' button below.,,,,,,,,,,,,
 health info,covid info,,,covid info,"🦠️ *Covid-19 information*
 
-Find information about Covid-19 below.",covid info,"🦠️ Covid-19 information
+Find information about Covid-19 below.",,,covid info,"🦠️ Covid-19 information
 
 Find information about Covid-19 below.",,,87d195a1-4962-47db-b33d-30a6756ef365,covid-info,"Main menu🏠, Know the facts📖, Previous menu🔙, Safety advice🦺, Vaccines🩹, Mental health🌤️",COVID-19 info🦠,English,,,,,
 covid info,covid safety advice,,,covid safety advice,"*Safety advice* 🦺
 
 Protect yourself and others by staying up-to-date with the latest COVID-19 safety advice from WHO.
 
-_Reply *0* to return to the main menu_ 🏠",covid safety advice,"Safety advice 🦺
+_Reply *0* to return to the main menu_ 🏠",,,covid safety advice,"Safety advice 🦺
 
 Protect yourself and others by staying up-to-date with the latest COVID-19 safety advice from WHO.
 
@@ -429,7 +429,7 @@ Even if you have had COVID-19 or have been vaccinated, still follow basic precau
 
 🏠 Stay at home if you feel unwell - even with a slight fever and cough
 
-🤒 If you have a fever, cough and difficulty breathing, seek medical care early - but phone first",covid self safety,"Protect yourself 🛡️
+🤒 If you have a fever, cough and difficulty breathing, seek medical care early - but phone first",,,covid self safety,"Protect yourself 🛡️
 
 Even if you have had COVID-19 or have been vaccinated, still follow basic precautions:
 
@@ -455,7 +455,7 @@ Take for for a COVID-19 patient at home if the health system is overstretched or
 - Isolate the sick person
 - Prevent the spread of infection
 - Take care of the patient
-- Watch out for danger signs",covid home safety,"Care at home 🏡
+- Watch out for danger signs",,,covid home safety,"Care at home 🏡
 
 Take for for a COVID-19 patient at home if the health system is overstretched or if they have mild disease and are not at high risk. Get support from a health worker.
 
@@ -481,7 +481,7 @@ Take for for a COVID-19 patient at home if the health system is overstretched or
 
 🧼 Clean and disinfect surfaces.
 
-⛔ Do not allow visitors.",,"Isolate the sick person and avoid further infection:
+⛔ Do not allow visitors.",,,,"Isolate the sick person and avoid further infection:
 
 🚪 The patient should stay in a separate room or part of the home.
 
@@ -510,7 +510,7 @@ Take for for a COVID-19 patient at home if the health system is overstretched or
 
 - Danger signs in adults: shortness of breath, heavy breathing, chest pains, dehydration.
 
-- Danger signs in children: confusion, blue lips or face, isn't eating or breastfeeding.",,"Take care of the patient and watch out for danger signs
+- Danger signs in children: confusion, blue lips or face, isn't eating or breastfeeding.",,,,"Take care of the patient and watch out for danger signs
 
 🤒 Keep an eye on symptoms and treat them where possible. For example, treat a fever with medicines that reduce fevers.
 
@@ -528,7 +528,7 @@ For more info, watch ""Science in 5"":
 📹 youtu.be/kiST7VZ2yUM
 
 #36 Safe care at home
-📹 youtu.be/MEg-vYTsEVc",,"👆 You can measure the patient's oxygen level at home using a pulse oximeter on the patient's fingertip. If the oxygen level starts to drop, get medical advice. A reading of 94 to 90 is a little bit low. Below 90 is a danger sign.
+📹 youtu.be/MEg-vYTsEVc",,,,"👆 You can measure the patient's oxygen level at home using a pulse oximeter on the patient's fingertip. If the oxygen level starts to drop, get medical advice. A reading of 94 to 90 is a little bit low. Below 90 is a danger sign.
 
 For more info, watch ""Science in 5"":
 #37 Treatment and care at home
@@ -549,7 +549,7 @@ During the pandemic, we are all dealing with extra stress. These challenges incl
 - working from home
 - temporary unemployment
 - home-schooling children
-- lack of physical contact",covid mental health,"Mental health and COVID-19 🌤️
+- lack of physical contact",,,covid mental health,"Mental health and COVID-19 🌤️
 
 The COVID-19 pandemic could impact on your mental health causing you to feel stressed, anxious or depressed.
 
@@ -568,7 +568,7 @@ Mental health is essential to our overall well-being and is as important as phys
 
 When we feel mentally well, we can work productively, enjoy our free time, and contribute actively to our communities.
 
-💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by replying ""Breathe""",,"It is important to look after our mental health.
+💡 Learn how to cope with stress and improve your wellbeing with a *free* WHO stress management program by replying ""Breathe""",,,,"It is important to look after our mental health.
 Mental health is essential to our overall well-being and is as important as physical health.
 
 When we feel mentally well, we can work productively, enjoy our free time, and contribute actively to our communities.
@@ -578,7 +578,7 @@ covid info,covid vaccines,,,covid vaccines,"*Vaccines* 🩹
 
 COVID-19 vaccines are safe and effective. A vaccinated person may still get COVID-19 but the illness is less severe. Keep practicing basic health precautions to prevent the spread.
 
-Tap on the 'Options' button below to learn more about COVID-19 vaccines ⬇️",covid vaccines,"Vaccines 🩹
+Tap on the 'Options' button below to learn more about COVID-19 vaccines ⬇️",,,covid vaccines,"Vaccines 🩹
 
 COVID-19 vaccines are safe and effective. A vaccinated person may still get COVID-19 but the illness is less severe. Keep practicing basic health precautions to prevent the spread.
 
@@ -587,7 +587,7 @@ covid vaccines,covid vaccine safety,,,covid vaccine safety,"*Vaccines are safe* 
 
 Vaccines are very safe. A person is far more likely to be seriously harmed by a disease than by a vaccine. Getting vaccinated lowers your chance of getting serious or deadly illness, and from getting long-term symptoms.
 
-Common vaccines (like the Polio vaccine) have been used for decades. Millions of people receive them safely every year.",covid vaccine safety,"Vaccines are safe ✅
+Common vaccines (like the Polio vaccine) have been used for decades. Millions of people receive them safely every year.",,,covid vaccine safety,"Vaccines are safe ✅
 
 Vaccines are very safe. A person is far more likely to be seriously harmed by a disease than by a vaccine. Getting vaccinated lowers your chance of getting serious or deadly illness, and from getting long-term symptoms.
 
@@ -598,7 +598,7 @@ Vaccines are closely monitored. If any health problems are reported they are car
 
 Usually, health problems that are investigated are not caused by the vaccine itself.
 
-The benefits of getting vaccinated, outweigh any risks.",,"Every vaccine needs to go through large-scale testing before it can be used.
+The benefits of getting vaccinated, outweigh any risks.",,,,"Every vaccine needs to go through large-scale testing before it can be used.
 
 Vaccines are closely monitored. If any health problems are reported they are carefully investigated.
 
@@ -610,7 +610,7 @@ covid vaccine safety,covid infection,,,covid infection,"*VACCINE SAFETY QUESTION
 
 🤒 Breakthrough infection: People who have been vaccinated still can get infected, but there is much less chance of the illness being serious or deadly.
 
-😷 Spreading the virus: People who have been vaccinated can still spread the virus to others. It's important to still take basic precaution. Wear a mask, keep a physical distance, clean your hands and make sure there is fresh air.",covid infection,"VACCINE SAFETY QUESTIONS: Breakthrough infections  🦠
+😷 Spreading the virus: People who have been vaccinated can still spread the virus to others. It's important to still take basic precaution. Wear a mask, keep a physical distance, clean your hands and make sure there is fresh air.",,,covid infection,"VACCINE SAFETY QUESTIONS: Breakthrough infections  🦠
 
 
 🤒 Breakthrough infection: People who have been vaccinated still can get infected, but there is much less chance of the illness being serious or deadly.
@@ -622,7 +622,7 @@ covid vaccine safety,covid pregnancy,,,covid pregnancy,"*Pregnancy, breastfeedin
 
 🚼 Breastfeeding: Breastfeeding mothers can get the vaccine and can continue to breastfeed afterwards.
 
-🚺 Periods: Women can get the vaccine at any point in their menstrual cycle, including if they are on their period.",covid pregnancy,"Pregnancy, breastfeeding, periods 🤰 
+🚺 Periods: Women can get the vaccine at any point in their menstrual cycle, including if they are on their period.",,,covid pregnancy,"Pregnancy, breastfeeding, periods 🤰 
 
 🤰 Pregnancy: Pregnant women can get the vaccine. Pregnant women who get COVID-19 are at greater risk of severe illness and premature delivery.
 
@@ -640,7 +640,7 @@ The symptoms are generally mild and can be treated.
 Contact your doctor immediately, if you have any of the following new and ongoing symptoms a few days after vaccination:
 - chest pain
 - shortness of breath
-- racing heartbeat",covid heart inflammation,"Heart inflammation 🫀
+- racing heartbeat",,,covid heart inflammation,"Heart inflammation 🫀
 
 There have been rare cases of myocarditis or pericarditis (inflammation of the heart muscle or heart membrane) in younger men (under 30) after the second dose of an mRNA vaccine (like Pfizer and Moderna).
 
@@ -663,7 +663,7 @@ Contact your doctor immediately if you have any of the following new and severe 
 - severe abdominal pain
 - leg swelling or
 - unusual skin bruising
-- shortness of breath",covid blood clots,"Blood clots 🩸
+- shortness of breath",,,covid blood clots,"Blood clots 🩸
 
 There have been rare but serious cases of blood clots after vaccination with vaccines like AstraZeneca and Janssen. Remember that the risk of blood clots from COVID-19 itself is much higher than from either vaccine.
 
@@ -683,7 +683,7 @@ You should NOT be vaccinated if:
 
 🤒 You have a fever over 38.5°C on the day of your vaccine appointment. Get vaccinated when you’re feeling better.
 
-🦠 You have or think you may have COVID-19. Wait until you have completed the isolation period and your symptoms have passed to get vaccinated.",covid vaccine eligibility,"Who should not get vaccinated? ❌
+🦠 You have or think you may have COVID-19. Wait until you have completed the isolation period and your symptoms have passed to get vaccinated.",,,covid vaccine eligibility,"Who should not get vaccinated? ❌
 
 You should NOT be vaccinated if:
 
@@ -692,7 +692,7 @@ You should NOT be vaccinated if:
 🤒 You have a fever over 38.5°C on the day of your vaccine appointment. Get vaccinated when you’re feeling better.
 
 🦠 You have or think you may have COVID-19. Wait until you have completed the isolation period and your symptoms have passed to get vaccinated.",,,d0647c64-8579-41df-828a-7551b3c36a49,covid vaccine eligibility,"Main menu🏠, Previous menu🔙",Who can't get it❌,English,,,,,
-,,,,,"COVID-19 vaccines are safe for people taking blood thinners, but you should let the person giving you the vaccine know about any medication you’re taking BEFORE you are given the vaccine.",,"COVID-19 vaccines are safe for people taking blood thinners, but you should let the person giving you the vaccine know about any medication you’re taking BEFORE you are given the vaccine.",,,,,,,,,,,,
+,,,,,"COVID-19 vaccines are safe for people taking blood thinners, but you should let the person giving you the vaccine know about any medication you’re taking BEFORE you are given the vaccine.",,,,"COVID-19 vaccines are safe for people taking blood thinners, but you should let the person giving you the vaccine know about any medication you’re taking BEFORE you are given the vaccine.",,,,,,,,,,,,
 covid vaccines,covid vaccines protection,,,covid vaccines protection,"How long does protection last? 🛡️
 
 We still don’t know exactly how long protection from COVID-19 vaccines lasts, but current data indicates that most people have strong protection against serious illness and death for at least 6 months.
@@ -701,7 +701,7 @@ Immunity may reduce faster in people who are older or who have underlying medica
 
 📹 Watch: Science in 5
 #23 I am vaccinated, what next?
-https://youtu.be/YgfeV9b1K4M",covid vaccines protection,"How long does protection last? 🛡️
+https://youtu.be/YgfeV9b1K4M",,,covid vaccines protection,"How long does protection last? 🛡️
 
 We still don’t know exactly how long protection from COVID-19 vaccines lasts, but current data indicates that most people have strong protection against serious illness and death for at least 6 months.
 
@@ -712,14 +712,14 @@ Immunity may reduce faster in people who are older or who have underlying medica
 https://youtu.be/YgfeV9b1K4M",,,d6905b23-b6c0-4d78-b86a-854f920d60c3,covid vaccines protection,"Main menu🏠, Previous menu🔙",Protection🛡️,English,,,,,
 covid vaccines,covid vaccines work,,,covid vaccines work,"*How do vaccines work?* 🔬
 
-Vaccines are a simple, safe and effective way to protect people against harmful diseases. They use your body’s natural defenses to build resistance to an infection.",covid vaccines work,"How do vaccines work? 🔬
+Vaccines are a simple, safe and effective way to protect people against harmful diseases. They use your body’s natural defenses to build resistance to an infection.",,,covid vaccines work,"How do vaccines work? 🔬
 
 Vaccines are a simple, safe and effective way to protect people against harmful diseases. They use your body’s natural defenses to build resistance to an infection.",,,140506b0-4642-439b-ae8c-cde5e3e1087a,covid vaccines work,"Main menu🏠, Previous menu🔙",How they work🔬,English,,,,,
 ,,,,,"A few different types of vaccines have been developed for COVID-19:
 
 • Inactivated or weakened virus vaccines, which use a form of the virus that has been inactivated or weakened so it doesn’t cause disease but still creates an immune response.
 • Protein-based vaccines, which use harmless pieces of proteins or protein shells that are similar to the COVID-19 virus to safely create an immune response.
-•Viral vector vaccines, which use a safe virus that cannot cause disease but serves as a platform to produce coronavirus proteins to generate an immune response.",,"A few different types of vaccines have been developed for COVID-19:
+•Viral vector vaccines, which use a safe virus that cannot cause disease but serves as a platform to produce coronavirus proteins to generate an immune response.",,,,"A few different types of vaccines have been developed for COVID-19:
 
 • Inactivated or weakened virus vaccines, which use a form of the virus that has been inactivated or weakened so it doesn’t cause disease but still creates an immune response.
 • Protein-based vaccines, which use harmless pieces of proteins or protein shells that are similar to the COVID-19 virus to safely create an immune response.
@@ -730,7 +730,7 @@ These vaccines are all safe, and none will give you COVID-19. They do not put yo
 
 📹 Watch Science in 5
 #16 How vaccines work
-https://youtu.be/V4JAo9PhnoI",,"•RNA and DNA vaccines, an advanced approach that uses genetically engineered RNA or DNA to create a protein that itself safely prompts an immune response.
+https://youtu.be/V4JAo9PhnoI",,,,"•RNA and DNA vaccines, an advanced approach that uses genetically engineered RNA or DNA to create a protein that itself safely prompts an immune response.
 
 These vaccines are all safe, and none will give you COVID-19. They do not put you at risk of serious symptoms.
 
@@ -755,7 +755,7 @@ These include:
 - diarrhoea (runny tummy)
 - pain or redness at the injection site
 
-To treat mild side effects rest well, drink enough water and take paracetamol/ acetaminophen if you need it.",covid vaccine side effects,"COVID-19 vaccine side effects 😓
+To treat mild side effects rest well, drink enough water and take paracetamol/ acetaminophen if you need it.",,,covid vaccine side effects,"COVID-19 vaccine side effects 😓
 
 Like any vaccine, COVID-19 vaccines can cause mild side effects that go away on their own after a few days.
 
@@ -788,7 +788,7 @@ Get help immediately if you have
 *Rare serious allergic reactions*
 Severe allergic reactions – like anaphylaxis (throat closing up) – are a rare possibility with any vaccine.
 
-Take care if you have had an allergic reaction to a vaccine before. Tell your healthcare provider.",,"Rare serious reactions
+Take care if you have had an allergic reaction to a vaccine before. Tell your healthcare provider.",,,,"Rare serious reactions
 More serious or long-lasting side effects are extremely rare.
 
 Get medical help if the pain at the injection site gets worse after 24 hours, or the side effects don't go away after a couple days.
@@ -805,12 +805,12 @@ Severe allergic reactions – like anaphylaxis (throat closing up) – are a rar
 Take care if you have had an allergic reaction to a vaccine before. Tell your healthcare provider.",,,,,,,,,,,,
 ,,,,,"📹 Watch Science in 5
 #35 Which vaccine should I take and what about side effects
-https://youtu.be/A1fUMTgMoKk",,"📹 Watch Science in 5
+https://youtu.be/A1fUMTgMoKk",,,,"📹 Watch Science in 5
 #35 Which vaccine should I take and what about side effects
 https://youtu.be/A1fUMTgMoKk",,,,,,,,,,,,
 covid vaccines,covid vaccines options,,,covid vaccines options,"*COVID-19 vaccine options* 💊
 
-Learn about WHO's recommendations for the different COVID-19 vaccines.",covid vaccines options,"COVID-19 vaccine options 💊
+Learn about WHO's recommendations for the different COVID-19 vaccines.",,,covid vaccines options,"COVID-19 vaccine options 💊
 
 Learn about WHO's recommendations for the different COVID-19 vaccines.",,,912308ee-bb96-4cdc-9c01-c9f8e438ca5c,covid vaccines options,"Main menu🏠, Previous menu🔙, Sinopharm, Pfizer-BioNTech, Sinovac COVID-19, Moderna, Bharat Biotech, Johnson & Johnson, AstraZeneca",Vaccine options💊,English,,,,,
 covid vaccines options,covid moderna,,,covid moderna,"*WHO recommendations on the Moderna vaccine* 💊
@@ -826,7 +826,7 @@ The Moderna vaccine is 94.1% effective in protecting against COVID-19, starting 
 
 • Health workers and older people should get the vaccine first, followed by others at high risk.
 
-• The vaccine has been tested and found safe in people with diabetes, obesity, HIV, and lung, heart and liver disease.",covid moderna,"WHO recommendations on the Moderna vaccine 💊
+• The vaccine has been tested and found safe in people with diabetes, obesity, HIV, and lung, heart and liver disease.",,,covid moderna,"WHO recommendations on the Moderna vaccine 💊
 Updated 23 Feb 2022
 
 The Moderna vaccine is 94.1% effective in protecting against COVID-19, starting 14 days after the first dose.
@@ -850,7 +850,7 @@ The Moderna vaccine is 94.1% effective in protecting against COVID-19, starting 
 
 • Do not get the vaccine if you are allergic to any ingredient in the vaccine.
 
-• Frail older persons must be individually assessed.",,"• People who are immunocompromised or have HIV can be vaccinated after getting information and counselling.
+• Frail older persons must be individually assessed.",,,,"• People who are immunocompromised or have HIV can be vaccinated after getting information and counselling.
 
 • If you've had COVID-19, you can get the vaccine.
 
@@ -869,7 +869,7 @@ The Moderna vaccine is 94.1% effective in protecting against COVID-19, starting 
 
 • Even after vaccination, you can still catch and spread COVID-19. However, the vaccine is effective in preventing severe infection.
 
-• After vaccination, continue to practice health precautions.",,"• The Global Advisory Committee on Vaccine Safety is monitoring the vaccine.
+• After vaccination, continue to practice health precautions.",,,,"• The Global Advisory Committee on Vaccine Safety is monitoring the vaccine.
 
 • The evidence so far shows that it is effective against variants.
 
@@ -895,7 +895,7 @@ The Oxford/AstraZeneca vaccine provides 63.09% protection against COVID-19 sympt
 
 • Breastfeeding women can get vaccinated. You can continue breastfeeding after the vaccine.
 
-• Pregnant women should get vaccinated if the benefit outweighs the potential risks (e.g. for healthcare workers). Consult your health care provider.",covid oxford astrazeneca,"WHO recommendations  on the Oxford/AstraZeneca vaccine 💊
+• Pregnant women should get vaccinated if the benefit outweighs the potential risks (e.g. for healthcare workers). Consult your health care provider.",,,covid oxford astrazeneca,"WHO recommendations  on the Oxford/AstraZeneca vaccine 💊
 Updated 2 Sep 2021
 
 The Oxford/AstraZeneca vaccine provides 63.09% protection against COVID-19 symptoms.
@@ -921,7 +921,7 @@ The Oxford/AstraZeneca vaccine provides 63.09% protection against COVID-19 sympt
 
 • WHO recommends the vaccine even if there are virus variants in your country. Follow your country's guidelines.
 
-• After vaccination, continue to practice health precautions.",,"• Do not take the vaccine if you have a history of severe allergic reaction to any ingredient of the vaccine.
+• After vaccination, continue to practice health precautions.",,,,"• Do not take the vaccine if you have a history of severe allergic reaction to any ingredient of the vaccine.
 
 • The vaccine is not currently recommended for under 18s.
 
@@ -943,7 +943,7 @@ The Pfizer-BioNTech COVID-19 mRNA vaccine is safe and is 95% effective against s
 
 • People with a history of severe allergic reaction to any component of the vaccine should not take it.
 
-• The Pfizer-BioNTech COVID-19 mRNA vaccine is suitable for pregnant women.",covid pfizer,"WHO recommendations on the Pfizer-BioNTech vaccine 💊
+• The Pfizer-BioNTech COVID-19 mRNA vaccine is suitable for pregnant women.",,,covid pfizer,"WHO recommendations on the Pfizer-BioNTech vaccine 💊
 Updated 21 January 2022
 
 The Pfizer-BioNTech COVID-19 mRNA vaccine is safe and is 95% effective against symptomatic infection.
@@ -963,7 +963,7 @@ The Pfizer-BioNTech COVID-19 mRNA vaccine is safe and is 95% effective against s
 
 • People with known medical conditions can get the vaccine. This includes people with hypertension, diabetes, asthma, pulmonary, liver or kidney disease, and controlled chronic infections.
 
-• Given the significant risk of severe COVID-19 for moderately or severely immunocompromised persons (ICPs), WHO advises an extended (3 dose) primary series based on available data. Monitoring and consultation with a physician is needed.",,"• This vaccine is suitable for breastfeeding women. It’s not recommend to discontinue breastfeeding because of vaccination.
+• Given the significant risk of severe COVID-19 for moderately or severely immunocompromised persons (ICPs), WHO advises an extended (3 dose) primary series based on available data. Monitoring and consultation with a physician is needed.",,,,"• This vaccine is suitable for breastfeeding women. It’s not recommend to discontinue breastfeeding because of vaccination.
 
 • This vaccine is suitable for children 12 and over.
 
@@ -974,7 +974,7 @@ The Pfizer-BioNTech COVID-19 mRNA vaccine is safe and is 95% effective against s
 
 • People who have had COVID-19 already can get the vaccine.
 
-• After vaccination, continue to practice health precautions.",,"• A booster dose may be considered 4 – 6 months after the first vaccination series, but this is mainly recommended for the higher priority groups.
+• After vaccination, continue to practice health precautions.",,,,"• A booster dose may be considered 4 – 6 months after the first vaccination series, but this is mainly recommended for the higher priority groups.
 
 • People who have had COVID-19 already can get the vaccine.
 
@@ -992,7 +992,7 @@ The J&J COVID-19 vaccine is 85.4% effective in protecting against severe disease
 
 • If you've had COVID-19, you can get the vaccine.
 
-• Breastfeeding women can get the vaccine. Continue to breastfeed after the vaccination.",covid jj,"WHO recommendations on the Johnson & Johnson vaccine 💊
+• Breastfeeding women can get the vaccine. Continue to breastfeed after the vaccination.",,,covid jj,"WHO recommendations on the Johnson & Johnson vaccine 💊
 Updated 2 Sep 2021
 
 The J&J COVID-19 vaccine is 85.4% effective in protecting against severe disease and 93.1% effective against hospitalisation, 28 days after the vaccine.
@@ -1016,7 +1016,7 @@ The J&J COVID-19 vaccine is 85.4% effective in protecting against severe disease
 
 • We don't yet know if the vaccine prevents the spread of virus to others.
 
-• After vaccination, continue to practice health precautions.",,"• Pregnant women can get the vaccine.
+• After vaccination, continue to practice health precautions.",,,,"• Pregnant women can get the vaccine.
 
 • Do not get the vaccine if you have a history of anaphylaxis (extreme allergic reaction) to any component of the vaccine.
 
@@ -1038,7 +1038,7 @@ The Sinopharm COVID-19 vaccine is 79% effective against symptomatic infection an
 
 • Breastfeeding women can get the Sinopharm vaccine. Continue to breastfeed after vaccination.
 
-• Pregnant women at high risk (e.g. health workers) can get the vaccine if the benefits outweigh the risks.",covid sinopharm,"WHO recommendations on the Sinopharm vaccine 💊
+• Pregnant women at high risk (e.g. health workers) can get the vaccine if the benefits outweigh the risks.",,,covid sinopharm,"WHO recommendations on the Sinopharm vaccine 💊
 Updated on 15 March 2022
 
 The Sinopharm COVID-19 vaccine is 79% effective against symptomatic infection and 79% effective against hospitalisation.
@@ -1056,7 +1056,7 @@ The Sinopharm COVID-19 vaccine is 79% effective against symptomatic infection an
 
 • The vaccine is not currently recommended for under 18s as studies are still underway.
 
-• After vaccination, continue to practice health precautions.",,"• The vaccine was not tested with people living with HIV.
+• After vaccination, continue to practice health precautions.",,,,"• The vaccine was not tested with people living with HIV.
 
 • Do not get the vaccine if you have a history of anaphylaxis (extreme allergic reaction) or have a temperature over 38.5°C.
 
@@ -1076,7 +1076,7 @@ The Sinovac COVID-19 Vaccine is safe and has been proven to be 51% effective aga
 
 • It is not recommended for those under 18 as studies are still underway.
 
-• Pregnant women at high risk (e.g. health care workers) could get vaccinated if the benefits outweigh the risks.",covid sinovac,"WHO recommendations on the Sinovac COVID-19 vaccine: 💊
+• Pregnant women at high risk (e.g. health care workers) could get vaccinated if the benefits outweigh the risks.",,,covid sinovac,"WHO recommendations on the Sinovac COVID-19 vaccine: 💊
 Updated on 15 March 2022
 
 The Sinovac COVID-19 Vaccine is safe and has been proven to be 51% effective against symptomatic infection, and 100% effective against severe COVID-19 and hospitalization.
@@ -1098,7 +1098,7 @@ The Sinovac COVID-19 Vaccine is safe and has been proven to be 51% effective aga
 
 • You can get the vaccine if you have had COVID-19.
 
-• The vaccine should not be given to anyone with a history of severe allergies to any of the ingredients.",,"• Breastfeeding women can get vaccinated. There is no need to stop breastfeeding after vaccination.
+• The vaccine should not be given to anyone with a history of severe allergies to any of the ingredients.",,,,"• Breastfeeding women can get vaccinated. There is no need to stop breastfeeding after vaccination.
 
 • The vaccine is recommended for persons with comorbidities at risk of severe COVID-19 (obesity, cardiovascular disease and respiratory disease).
 
@@ -1115,7 +1115,7 @@ The Sinovac COVID-19 Vaccine is safe and has been proven to be 51% effective aga
 
 • Studies on the vaccine's effectiveness against Omicron are still underway.
 
-• After vaccination, continue to practice health precautions.",,"• If you have COVID-19, wait until you have recovered and completed isolation before getting the vaccine.
+• After vaccination, continue to practice health precautions.",,,,"• If you have COVID-19, wait until you have recovered and completed isolation before getting the vaccine.
 
 • If your temperature is over 38.5°C, wait until you no longer have a fever.
 
@@ -1133,7 +1133,7 @@ The Bharat Biotech COVID-19 vaccine is safe and has been proven to be 78% effect
 
 • If you have a severe allergic reaction, do not get a 2nd dose.
 
-• Health workers and older people should get the vaccine first, followed by others at high risk.",covid bharat,"WHO recommendations on the Bharat Biotech BBV152 COVAXIN vaccine 💊
+• Health workers and older people should get the vaccine first, followed by others at high risk.",,,covid bharat,"WHO recommendations on the Bharat Biotech BBV152 COVAXIN vaccine 💊
 16 March 2022
 
 The Bharat Biotech COVID-19 vaccine is safe and has been proven to be 78% effective against symptomatic infection, 93% effective against severe COVID-19, and 68% effective in those aged 60 years and over 14 or more days after the second dose.
@@ -1149,7 +1149,7 @@ The Bharat Biotech COVID-19 vaccine is safe and has been proven to be 78% effect
 
 • If you've had COVID-19, you can get the vaccine.
 
-• Breastfeeding women at high risk can get the vaccine. Continue to breastfeed after the vaccination.",,"• The vaccine has been tested and found safe in people with diabetes, obesity, HIV, and lung, heart and liver disease.
+• Breastfeeding women at high risk can get the vaccine. Continue to breastfeed after the vaccination.",,,,"• The vaccine has been tested and found safe in people with diabetes, obesity, HIV, and lung, heart and liver disease.
 
 • People who are immunocompromised or have HIV and in a stable condition can be vaccinated after getting information and counselling.
 
@@ -1168,7 +1168,7 @@ The Bharat Biotech COVID-19 vaccine is safe and has been proven to be 78% effect
 
 • Even after vaccination, you can still catch and spread COVID-19. However, the vaccine is effective in preventing severe infection.
 
-• After vaccination, continue to practice health precautions.",,"• The vaccine is safe and recommended for those breastfeeding.
+• After vaccination, continue to practice health precautions.",,,,"• The vaccine is safe and recommended for those breastfeeding.
 
 • Do not get the vaccine if you are allergic to any ingredient in the vaccine.
 
@@ -1187,7 +1187,7 @@ Research is being done by thousands of scientists around the world so we can und
 
 In general, the COVID-19 vaccines work very well at preventing serious illness, hospitalization and death from all current virus variants.
 
-While the current vaccines aren't as effective when it comes to protecting you from catching newer variants, your symptoms are more likely to be mild compared to those who aren't vaccinated.",covid vaccines variants,"Do the COVID-19 vaccines protect against virus variants? 🧫
+While the current vaccines aren't as effective when it comes to protecting you from catching newer variants, your symptoms are more likely to be mild compared to those who aren't vaccinated.",,,covid vaccines variants,"Do the COVID-19 vaccines protect against virus variants? 🧫
 
 Research is being done by thousands of scientists around the world so we can understand how new COVID-19 variants, like Omicron, are affected by the different COVID-19 vaccines.
 
@@ -1196,7 +1196,7 @@ In general, the COVID-19 vaccines work very well at preventing serious illness, 
 While the current vaccines aren't as effective when it comes to protecting you from catching newer variants, your symptoms are more likely to be mild compared to those who aren't vaccinated.",,,8298c921-7d5f-4f6b-bcb6-c9a73373876f,covid vaccines variants,"Main menu🏠, Previous menu🔙",Variants🧫,English,,,,,
 ,,,,,"📹 Watch Science in 5
 #16 How vaccines work
-https://youtu.be/V4JAo9PhnoI",,"📹 Watch Science in 5
+https://youtu.be/V4JAo9PhnoI",,,,"📹 Watch Science in 5
 #16 How vaccines work
 https://youtu.be/V4JAo9PhnoI",,,,,,,,,,,,
 covid info,covid facts,,,covid facts,"*Know the facts * 📖
@@ -1205,7 +1205,7 @@ Read COVID-19 FAQ's or test your knowledge of fact vs fiction by tapping a butto
 
 Or visit the International Fact-Checking Network's CoronaVirusFacts Alliance chatbot to check facts about COVID-19 and its vaccines: https://wa.me/17272912606?text=hi
 
-_Reply *0* to return to the main menu_ 🏠",covid facts,"Know the facts  📖
+_Reply *0* to return to the main menu_ 🏠",,,covid facts,"Know the facts  📖
 
 Read COVID-19 FAQ's or test your knowledge of fact vs fiction by tapping a button below.
 
@@ -1214,25 +1214,25 @@ Or visit the International Fact-Checking Network's CoronaVirusFacts Alliance cha
 Reply 0 to return to the main menu 🏠",,,978f178b-e5ea-4e06-a7a1-5a8e0080a124,covid facts,"Previous menu🔙, Questions❓, Myths & facts📚",Know the facts📖,English,,,,,
 covid facts,covid faq,,,covid faq,"*COVID-19 frequently asked questions*❓
 
-Tap on the 'Options' button below to get answers to some of the most frequently asked questions about COVID-19 ⬇️",covid faq,"COVID-19 frequently asked questions❓
+Tap on the 'Options' button below to get answers to some of the most frequently asked questions about COVID-19 ⬇️",,,covid faq,"COVID-19 frequently asked questions❓
 
 Tap on the 'Options' button below to get answers to some of the most frequently asked questions about COVID-19 ⬇️",,,2d310a65-134d-4adf-9741-5f3858495179,covid faq,"Main menu🏠, Risk of illness🤕, Changing virus🧬, COVID-19 symptoms🤒, What is COVID-19🦠, Previous menu🔙, When to get help🩺, Long COVID⏰",Questions❓,English,,,,,
 covid faq,covid defintion,,,covid defintion,"*Coronaviruses, COVID-19 and SARS*  🦠
 
 *What is a coronavirus?*
-Coronaviruses are a large family of viruses which may cause illness in animals or humans. In humans, several coronaviruses are known to cause respiratory infections. These include the common cold and more severe diseases, such as Middle East Respiratory Syndrome (MERS) and Severe Acute Respiratory Syndrome (SARS). The most recently discovered coronavirus SARS-CoV-2  causes COVID-19.",covid defintion,"Coronaviruses, COVID-19 and SARS  🦠
+Coronaviruses are a large family of viruses which may cause illness in animals or humans. In humans, several coronaviruses are known to cause respiratory infections. These include the common cold and more severe diseases, such as Middle East Respiratory Syndrome (MERS) and Severe Acute Respiratory Syndrome (SARS). The most recently discovered coronavirus SARS-CoV-2  causes COVID-19.",,,covid defintion,"Coronaviruses, COVID-19 and SARS  🦠
 
 What is a coronavirus?
 Coronaviruses are a large family of viruses which may cause illness in animals or humans. In humans, several coronaviruses are known to cause respiratory infections. These include the common cold and more severe diseases, such as Middle East Respiratory Syndrome (MERS) and Severe Acute Respiratory Syndrome (SARS). The most recently discovered coronavirus SARS-CoV-2  causes COVID-19.",,,2ac55977-0a94-496c-b6f4-d488ce1bc97c,covid defintion,"Main menu🏠, Previous menu🔙",What is COVID-19🦠,English,,,,,
 ,,,,,"*What is COVID-19?*
-COVID-19 is the infectious disease caused by the most recently discovered coronavirus. This new virus and disease were unknown before December 2019. COVID-19 is now a pandemic affecting many countries globally.",,"What is COVID-19?
+COVID-19 is the infectious disease caused by the most recently discovered coronavirus. This new virus and disease were unknown before December 2019. COVID-19 is now a pandemic affecting many countries globally.",,,,"What is COVID-19?
 COVID-19 is the infectious disease caused by the most recently discovered coronavirus. This new virus and disease were unknown before December 2019. COVID-19 is now a pandemic affecting many countries globally.",,,,,,,,,,,,
 ,,,,,"*Is COVID-19 the same as SARS?*
 No. The COVID-19 virus and the 2003 SARS virus are related to each other genetically. However, the diseases they cause are quite different. SARS was more deadly but much less infectious than COVID-19. There have been no outbreaks of SARS anywhere in the world since 2003.
 
 📹 Watch: Science in 5
 #2 SARS-CoV-2
-youtu.be/Rg6Tf5ZN5rQ",,"Is COVID-19 the same as SARS?
+youtu.be/Rg6Tf5ZN5rQ",,,,"Is COVID-19 the same as SARS?
 No. The COVID-19 virus and the 2003 SARS virus are related to each other genetically. However, the diseases they cause are quite different. SARS was more deadly but much less infectious than COVID-19. There have been no outbreaks of SARS anywhere in the world since 2003.
 
 📹 Watch: Science in 5
@@ -1260,7 +1260,7 @@ covid faq,covid symptoms,,,covid symptoms,"*Symptoms of COVID-19* 🤒
 
 Symptoms usually appear 5-6 days after exposure, but this can vary from 1 to 14 days.
 
-Some people become infected but don’t develop any symptoms and don't feel unwell.",covid symptoms,"Symptoms of COVID-19 🤒
+Some people become infected but don’t develop any symptoms and don't feel unwell.",,,covid symptoms,"Symptoms of COVID-19 🤒
 
 The most common symptoms of COVID-19 are:
 
@@ -1290,7 +1290,7 @@ Anyone can catch COVID-19 and become seriously ill. People who are at greater ri
 - high blood pressure
 - heart and lung problems
 - diabetes
-- cancer",,"Severity of symptoms
+- cancer",,,,"Severity of symptoms
 Most people (about 80%) recover from the disease without needing special treatment. Around 1 out of 6 people becomes seriously ill and develops difficulty breathing.
 
 Anyone can catch COVID-19 and become seriously ill. People who are at greater risk of severe illness include older people and those with underlying medical problems, like:
@@ -1306,7 +1306,7 @@ Watch: Science in 5
 📹 youtu.be/0taCcDHTURw
 
 #47 - Post COVID-19 condition
-📹 youtu.be/0p-FOLJH8Ag",,"Long-term symptoms
+📹 youtu.be/0p-FOLJH8Ag",,,,"Long-term symptoms
 Some people who have had COVID-19 continue to experience symptoms, including fatigue, respiratory and neurological symptoms. This is called Long COVID or Post-COVID Condition and it can last anywhere from 3 to 9 months. While there is no specific treatment for Long COVID, your health worker will help you with treatment for your symptoms. Research into this condition is ongoing.
 
 Watch: Science in 5
@@ -1329,7 +1329,7 @@ covid faq,covid illness risk,,,covid illness risk,"*People at greater risk of be
 - Diabetes
 - Cancer
 
-Reduce your chances of getting seriously ill by getting vaccinated as soon as possible.",covid illness risk,"People at greater risk of becoming seriously ill with COVID-19 include: 🤕
+Reduce your chances of getting seriously ill by getting vaccinated as soon as possible.",,,covid illness risk,"People at greater risk of becoming seriously ill with COVID-19 include: 🤕
 
 👵 Older persons
 💊 People living with diseases
@@ -1361,7 +1361,7 @@ While most people who develop COVID-19 fully recover, some people develop a vari
 - Muscle aches
 - Loss of smell or taste
 - Depression or anxiety
-- Fever",long covid,"What is post COVID-19 condition? ⏰
+- Fever",,,long covid,"What is post COVID-19 condition? ⏰
 
 Post COVID-19 condition, also known as “long COVID,” refers to the long-term symptoms that some people experience after they have had COVID-19.
 
@@ -1383,28 +1383,28 @@ The most common symptoms include:
 
 What should I do if I think I have post COVID-19 condition?
 
-If you think you may have the condition, visit your healthcare provider so they can confirm the condition and help you manage your symptoms.",,"People with post COVID-19 condition may have difficulty performing daily activities such as work or household chores.
+If you think you may have the condition, visit your healthcare provider so they can confirm the condition and help you manage your symptoms.",,,,"People with post COVID-19 condition may have difficulty performing daily activities such as work or household chores.
 
 What should I do if I think I have post COVID-19 condition?
 
 If you think you may have the condition, visit your healthcare provider so they can confirm the condition and help you manage your symptoms.",,,,,,,,,,,,
 ,,,,,"Currently there is no specific medication or medical therapy that specifically treats the post COVID-19 condition symptoms.
 
-However, some healthcare workers believe that holistic care, including rehabilitation, can be helpful. We’re still learning why some people develop this condition and how to best manage it.",,"Currently there is no specific medication or medical therapy that specifically treats the post COVID-19 condition symptoms.
+However, some healthcare workers believe that holistic care, including rehabilitation, can be helpful. We’re still learning why some people develop this condition and how to best manage it.",,,,"Currently there is no specific medication or medical therapy that specifically treats the post COVID-19 condition symptoms.
 
 However, some healthcare workers believe that holistic care, including rehabilitation, can be helpful. We’re still learning why some people develop this condition and how to best manage it.",,,,,,,,,,,,
 ,,,,,"*When do symptoms of post COVID-19 condition happen?*
 
 Symptoms of post COVID-19 condition can start when you first get COVID-19, or begin after recovery.
 
-Symptoms may come and go over time. Post COVID-19 condition is usually diagnosed three months after COVID-19. This allows the healthcare provider to rule out the normal recovery process after illness.",,"When do symptoms of post COVID-19 condition happen?
+Symptoms may come and go over time. Post COVID-19 condition is usually diagnosed three months after COVID-19. This allows the healthcare provider to rule out the normal recovery process after illness.",,,,"When do symptoms of post COVID-19 condition happen?
 
 Symptoms of post COVID-19 condition can start when you first get COVID-19, or begin after recovery.
 
 Symptoms may come and go over time. Post COVID-19 condition is usually diagnosed three months after COVID-19. This allows the healthcare provider to rule out the normal recovery process after illness.",,,,,,,,,,,,
 ,,,,,"*How long does post COVID-19 condition last?*
 
-It’s difficult to guess how long post COVID-19 condition will last for every person. Current research shows that patients can experience symptoms for weeks to months following COVID-19. The research also shows that patients can improve with time.",,"How long does post COVID-19 condition last?
+It’s difficult to guess how long post COVID-19 condition will last for every person. Current research shows that patients can experience symptoms for weeks to months following COVID-19. The research also shows that patients can improve with time.",,,,"How long does post COVID-19 condition last?
 
 It’s difficult to guess how long post COVID-19 condition will last for every person. Current research shows that patients can experience symptoms for weeks to months following COVID-19. The research also shows that patients can improve with time.",,,,,,,,,,,,
 ,,,,,"*What is the best way to protect myself against post COVID-19 condition?*
@@ -1415,7 +1415,7 @@ The best way to do this is to void getting infected with the COVID-19 virus. Thi
 - Opening windows
 - Coughing or sneezing into your elbow
 - Cleaning your hands often
-- Getting vaccinated as soon as it is your turn",,"What is the best way to protect myself against post COVID-19 condition?
+- Getting vaccinated as soon as it is your turn",,,,"What is the best way to protect myself against post COVID-19 condition?
 
 The best way to do this is to void getting infected with the COVID-19 virus. This includes getting vaccinated and:
 - Keeping physical distance of at least 1 metre from others
@@ -1434,7 +1434,7 @@ No, post COVID-19 condition cannot be passed to others.
 
 📹 Watch Science in 5
 #18 Immunity after recovery
-https://youtu.be/OIsz3-Mz3eQ",,"Does getting vaccinated prevent post COVID-19 condition?
+https://youtu.be/OIsz3-Mz3eQ",,,,"Does getting vaccinated prevent post COVID-19 condition?
 
 Research is ongoing. A vaccine’s ability to prevent post COVID-19 condition depends on its ability to prevent COVID-19 in the first place. The vaccines we use today are aimed at preventing severe disease and death from COVID-19. However, some people may still get infected with COVID-19 even after they are vaccinated.
 
@@ -1454,7 +1454,7 @@ Self-isolate and monitor your health.
 
 If you have shortness of breath or pain or pressure in the chest, seek medical attention immediately.
 
-If possible, call your first, so you can be directed to the right clinic.",covid medical attention,"When to get medical attention 🩺
+If possible, call your first, so you can be directed to the right clinic.",,,covid medical attention,"When to get medical attention 🩺
 
 🚨 When to get help for COVID-19
 If you have any symptoms that might be COVID-19, call your health care provider or local hotline for instructions.
@@ -1478,7 +1478,7 @@ Wear your mask and bring your sanitizer.
 
 If you have to queue, keep a physical distance.
 
-⏩ SHARE this service with this link: wa.me/41798931892?text=hi",,"🩺 Don't put off medical appointments!
+⏩ SHARE this service with this link: wa.me/41798931892?text=hi",,,,"🩺 Don't put off medical appointments!
 It's important to get the check-ups and treatment you need for health issues other than COVID-19.
 
 If it's time for a check-up, don't delay!
@@ -1501,7 +1501,7 @@ It is normal for viruses to change over time (including the SARS-CoV-2 virus) an
 *Protection against variants*
 The virus will continue to evolve as long as it continues to spread, so we should make every effort to stop the virus spreading.
 
-WHO urges you to get vaccinated as soon as you can. Continue to wear masks and take other precautions, even if you have been vaccinated.",covid virus variants,"Should I worry about the virus changing? (Variants)  🧬
+WHO urges you to get vaccinated as soon as you can. Continue to wear masks and take other precautions, even if you have been vaccinated.",,,covid virus variants,"Should I worry about the virus changing? (Variants)  🧬
 Updated on 4 Dec 2021
 
 It is normal for viruses to change over time (including the SARS-CoV-2 virus) and scientists follow these changes closely.
@@ -1519,7 +1519,7 @@ WHO have named a new variant of concern, Omicron. This variant has a large numbe
 We do not yet know:
 - How easily it spreads
 - Whether it causes more severe disease
-- How effective existing vaccines are",,"Delta variant
+- How effective existing vaccines are",,,,"Delta variant
 Delta is currently the dominant variant worldwide. It spreads easily, especially in groups of unvaccinated people. It is responsible for more cases and deaths worldwide. All approved COVID-19 vaccines help prevent severe disease and death from Delta.
 
 Omicron variant
@@ -1534,7 +1534,7 @@ We do not yet know:
 - Existing PCR tests work to detect it.
 - Existing treatment will be effective.
 
-Scientists are studying the variant and will share information as it becomes available.",,"The first evidence seems to show that:
+Scientists are studying the variant and will share information as it becomes available.",,,,"The first evidence seems to show that:
 - You can get reinfected by this variant.
 - Existing PCR tests work to detect it.
 - Existing treatment will be effective.
@@ -1551,7 +1551,7 @@ https://www.goviralgame.com/books/go-viral/
 
 The International Fact-Checking Network has created the CoronaVirusFacts Alliance chatbot to help you bust myths and check facts about Covid-19 and its vaccines.
 
-Make sure you know the facts! Click on this link to use the service: https://wa.me/17272912606?text=hi",covid myths,"Myths 📚
+Make sure you know the facts! Click on this link to use the service: https://wa.me/17272912606?text=hi",,,covid myths,"Myths 📚
 
 There is a lot of false information about COVID-19 being spread.
 
@@ -1571,7 +1571,7 @@ Watch Science in 5
 📹 youtu.be/Iy1xeIVeRwY
 
 #8 Myth vs Science
-📹 youtu.be/Rr6ABy2Kf_Y",,"⚠️ Please note that WHO is not responsible for the content shared on the CoronaVirusFacts Alliance’s chatbot.
+📹 youtu.be/Rr6ABy2Kf_Y",,,,"⚠️ Please note that WHO is not responsible for the content shared on the CoronaVirusFacts Alliance’s chatbot.
 
 Watch Science in 5
 
@@ -1584,7 +1584,7 @@ health info,quit tobacco,,,quit tobacco,"*Quit tobacco today!* 🚬
 
 Tobacco is dangerous, expensive and harms those around you. Today is a great day to quit.
 
-Join the quit challenge now by choosing the option below, and we'll send you daily tips and motivation for 42 days to help you stay tobacco free 🚭",quit tobacco,"*Quit tobacco today!* 🚬
+Join the quit challenge now by choosing the option below, and we'll send you daily tips and motivation for 42 days to help you stay tobacco free 🚭",,,quit tobacco,"*Quit tobacco today!* 🚬
 
 Tobacco is dangerous, expensive and harms those around you. Today is a great day to quit.
 
@@ -1596,7 +1596,7 @@ Reply with a number to take part in a *free* self-help program created by WHO.
 1. Quit tobacco 🚭
 _Stop smoking with the help of a guided, 42-day program._
 2. Manage your stress 🧘🏽‍♀️
-_Learn how to cope with stress and improve your wellbeing._",self-help,"Self-help programs 🌬️
+_Learn how to cope with stress and improve your wellbeing._",,,self-help,"Self-help programs 🌬️
 
 Reply with a number to take part in a free self-help program created by WHO.
 
@@ -1608,7 +1608,7 @@ self-help,quit tobacco,,,quit tobacco,"*Quit tobacco today!* 🚬
 
 Tobacco is dangerous, expensive and harms those around you. Today is a great day to quit.
 
-Join the quit challenge now by choosing the option below, and we'll send you daily tips and motivation for 42 days to help you stay tobacco free 🚭",quit tobacco,"*Quit tobacco today!* 🚬
+Join the quit challenge now by choosing the option below, and we'll send you daily tips and motivation for 42 days to help you stay tobacco free 🚭",,,quit tobacco,"*Quit tobacco today!* 🚬
 
 Tobacco is dangerous, expensive and harms those around you. Today is a great day to quit.
 
@@ -1625,7 +1625,7 @@ To help you resist tobacco cravings, say out loud why you want to stop using tob
 ☠️ KILLS 8 million people every year
 🌳 POLLUTES  the environment
 
-You've got this !👏",motivation,"*Get motivated to quit tobacco* 💪
+You've got this !👏",,,motivation,"*Get motivated to quit tobacco* 💪
 
 To help you resist tobacco cravings, say out loud why you want to stop using tobacco.
 
@@ -1642,7 +1642,7 @@ quit tobacco,tips for triggers,,,tips for triggers,"*Tobacco triggers* 💡
 
 Triggers are the things that make you want to smoke. Everyone who uses tobacco has triggers. If you know your triggers, you can figure out how to deal with them and stay in control. 💪
 
-Different people are triggered by different things.",tips for triggers,"*Tobacco triggers* 💡
+Different people are triggered by different things.",,,tips for triggers,"*Tobacco triggers* 💡
 
 Triggers are the things that make you want to smoke. Everyone who uses tobacco has triggers. If you know your triggers, you can figure out how to deal with them and stay in control. 💪
 
@@ -1653,7 +1653,7 @@ Different people are triggered by different things.",,,cef87fe0-ccca-4211-9947-b
 
 📱 Don't set yourself up for a relapse. Have an alternative to keep you busy at times when you often used tobacco before, like doodling in a notebook while you talk on the phone instead of smoking.
 
-🏢 Make a list of high-risk places to avoid. Think of other places where smoking isn't allowed (shops, museums, cinemas).",,"*Tips to deal with triggers*
+🏢 Make a list of high-risk places to avoid. Think of other places where smoking isn't allowed (shops, museums, cinemas).",,,,"*Tips to deal with triggers*
 
 🍷 The urge to use tobacco is often strong in the situations where you used tobacco most often before, such as at parties or bars, or while feeling stressed or sipping coffee. Identify your trigger situations and plan how to avoid or get through them.
 
@@ -1670,7 +1670,7 @@ Different people are triggered by different things.",,,cef87fe0-ccca-4211-9947-b
 
 🥳 Tobacco does not make a party better. Stay strong and say no. You will thank yourself later!
 
-😞 Loneliness can make it difficult, but quitting is the way to go. Let a friend know how they can support you.",,"🚭 If friends or family use tobacco, ask them not to, and ask them not to leave tobacco products near you.
+😞 Loneliness can make it difficult, but quitting is the way to go. Let a friend know how they can support you.",,,,"🚭 If friends or family use tobacco, ask them not to, and ask them not to leave tobacco products near you.
 
 😡 Stress and anger are smoking triggers. If you're feeling stressed or upset, get extra support! Call or text someone or phone a quit line.
 
@@ -1687,7 +1687,7 @@ Smokers are at higher risk of developing severe disease and death from COVID-19.
 
 Tobacco use can increase your chances of getting COVID-19 because of the contact between your fingers and lips.
 
-Smoking affects your lungs, putting you at higher risk of developing severe COVID-19 outcomes.",tobacco harm,"*Tobacco harm* 🔴
+Smoking affects your lungs, putting you at higher risk of developing severe COVID-19 outcomes.",,,tobacco harm,"*Tobacco harm* 🔴
 
 Smokers are at higher risk of developing severe disease and death from COVID-19.
 
@@ -1703,7 +1703,7 @@ There is clear evidence that tobacco use is harmful to your health. Tobacco prod
 
 • Tobacco use is very expensive for you and your family.
 
-• Second-hand smoke harms those around you and can cause sudden infant death syndrome, respiratory illness, heart disease and cancer.",,"*Tobacco use is harmful*
+• Second-hand smoke harms those around you and can cause sudden infant death syndrome, respiratory illness, heart disease and cancer.",,,,"*Tobacco use is harmful*
 There is clear evidence that tobacco use is harmful to your health. Tobacco products contain at least 250 harmful chemicals, including 69 cancer causing chemicals.
 
 • Tobacco kills up to half of its users.
@@ -1725,7 +1725,7 @@ There is clear evidence that tobacco use is harmful to your health. Tobacco prod
 
 🏥 Your risk of many different types of cancer decreases.
 
-*Stop tobacco use at 30 and gain almost 10 years of life expectancy!*",,"*Quit tobacco and start seeing benefits immediately*
+*Stop tobacco use at 30 and gain almost 10 years of life expectancy!*",,,,"*Quit tobacco and start seeing benefits immediately*
 
 ❤️ Your blood pressure and heart rate lower within 20 minutes.
 
@@ -1742,7 +1742,7 @@ quit tobacco,cravings,,,cravings,"*Beat tobacco cravings!* 👊
 
 Tobacco cravings can be powerful but you are not at the mercy of these cravings!
 
-The urge to use tobacco may be intense, but it will probably pass in 5 to 10 minutes.  And each time you resist a craving, you are one step closer to stopping tobacco use for good.  After each craving passes you’ll feel stronger for having overcome it!",cravings,"*Beat tobacco cravings!* 👊
+The urge to use tobacco may be intense, but it will probably pass in 5 to 10 minutes.  And each time you resist a craving, you are one step closer to stopping tobacco use for good.  After each craving passes you’ll feel stronger for having overcome it!",,,cravings,"*Beat tobacco cravings!* 👊
 
 Tobacco cravings can be powerful but you are not at the mercy of these cravings!
 
@@ -1761,7 +1761,7 @@ The urge to use tobacco may be intense, but it will probably pass in 5 to 10 min
 
 💦 Drink a glass of water.
 
-😌 Try not to panic! Take 10 deep breaths.",,"The first week can be tough but remember that this is temporary. Dig your heels in and go the distance. It’s worth it in the long run.
+😌 Try not to panic! Take 10 deep breaths.",,,,"The first week can be tough but remember that this is temporary. Dig your heels in and go the distance. It’s worth it in the long run.
 
 *When a craving hits, you can:*
 
@@ -1788,7 +1788,7 @@ The urge to use tobacco may be intense, but it will probably pass in 5 to 10 min
 
 💃🏼 Pick out your favourite music, sing and dance.
 
-💊 Use nicotine replacement therapies (NRT).",,"📱 Text or talk with a friend or family member.
+💊 Use nicotine replacement therapies (NRT).",,,,"📱 Text or talk with a friend or family member.
 
 ☎️ Call a tobacco quitline to talk to a counselor or get online support.
 
@@ -1809,7 +1809,7 @@ The urge to use tobacco may be intense, but it will probably pass in 5 to 10 min
 
 🫀 Remind yourself why you are doing this! (your health, looks, finances, family)
 
-Be careful! Don't try to satisfy a craving by ""just having one"". One just leads to another and another — and you may end up using tobacco again.",,"✋ Keep your hands busy by drawing, playing with a stress ball or texting friends.
+Be careful! Don't try to satisfy a craving by ""just having one"". One just leads to another and another — and you may end up using tobacco again.",,,,"✋ Keep your hands busy by drawing, playing with a stress ball or texting friends.
 
 🎶 Fill your head with happy, uplifting music to drown out the negative thoughts and emotions that you are experiencing.
 
@@ -1832,7 +1832,7 @@ Are you more likely to use tobacco when you are...
 • Happy
 • Lonely
 • Satisfied
-• After a fight",Triggers,"*Tobacco trigger types* 😐
+• After a fight",,,Triggers,"*Tobacco trigger types* 😐
 
 *Emotional triggers* 😩
 Many people use tobacco when they have intense emotions and emotional triggers remind you of those times.
@@ -1860,7 +1860,7 @@ Are you more likely to use tobacco when you ...
 • Drink coffee or tea
 • Take a work break
 - Before you go to bed
-- When you study",,"*Pattern triggers* ☕️
+- When you study",,,,"*Pattern triggers* ☕️
 A pattern trigger is an activity that you connect with tobacco use.
 
 Are you more likely to use tobacco when you ...
@@ -1883,7 +1883,7 @@ Here are some examples:
 • At a concert
 • Seeing someone smoking
 • Being with friends who use tobacco
-• At a celebration",,"*Social triggers* 🎉
+• At a celebration",,,,"*Social triggers* 🎉
 Social triggers are usually times when other people are using tobacco.
 
 Here are some examples:
@@ -1900,7 +1900,7 @@ When you quit, withdrawal symptoms will produce cravings for nicotine. Withdrawa
 • Crave the taste of tobacco
 • Smell tobacco
 • Handle tobacco products
-• Need to do something with your hands or mouth",,"*Withdrawal triggers* 😈
+• Need to do something with your hands or mouth",,,,"*Withdrawal triggers* 😈
 If you’ve been a long-time tobacco user, your body is used to getting a regular dose of nicotine.
 
 When you quit, withdrawal symptoms will produce cravings for nicotine. Withdrawal triggers include when you:
@@ -1910,11 +1910,11 @@ When you quit, withdrawal symptoms will produce cravings for nicotine. Withdrawa
 • Need to do something with your hands or mouth",,,,,,,,,,,,
 quit tobacco,quit challenge,,,quit challenge,"WHO's self-help programs will be available on Facebook Messenger soon.
 
-Would you like to be notified when they're up and running?",quit challenge,"WHO's self-help programs will be available on Facebook Messenger soon.
+Would you like to be notified when they're up and running?",,,quit challenge,"WHO's self-help programs will be available on Facebook Messenger soon.
 
 Would you like to be notified when they're up and running?",,,2f5b9e16-a6de-44a8-93a9-09b88dffa3ed,quit challenge,"Main menu🏠, No ❌, Yes ✅",Quit challenge🚭,English,,,,,
 self-help,manage stress,,,manage stress,"WHO's self-help programs will be available on Facebook Messenger soon.
 
-Would you like to be notified when they're up and running?",manage stress,"WHO's self-help programs will be available on Facebook Messenger soon.
+Would you like to be notified when they're up and running?",,,manage stress,"WHO's self-help programs will be available on Facebook Messenger soon.
 
 Would you like to be notified when they're up and running?",,,71e0cfc8-379d-4b9c-a87b-f7993d7b8a3f,manage stress,"Main menu🏠, No ❌, Yes ✅",Manage stress🧘🏽‍♀️,English,,,,,
