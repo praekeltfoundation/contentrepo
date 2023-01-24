@@ -187,10 +187,19 @@ def import_content(file, filetype, purge=True, locale="en"):
         else:
             home_page.add_child(instance=page)
 
-    def add_web(row):
+    def add_web(row, page, pk=None):
         if "web_title" not in row.keys() or not row["web_title"]:
             return
+        if page:
+            page.title = row["web_title"]
+            page.subtitle = row["web_subtitle"]
+            page.body = get_rich_text_body(row["web_body"])
+            page.enable_web = True
+            page.locale = home_page.locale
+            return page
+
         return ContentPage(
+            pk=pk,
             title=row["web_title"],
             subtitle=row["web_subtitle"],
             body=get_rich_text_body(row["web_body"]),
@@ -198,12 +207,13 @@ def import_content(file, filetype, purge=True, locale="en"):
             locale=home_page.locale,
         )
 
-    def add_whatsapp(row, whatsapp_messages, page=None, variation_messages=[]):
+    def add_whatsapp(row, whatsapp_messages, page=None, variation_messages=[], pk=None):
         if "whatsapp_title" not in row.keys() or not row["whatsapp_title"]:
             return page
 
         if not page:
             return ContentPage(
+                pk=pk,
                 title=row["whatsapp_title"],
                 enable_whatsapp=True,
                 whatsapp_title=row["whatsapp_title"],
@@ -220,17 +230,17 @@ def import_content(file, filetype, purge=True, locale="en"):
             )
             return page
 
-    def add_messenger(row, messenger_messages, page=None):
+    def add_messenger(row, messenger_messages, page=None, pk=None):
         if "messenger_title" not in row.keys() or not row["messenger_title"]:
             return page
 
         if not page:
             return ContentPage(
+                pk=pk,
                 title=row["messenger_title"],
                 enable_messenger=True,
                 messenger_title=row["messenger_title"],
                 messenger_body=get_body(messenger_messages, "messenger_block"),
-                messenger_quick_replies=add_quick_replies(row["quick_replies"]),
                 locale=home_page.locale,
             )
         else:
@@ -239,17 +249,17 @@ def import_content(file, filetype, purge=True, locale="en"):
             page.messenger_body = get_body(messenger_messages, "messenger_block")
             return page
 
-    def add_viber(row, viber_messages, page=None):
+    def add_viber(row, viber_messages, page=None, pk=None):
         if "viber_title" not in row.keys() or not row["viber_title"]:
             return page
 
         if not page:
             return ContentPage(
+                pk=pk,
                 title=row["viber_title"],
                 enable_viberr=True,
                 viber_title=row["viber_title"],
                 viber_body=get_body(viber_messages, "viber_message"),
-                viber_quick_replies=add_quick_replies(row["quick_replies"]),
                 locale=home_page.locale,
             )
         else:
@@ -321,6 +331,7 @@ def import_content(file, filetype, purge=True, locale="en"):
     home_page = HomePage.objects.get(locale__pk=locale.pk)
 
     for index, row in enumerate(lines):
+        pk = row["page_id"]
         if row["web_title"] in ["", None]:
             continue
         if (
@@ -329,9 +340,14 @@ def import_content(file, filetype, purge=True, locale="en"):
             and row["whatsapp_body"] in ["", None]
             and row["messenger_body"] in ["", None]
         ):
-            cpi = ContentPageIndex(title=row["web_title"])
-            home_page.add_child(instance=cpi)
-            cpi.save_revision().publish()
+            cpi_existing = ContentPageIndex.objects.filter(pk=pk).first()
+            if cpi_existing:
+                cpi_existing.title = row["web_title"]
+                cpi_existing.save_revision().publish()
+            else:
+                cpi = ContentPageIndex(pk=pk, title=row["web_title"])
+                home_page.add_child(instance=cpi)
+                cpi.save_revision().publish()
             continue
         row = clean_row(row)
         variation_messages = []
@@ -356,8 +372,11 @@ def import_content(file, filetype, purge=True, locale="en"):
                 messenger_messages.append(next_row["messenger_body"])
             if next_row["viber_body"] not in ["", None]:
                 viber_messages.append(next_row["viber_body"])
+        exiting_contentpage = ContentPage.objects.filter(pk=pk).first()
+        if exiting_contentpage:
+            contentpage = exiting_contentpage
 
-        contentpage = add_web(row)
+        contentpage = add_web(row, contentpage)
         contentpage = add_whatsapp(
             row, whatsapp_messages, contentpage, variation_messages
         )
@@ -367,7 +386,8 @@ def import_content(file, filetype, purge=True, locale="en"):
             create_tags(row, contentpage)
             add_quick_replies(row, contentpage)
             add_triggers(row, contentpage)
-            add_parent(row, contentpage, home_page)
+            if not exiting_contentpage:
+                add_parent(row, contentpage, home_page)
             contentpage.save_revision().publish()
             try:
                 pages = contentpage.tags.first().home_contentpagetag_items.all()
