@@ -72,9 +72,7 @@ def import_content(file, filetype, purge=True, locale="en"):
                     "variation_title"
                 ].split(": ")
                 site = Site.objects.get(is_default_site=True)
-                for (
-                    profile_block
-                ) in site.sitesettings.profile_field_options:
+                for profile_block in site.sitesettings.profile_field_options:
                     if profile_block.block_type == profile_field:
                         variation_blocks.append(
                             {
@@ -84,9 +82,7 @@ def import_content(file, filetype, purge=True, locale="en"):
                                         "value": profile_field_value,
                                     }
                                 ],
-                                "message": variation_message[
-                                    "variation_body"
-                                ],
+                                "message": variation_message["variation_body"],
                             }
                         )
                         break
