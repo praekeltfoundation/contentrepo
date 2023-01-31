@@ -64,6 +64,35 @@ EXPORT_FIELDNAMES = [
 
 
 def import_content(file, filetype, purge=True, locale="en"):
+    def set_variation_blocks(body_values, message_number):
+        variation_blocks = []
+        for variation_message in variation_messages:
+            if variation_message["message_number"] == str(message_number):
+                profile_field, profile_field_value = variation_message[
+                    "variation_title"
+                ].split(": ")
+                site = Site.objects.get(is_default_site=True)
+                for (
+                    profile_block
+                ) in site.sitesettings.profile_field_options:
+                    if profile_block.block_type == profile_field:
+                        variation_blocks.append(
+                            {
+                                "variation_restrictions": [
+                                    {
+                                        "type": profile_field,
+                                        "value": profile_field_value,
+                                    }
+                                ],
+                                "message": variation_message[
+                                    "variation_body"
+                                ],
+                            }
+                        )
+                        break
+            body_values["variation_messages"] = variation_blocks
+        return body_values
+
     def get_rich_text_body(text=None):
         if text:
             body = []
@@ -123,32 +152,11 @@ def import_content(file, filetype, purge=True, locale="en"):
                     body_values["media"] = media
 
                 if type_of_message == "Whatsapp_Message" and variation_messages:
-                    variation_blocks = []
-                    for variation_message in variation_messages:
-                        if variation_message["message_number"] == str(message_number):
-                            profile_field, profile_field_value = variation_message[
-                                "variation_title"
-                            ].split(": ")
-                            site = Site.objects.get(is_default_site=True)
-                            for (
-                                profile_block
-                            ) in site.sitesettings.profile_field_options:
-                                if profile_block.block_type == profile_field:
-                                    variation_blocks.append(
-                                        {
-                                            "variation_restrictions": [
-                                                {
-                                                    "type": profile_field,
-                                                    "value": profile_field_value,
-                                                }
-                                            ],
-                                            "message": variation_message[
-                                                "variation_body"
-                                            ],
-                                        }
-                                    )
-                                    break
-                        body_values["variation_messages"] = variation_blocks
+                    body_values = set_variation_blocks(
+                        body_values=body_values,
+                        message_number=message_number,
+                    )
+
                 block_value = block.to_python(body_values)
                 struct_blocks.append((type_of_message, block_value))
         return struct_blocks
