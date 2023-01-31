@@ -681,7 +681,7 @@ class VariationMessage:
 
 @dataclass
 class VariationMessageList:
-    variations: Tuple[VariationMessage]
+    variations: List[VariationMessage]
 
     @classmethod
     def from_platform_body_element(cls, whatsapp_msg: blocks.StreamValue.StreamChild):
@@ -689,10 +689,6 @@ class VariationMessageList:
         for variation in whatsapp_msg.value["variation_messages"]:
             variations.append(VariationMessage.from_variation(variation=variation))
         return cls(variations)
-
-    def __iter__(self):
-        for value in self.__dict__.values():
-            yield value
 
 
 @dataclass
