@@ -38,7 +38,6 @@ def mainmenu(request):
         text.append(f"\n*{page.title}*")
 
         for child in page.get_children().live():
-
             if bcm and child.id not in bcm_ids:
                 continue
 

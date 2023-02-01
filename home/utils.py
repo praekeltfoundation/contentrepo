@@ -501,7 +501,8 @@ def get_rows(
     structure_string: str,
 ) -> List[list]:
     """Sets up row for each page including the side panel.
-    Each page is returned as a list of rows, this accounts for pages with multiple messages"""
+    Each page is returned as a list of rows, this accounts for pages with multiple messages
+    """
     rows = []
     base_row = ContentSheetRow.from_page(page=page, structure_string=structure_string)
     if base_row:
@@ -911,7 +912,8 @@ class ContentSheetRow:
     ):
         """Sets all message level content, including any message level content such as documents, images, next prompts and media.
         Takes the possibility of different numbers of messages on different platforms.
-        Adds multiple messages as blank rows with only the extra messages and the message number to the row to match the template"""
+        Adds multiple messages as blank rows with only the extra messages and the message number to the row to match the template
+        """
         self.side_panel_message_number = side_panel_message_number + 1
         most_messages = max(
             [
