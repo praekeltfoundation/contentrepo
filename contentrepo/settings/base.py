@@ -212,7 +212,12 @@ if AWS_STORAGE_BUCKET_NAME and AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
         "storages",
     ]
 
+# The URL to access the WhatsApp graph API, for submitting templates
 WHATSAPP_API_URL = env.str("WHATSAPP_API_URL", "")
+# The access token to use. If you're getting 403 error responses, it could still be that
+# the token is incorrect or expired. This usually looks like a UUID.
 WHATSAPP_ACCESS_TOKEN = env.str("WHATSAPP_ACCESS_TOKEN", "")
+# This usually looks like the phone number of your WhatsApp line
 FB_BUSINESS_ID = env.str("FB_BUSINESS_ID", "")
+# Whether or not to create WhatsApp templates for content marked as a template.
 WHATSAPP_CREATE_TEMPLATES = env.bool("WHATSAPP_CREATE_TEMPLATES", False)
