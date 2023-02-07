@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    ports:
+      - 8000:8000
+    working_dir: /app
+    volumes:
+      - ./:/app:Z
+    environment:
+      SECRET_KEY: test
+      ALLOWED_HOSTS: localhost
+      CSRF_TRUSTED_ORIGINS: http://localhost
+      REDIS_LOCATION: redis://redis
+      LOG_LEVEL: DEBUG
+  redis:
+    image: redis:6
