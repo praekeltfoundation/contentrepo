@@ -7,6 +7,7 @@ from math import ceil
 from typing import List, Tuple, Union
 
 from django.http import HttpResponse
+from django.db.models.query import QuerySet
 from openpyxl import load_workbook
 from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
 from openpyxl.utils import get_column_letter
@@ -33,6 +34,7 @@ from home.models import (  # isort:skip
     MediaBlock,
     Page,
     VariationBlock,
+    OrderedContentSet,
 )
 
 
@@ -621,6 +623,50 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
     writer = csv.writer(response)
     for row in content_sheet:
         writer.writerow(row)
+
+
+def get_serialized_ordered_set(ordered_set: OrderedContentSet,) -> List[list]:
+    set_as_list = [ordered_set.name]
+
+    profile_fields_list = []
+    for field in ordered_set.profile_fields.raw_data:
+        profile_fields_list.append(f"{field['type']}:{field['value']}")
+    set_as_list.append(", ".join(profile_fields_list))
+
+    pages_list = []
+    for page in ordered_set.pages:
+        pages_list.append(page.value.slug)
+    set_as_list.append(", ".join(pages_list))
+
+    return set_as_list
+
+
+def get_ordered_set_sheet(queryset: QuerySet) -> List[list]:
+    ordered_set_sheet = []
+    headings = ["name", "profile fields", "page slugs"]
+    ordered_content_sheet.append(headings)
+    for ordered_set in queryset:
+        ordered_content_sheet.append(get_serialized_ordered_set(ordered_set))
+    return ordered_content_sheet
+
+
+def export_csv_ordered_sets(queryset: QuerySet, response: HttpResponse) -> None:
+    """Export ordered content sets within the queryset to a csv"""
+    ordered_set_sheet = get_ordered_set_sheet(queryset)
+    writer = csv.writer(response)
+    for row in ordered_set_sheet:
+        writer.writerow(row)
+
+
+def export_xlsx_ordered_sets(queryset: QuerySet, response: HttpResponse) -> None:
+    """Export ordered content sets within the queryset to an xlsx"""
+    workbook = Workbook()
+    worksheet = workbook.active
+
+    ordered_content_sheet = get_ordered_set_sheet(queryset)
+    for row in content_sheet:
+        worksheet.append(row)
+    workbook.save(response)
 
 
 @dataclass
