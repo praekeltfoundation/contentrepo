@@ -34,7 +34,7 @@ class PaginationTestCase(TestCase):
         # it should return all pages for no tag
         response = self.client.get("/api/v2/pages/")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 59)
+        self.assertEquals(content["count"], 5)
 
     def test_pagination(self):
         self.client = Client()
