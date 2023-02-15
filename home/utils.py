@@ -3,6 +3,7 @@ import csv
 import io
 from dataclasses import dataclass
 from io import BytesIO
+from json import dumps
 from math import ceil
 from typing import List, Tuple, Union
 
@@ -159,18 +160,21 @@ def import_content(file, filetype, purge=True, locale="en"):
         return struct_blocks
 
     def create_tags(row, page):
+        page.tags.clear()
         if row["tags"]:
-            tags = row["tags"].split(",")
+            tags = row["tags"].split(", ")
             for tag in tags:
                 created_tag, _ = Tag.objects.get_or_create(name=tag.strip())
                 page.tags.add(created_tag)
-        else:
-            # clear tags if content sheet has no tags
-            page.tags.clear()
+
+        if "translation_tag" in row:
+            translation_tag = row["translation_tag"]
+            created_tag, _ = Tag.objects.get_or_create(name=translation_tag.strip())
+            page.tags.add(created_tag)
 
     def add_quick_replies(row, page):
         if row["quick_replies"]:
-            replies = row["quick_replies"].split(",")
+            replies = row["quick_replies"].split(", ")
             for reply in replies:
                 created_tag, _ = ContentQuickReply.objects.get_or_create(
                     name=reply.strip()
@@ -179,7 +183,7 @@ def import_content(file, filetype, purge=True, locale="en"):
 
     def add_triggers(row, page):
         if row["triggers"]:
-            triggers = row["triggers"].split(",")
+            triggers = row["triggers"].split(", ")
             for trigger in triggers:
                 created_tag, _ = ContentTrigger.objects.get_or_create(
                     name=trigger.strip()
@@ -414,6 +418,23 @@ def import_content(file, filetype, purge=True, locale="en"):
                 print(e)
         else:
             print(f"Content page not created for {row}")
+
+    # add related pages
+    for row in lines:
+        related_pages_raw_data = []
+        if row["related_pages"]:
+            slug = row["slug"]
+            page = ContentPage.objects.filter(slug=slug).first()
+            related_page_slugs = row["related_pages"].split(", ")
+            for related_page_slug in related_page_slugs:
+                related_page = ContentPage.objects.filter(
+                    slug=related_page_slug
+                ).first()
+                related_pages_raw_data.append(
+                    {"type": "related_page", "value": related_page.id}
+                )
+            page.related_pages = dumps(related_pages_raw_data)
+            page.save_revision().publish()
 
 
 def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
