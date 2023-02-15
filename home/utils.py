@@ -193,7 +193,7 @@ def import_content(file, filetype, purge=True, locale="en"):
         else:
             home_page.add_child(instance=page)
 
-    def add_web(row, page):
+    def add_web(row, page=None):
         if "web_title" not in row.keys() or not row["web_title"]:
             return
 
