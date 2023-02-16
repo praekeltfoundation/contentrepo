@@ -6,8 +6,8 @@ from io import BytesIO
 from math import ceil
 from typing import List, Tuple, Union
 
-from django.http import HttpResponse
 from django.db.models.query import QuerySet
+from django.http import HttpResponse
 from openpyxl import load_workbook
 from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
 from openpyxl.utils import get_column_letter
