@@ -625,7 +625,9 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
         writer.writerow(row)
 
 
-def get_serialized_ordered_set(ordered_set: OrderedContentSet,) -> List[list]:
+def get_serialized_ordered_set(
+    ordered_set: OrderedContentSet,
+) -> List[list]:
     set_as_list = [ordered_set.name]
 
     profile_fields_list = []
@@ -642,7 +644,7 @@ def get_serialized_ordered_set(ordered_set: OrderedContentSet,) -> List[list]:
 
 
 def get_ordered_set_sheet(queryset: QuerySet) -> List[list]:
-    ordered_set_sheet = []
+    ordered_content_sheet = []
     headings = ["name", "profile fields", "page slugs"]
     ordered_content_sheet.append(headings)
     for ordered_set in queryset:
@@ -664,7 +666,7 @@ def export_xlsx_ordered_sets(queryset: QuerySet, response: HttpResponse) -> None
     worksheet = workbook.active
 
     ordered_content_sheet = get_ordered_set_sheet(queryset)
-    for row in content_sheet:
+    for row in ordered_content_sheet:
         worksheet.append(row)
     workbook.save(response)
 
@@ -675,17 +677,12 @@ def import_ordered_sets(file, filetype):
         set_profile_fields = []
         for field in [f.strip() for f in row["profile fields"].split(",")]:
             [field_name, field_value] = field.split(":")
-            set_profile_fields.append({
-                "type": field_name,
-                "value": field_value
-            })
+            set_profile_fields.append({"type": field_name, "value": field_value})
         set_pages = []
         for page_slug in [p.strip() for p in row["page slugs"].split(",")]:
             page = ContentPage.objects.filter(slug=page_slug).first()
             if page:
-                set_pages.append(
-                    {"type": "pages", "value": page.id}
-                )
+                set_pages.append({"type": "pages", "value": page.id})
             else:
                 print(f"Content page not found for slug '{page_slug}'")
 
@@ -711,10 +708,7 @@ def import_ordered_sets(file, filetype):
         ws = wb.worksheets[0]
         ws.delete_rows(1)
         for row in ws.iter_rows(values_only=True):
-            row_dict = {
-                "name": row[0],
-                "profile fields": row[1],
-                "page slugs": row[2]}
+            row_dict = {"name": row[0], "profile fields": row[1], "page slugs": row[2]}
             lines.append(row_dict)
     else:
         if isinstance(file, bytes):
