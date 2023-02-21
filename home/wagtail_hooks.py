@@ -4,8 +4,14 @@ from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
-from .models import ContentPage
-from .views import ContentPageReportView, CustomIndexView, PageViewReportView
+from .models import ContentPage, OrderedContentSet
+
+from .views import (  # isort:skip
+    ContentPageReportView,
+    CustomIndexView,
+    OrderedContentSetAdminViewSet,
+    PageViewReportView,
+)
 
 
 @hooks.register("register_page_listing_buttons")
@@ -120,5 +126,28 @@ class ContentPageAdmin(ModelAdmin):
     parental.short_description = "Parent"
 
 
+class OrderedContentSetAdmin(ModelAdmin):
+    model = OrderedContentSet
+    menu_icon = "order"
+    menu_order = 200
+    add_to_settings_menu = False
+    exclude_from_explorer = False
+    viewset = OrderedContentSetAdminViewSet
+    list_display = ("name", "profile_fields", "pages")
+    list_export = ("name", "profile_field", "page")
+    search_fields = ("name", "profile_fields")
+
+    def profile_field(self, obj):
+        return [f"{x.block_type}:{x.value}" for x in obj.profile_fields]
+
+    profile_field.short_description = "Profile Fields"
+
+    def page(self, obj):
+        return [p.value.slug for p in obj.pages]
+
+    page.short_description = "Page Slugs"
+
+
 # Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
+modeladmin_register(OrderedContentSetAdmin)
