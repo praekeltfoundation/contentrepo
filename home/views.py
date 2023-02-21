@@ -22,7 +22,6 @@ from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 from wagtail.contrib.modeladmin.views import IndexView
-from wagtail.snippets.views import snippets as snippet_views
 
 from .forms import UploadFileForm
 from .mixins import SpreadsheetExportMixin
@@ -241,7 +240,3 @@ class ContentPageRatingViewSet(GenericListViewset, CreateModelMixin):
                 raise ValidationError({"page": ["Page matching query does not exist."]})
 
         return super().create(request, *args, **kwargs)
-
-
-class OrderedContentSetAdminViewSet(snippet_views.SnippetViewSet):
-    pass

@@ -5,13 +5,7 @@ from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
 from .models import ContentPage, OrderedContentSet
-
-from .views import (  # isort:skip
-    ContentPageReportView,
-    CustomIndexView,
-    OrderedContentSetAdminViewSet,
-    PageViewReportView,
-)
+from .views import ContentPageReportView, CustomIndexView, PageViewReportView
 
 
 @hooks.register("register_page_listing_buttons")
@@ -132,7 +126,6 @@ class OrderedContentSetAdmin(ModelAdmin):
     menu_order = 200
     add_to_settings_menu = False
     exclude_from_explorer = False
-    viewset = OrderedContentSetAdminViewSet
     list_display = ("name", "profile_fields", "pages")
     list_export = ("name", "profile_field", "page")
     search_fields = ("name", "profile_fields")
