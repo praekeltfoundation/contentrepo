@@ -625,52 +625,6 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
         writer.writerow(row)
 
 
-def get_serialized_ordered_set(
-    ordered_set: OrderedContentSet,
-) -> List[list]:
-    set_as_list = [ordered_set.name]
-
-    profile_fields_list = []
-    for field in ordered_set.profile_fields.raw_data:
-        profile_fields_list.append(f"{field['type']}:{field['value']}")
-    set_as_list.append(", ".join(profile_fields_list))
-
-    pages_list = []
-    for page in ordered_set.pages:
-        pages_list.append(page.value.slug)
-    set_as_list.append(", ".join(pages_list))
-
-    return set_as_list
-
-
-def get_ordered_set_sheet(queryset: QuerySet) -> List[list]:
-    ordered_content_sheet = []
-    headings = ["name", "profile fields", "page slugs"]
-    ordered_content_sheet.append(headings)
-    for ordered_set in queryset:
-        ordered_content_sheet.append(get_serialized_ordered_set(ordered_set))
-    return ordered_content_sheet
-
-
-def export_csv_ordered_sets(queryset: QuerySet, response: HttpResponse) -> None:
-    """Export ordered content sets within the queryset to a csv"""
-    ordered_set_sheet = get_ordered_set_sheet(queryset)
-    writer = csv.writer(response)
-    for row in ordered_set_sheet:
-        writer.writerow(row)
-
-
-def export_xlsx_ordered_sets(queryset: QuerySet, response: HttpResponse) -> None:
-    """Export ordered content sets within the queryset to an xlsx"""
-    workbook = Workbook()
-    worksheet = workbook.active
-
-    ordered_content_sheet = get_ordered_set_sheet(queryset)
-    for row in ordered_content_sheet:
-        worksheet.append(row)
-    workbook.save(response)
-
-
 def import_ordered_sets(file, filetype):
     def create_ordered_set_from_row(row):
         set_name = row["name"]
