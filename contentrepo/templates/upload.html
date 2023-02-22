@@ -29,7 +29,7 @@
             <span id="loadingBar" style="width: 50%"><span></span></span>
         </div>
     {% else %}
-      <form action="/import/" method="POST" enctype="multipart/form-data">
+      <form action="/admin/import/" method="POST" enctype="multipart/form-data">
           {% csrf_token %}
           <ul class="fields">
               <li class="required {{ wrapper_classes }} {{ li_classes }} {% if field.errors %}error{% endif %}">

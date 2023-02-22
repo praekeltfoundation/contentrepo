@@ -5,7 +5,14 @@ from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
 from .models import ContentPage
-from .views import ContentPageReportView, CustomIndexView, PageViewReportView
+from .views import ContentPageReportView, CustomIndexView, PageViewReportView, UploadView
+
+
+@hooks.register('register_admin_urls')
+def register_calendar_url():
+    return [
+        path('import/', UploadView.as_view(), name='import'),
+    ]
 
 
 @hooks.register("register_page_listing_buttons")
