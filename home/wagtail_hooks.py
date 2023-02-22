@@ -72,6 +72,7 @@ class ContentPageAdmin(ModelAdmin):
         "subtitle",
         "wa_body",
         "mess_body",
+        "vib_body",
         "replies",
         "trigger",
         "tag",
@@ -79,7 +80,14 @@ class ContentPageAdmin(ModelAdmin):
         "parental",
     )
     list_filter = ("locale",)
-    search_fields = ("title", "body", "whatsapp_body", "slug")
+    search_fields = (
+        "title",
+        "body",
+        "whatsapp_body",
+        "messenger_body",
+        "viber_body",
+        "slug",
+    )
     list_export = ("locale", "title")
 
     def replies(self, obj):
@@ -109,6 +117,14 @@ class ContentPageAdmin(ModelAdmin):
         return body
 
     mess_body.short_description = "Messenger Body"
+
+    def vib_body(self, obj):
+        body = ""
+        for message in obj.viber_body:
+            body = body + message.value["message"]
+        return body
+
+    vib_body.short_description = "Viber Body"
 
     def web_body(self, obj):
         return obj.body
