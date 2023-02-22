@@ -23,7 +23,7 @@ from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 from wagtail.contrib.modeladmin.views import IndexView
 
-from .forms import UploadFileForm
+from .forms import UploadContentFileForm
 from .mixins import SpreadsheetExportMixin
 from .models import ContentPage, ContentPageRating, PageView
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
@@ -121,10 +121,15 @@ class PageViewReportView(ReportView):
         return context
 
 
-class ContentUploadThread(threading.Thread):
-    def __init__(self, file, file_type, purge, locale, **kwargs):
+class UploadThread(threading.Thread):
+    def __init__(self, file, file_type, **kwargs):
         self.file = file
         self.file_type = file_type
+        super(UploadThread, self).__init__(**kwargs)
+
+
+class ContentUploadThread(UploadThread):
+    def __init__(self, purge, locale, **kwargs):
         self.purge = purge
         self.locale = locale
         super(ContentUploadThread, self).__init__(**kwargs)
@@ -133,8 +138,8 @@ class ContentUploadThread(threading.Thread):
         import_content(self.file, self.file_type, self.purge, self.locale)
 
 
-class UploadView(View):
-    form_class = UploadFileForm
+class ContentUploadView(View):
+    form_class = UploadContentFileForm
     template_name = "upload.html"
 
     def get(self, request, *args, **kwargs):
@@ -150,10 +155,10 @@ class UploadView(View):
             if form.cleaned_data["purge"] == "True":
                 ContentPage.objects.all().delete()
             ContentUploadThread(
-                request.FILES["file"],
-                form.cleaned_data["file_type"],
                 form.cleaned_data["purge"],
                 form.cleaned_data["locale"],
+                file=request.FILES["file"],
+                file_type=form.cleaned_data["file_type"],
                 name="ContentUploadThread",
             ).start()
             loading = "ContentUploadThread" in [th.name for th in threading.enumerate()]
