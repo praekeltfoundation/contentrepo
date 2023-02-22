@@ -66,6 +66,7 @@ class ContentPageAdmin(ModelAdmin):
     exclude_from_explorer = False
     index_view_class = CustomIndexView
     list_display = (
+        "slug",
         "title",
         "web_body",
         "subtitle",
