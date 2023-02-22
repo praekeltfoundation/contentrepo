@@ -79,7 +79,7 @@ class ContentPageAdmin(ModelAdmin):
         "parental",
     )
     list_filter = ("locale",)
-    search_fields = ("title", "body")
+    search_fields = ("title", "body", "whatsapp_body", "slug")
     list_export = ("locale", "title")
 
     def replies(self, obj):
