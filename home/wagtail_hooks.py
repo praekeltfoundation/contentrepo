@@ -5,13 +5,19 @@ from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
 from .models import ContentPage
-from .views import ContentPageReportView, CustomIndexView, PageViewReportView, UploadView
+
+from .views import (  # isort:skip
+    ContentPageReportView,
+    CustomIndexView,
+    PageViewReportView,
+    UploadView,
+)
 
 
-@hooks.register('register_admin_urls')
+@hooks.register("register_admin_urls")
 def register_import_urls():
     return [
-        path('import/', UploadView.as_view(), name='import'),
+        path("import/", UploadView.as_view(), name="import"),
     ]
 
 
