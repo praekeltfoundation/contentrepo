@@ -9,7 +9,7 @@ from .views import ContentPageReportView, CustomIndexView, PageViewReportView, U
 
 
 @hooks.register('register_admin_urls')
-def register_calendar_url():
+def register_import_urls():
     return [
         path('import/', UploadView.as_view(), name='import'),
     ]
@@ -18,7 +18,7 @@ def register_calendar_url():
 @hooks.register("register_page_listing_buttons")
 def page_listing_buttons(page, page_perms, is_parent=False, next_url=None):
     yield wagtailadmin_widgets.PageListingButton(
-        "Import Content", "/import/", priority=10
+        "Import Content", reverse("import"), priority=10
     )
 
 
