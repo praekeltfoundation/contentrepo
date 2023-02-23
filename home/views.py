@@ -25,7 +25,7 @@ from wagtail.contrib.modeladmin.views import IndexView
 
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
 from .mixins import SpreadsheetExportMixin
-from .models import ContentPage, ContentPageRating, PageView, OrderedContentSet
+from .models import ContentPage, ContentPageRating, OrderedContentSet, PageView
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
 from .utils import import_content, import_ordered_sets
 
@@ -152,7 +152,9 @@ class OrderedContentSetUploadView(View):
     template_name = "orderedcontentset_upload.html"
 
     def get(self, request, *args, **kwargs):
-        loading = "OrderedContentSetUploadThread" in [th.name for th in threading.enumerate()]
+        loading = "OrderedContentSetUploadThread" in [
+            th.name for th in threading.enumerate()
+        ]
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             return HttpResponse(loading)
         form = self.form_class()
@@ -169,10 +171,13 @@ class OrderedContentSetUploadView(View):
                 file_type=form.cleaned_data["file_type"],
                 name="OrderedContentSetUploadThread",
             ).start()
-            loading = "OrderedContentSetUploadThread" in [th.name for th in threading.enumerate()]
+            loading = "OrderedContentSetUploadThread" in [
+                th.name for th in threading.enumerate()
+            ]
             return render(
                 request, self.template_name, {"form": form, "loading": loading}
             )
+
 
 class ContentUploadView(View):
     form_class = UploadContentFileForm

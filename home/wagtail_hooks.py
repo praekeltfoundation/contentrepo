@@ -5,13 +5,23 @@ from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
 from .models import ContentPage, OrderedContentSet
-from .views import ContentPageReportView, CustomIndexView, PageViewReportView OrderedContentSetUploadView
+
+from .views import (  # isort:skip
+    ContentPageReportView,
+    CustomIndexView,
+    OrderedContentSetUploadView,
+    PageViewReportView,
+)
 
 
-@hooks.register('register_admin_urls')
+@hooks.register("register_admin_urls")
 def register_ordered_set_import_url():
     return [
-        path('import_orderedcontentset/', OrderedContentSetUploadView.as_view(), name='import_orderedcontentset'),
+        path(
+            "import_orderedcontentset/",
+            OrderedContentSetUploadView.as_view(),
+            name="import_orderedcontentset",
+        ),
     ]
 
 
