@@ -23,11 +23,11 @@ from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 from wagtail.contrib.modeladmin.views import IndexView
 
-from .forms import UploadContentFileForm
+from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
 from .mixins import SpreadsheetExportMixin
-from .models import ContentPage, ContentPageRating, PageView
+from .models import ContentPage, ContentPageRating, PageView, OrderedContentSet
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
-from .utils import import_content
+from .utils import import_content, import_ordered_sets
 
 
 class CustomIndexView(SpreadsheetExportMixin, IndexView):
@@ -137,6 +137,42 @@ class ContentUploadThread(UploadThread):
     def run(self):
         import_content(self.file, self.file_type, self.purge, self.locale)
 
+
+class OrderedContentSetUploadThread(UploadThread):
+    def __init__(self, purge, **kwargs):
+        self.purge = purge
+        super(OrderedContentSetUploadThread, self).__init__(**kwargs)
+
+    def run(self):
+        import_ordered_sets(self.file, self.file_type, self.purge)
+
+
+class OrderedContentSetUploadView(View):
+    form_class = UploadOrderedContentSetFileForm
+    template_name = "orderedcontentset_upload.html"
+
+    def get(self, request, *args, **kwargs):
+        loading = "OrderedContentSetUploadThread" in [th.name for th in threading.enumerate()]
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return HttpResponse(loading)
+        form = self.form_class()
+        return render(request, self.template_name, {"form": form, "loading": loading})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, request.FILES)
+        if form.is_valid():
+            if form.cleaned_data["purge"] == "True":
+                OrderedContentSet.objects.all().delete()
+            OrderedContentSetUploadThread(
+                form.cleaned_data["purge"],
+                file=request.FILES["file"],
+                file_type=form.cleaned_data["file_type"],
+                name="OrderedContentSetUploadThread",
+            ).start()
+            loading = "OrderedContentSetUploadThread" in [th.name for th in threading.enumerate()]
+            return render(
+                request, self.template_name, {"form": form, "loading": loading}
+            )
 
 class ContentUploadView(View):
     form_class = UploadContentFileForm

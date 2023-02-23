@@ -624,15 +624,15 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
         writer.writerow(row)
 
 
-def import_ordered_sets(file, filetype):
+def import_ordered_sets(file, filetype, purge=False):
     def create_ordered_set_from_row(row):
-        set_name = row["name"]
+        set_name = row["Name"]
         set_profile_fields = []
-        for field in [f.strip() for f in row["profile fields"].split(",")]:
+        for field in [f.strip() for f in row["Profile Fields"].split(",")]:
             [field_name, field_value] = field.split(":")
             set_profile_fields.append({"type": field_name, "value": field_value})
         set_pages = []
-        for page_slug in [p.strip() for p in row["page slugs"].split(",")]:
+        for page_slug in [p.strip() for p in row["Page Slugs"].split(",")]:
             page = ContentPage.objects.filter(slug=page_slug).first()
             if page:
                 set_pages.append({"type": "pages", "value": page.id})
@@ -661,7 +661,7 @@ def import_ordered_sets(file, filetype):
         ws = wb.worksheets[0]
         ws.delete_rows(1)
         for row in ws.iter_rows(values_only=True):
-            row_dict = {"name": row[0], "profile fields": row[1], "page slugs": row[2]}
+            row_dict = {"Name": row[0], "Profile Fields": row[1], "Page Slugs": row[2]}
             lines.append(row_dict)
     else:
         if isinstance(file, bytes):

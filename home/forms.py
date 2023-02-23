@@ -14,3 +14,8 @@ class UploadContentFileForm(UploadFileForm):
     locale = forms.ModelChoiceField(
         queryset=Locale.objects.all(), empty_label="Select Locale"
     )
+
+
+class UploadOrderedContentSetFileForm(UploadFileForm):
+    YES_NO = ((False, "No"), (True, "Yes"))
+    purge = forms.ChoiceField(choices=YES_NO)
