@@ -29,7 +29,7 @@
             <span id="loadingBar" style="width: 50%"><span></span></span>
         </div>
     {% else %}
-      <form action="/admin/import/" method="POST" enctype="multipart/form-data">
+      <form action="{% url 'import' %}" method="POST" enctype="multipart/form-data">
           {% csrf_token %}
           <ul class="fields">
               <li class="required {{ wrapper_classes }} {{ li_classes }} {% if field.errors %}error{% endif %}">
@@ -53,5 +53,9 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script>
+      var importURL = "{% url 'import' %}";
+      var destinationURL = "{% url 'home_contentpage_modeladmin_index' %}";
+    </script>
     <script type="text/javascript" src="{% static 'js/contentrepo.js' %}"></script>
 {% endblock %}
