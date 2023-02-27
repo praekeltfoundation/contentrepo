@@ -14,8 +14,16 @@ def rename_duplicate_slugs(Page):
     )
     for slug in duplicate_slugs:
         pages = Page.objects.filter(slug=slug)
-        for i, page in enumerate(pages, start=1):
-            page.slug = f"{page.slug}-{i}"
+        while pages.count() > 1:
+            page = pages.first()
+
+            suffix = 1
+            candidate_slug = slug
+            while Page.objects.filter(slug=candidate_slug).exists():
+                suffix += 1
+                candidate_slug = f"{slug}-{suffix}"
+
+            page.slug = candidate_slug
             page.save(update_fields=["slug"])
 
 

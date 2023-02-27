@@ -17,14 +17,19 @@ class DeduplicateSlugsMigrationTests(TestCase):
         home = Page.objects.first()
         duplicate = home.add_child(instance=Page(title="duplicate", slug="duplicate"))
         duplicate.add_child(instance=Page(title="duplicate", slug="duplicate"))
+        duplicate.add_child(instance=Page(title="duplicate", slug="duplicate-2"))
         home.add_child(instance=Page(title="unique", slug="unique"))
 
         rename_duplicate_slugs(Page)
 
-        assert sorted(Page.objects.values_list("slug", flat=True)) == [
-            "duplicate-1",
-            "duplicate-2",
-            "home",
-            "root",
-            "unique",
-        ]
+        self.assertEqual(
+            sorted(Page.objects.values_list("slug", flat=True)),
+            [
+                "duplicate",
+                "duplicate-2",
+                "duplicate-3",
+                "home",
+                "root",
+                "unique",
+            ],
+        )
