@@ -1,6 +1,7 @@
 import json
 
 from django.core.management.base import BaseCommand
+from wagtail.models import Page
 
 from home.models import ContentPage
 
@@ -22,15 +23,25 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        pages = ContentPage.objects.live().filter(
-            tags__name__startswith=self.TAG_PREFIX
+        pages = (
+            ContentPage.objects.live()
+            .filter(tags__name__startswith=self.TAG_PREFIX)
+            .distinct()
         )
         for page in pages:
-            related_pages = set(p.value.id for p in page.related_pages)
+            related_pages = set(
+                p.value.id if p.value else None for p in page.related_pages
+            )
             existing_related_pages = related_pages.copy()
+            # Add any related pages specified by tags
             for tag in page.tags.filter(name__startswith=self.TAG_PREFIX):
                 page_id = int(tag.name.replace(self.TAG_PREFIX, ""))
                 related_pages.add(page_id)
+            # Remove any non-existing related pages
+            related_pages = set(
+                Page.objects.filter(id__in=related_pages).values_list("id", flat=True)
+            )
+
             if related_pages == existing_related_pages:
                 continue
             if options["no_dry_run"]:
