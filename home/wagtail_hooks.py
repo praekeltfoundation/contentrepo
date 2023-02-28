@@ -3,15 +3,29 @@ from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
+from wagtail.models import Page
 
 from .models import ContentPage
-from .views import ContentPageReportView, CustomIndexView, PageViewReportView
+
+from .views import (  # isort:skip
+    ContentPageReportView,
+    CustomIndexView,
+    PageViewReportView,
+    UploadView,
+)
+
+
+@hooks.register("register_admin_urls")
+def register_import_urls():
+    return [
+        path("import/", UploadView.as_view(), name="import"),
+    ]
 
 
 @hooks.register("register_page_listing_buttons")
 def page_listing_buttons(page, page_perms, is_parent=False, next_url=None):
     yield wagtailadmin_widgets.PageListingButton(
-        "Import Content", "/import/", priority=10
+        "Import Content", reverse("import"), priority=10
     )
 
 
@@ -66,11 +80,13 @@ class ContentPageAdmin(ModelAdmin):
     exclude_from_explorer = False
     index_view_class = CustomIndexView
     list_display = (
+        "slug",
         "title",
         "web_body",
         "subtitle",
         "wa_body",
         "mess_body",
+        "vib_body",
         "replies",
         "trigger",
         "tag",
@@ -78,7 +94,14 @@ class ContentPageAdmin(ModelAdmin):
         "parental",
     )
     list_filter = ("locale",)
-    search_fields = ("title", "body")
+    search_fields = (
+        "title",
+        "body",
+        "whatsapp_body",
+        "messenger_body",
+        "viber_body",
+        "slug",
+    )
     list_export = ("locale", "title")
 
     def replies(self, obj):
@@ -109,6 +132,14 @@ class ContentPageAdmin(ModelAdmin):
 
     mess_body.short_description = "Messenger Body"
 
+    def vib_body(self, obj):
+        body = ""
+        for message in obj.viber_body:
+            body = body + message.value["message"]
+        return body
+
+    vib_body.short_description = "Viber Body"
+
     def web_body(self, obj):
         return obj.body
 
@@ -122,3 +153,41 @@ class ContentPageAdmin(ModelAdmin):
 
 # Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
+
+
+@hooks.register("before_edit_page")
+def validate_slug_before_edit(request, page):
+    if request.POST.get("slug") == page.slug:
+        return
+
+    slug = create_unique_slug(request.POST.get("slug"))
+    if slug:
+        post = request.POST.copy()
+        post["slug"] = slug
+        request.POST = post
+
+
+@hooks.register("before_create_page")
+def validate_slug_before_create(request, parent_page, page_class):
+    slug = create_unique_slug(request.POST.get("slug"))
+    if slug:
+        post = request.POST.copy()
+        post["slug"] = slug
+        request.POST = post
+
+
+def create_unique_slug(slug):
+    """
+    If the slug already exists in the database, appends a number to the slug to ensure
+    that the slug is unique
+    """
+    if not slug:
+        return
+
+    suffix = 1
+    candidate_slug = slug
+    while Page.objects.filter(slug=candidate_slug).exists():
+        suffix += 1
+        candidate_slug = f"{slug}-{suffix}"
+
+    return candidate_slug

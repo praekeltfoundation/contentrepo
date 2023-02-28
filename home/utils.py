@@ -3,6 +3,7 @@ import csv
 import io
 from dataclasses import dataclass
 from io import BytesIO
+from json import dumps
 from math import ceil
 from typing import List, Tuple, Union
 
@@ -38,6 +39,7 @@ from home.models import (  # isort:skip
 
 EXPORT_FIELDNAMES = [
     "page_id",
+    "slug",
     "parent",
     "web_title",
     "web_subtitle",
@@ -158,17 +160,21 @@ def import_content(file, filetype, purge=True, locale="en"):
         return struct_blocks
 
     def create_tags(row, page):
+        page.tags.clear()
         if row["tags"]:
-            tags = row["tags"].split(",")
-            if "translation_tag" in row:
-                tags.extend(row["translation_tag"].split(","))
+            tags = row["tags"].split(", ")
             for tag in tags:
                 created_tag, _ = Tag.objects.get_or_create(name=tag.strip())
                 page.tags.add(created_tag)
 
+        if "translation_tag" in row:
+            translation_tag = row["translation_tag"]
+            created_tag, _ = Tag.objects.get_or_create(name=translation_tag.strip())
+            page.tags.add(created_tag)
+
     def add_quick_replies(row, page):
         if row["quick_replies"]:
-            replies = row["quick_replies"].split(",")
+            replies = row["quick_replies"].split(", ")
             for reply in replies:
                 created_tag, _ = ContentQuickReply.objects.get_or_create(
                     name=reply.strip()
@@ -177,7 +183,7 @@ def import_content(file, filetype, purge=True, locale="en"):
 
     def add_triggers(row, page):
         if row["triggers"]:
-            triggers = row["triggers"].split(",")
+            triggers = row["triggers"].split(", ")
             for trigger in triggers:
                 created_tag, _ = ContentTrigger.objects.get_or_create(
                     name=trigger.strip()
@@ -191,11 +197,20 @@ def import_content(file, filetype, purge=True, locale="en"):
         else:
             home_page.add_child(instance=page)
 
-    def add_web(row):
+    def add_web(row, page=None):
         if "web_title" not in row.keys() or not row["web_title"]:
             return
+
+        if page:  # update
+            page.title = row["web_title"]
+            page.subtitle = row["web_subtitle"]
+            page.body = get_rich_text_body(row["web_body"])
+            page.enable_web = True
+            page.locale = home_page.locale
+            return page
         return ContentPage(
             title=row["web_title"],
+            slug=row["slug"],
             subtitle=row["web_subtitle"],
             body=get_rich_text_body(row["web_body"]),
             enable_web=True,
@@ -209,6 +224,7 @@ def import_content(file, filetype, purge=True, locale="en"):
         if not page:
             return ContentPage(
                 title=row["whatsapp_title"],
+                slug=row["slug"],
                 enable_whatsapp=True,
                 whatsapp_title=row["whatsapp_title"],
                 whatsapp_body=get_body(
@@ -231,6 +247,7 @@ def import_content(file, filetype, purge=True, locale="en"):
         if not page:
             return ContentPage(
                 title=row["messenger_title"],
+                slug=row["slug"],
                 enable_messenger=True,
                 messenger_title=row["messenger_title"],
                 messenger_body=get_body(messenger_messages, "messenger_block"),
@@ -249,6 +266,7 @@ def import_content(file, filetype, purge=True, locale="en"):
         if not page:
             return ContentPage(
                 title=row["viber_title"],
+                slug=row["slug"],
                 enable_viberr=True,
                 viber_title=row["viber_title"],
                 viber_body=get_body(viber_messages, "viber_message"),
@@ -323,12 +341,8 @@ def import_content(file, filetype, purge=True, locale="en"):
     home_page = HomePage.objects.get(locale__pk=locale.pk)
 
     for index, row in enumerate(lines):
-        pk = row["page_id"]
-        if pk:
-            # if there is a page_id in the contentsheet,
-            # skip updating or creatinbg a page
-            print(f"Skipped page with id {pk}")
-            continue
+        slug = row["slug"]
+
         if row["web_title"] in ["", None]:
             continue
         if (
@@ -337,9 +351,14 @@ def import_content(file, filetype, purge=True, locale="en"):
             and row["whatsapp_body"] in ["", None]
             and row["messenger_body"] in ["", None]
         ):
-            cpi = ContentPageIndex(title=row["web_title"])
-            home_page.add_child(instance=cpi)
-            cpi.save_revision().publish()
+            cpi = ContentPageIndex.objects.filter(slug=slug).first()
+            if cpi:
+                cpi.title = row["web_title"]
+                cpi.save_revision().publish()
+            else:
+                cpi = ContentPageIndex(title=row["web_title"], slug=slug)
+                home_page.add_child(instance=cpi)
+                cpi.save_revision().publish()
             continue
         row = clean_row(row)
         variation_messages = []
@@ -365,7 +384,9 @@ def import_content(file, filetype, purge=True, locale="en"):
             if next_row["viber_body"] not in ["", None]:
                 viber_messages.append(next_row["viber_body"])
 
-        contentpage = add_web(row=row)
+        exiting_contentpage = ContentPage.objects.filter(slug=slug).first()
+
+        contentpage = add_web(row=row, page=exiting_contentpage)
         contentpage = add_whatsapp(
             row=row,
             whatsapp_messages=whatsapp_messages,
@@ -382,7 +403,8 @@ def import_content(file, filetype, purge=True, locale="en"):
             create_tags(row, contentpage)
             add_quick_replies(row, contentpage)
             add_triggers(row, contentpage)
-            add_parent(row, contentpage, home_page)
+            if not exiting_contentpage:
+                add_parent(row, contentpage, home_page)
             contentpage.save_revision().publish()
             try:
                 pages = contentpage.tags.first().home_contentpagetag_items.all()
@@ -396,6 +418,23 @@ def import_content(file, filetype, purge=True, locale="en"):
                 print(e)
         else:
             print(f"Content page not created for {row}")
+
+    # add related pages
+    for row in lines:
+        related_pages_raw_data = []
+        if row["related_pages"]:
+            slug = row["slug"]
+            page = ContentPage.objects.filter(slug=slug).first()
+            related_page_slugs = row["related_pages"].split(", ")
+            for related_page_slug in related_page_slugs:
+                related_page = ContentPage.objects.filter(
+                    slug=related_page_slug
+                ).first()
+                related_pages_raw_data.append(
+                    {"type": "related_page", "value": related_page.id}
+                )
+            page.related_pages = dumps(related_pages_raw_data)
+            page.save_revision().publish()
 
 
 def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
@@ -411,6 +450,7 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
         "structure": 110,
         "message": 70,
         "page_id": 110,
+        "slug": 110,
         "parent": 110,
         "web_title": 110,
         "web_subtitle": 110,
@@ -748,6 +788,7 @@ class ContentSheetRow:
     structure: str = ""
     side_panel_message_number: int = 0
     parent: str = ""
+    slug: str = ""
     web_title: str = ""
     web_subtitle: str = ""
     web_body: str = ""
@@ -806,6 +847,7 @@ class ContentSheetRow:
 
         content_sheet_row.structure = structure_string
         content_sheet_row.page_id = page.id
+        content_sheet_row.slug = page.slug
 
         if side_panel_message_number == 0:
             content_sheet_row.parent = content_sheet_row._get_parent_page(page)
@@ -841,6 +883,7 @@ class ContentSheetRow:
     ):
         content_sheet_row = cls()
         content_sheet_row.page_id = page.id
+        content_sheet_row.slug = page.slug
         content_sheet_row.structure = structure_string
         content_sheet_row.parent = content_sheet_row._get_parent_page(page)
         content_sheet_row.web_title = page.title
@@ -858,6 +901,7 @@ class ContentSheetRow:
     ):
         content_sheet_row = cls()
         content_sheet_row.page_id = page.id
+        content_sheet_row.slug = page.slug
         content_sheet_row.side_panel_message_number = side_panel_message_number + 1
         content_sheet_row.variation_title = variation_title
         content_sheet_row.variation_body = variation_body
@@ -869,6 +913,7 @@ class ContentSheetRow:
             self.structure,
             self.side_panel_message_number,
             self.page_id,
+            self.slug,
             self.parent,
             self.web_title,
             self.web_subtitle,
@@ -1008,10 +1053,10 @@ class ContentSheetRow:
 
     @staticmethod
     def _get_related_pages(page: ContentPage) -> List[str]:
-        """Returns a list of strings of the related page titles"""
+        """Returns a list of strings of the related page slugs"""
         related_pages = []
         for related_page in page.related_pages:
-            related_pages.append(related_page.value.title)
+            related_pages.append(related_page.value.slug)
         return related_pages
 
     def _get_image_link(
