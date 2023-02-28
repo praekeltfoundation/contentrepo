@@ -70,3 +70,19 @@ class ManagementRelatedTag(TestCase):
         self.assertEqual(out.getvalue(), "")
         page = ContentPage.objects.get(id=self.page.id)
         self.assertEqual(page, self.page)
+
+    def test_invalid_tags(self):
+        """
+        If any of the tags don't point to a valid page ID, then they should be excluded
+        """
+        out = StringIO()
+        self.page.tags.add(Tag.objects.create(name="related_9999"))
+        self.page.related_pages = json.dumps([{"type": "related_page", "value": None}])
+        self.page.save_revision().publish()
+
+        call_command("change_related_tag_to_related_page", "--no-dry-run", stdout=out)
+
+        page = ContentPage.objects.get(id=self.page.id)
+        self.assertEqual(
+            [p.value.id for p in page.related_pages], [self.related_page.id]
+        )
