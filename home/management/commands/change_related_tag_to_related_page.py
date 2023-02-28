@@ -29,7 +29,9 @@ class Command(BaseCommand):
             .distinct()
         )
         for page in pages:
-            related_pages = set(p.value and p.value.id for p in page.related_pages)
+            related_pages = set(
+                p.value.id if p.value else None for p in page.related_pages
+            )
             existing_related_pages = related_pages.copy()
             # Add any related pages specified by tags
             for tag in page.tags.filter(name__startswith=self.TAG_PREFIX):
