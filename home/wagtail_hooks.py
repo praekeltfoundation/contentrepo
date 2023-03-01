@@ -163,7 +163,7 @@ class OrderedContentSetAdmin(ModelAdmin):
     menu_order = 200
     add_to_settings_menu = False
     exclude_from_explorer = False
-    list_display = ("name", "profile_fields", "pages")
+    list_display = ("name", "profile_fields")
     list_export = ("name", "profile_field", "page")
     search_fields = ("name", "profile_fields")
 
