@@ -173,7 +173,9 @@ class OrderedContentSetAdmin(ModelAdmin):
     profile_field.short_description = "Profile Fields"
 
     def page(self, obj):
-        return [p.value.slug for p in obj.pages]
+        if obj.pages:
+            return [p.value.slug if p.value else "" for p in obj.pages]
+        return ["-"]
 
     page.short_description = "Page Slugs"
 
