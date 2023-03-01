@@ -12,14 +12,14 @@ from .views import (  # isort:skip
     CustomIndexView,
     OrderedContentSetUploadView,
     PageViewReportView,
-    UploadView,
+    ContentUploadView,
 )
 
 
 @hooks.register("register_admin_urls")
 def register_import_urls():
     return [
-        path("import/", UploadView.as_view(), name="import"),
+        path("import/", ContentUploadView.as_view(), name="import"),
         path(
             "import_orderedcontentset/",
             OrderedContentSetUploadView.as_view(),
