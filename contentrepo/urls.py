@@ -32,7 +32,6 @@ urlpatterns = [
     path("search/", search_views.search, name="search"),
     path("mainmenu/", menu_views.mainmenu, name="mainmenu"),
     path("submenu/", menu_views.submenu, name="submenu"),
-    path("import/", home_views.ContentUploadView.as_view(), name="import"),
     path("randommenu/", menu_views.randommenu, name="randommenu"),
     path("faqmenu/", menu_views.faqmenu, name="faqmenu"),
     path("suggestedcontent/", menu_views.suggestedcontent, name="suggestedcontent"),

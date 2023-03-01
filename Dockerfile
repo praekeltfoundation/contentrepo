@@ -33,4 +33,4 @@ USER wagtail
 
 ENV DJANGO_SETTINGS_MODULE=contentrepo.settings.production
 
-CMD set -xe; gunicorn contentrepo.wsgi:application
+CMD set -xe; gunicorn  --timeout 120 contentrepo.wsgi:application

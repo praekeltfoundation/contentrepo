@@ -12,11 +12,11 @@ $(".meter > span").each(function () {
 
 function getUploadState(){
  $.ajax({
-  url: '/import/',
+  url: importURL,
   type: 'get',
   success: function(response){
    if(response != "True"){
-    window.location.href = '/admin/home/contentpage/';
+    window.location.href = destinationURL;
    }
   }
  });

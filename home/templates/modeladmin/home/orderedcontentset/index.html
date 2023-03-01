@@ -1,0 +1,10 @@
+{% extends "modeladmin/index.html" %}
+{% load i18n modeladmin_tags wagtailadmin_tags %}
+
+{% block import_button %}
+    <div class="actionbutton">
+            <div class="dropdown dropdown-button match-width col">
+                <a href="/admin/import_orderedcontentset/" class="button bicolor button--icon">{% icon name="download" wrapped=1 %}{% trans 'Import' %}</a>
+            </div>
+    </div>
+{% endblock %}
