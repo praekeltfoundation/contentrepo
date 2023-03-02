@@ -163,7 +163,7 @@ class OrderedContentSetAdmin(ModelAdmin):
     menu_order = 200
     add_to_settings_menu = False
     exclude_from_explorer = False
-    list_display = ("name", "profile_fields", "pages")
+    list_display = ("name", "profile_fields")
     list_export = ("name", "profile_field", "page")
     search_fields = ("name", "profile_fields")
 
@@ -173,13 +173,16 @@ class OrderedContentSetAdmin(ModelAdmin):
     profile_field.short_description = "Profile Fields"
 
     def page(self, obj):
-        return [p.value.slug for p in obj.pages]
+        if obj.pages:
+            return [p.value.slug if p.value else "" for p in obj.pages]
+        return ["-"]
 
     page.short_description = "Page Slugs"
 
 
 # Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
+modeladmin_register(OrderedContentSetAdmin)
 
 
 @hooks.register("before_edit_page")
