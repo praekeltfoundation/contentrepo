@@ -34,6 +34,7 @@ from home.models import (  # isort:skip
     MediaBlock,
     Page,
     VariationBlock,
+    OrderedContentSet,
 )
 
 
@@ -642,6 +643,58 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
     writer = csv.writer(response)
     for row in content_sheet:
         writer.writerow(row)
+
+
+def import_ordered_sets(file, filetype, purge=False):
+    def create_ordered_set_from_row(row):
+        set_name = row["Name"]
+        set_profile_fields = []
+        for field in [f.strip() for f in row["Profile Fields"].split(",")]:
+            [field_name, field_value] = field.split(":")
+            set_profile_fields.append({"type": field_name, "value": field_value})
+        set_pages = []
+        for page_slug in [p.strip() for p in row["Page Slugs"].split(",")]:
+            page = ContentPage.objects.filter(slug=page_slug).first()
+            if page:
+                set_pages.append({"type": "pages", "value": page.id})
+            else:
+                print(f"Content page not found for slug '{page_slug}'")
+
+        existing_ordered_set = OrderedContentSet.objects.filter(name=set_name).first()
+        if existing_ordered_set:
+            existing_ordered_set.profile_fields = set_profile_fields
+            existing_ordered_set.pages = set_pages
+            existing_ordered_set.save()
+            ordered_set = existing_ordered_set
+        else:
+            ordered_set = OrderedContentSet(
+                name=set_name,
+                profile_fields=set_profile_fields,
+                pages=set_pages,
+            )
+            ordered_set.save()
+        return ordered_set or None
+
+    file = file.read()
+    lines = []
+    if filetype == "XLSX":
+        wb = load_workbook(filename=BytesIO(file))
+        ws = wb.worksheets[0]
+        ws.delete_rows(1)
+        for row in ws.iter_rows(values_only=True):
+            row_dict = {"Name": row[0], "Profile Fields": row[1], "Page Slugs": row[2]}
+            lines.append(row_dict)
+    else:
+        if isinstance(file, bytes):
+            file = file.decode("utf-8")
+        reader = csv.DictReader(io.StringIO(file))
+        for dictionary in reader:
+            lines.append(dictionary)
+
+    for index, row in enumerate(lines):
+        os = create_ordered_set_from_row(row)
+        if not os:
+            print(f"Ordered Content Set not created for row {index + 1}")
 
 
 @dataclass

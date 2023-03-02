@@ -5,20 +5,26 @@ from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.models import Page
 
-from .models import ContentPage
+from .models import ContentPage, OrderedContentSet
 
 from .views import (  # isort:skip
     ContentPageReportView,
     CustomIndexView,
+    OrderedContentSetUploadView,
     PageViewReportView,
-    UploadView,
+    ContentUploadView,
 )
 
 
 @hooks.register("register_admin_urls")
 def register_import_urls():
     return [
-        path("import/", UploadView.as_view(), name="import"),
+        path("import/", ContentUploadView.as_view(), name="import"),
+        path(
+            "import_orderedcontentset/",
+            OrderedContentSetUploadView.as_view(),
+            name="import_orderedcontentset",
+        ),
     ]
 
 
@@ -149,6 +155,27 @@ class ContentPageAdmin(ModelAdmin):
         return obj.get_parent()
 
     parental.short_description = "Parent"
+
+
+class OrderedContentSetAdmin(ModelAdmin):
+    model = OrderedContentSet
+    menu_icon = "order"
+    menu_order = 200
+    add_to_settings_menu = False
+    exclude_from_explorer = False
+    list_display = ("name", "profile_fields", "pages")
+    list_export = ("name", "profile_field", "page")
+    search_fields = ("name", "profile_fields")
+
+    def profile_field(self, obj):
+        return [f"{x.block_type}:{x.value}" for x in obj.profile_fields]
+
+    profile_field.short_description = "Profile Fields"
+
+    def page(self, obj):
+        return [p.value.slug for p in obj.pages]
+
+    page.short_description = "Page Slugs"
 
 
 # Now you just need to register your customised ModelAdmin class with Wagtail

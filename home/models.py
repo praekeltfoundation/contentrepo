@@ -14,7 +14,6 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Page, Revision
 from wagtail.models.sites import Site
 from wagtail.search import index
-from wagtail.snippets.models import register_snippet
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
@@ -532,7 +531,6 @@ class ContentPage(Page, ContentImportMixin):
         return response
 
 
-@register_snippet
 class OrderedContentSet(index.Indexed, models.Model):
     name = models.CharField(max_length=255)
 
