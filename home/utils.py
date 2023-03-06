@@ -650,10 +650,14 @@ def import_ordered_sets(file, filetype, purge=False):
         set_name = row["Name"]
         set_profile_fields = []
         for field in [f.strip() for f in row["Profile Fields"].split(",")]:
+            if not field or field == "-":
+                continue
             [field_name, field_value] = field.split(":")
             set_profile_fields.append({"type": field_name, "value": field_value})
         set_pages = []
         for page_slug in [p.strip() for p in row["Page Slugs"].split(",")]:
+            if not page_slug or page_slug == "-":
+                continue
             page = ContentPage.objects.filter(slug=page_slug).first()
             if page:
                 set_pages.append({"type": "pages", "value": page.id})
