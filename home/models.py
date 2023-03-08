@@ -442,9 +442,6 @@ class ContentPage(Page, ContentImportMixin):
         return template_name
 
     def clean(self):
-        if self.is_whatsapp_template and not self.whatsapp_template_name:
-            self.whatsapp_template_name = self.create_whatsapp_template_name()
-
         message_with_media_length = 1024
         errors = []
         for message in self.whatsapp_body:
@@ -529,6 +526,8 @@ class ContentPage(Page, ContentImportMixin):
             clean,
         )
         if settings.WHATSAPP_CREATE_TEMPLATES and self.is_whatsapp_template:
+            self.whatsapp_template_name = self.create_whatsapp_template_name()
+            self.save(update_fields=["whatsapp_template_name"])
             quick_reply_buttons = []
             if self.quick_reply_items.count() > 0:
                 quick_reply_buttons = list(

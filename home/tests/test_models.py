@@ -61,3 +61,24 @@ class ContentPageTests(TestCase):
             "Test WhatsApp Message 1",
             ["button 1", "button 2"],
         )
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_updated_on_change(self, mock_create_whatsapp_template):
+        """
+        If the content is changed, the template should be resubmitted with an updated
+        template name
+        """
+        page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        mock_create_whatsapp_template.assert_called_with(
+            "WA_Title_1",
+            "Test WhatsApp Message 1",
+            ["button 1", "button 2"],
+        )
+        page.whatsapp_body.raw_data[0]["value"]["message"] = "Test WhatsApp Message 2"
+        page.save_revision().publish()
+        mock_create_whatsapp_template.assert_called_with(
+            "WA_Title_2",
+            "Test WhatsApp Message 2",
+            ["button 1", "button 2"],
+        )
