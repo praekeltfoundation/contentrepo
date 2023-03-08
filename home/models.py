@@ -281,6 +281,7 @@ class ContentPage(Page, ContentImportMixin):
 
     # whatsapp page setup
     is_whatsapp_template = models.BooleanField("Is Template", default=False)
+    whatsapp_template_name = models.CharField(max_length=512, blank=True, default="")
     whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
     whatsapp_body = StreamField(
         [
@@ -425,15 +426,25 @@ class ContentPage(Page, ContentImportMixin):
         )
 
     @property
-    def whatsapp_template_name(self):
-        name = f"{self.whatsapp_title}_{self.get_latest_revision().id}"
-        return name.replace(" ", "_")
+    def whatsapp_template_prefix(self) -> str:
+        return self.whatsapp_title.replace(" ", "_")
 
     @property
     def whatsapp_template_body(self):
         return self.whatsapp_body.raw_data[0]["value"]["message"]
 
+    def create_whatsapp_template_name(self) -> str:
+        template_number = 1
+        template_name = f"{self.whatsapp_template_prefix}_{template_number}"
+        while ContentPage.objects.filter(whatsapp_template_name=template_name).exists():
+            template_number += 1
+            template_name = f"{self.whatsapp_template_prefix}_{template_number}"
+        return template_name
+
     def clean(self):
+        if self.is_whatsapp_template and not self.whatsapp_template_name:
+            self.whatsapp_template_name = self.create_whatsapp_template_name()
+
         message_with_media_length = 1024
         errors = []
         for message in self.whatsapp_body:
