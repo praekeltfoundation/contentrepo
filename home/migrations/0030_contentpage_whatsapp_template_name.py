@@ -9,10 +9,22 @@ def add_previous_template_names(apps, schema_editor):
     number. This adds that as the value for the new whatsapp_template_name field
     """
     ContentPage = apps.get_model("home", "ContentPage")
-    for page in ContentPage.objects.filter(is_whatsapp_template=True, whatsapp_template_name=""):
-        template_name = f"{page.whatsapp_title}_{page.get_latest_revision().id}"
-        page.template_name = template_name.replace(" ", "_")
-        page.save(update_fields=["template_name"])
+    Revision = apps.get_model("wagtailcore", "Revision")
+    for page in ContentPage.objects.filter(is_whatsapp_template=True):
+        template_prefix = page.whatsapp_title.replace(" ", "_")
+        page.whatsapp_template_name = f"{template_prefix}_{page.latest_revision.id}"
+        page.save(update_fields=["whatsapp_template_name"])
+
+        revisions = Revision.objects.filter(
+            content_type=page.content_type,
+            object_id=page.pk,
+        )
+        for revision in revisions:
+            if not revision.content.get("whatsapp_title"):
+                continue
+            template_prefix = revision.content["whatsapp_title"].replace(" ", "_")
+            revision.content["whatsapp_template_name"] = f"{template_prefix}_{revision.pk}"
+            revision.save(update_fields=["content"])
 
 
 class Migration(migrations.Migration):
