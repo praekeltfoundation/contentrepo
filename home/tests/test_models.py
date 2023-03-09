@@ -47,17 +47,17 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_create_on_save(self, mock_create_whatsapp_template):
-        create_page(is_whatsapp_template=True)
+        page = create_page(is_whatsapp_template=True)
         mock_create_whatsapp_template.assert_called_with(
-            "WA_Title_1", "Test WhatsApp Message 1", []
+            f"WA_Title_{page.get_latest_revision().id}", "Test WhatsApp Message 1", []
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_create_with_buttons_on_save(self, mock_create_whatsapp_template):
-        create_page(is_whatsapp_template=True, has_quick_replies=True)
+        page = create_page(is_whatsapp_template=True, has_quick_replies=True)
         mock_create_whatsapp_template.assert_called_with(
-            "WA_Title_1",
+            f"WA_Title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
             ["button 1", "button 2"],
         )
@@ -71,7 +71,7 @@ class ContentPageTests(TestCase):
         """
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
         mock_create_whatsapp_template.assert_called_once_with(
-            "WA_Title_1",
+            f"WA_Title_{page.get_latest_revision().pk}",
             "Test WhatsApp Message 1",
             ["button 1", "button 2"],
         )
@@ -79,7 +79,7 @@ class ContentPageTests(TestCase):
         page.whatsapp_body.raw_data[0]["value"]["message"] = "Test WhatsApp Message 2"
         page.save_revision().publish()
         mock_create_whatsapp_template.assert_called_once_with(
-            "WA_Title_2",
+            f"WA_Title_{page.get_latest_revision().pk}",
             "Test WhatsApp Message 2",
             ["button 1", "button 2"],
         )
