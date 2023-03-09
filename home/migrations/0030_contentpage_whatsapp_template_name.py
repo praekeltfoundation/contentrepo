@@ -3,28 +3,34 @@
 from django.db import migrations, models
 
 
-def add_previous_template_names(apps, schema_editor):
+def add_previous_template_names(ContentType, ContentPage, Revision):
     """
     The previous way of calculating template names was to use the title and the revision
     number. This adds that as the value for the new whatsapp_template_name field
     """
-    ContentPage = apps.get_model("home", "ContentPage")
-    Revision = apps.get_model("wagtailcore", "Revision")
     for page in ContentPage.objects.filter(is_whatsapp_template=True):
+        if not page.whatsapp_title:
+            continue
         template_prefix = page.whatsapp_title.replace(" ", "_")
         page.whatsapp_template_name = f"{template_prefix}_{page.latest_revision.id}"
         page.save(update_fields=["whatsapp_template_name"])
 
-        revisions = Revision.objects.filter(
-            content_type=page.content_type,
-            object_id=page.pk,
-        )
-        for revision in revisions:
-            if not revision.content.get("whatsapp_title"):
-                continue
-            template_prefix = revision.content["whatsapp_title"].replace(" ", "_")
-            revision.content["whatsapp_template_name"] = f"{template_prefix}_{revision.pk}"
-            revision.save(update_fields=["content"])
+    content_type = ContentType.objects.get_for_model(ContentPage)
+    for revision in Revision.objects.filter(content_type__pk=content_type.pk):
+        if not revision.content.get("whatsapp_title"):
+            continue
+        if not revision.content.get("is_whatsapp_template"):
+            continue
+        template_prefix = revision.content["whatsapp_title"].replace(" ", "_")
+        revision.content["whatsapp_template_name"] = f"{template_prefix}_{revision.pk}"
+        revision.save(update_fields=["content"])
+
+
+def run_migration(apps, schema_editor):
+    ContentType = apps.get_model("contenttypes", "ContentType")
+    ContentPage = apps.get_model("home", "ContentPage")
+    Revision = apps.get_model("wagtailcore", "Revision")
+    add_previous_template_names(ContentType, ContentPage, Revision)
 
 
 class Migration(migrations.Migration):
@@ -38,5 +44,5 @@ class Migration(migrations.Migration):
             name="whatsapp_template_name",
             field=models.CharField(blank=True, default="", max_length=512),
         ),
-        migrations.RunPython(add_previous_template_names, migrations.RunPython.noop)
+        migrations.RunPython(run_migration, migrations.RunPython.noop)
     ]

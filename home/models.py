@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.forms import CheckboxSelectMultiple
@@ -436,9 +437,11 @@ class ContentPage(Page, ContentImportMixin):
     def create_whatsapp_template_name(self) -> str:
         template_number = 1
         template_name = f"{self.whatsapp_template_prefix}_{template_number}"
+
+        content_type = ContentType.objects.get_for_model(ContentPage)
         existing_names = set(
-            revision.as_object().whatsapp_template_name
-            for revision in self.revisions.all()
+            revision.content.get("whatsapp_template_name")
+            for revision in Revision.objects.filter(content_type__pk=content_type.pk)
         )
         while template_name in existing_names:
             template_number += 1
