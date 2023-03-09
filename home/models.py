@@ -509,7 +509,8 @@ class ContentPage(Page, ContentImportMixin):
         """
         Submits a request to the WhatsApp API to create a template for this content
 
-        Only submits
+        Only submits if the create templates is enabled, if the page is a whatsapp
+        template, and if the content or buttons are different to the previous revision
         """
         if not settings.WHATSAPP_CREATE_TEMPLATES:
             return
@@ -526,15 +527,15 @@ class ContentPage(Page, ContentImportMixin):
         except AttributeError:
             pass
 
-        template_name = self.create_whatsapp_template_name()
+        self.whatsapp_template_name = self.create_whatsapp_template_name()
 
         create_whatsapp_template(
-            template_name,
+            self.whatsapp_template_name,
             self.whatsapp_template_body,
             sorted(self.quick_reply_buttons),
         )
 
-        return template_name
+        return self.whatsapp_template_name
 
     def save_revision(
         self,
