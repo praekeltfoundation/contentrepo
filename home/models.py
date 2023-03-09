@@ -526,13 +526,15 @@ class ContentPage(Page, ContentImportMixin):
         except AttributeError:
             pass
 
-        self.whatsapp_template_name = self.create_whatsapp_template_name()
+        template_name = self.create_whatsapp_template_name()
 
         create_whatsapp_template(
-            self.whatsapp_template_name,
+            template_name,
             self.whatsapp_template_body,
             sorted(self.quick_reply_buttons),
         )
+
+        return template_name
 
     def save_revision(
         self,
@@ -554,7 +556,10 @@ class ContentPage(Page, ContentImportMixin):
             previous_revision,
             clean,
         )
-        self.submit_whatsapp_template(previous_revision)
+        template_name = self.submit_whatsapp_template(previous_revision)
+        if template_name:
+            revision.content["whatsapp_template_name"] = template_name
+            revision.save(update_fields=["content"])
         return revision
 
 

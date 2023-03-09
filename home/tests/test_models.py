@@ -75,14 +75,21 @@ class ContentPageTests(TestCase):
             "Test WhatsApp Message 1",
             ["button 1", "button 2"],
         )
+
         mock_create_whatsapp_template.reset_mock()
         page.whatsapp_body.raw_data[0]["value"]["message"] = "Test WhatsApp Message 2"
-        page.save_revision().publish()
+        revision = page.save_revision()
+        revision.publish()
+
+        expected_title = f"WA_Title_{page.get_latest_revision().pk}"
         mock_create_whatsapp_template.assert_called_once_with(
-            f"WA_Title_{page.get_latest_revision().pk}",
+            expected_title,
             "Test WhatsApp Message 2",
             ["button 1", "button 2"],
         )
+        page.refresh_from_db()
+        self.assertEqual(page.whatsapp_template_name, expected_title)
+        self.assertEqual(revision.as_object().whatsapp_template_name, expected_title)
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
@@ -91,11 +98,17 @@ class ContentPageTests(TestCase):
         If the content is not changed, the template should not be resubmitted
         """
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        page.get_latest_revision().publish()
+        page.refresh_from_db()
+        expected_template_name = f"WA_Title_{page.get_latest_revision().pk}"
         mock_create_whatsapp_template.assert_called_once_with(
-            "WA_Title_1",
+            expected_template_name,
             "Test WhatsApp Message 1",
             ["button 1", "button 2"],
         )
+
         mock_create_whatsapp_template.reset_mock()
         page.save_revision().publish()
         mock_create_whatsapp_template.assert_not_called()
+        page.refresh_from_db()
+        self.assertEqual(page.whatsapp_template_name, expected_template_name)
