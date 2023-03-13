@@ -47,6 +47,7 @@ EXPORT_FIELDNAMES = [
     "web_body",
     "whatsapp_title",
     "whatsapp_body",
+    "whatsapp_template_name",
     "variation_title",
     "variation_body",
     "messenger_title",
@@ -222,6 +223,8 @@ def import_content(file, filetype, purge=True, locale="en"):
         if "whatsapp_title" not in row.keys() or not row["whatsapp_title"]:
             return page
 
+        whatsapp_template_name = row.get("whatsapp_template_name", "")
+
         if not page:
             return ContentPage(
                 title=row["whatsapp_title"],
@@ -231,6 +234,8 @@ def import_content(file, filetype, purge=True, locale="en"):
                 whatsapp_body=get_body(
                     whatsapp_messages, "Whatsapp_Message", variation_messages
                 ),
+                whatsapp_template_name=whatsapp_template_name,
+                is_whatsapp_template=bool(whatsapp_template_name),
                 locale=home_page.locale,
             )
         else:
@@ -239,6 +244,8 @@ def import_content(file, filetype, purge=True, locale="en"):
             page.whatsapp_body = get_body(
                 whatsapp_messages, "Whatsapp_Message", variation_messages
             )
+            page.whatsapp_template_name = whatsapp_template_name
+            page.is_whatsapp_template = bool(whatsapp_template_name)
             return page
 
     def add_messenger(row, messenger_messages, page=None):
@@ -286,6 +293,7 @@ def import_content(file, filetype, purge=True, locale="en"):
             "web_body",
             "whatsapp_title",
             "whatsapp_body",
+            "whataspp_template_name",
             "variation_title",
             "variation_body",
             "next_prompt",
@@ -458,6 +466,7 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
         "web_body": 370,
         "whatsapp_title": 118,
         "whatsapp_body": 370,
+        "whatsapp_template_name": 118,
         "variation_title": 118,
         "variation_body": 370,
         "messenger_title": 118,
@@ -851,6 +860,7 @@ class ContentSheetRow:
     web_body: str = ""
     whatsapp_title: str = ""
     whatsapp_body: str = ""
+    whatsapp_template_name: str = ""
     messenger_title: str = ""
     messenger_body: str = ""
     viber_title: str = ""
@@ -977,6 +987,7 @@ class ContentSheetRow:
             self.web_body,
             self.whatsapp_title,
             self.whatsapp_body,
+            self.whatsapp_template_name,
             self.variation_title,
             self.variation_body,
             self.messenger_title,
