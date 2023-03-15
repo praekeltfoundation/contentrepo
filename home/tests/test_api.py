@@ -164,3 +164,22 @@ class PaginationTestCase(TestCase):
         self.assertEquals(PageView.objects.count(), 1)
         view = PageView.objects.last()
         self.assertEquals(view.message, 1)
+
+    def test_whatsapp_body(self):
+        """
+        Should have the WhatsApp specific fields included in the body; if it's a
+        template, what's the template name, the text body of the message.
+        """
+        ContentPage.objects.all().delete()
+        page = create_page(
+            is_whatsapp_template=True, whatsapp_template_name="test_template"
+        )
+
+        # it should return the correct details
+        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp")
+        content = response.json()
+        self.assertTrue(content["body"]["is_whatsapp_template"])
+        self.assertEqual(content["body"]["whatsapp_template_name"], "test_template")
+        self.assertEqual(
+            content["body"]["text"]["value"]["message"], "Test WhatsApp Message 1"
+        )

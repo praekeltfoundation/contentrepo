@@ -20,6 +20,7 @@ def create_page(
     is_whatsapp_template=False,
     add_variation=False,
     has_quick_replies=False,
+    whatsapp_template_name="",
 ):
     block = blocks.StructBlock(
         [
@@ -55,6 +56,7 @@ def create_page(
         whatsapp_title="WA Title",
         whatsapp_body=[("Whatsapp_Message", block_value)],
         is_whatsapp_template=is_whatsapp_template,
+        whatsapp_template_name=whatsapp_template_name,
     )
 
     if has_quick_replies:
