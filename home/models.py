@@ -281,6 +281,7 @@ class ContentPage(Page, ContentImportMixin):
 
     # whatsapp page setup
     is_whatsapp_template = models.BooleanField("Is Template", default=False)
+    whatsapp_template_name = models.CharField(max_length=512, blank=True, default="")
     whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
     whatsapp_body = StreamField(
         [
@@ -425,13 +426,15 @@ class ContentPage(Page, ContentImportMixin):
         )
 
     @property
-    def whatsapp_template_name(self):
-        name = f"{self.whatsapp_title}_{self.get_latest_revision().id}"
-        return name.replace(" ", "_")
+    def whatsapp_template_prefix(self):
+        return self.whatsapp_title.replace(" ", "_")
 
     @property
     def whatsapp_template_body(self):
         return self.whatsapp_body.raw_data[0]["value"]["message"]
+
+    def create_whatsapp_template_name(self) -> str:
+        return f"{self.whatsapp_template_prefix}_{self.get_latest_revision().pk}"
 
     def clean(self):
         message_with_media_length = 1024
@@ -498,6 +501,42 @@ class ContentPage(Page, ContentImportMixin):
 
         self.views.create(**page_view)
 
+    @property
+    def quick_reply_buttons(self):
+        return self.quick_reply_items.all().values_list("tag__name", flat=True)
+
+    def submit_whatsapp_template(self, previous_revision):
+        """
+        Submits a request to the WhatsApp API to create a template for this content
+
+        Only submits if the create templates is enabled, if the page is a whatsapp
+        template, and if the content or buttons are different to the previous revision
+        """
+        if not settings.WHATSAPP_CREATE_TEMPLATES:
+            return
+        if not self.is_whatsapp_template:
+            return
+        try:
+            previous_revision = previous_revision.as_object()
+            if (
+                self.whatsapp_template_body == previous_revision.whatsapp_template_body
+                and sorted(self.quick_reply_buttons)
+                == sorted(previous_revision.quick_reply_buttons)
+            ):
+                return
+        except AttributeError:
+            pass
+
+        self.whatsapp_template_name = self.create_whatsapp_template_name()
+
+        create_whatsapp_template(
+            self.whatsapp_template_name,
+            self.whatsapp_template_body,
+            sorted(self.quick_reply_buttons),
+        )
+
+        return self.whatsapp_template_name
+
     def save_revision(
         self,
         user=None,
@@ -508,7 +547,8 @@ class ContentPage(Page, ContentImportMixin):
         previous_revision=None,
         clean=True,
     ):
-        response = super().save_revision(
+        previous_revision = self.get_latest_revision()
+        revision = super().save_revision(
             user,
             submitted_for_moderation,
             approved_go_live_at,
@@ -517,18 +557,11 @@ class ContentPage(Page, ContentImportMixin):
             previous_revision,
             clean,
         )
-        if settings.WHATSAPP_CREATE_TEMPLATES and self.is_whatsapp_template:
-            quick_reply_buttons = []
-            if self.quick_reply_items.count() > 0:
-                quick_reply_buttons = list(
-                    self.quick_reply_items.all().values_list("tag__name", flat=True)
-                )
-            create_whatsapp_template(
-                self.whatsapp_template_name,
-                self.whatsapp_template_body,
-                sorted(quick_reply_buttons),
-            )
-        return response
+        template_name = self.submit_whatsapp_template(previous_revision)
+        if template_name:
+            revision.content["whatsapp_template_name"] = template_name
+            revision.save(update_fields=["content"])
+        return revision
 
 
 class OrderedContentSet(index.Indexed, models.Model):
