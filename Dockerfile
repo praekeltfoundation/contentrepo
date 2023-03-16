@@ -1,36 +1,18 @@
-FROM python:3.10.6-slim-buster
+FROM ghcr.io/praekeltfoundation/docker-django-bootstrap-nw:py3.10-buster
 
-RUN useradd wagtail
+COPY . /app
+RUN pip install -e .
 
-EXPOSE 8000
+ENV DJANGO_SETTINGS_MODULE contentrepo.settings.production
 
-ENV PYTHONUNBUFFERED=1 \
-    PORT=8000
+RUN django-admin collectstatic --noinput --settings=contentrepo.settings.base
 
-# Install system packages required by Wagtail and Django.
-RUN apt-get update --yes --quiet && apt-get install --yes --quiet --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    libmariadbclient-dev \
-    libjpeg62-turbo-dev \
-    zlib1g-dev \
-    libwebp-dev \
-    redis \
-
- && rm -rf /var/lib/apt/lists/*
-
-RUN pip install "gunicorn==20.0.4"
-
-COPY requirements.txt /
-RUN pip install -r /requirements.txt
-
-WORKDIR /app
-RUN chown wagtail:wagtail /app
-
-COPY --chown=wagtail:wagtail . .
-
-USER wagtail
-
-ENV DJANGO_SETTINGS_MODULE=contentrepo.settings.production
-
-CMD set -xe; gunicorn  --timeout 120 contentrepo.wsgi:application
+CMD [\
+    "contentrepo.wsgi:application",\
+    "--timeout=120",\
+    # Only a single worker allowed due to uploads happening in a thread
+    "--workers=1",\
+    "--threads=4",\
+    "--worker-class=gthread",\
+    "--worker-tmp-dir=/dev/shm"\
+]
