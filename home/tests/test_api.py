@@ -4,7 +4,8 @@ from pathlib import Path
 from django.test import Client, TestCase
 from wagtail import blocks
 
-from home.models import ContentPage, PageView, VariationBlock
+from home.models import (ContentPage, OrderedContentSet, PageView,
+                         VariationBlock)
 from home.utils import import_content
 
 from .utils import create_page
@@ -182,4 +183,90 @@ class PaginationTestCase(TestCase):
         self.assertEqual(content["body"]["whatsapp_template_name"], "test_template")
         self.assertEqual(
             content["body"]["text"]["value"]["message"], "Test WhatsApp Message 1"
+        )
+
+
+class OrderedContentSetTestCase(TestCase):
+    def setUp(self):
+        path = Path("home/tests/content2.csv")
+        with path.open(mode="rb") as f:
+            import_content(f, "CSV")
+        self.content_page1 = ContentPage.objects.first()
+        self.ordered_content_set = OrderedContentSet.objects.create(
+            name="Test set",
+            pages=[
+                {"type": "pages", "value": self.content_page1.id},
+            ],
+            profile_fields=[
+                {"type": "gender", "value": "female"},
+            ],
+        )
+
+    def test_orderedcontent_endpoint(self):
+        self.client = Client()
+        # it should return a list of ordered sets and show the profile fields
+        response = self.client.get("/api/v2/orderedcontent/")
+        content = json.loads(response.content)
+        self.assertEquals(content["count"], 1)
+        self.assertEquals(content["results"][0]["name"], self.ordered_content_set.name)
+        self.assertEquals(
+            content["results"][0]["profile_fields"][0],
+            {"profile_field": "gender", "value": "female"},
+        )
+
+    def test_orderedcontent_detail_endpoint(self):
+        self.client = Client()
+        # it should return the list of pages that are part of the ordered content set
+        response = self.client.get(
+            f"/api/v2/orderedcontent/{self.ordered_content_set.id}/"
+        )
+        content = json.loads(response.content)
+        self.assertEquals(content["name"], self.ordered_content_set.name)
+        self.assertEquals(
+            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
+        )
+        self.assertEquals(
+            content["pages"][0],
+            {"id": self.content_page1.id, "title": self.content_page1.title},
+        )
+
+    def test_orderedcontent_detail_endpoint_rel_pages_flag(self):
+        rel_page = create_page("Related Page")
+        self.content_page1.related_pages = [
+            {"type": "related_page", "value": rel_page.id},
+        ]
+        self.content_page1.save_revision().publish()
+
+        self.client = Client()
+        # it should return the list of pages that are part of the ordered content set
+        response = self.client.get(
+            f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_related=true"
+        )
+        content = json.loads(response.content)
+        self.assertEquals(content["name"], self.ordered_content_set.name)
+        self.assertEquals(
+            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
+        )
+        self.assertEquals(
+            content["pages"][0],
+            {
+                "id": self.content_page1.id,
+                "title": self.content_page1.title,
+                "related_pages": [rel_page.id],
+            },
+        )
+
+    def test_orderedcontent_detail_endpoint_tags_flag(self):
+        self.client = Client()
+        # it should return the list of pages that are part of the ordered content set
+        response = self.client.get(
+            f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_tags=true"
+        )
+        content = json.loads(response.content)
+        self.assertEquals(content["name"], self.ordered_content_set.name)
+        self.assertEquals(
+            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
+        )
+        self.assertEquals(
+            content["pages"][0]["tags"], [t.name for t in self.content_page1.tags.all()]
         )
