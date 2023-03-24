@@ -163,7 +163,7 @@ class OrderedContentSetAdmin(ModelAdmin):
     menu_order = 200
     add_to_settings_menu = False
     exclude_from_explorer = False
-    list_display = ("name", "profile_fields")
+    list_display = ("name", "profile_fields", "num_pages")
     list_export = ("name", "profile_field", "page")
     search_fields = ("name", "profile_fields")
 
@@ -178,6 +178,11 @@ class OrderedContentSetAdmin(ModelAdmin):
         return ["-"]
 
     page.short_description = "Page Slugs"
+
+    def num_pages(self, obj):
+        return len(obj.pages)
+
+    num_pages.short_description = "Number of Pages"
 
 
 # Now you just need to register your customised ModelAdmin class with Wagtail

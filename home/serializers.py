@@ -288,12 +288,16 @@ class PagesField(serializers.Field):
             elif "viber" in request.GET and page.enable_viber is True:
                 if page.viber_title:
                     title = page.viber_title
-            pages.append(
-                {
-                    "id": page.id,
-                    "title": title,
-                }
-            )
+            page_data = {
+                "id": page.id,
+                "title": title,
+            }
+            if "show_related" in request.GET and bool(request.GET["show_related"]):
+                page_data["related_pages"] = [p.value.id for p in page.related_pages]
+            if "show_tags" in request.GET and bool(request.GET["show_tags"]):
+                page_data["tags"] = [x.name for x in page.tags.all()]
+
+            pages.append(page_data)
         return pages
 
 
