@@ -4,11 +4,16 @@ from pathlib import Path
 from django.test import Client, TestCase
 from wagtail import blocks
 
-from home.models import (ContentPage, OrderedContentSet, PageView,
-                         VariationBlock)
 from home.utils import import_content
 
 from .utils import create_page
+
+from home.models import (  # isort:skip
+    ContentPage,
+    OrderedContentSet,
+    PageView,
+    VariationBlock,
+)
 
 
 class PaginationTestCase(TestCase):
