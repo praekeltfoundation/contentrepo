@@ -439,11 +439,15 @@ def import_content(file, filetype, purge=True, locale="en"):
                 related_page = ContentPage.objects.filter(
                     slug=related_page_slug
                 ).first()
-                related_pages_raw_data.append(
-                    {"type": "related_page", "value": related_page.id}
-                )
-            page.related_pages = dumps(related_pages_raw_data)
-            page.save_revision().publish()
+                if related_page:
+                    related_pages_raw_data.append(
+                        {"type": "related_page", "value": related_page.id}
+                    )
+                else:
+                    print(f"Content page not found for slug '{related_page_slug}'")
+            if related_pages_raw_data:
+                page.related_pages = dumps(related_pages_raw_data)
+                page.save_revision().publish()
 
 
 def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
