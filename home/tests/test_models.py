@@ -112,3 +112,29 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_not_called()
         page.refresh_from_db()
         self.assertEqual(page.whatsapp_template_name, expected_template_name)
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_submitted_when_is_whatsapp_template_is_set(
+        self, mock_create_whatsapp_template
+    ):
+        """
+        If the is_whatsapp_template was not enabled on the content, but is changed,
+        then it should submit, even if the content hasn't changed.
+        """
+        page = create_page(is_whatsapp_template=False, has_quick_replies=True)
+        page.get_latest_revision().publish()
+        page.refresh_from_db()
+        mock_create_whatsapp_template.assert_not_called()
+
+        page.is_whatsapp_template = True
+        page.save_revision().publish()
+
+        page.refresh_from_db()
+        expected_template_name = f"WA_Title_{page.get_latest_revision().pk}"
+        self.assertEqual(page.whatsapp_template_name, expected_template_name)
+        mock_create_whatsapp_template.assert_called_once_with(
+            expected_template_name,
+            "Test WhatsApp Message 1",
+            ["button 1", "button 2"],
+        )
