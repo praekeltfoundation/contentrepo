@@ -522,6 +522,7 @@ class ContentPage(Page, ContentImportMixin):
                 self.whatsapp_template_body == previous_revision.whatsapp_template_body
                 and sorted(self.quick_reply_buttons)
                 == sorted(previous_revision.quick_reply_buttons)
+                and self.is_whatsapp_template == previous_revision.is_whatsapp_template
             ):
                 return
         except AttributeError:
