@@ -23,7 +23,7 @@ def create_whatsapp_template(name, body, quick_replies=[]):
         components.append({"type": "BUTTONS", "buttons": buttons})
 
     data = {
-        "category": "ACCOUNT_UPDATE",
+        "category": "UTILITY",
         "name": name.lower(),
         "language": "en_US",
         "components": components,

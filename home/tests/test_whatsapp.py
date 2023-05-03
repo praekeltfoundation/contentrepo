@@ -10,7 +10,7 @@ class WhatsAppTests(TestCase):
     @responses.activate
     def test_create_whatsapp_template(self):
         data = {
-            "category": "ACCOUNT_UPDATE",
+            "category": "UTILITY",
             "name": "test-template",
             "language": "en_US",
             "components": [{"type": "BODY", "text": "Test Body"}],
@@ -28,7 +28,7 @@ class WhatsAppTests(TestCase):
     @responses.activate
     def test_create_whatsapp_template_with_buttons(self):
         data = {
-            "category": "ACCOUNT_UPDATE",
+            "category": "UTILITY",
             "name": "test-template",
             "language": "en_US",
             "components": [
