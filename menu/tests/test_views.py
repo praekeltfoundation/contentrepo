@@ -154,7 +154,7 @@ class SuggestedContentTestCase(TestCase):
 
     def test_suggestedcontent_with_less_pages(self):
         """
-        Should return id and title of 3 random descendands of the page id provided.
+        Should return id and title of 2 random descendands of the page id provided.
         """
         included_parent = create_page(title="Included Parent")
         included_parent2 = create_page(title="Included Parent 2")
