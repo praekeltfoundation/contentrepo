@@ -163,18 +163,19 @@ def suggestedcontent(request):
 
     suggested_pages = []
     for topic_id in topics_viewed:
-        try:
-            pages = (
-                ContentPage.objects.get(id=topic_id)
-                .get_descendants()
-                .filter(numchild=0)
-                .live()
-            )
-        except ContentPage.DoesNotExist:
-            pages = []
+        if topic_id != "":
+            try:
+                pages = (
+                    ContentPage.objects.get(id=topic_id)
+                    .get_descendants()
+                    .filter(numchild=0)
+                    .live()
+                )
+            except ContentPage.DoesNotExist:
+                pages = []
 
-        for page in pages:
-            suggested_pages.append(page)
+            for page in pages:
+                suggested_pages.append(page)
 
     data = {
         "results": [

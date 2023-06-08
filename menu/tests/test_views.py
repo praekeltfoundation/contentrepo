@@ -177,3 +177,16 @@ class SuggestedContentTestCase(TestCase):
                 page["title"], ContentPage.objects.get(id=page["id"]).title
             )
             suggested_ids.append(page["id"])
+
+    def test_suggestedcontent_with_empty_pages(self):
+        """
+        Should return empty results
+        """
+
+        response = self.client.get(
+            f"/suggestedcontent/"
+        )
+        result = response.json()
+
+        self.assertEqual(len(result["results"]), 0)
+
