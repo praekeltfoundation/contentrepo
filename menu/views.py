@@ -171,7 +171,7 @@ def suggestedcontent(request):
                 .live()
             )
         except ContentPage.DoesNotExist:
-            pages = None
+            pages = []
 
         for page in pages:
             suggested_pages.append(page)
