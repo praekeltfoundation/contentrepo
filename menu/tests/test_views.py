@@ -183,9 +183,7 @@ class SuggestedContentTestCase(TestCase):
         Should return empty results
         """
 
-        response = self.client.get(
-            "/suggestedcontent/"
-        )
+        response = self.client.get("/suggestedcontent/")
         result = response.json()
 
         self.assertEqual(len(result["results"]), 0)
