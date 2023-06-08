@@ -184,9 +184,8 @@ class SuggestedContentTestCase(TestCase):
         """
 
         response = self.client.get(
-            f"/suggestedcontent/"
+            "/suggestedcontent/"
         )
         result = response.json()
 
         self.assertEqual(len(result["results"]), 0)
-
