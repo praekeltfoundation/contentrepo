@@ -173,14 +173,8 @@ def suggestedcontent(request):
         except ContentPage.DoesNotExist:
             pages = None
 
-        if pages:
-            for page in (
-                ContentPage.objects.get(id=topic_id)
-                .get_descendants()
-                .filter(numchild=0)
-                .live()
-            ):
-                suggested_pages.append(page)
+        for page in pages:
+            suggested_pages.append(page)
 
     data = {
         "results": [
