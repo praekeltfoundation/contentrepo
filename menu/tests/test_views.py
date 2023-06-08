@@ -151,3 +151,39 @@ class SuggestedContentTestCase(TestCase):
 
         for id in excluded_children:
             self.assertNotIn(id, suggested_ids)
+
+    def test_suggestedcontent_with_less_pages(self):
+        """
+        Should return id and title of 2 random descendands of the page id provided.
+        """
+        included_parent = create_page(title="Included Parent")
+        included_parent2 = create_page(title="Included Parent 2")
+
+        included_children = [
+            create_page(title=f"Included Child {i}", parent=included_parent).id
+            for i in range(2)
+        ]
+
+        response = self.client.get(
+            f"/suggestedcontent/?topics_viewed={included_parent.id},{included_parent2.id}"
+        )
+        result = response.json()
+
+        self.assertEqual(len(result["results"]), 2)
+        suggested_ids = []
+        for page in result["results"]:
+            self.assertIn(page["id"], included_children)
+            self.assertEqual(
+                page["title"], ContentPage.objects.get(id=page["id"]).title
+            )
+            suggested_ids.append(page["id"])
+
+    def test_suggestedcontent_with_empty_pages(self):
+        """
+        Should return empty results
+        """
+
+        response = self.client.get("/suggestedcontent/")
+        result = response.json()
+
+        self.assertEqual(len(result["results"]), 0)
