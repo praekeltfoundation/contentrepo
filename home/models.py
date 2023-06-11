@@ -1,6 +1,10 @@
+import re
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
@@ -17,10 +21,15 @@ from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
-from .constants import AGE_CHOICES, GENDER_CHOICES, RELATIONSHIP_STATUS_CHOICES
 from .panels import PageRatingPanel
 from .whatsapp import create_whatsapp_template
 
+from .constants import (  # isort:skip
+    AGE_CHOICES,
+    GENDER_CHOICES,
+    RELATIONSHIP_STATUS_CHOICES,
+    model,
+)
 from wagtail.admin.panels import (  # isort:skip
     FieldPanel,
     MultiFieldPanel,
@@ -265,6 +274,8 @@ class ContentPage(Page, ContentImportMixin):
         use_json_field=True,
     )
     include_in_footer = models.BooleanField(default=False)
+
+    embedding = models.JSONField(blank=True, null=True)
 
     # Web panels
     web_panels = [
@@ -563,6 +574,30 @@ class ContentPage(Page, ContentImportMixin):
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
         return revision
+
+
+@receiver(pre_save, sender=ContentPage)
+def update_embedding(sender, instance, *args, **kwargs):
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F600-\U0001F64F"
+        "\U0001F300-\U0001F5FF"
+        "\U0001F680-\U0001F6FF"
+        "\U0001F1E0-\U0001F1FF"
+        "\U00002702-\U000027B0"
+        "\U000024C2-\U0001F251"
+        "\U0001FA00-\U0001FAFF"
+        "\U0001F900-\U0001F9FF"
+        "]+",
+        flags=re.UNICODE,
+    )
+    body = emoji_pattern.sub(r"", instance.body[0].value.source)
+
+    instance.embedding = {
+        "values": [
+            float(i) for i in model.encode(body.replace("\n\n", " ").replace("*", ""))
+        ]
+    }
 
 
 class OrderedContentSet(index.Indexed, models.Model):

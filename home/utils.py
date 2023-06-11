@@ -7,6 +7,7 @@ from json import dumps
 from math import ceil
 from typing import List, Tuple, Union
 
+import numpy as np
 from django.http import HttpResponse
 from openpyxl import load_workbook
 from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
@@ -24,6 +25,8 @@ from wagtail.models.sites import Site
 from wagtail.query import PageQuerySet
 from wagtail.rich_text import RichText
 from wagtailmedia.models import Media
+
+from .constants import model
 
 from home.models import (  # isort:skip
     ContentPage,
@@ -65,6 +68,26 @@ EXPORT_FIELDNAMES = [
     "media_link",
     "related_pages",
 ]
+
+
+def cosine_similarity(A, B):
+    return float((np.dot(A, B) / (np.linalg.norm(A) * np.linalg.norm(B))))
+
+
+def retrieve_top_n_content_pieces(user_input, queryset, n=5, content_type=None):
+    # similar_embeddings = [{'faq_name':, 'faq_content':, 'embedding':}, ...] # We need to filter by content type and then retrieve their embeddings
+    # Generate embedding for user text
+    user_embedding = model.encode([user_input])
+
+    documents_retrieved = []
+    for page in queryset:
+        similarity_score = cosine_similarity(
+            user_embedding[0].tolist(), page.embedding["values"]
+        )  # Replace with your cosine similarity calculation
+        documents_retrieved.append((page.pk, page.title, page.body, similarity_score))
+    documents_retrieved = sorted(documents_retrieved, key=lambda x: x[3], reverse=True)
+    content_retrieved = [doc[0] for doc in documents_retrieved[0:n]]
+    return content_retrieved
 
 
 def import_content(file, filetype, purge=True, locale="en"):

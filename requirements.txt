@@ -12,3 +12,4 @@ boto3
 django-storages
 responses
 sentry-sdk==1.15.0
+sentence_transformers

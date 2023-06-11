@@ -25,6 +25,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
             "tag",
             "trigger",
             "page",
+            "s",
         ]
     )
     pagination_class = PageNumberPagination
@@ -42,7 +43,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
         super(ContentPagesViewSet, self).list(self, request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = super(ContentPagesViewSet, self).get_queryset()
+        queryset = ContentPage.objects.live()
         tag = self.request.query_params.get("tag")
         if tag is not None:
             ids = []
@@ -54,6 +55,12 @@ class ContentPagesViewSet(PagesAPIViewSet):
             ids = []
             for t in TriggeredContent.objects.filter(tag__name__iexact=trigger.strip()):
                 ids.append(t.content_object_id)
+            queryset = queryset.filter(id__in=ids)
+        s = self.request.query_params.get("s")
+        if s is not None:
+            from .utils import retrieve_top_n_content_pieces
+
+            ids = retrieve_top_n_content_pieces(s, queryset)
             queryset = queryset.filter(id__in=ids)
         return queryset
 
