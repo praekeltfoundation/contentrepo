@@ -672,4 +672,4 @@ class PageView(models.Model):
     data = models.JSONField(default=dict, blank=True, null=True)
 
     class Meta:
-        indexes = [models.Index(fields=['timestamp'])]
+        indexes = [models.Index(fields=["timestamp"])]
