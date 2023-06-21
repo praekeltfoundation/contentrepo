@@ -670,6 +670,3 @@ class PageView(models.Model):
     )
     message = models.IntegerField(blank=True, default=None, null=True)
     data = models.JSONField(default=dict, blank=True, null=True)
-
-    class Meta:
-        indexes = [models.Index(fields=["timestamp"])]
