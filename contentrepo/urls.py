@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, reverse_lazy
+from django.views.generic.base import RedirectView
+
 from rest_framework import routers
 from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
@@ -26,7 +28,7 @@ custom_v2router.register("pageviews", home_views.PageViewViewSet)
 
 urlpatterns = [
     path("django-admin/", admin.site.urls),
-    path("", include(wagtail_content_import_urls)),
+    path("", RedirectView.as_view(url=reverse_lazy('wagtailadmin_home'))),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("search/", search_views.search, name="search"),
