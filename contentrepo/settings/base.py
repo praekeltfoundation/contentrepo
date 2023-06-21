@@ -89,7 +89,8 @@ WSGI_APPLICATION = "contentrepo.wsgi.application"
 DATABASES = {
     "default": dj_database_url.config(
         default=os.environ.get(
-            "CONTENTREPO_DATABASE", "postgres://postgres:postgres123@localhost/contentrepo"
+            "CONTENTREPO_DATABASE",
+            "postgres://postgres:postgres123@localhost/contentrepo",
         ),
         engine="django.db.backends.postgresql",
     )
