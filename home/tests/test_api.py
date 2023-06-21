@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from wagtail import blocks
 
@@ -22,9 +23,19 @@ class PaginationTestCase(TestCase):
         with path.open(mode="rb") as f:
             import_content(f, "CSV")
         self.content_page1 = ContentPage.objects.first()
+        self.user_credentials = {"username": "test", "password": "test"}
+        self.user = get_user_model().objects.create_user(**self.user_credentials)
+        self.client.login(**self.user_credentials)
+
+    def test_login_required(self):
+        """
+        Users that aren't logged in shouldn't be allowed to access the API
+        """
+        client = Client()
+        response = client.get("/api/v2/pages/?tag=menu")
+        self.assertEqual(response.status_code, 401)
 
     def test_tag_filtering(self):
-        self.client = Client()
         # it should return 1 page for correct tag
         response = self.client.get("/api/v2/pages/?tag=menu")
         content = json.loads(response.content)
@@ -43,7 +54,6 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["count"], 5)
 
     def test_pagination(self):
-        self.client = Client()
         # it should return the web body if enable_whatsapp=false
         self.content_page1.enable_whatsapp = False
         self.content_page1.save_revision().publish()
@@ -206,9 +216,11 @@ class OrderedContentSetTestCase(TestCase):
                 {"type": "gender", "value": "female"},
             ],
         )
+        self.user_credentials = {"username": "test", "password": "test"}
+        self.user = get_user_model().objects.create_user(**self.user_credentials)
+        self.client.login(**self.user_credentials)
 
     def test_orderedcontent_endpoint(self):
-        self.client = Client()
         # it should return a list of ordered sets and show the profile fields
         response = self.client.get("/api/v2/orderedcontent/")
         content = json.loads(response.content)
@@ -220,7 +232,6 @@ class OrderedContentSetTestCase(TestCase):
         )
 
     def test_orderedcontent_detail_endpoint(self):
-        self.client = Client()
         # it should return the list of pages that are part of the ordered content set
         response = self.client.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/"
@@ -242,7 +253,6 @@ class OrderedContentSetTestCase(TestCase):
         ]
         self.content_page1.save_revision().publish()
 
-        self.client = Client()
         # it should return the list of pages that are part of the ordered content set
         response = self.client.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_related=true"
@@ -262,7 +272,6 @@ class OrderedContentSetTestCase(TestCase):
         )
 
     def test_orderedcontent_detail_endpoint_tags_flag(self):
-        self.client = Client()
         # it should return the list of pages that are part of the ordered content set
         response = self.client.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_tags=true"
