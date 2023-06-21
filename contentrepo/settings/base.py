@@ -191,8 +191,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": env.int("PAGE_SIZE", 5),
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.BasicAuthentication",
-        # TODO: Token authentication
-        # "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
