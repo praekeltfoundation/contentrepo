@@ -11,15 +11,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name="pageview",
-            name="timestamp",
-            field=models.DateTimeField(auto_now_add=True, db_index=True),
-        ),
-    ]
-
-
-    operations = [
         migrations.SeparateDatabaseAndState(
             state_operations=[
                  migrations.AlterField(
