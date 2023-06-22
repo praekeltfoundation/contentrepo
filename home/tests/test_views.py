@@ -15,6 +15,10 @@ class PageRatingTestCase(APITestCase):
     def setUp(self):
         self.url = reverse("contentpagerating-list")
 
+    def test_homepage_redirect(self):
+        response = self.client.get("/")
+        self.assertEquals("/admin/", response.url)
+
     def test_page_rating_success(self):
         user = get_user_model().objects.create_user("test")
         self.client.force_authenticate(user)
