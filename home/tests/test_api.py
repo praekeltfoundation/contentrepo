@@ -190,6 +190,14 @@ class PaginationTestCase(TestCase):
             content["body"]["text"]["value"]["message"], "Test WhatsApp Message 1"
         )
 
+    def test_detail_view_no_content_page(self):
+        # it should return the validation error for content page that doesn't exist
+        response = self.client.get("/api/v2/pages/1/")
+        content = response.json()
+
+        self.assertEquals(content, {"page": ["Page matching query does not exist."]})
+        self.assertEquals(content.get("page"), ["Page matching query does not exist."])
+
 
 class OrderedContentSetTestCase(TestCase):
     def setUp(self):

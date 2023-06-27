@@ -6,6 +6,7 @@ from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
 from wagtail.images.api.v2.views import ImagesAPIViewSet
+from rest_framework.exceptions import ValidationError
 
 from .models import OrderedContentSet
 from .serializers import ContentPageSerializer, OrderedContentSetSerializer
@@ -34,7 +35,11 @@ class ContentPagesViewSet(PagesAPIViewSet):
         super(ContentPagesViewSet, self).get(self, request, *args, **kwargs)
 
     def detail_view(self, request, pk):
-        ContentPage.objects.get(id=pk).save_page_view(request.query_params)
+        try:
+            ContentPage.objects.get(id=pk).save_page_view(request.query_params)
+        except ContentPage.DoesNotExist:
+            raise ValidationError({"page": ["Page matching query does not exist."]})
+
         return super().detail_view(request, pk)
 
     @method_decorator(cache_page(60 * 60 * 2))
