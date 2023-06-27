@@ -47,7 +47,9 @@ class PaginationTestCase(TestCase):
         # it should return the web body if enable_whatsapp=false
         self.content_page1.enable_whatsapp = False
         self.content_page1.save_revision().publish()
-        response = self.client.get("/api/v2/pages/5/?whatsapp=True")
+        response = self.client.get(
+            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True"
+        )
         content = json.loads(response.content)
         self.assertNotEquals(content["body"]["text"], "Whatsapp Body 1")
         self.assertEquals(content["body"]["text"], [])
@@ -58,7 +60,9 @@ class PaginationTestCase(TestCase):
 
         # it should only return the first paragraph if no specific message
         # is requested
-        response = self.client.get("/api/v2/pages/5/?whatsapp=True")
+        response = self.client.get(
+            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True"
+        )
         content = json.loads(response.content)
         self.assertEquals(content["body"]["message"], 1)
         self.assertEquals(content["body"]["previous_message"], None)
@@ -72,14 +76,18 @@ class PaginationTestCase(TestCase):
 
         # it should return an appropriate error if requested message index
         # is out of range
-        response = self.client.get("/api/v2/pages/5/?whatsapp=True&message=3")
+        response = self.client.get(
+            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=3"
+        )
         content = json.loads(response.content)
         self.assertEquals(response.status_code, 400)
         self.assertEquals(content, ["The requested message does not exist"])
 
         # it should return an appropriate error if requested message is not
         # a positive integer value
-        response = self.client.get("/api/v2/pages/5/?whatsapp=True&message=notint")
+        response = self.client.get(
+            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=notint"
+        )
         content = json.loads(response.content)
         self.assertEquals(response.status_code, 400)
         self.assertEquals(
@@ -105,7 +113,9 @@ class PaginationTestCase(TestCase):
 
         # it should only return the 11th paragraph if 11th message
         # is requested
-        response = self.client.get("/api/v2/pages/5/?whatsapp=True&message=11")
+        response = self.client.get(
+            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=11"
+        )
         content = json.loads(response.content)
         self.assertEquals(content["body"]["message"], 11)
         self.assertEquals(content["body"]["next_message"], 12)

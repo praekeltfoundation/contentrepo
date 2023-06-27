@@ -1,5 +1,6 @@
 import os
 
+import dj_database_url
 import environ
 
 env = environ.Env()
@@ -85,10 +86,13 @@ WSGI_APPLICATION = "contentrepo.wsgi.application"
 
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    }
+    "default": dj_database_url.config(
+        default=os.environ.get(
+            "CONTENTREPO_DATABASE",
+            "postgres://postgres@localhost/contentrepo",
+        ),
+        engine="django.db.backends.postgresql",
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [

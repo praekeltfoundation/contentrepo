@@ -661,7 +661,7 @@ class PageView(models.Model):
         default="web",
         max_length=20,
     )
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     page = models.ForeignKey(
         ContentPage, related_name="views", null=False, on_delete=models.CASCADE
     )
