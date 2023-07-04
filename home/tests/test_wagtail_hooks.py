@@ -1,7 +1,8 @@
 from django.test import TestCase
 
-from home.wagtail_hooks import ContentPageAdmin
 from home.models import ContentPage
+from home.wagtail_hooks import ContentPageAdmin
+
 
 class ContentPageAdminTests(TestCase):
     def test_body_text_truncation(self):
