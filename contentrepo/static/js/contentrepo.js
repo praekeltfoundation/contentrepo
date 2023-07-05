@@ -1,23 +1,24 @@
-$(".meter > span").each(function () {
-  $(this)
-    .data("origWidth", $(this).width())
-    .width(0)
-    .animate(
-      {
-        width: $(this).data("origWidth")
-      },
-      1200
-    );
-});
+getUploadStateInterval = null;
 
 function getUploadState(){
- $.ajax({
+ $.getJSON({
   url: importURL,
-  type: 'get',
   success: function(response){
-   if(response != "True"){
+   if(!response.loading){
     window.location.href = destinationURL;
+    clearInterval(getUploadStateInterval)
    }
+   if(response.progress) {
+      $(".meter > span").each(function () {
+        $(this)
+          .animate(
+            {
+              width: response.progress + "%"
+            },
+            1200
+          );
+      });
+    }
   }
  });
 }
@@ -25,6 +26,6 @@ function getUploadState(){
 $(document).ready(function(){
  var loadingBar = document.getElementById("loadingBar");
  if (loadingBar != null){
-    setInterval(getUploadState,1000);
+    getUploadStateInterval = setInterval(getUploadState,1000);
  }
 });

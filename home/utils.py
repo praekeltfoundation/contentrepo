@@ -67,7 +67,7 @@ EXPORT_FIELDNAMES = [
 ]
 
 
-def import_content(file, filetype, purge=True, locale="en"):
+def import_content(file, filetype, progress_queue, purge=True, locale="en"):
     def set_variation_blocks(body_values, message_number):
         variation_blocks = []
         for variation_message in variation_messages:
@@ -340,9 +340,15 @@ def import_content(file, filetype, purge=True, locale="en"):
         for dictionary in reader:
             lines.append(dictionary)
 
+    # 10% progress for loading file
+    progress_queue.put_nowait(10)
+
     if purge in ["True", "yes", True]:
         ContentPage.objects.all().delete()
         ContentPageIndex.objects.all().delete()
+
+    # 10-20% progress for purging
+    progress_queue.put_nowait(20)
 
     if isinstance(locale, str):
         locale = Locale.objects.get(language_code=locale)
@@ -428,6 +434,9 @@ def import_content(file, filetype, purge=True, locale="en"):
         else:
             print(f"Content page not created for {row}")
 
+        # 20-80% progress for uploading content
+        progress_queue.put_nowait(20 + (index * 60 / len(lines)))
+
     # add related pages
     for row in lines:
         related_pages_raw_data = []
@@ -448,6 +457,8 @@ def import_content(file, filetype, purge=True, locale="en"):
             if related_pages_raw_data:
                 page.related_pages = dumps(related_pages_raw_data)
                 page.save_revision().publish()
+        # 80-100% progress for uploading content
+        progress_queue.put_nowait(80 + (index * 20 / len(lines)))
 
 
 def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:

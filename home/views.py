@@ -10,7 +10,7 @@ from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
 from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from django.views import View
@@ -131,6 +131,7 @@ class UploadThread(threading.Thread):
         self.file = file
         self.file_type = file_type
         self.result_queue = queue.Queue()
+        self.progress_queue = queue.Queue()
         super(UploadThread, self).__init__(**kwargs)
 
 
@@ -142,7 +143,7 @@ class ContentUploadThread(UploadThread):
 
     def run(self):
         try:
-            import_content(self.file, self.file_type, self.purge, self.locale)
+            import_content(self.file, self.file_type, self.progress_queue, self.purge, self.locale)
         except Exception:
             self.result_queue.put((messages.ERROR, "Content import failed"))
             logger.exception("Content import failed")
@@ -186,17 +187,17 @@ class OrderedContentSetUploadView(View):
         )
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             if not thread:
-                return HttpResponse(False)
+                return JsonResponse({"loading": False})
             try:
                 # If there's a result message from the thread, send it to the user,
                 # and call task_done to end the thread.
                 level, text = thread.result_queue.get_nowait()
                 messages.add_message(request, level, text)
                 thread.result_queue.task_done()
-                return HttpResponse(False)
+                return JsonResponse({"loading": False})
             except queue.Empty:
                 # No message means that the task is still running
-                return HttpResponse(True)
+                return JsonResponse({"loading": True})
         form = self.form_class()
         return render(
             request, self.template_name, {"form": form, "loading": thread is not None}
@@ -231,17 +232,26 @@ class ContentUploadView(View):
         )
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             if not thread:
-                return HttpResponse(False)
+                return JsonResponse({"loading": False})
+
             try:
                 # If there's a result message from the thread, send it to the user,
                 # and call task_done to end the thread.
                 level, text = thread.result_queue.get_nowait()
                 messages.add_message(request, level, text)
                 thread.result_queue.task_done()
-                return HttpResponse(False)
+                return JsonResponse({"loading": False})
             except queue.Empty:
                 # No message means that the task is still running
-                return HttpResponse(True)
+                # Get the latest task progress and return that too
+                progress = None
+                try:
+                    while True:
+                        progress = thread.progress_queue.get_nowait()
+                except queue.Empty:
+                    pass
+
+                return JsonResponse({"loading": True, "progress": progress})
         form = self.form_class()
         return render(
             request, self.template_name, {"form": form, "loading": thread is not None}
