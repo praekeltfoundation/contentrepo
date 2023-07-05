@@ -10,7 +10,7 @@ from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
 from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from django.views import View
@@ -143,7 +143,9 @@ class ContentUploadThread(UploadThread):
 
     def run(self):
         try:
-            import_content(self.file, self.file_type, self.progress_queue, self.purge, self.locale)
+            import_content(
+                self.file, self.file_type, self.progress_queue, self.purge, self.locale
+            )
         except Exception:
             self.result_queue.put((messages.ERROR, "Content import failed"))
             logger.exception("Content import failed")
