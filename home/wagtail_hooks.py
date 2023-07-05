@@ -52,7 +52,7 @@ def create_site_settings(request, page):
     for site in Site.objects.all():
         try:
             SiteSettings.objects.get(site=site)
-        except:
+        except SiteSettings.DoesNotExist:
             SiteSettings.objects.create(site=site)
 
 
