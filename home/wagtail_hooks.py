@@ -4,8 +4,10 @@ from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.models import Page
+from wagtail.models.sites import Site
 
-from .models import ContentPage, OrderedContentSet
+
+from .models import ContentPage, OrderedContentSet, SiteSettings
 
 from .views import (  # isort:skip
     ContentPageReportView,
@@ -43,6 +45,15 @@ def register_stale_content_report_menu_item():
         classnames="icon icon-" + ContentPageReportView.header_icon,
         order=700,
     )
+
+
+@hooks.register("construct_homepage_panels")
+def create_site_settings(request, page):
+    for site in Site.objects.all():
+        try:
+            SiteSettings.objects.get(site=site)
+        except:
+            SiteSettings.objects.create(site=site)
 
 
 @hooks.register("register_admin_urls")

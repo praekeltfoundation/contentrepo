@@ -71,16 +71,15 @@ class MediaBlock(AbstractMediaChooserBlock):
 
 def get_valid_profile_values(field):
     site = Site.objects.get(is_default_site=True)
-    if site and site.sitesettings:
-        profile_values = {}
 
-        for profile_block in site.sitesettings.profile_field_options:
-            profile_values[profile_block.block_type] = [b for b in profile_block.value]
-        try:
-            return profile_values[field]
-        except KeyError:
-            return []
-    return []
+    profile_values = {}
+
+    for profile_block in site.sitesettings.profile_field_options:
+        profile_values[profile_block.block_type] = [b for b in profile_block.value]
+    try:
+        return profile_values[field]
+    except KeyError:
+        return []
 
 
 def get_gender_choices():
