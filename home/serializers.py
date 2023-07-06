@@ -127,7 +127,10 @@ class BodyField(serializers.Field):
         else:
             message = 0
 
-        if "whatsapp" in request.GET and (page.enable_whatsapp is True or ("qa" in request.GET and request.GET["qa"] == "True")):
+        if "whatsapp" in request.GET and (
+            page.enable_whatsapp is True
+            or ("qa" in request.GET and request.GET["qa"] == "True")
+        ):
             if page.whatsapp_body != []:
                 try:
                     return OrderedDict(
