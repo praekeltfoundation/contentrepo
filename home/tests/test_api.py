@@ -216,18 +216,16 @@ class OrderedContentSetTestCase(TestCase):
         with path.open(mode="rb") as f:
             import_content(f, "CSV", queue.Queue())
         self.content_page1 = ContentPage.objects.first()
-        self.ordered_content_set = OrderedContentSet.objects.create(
-            name="Test set",
-            pages=[
-                {"type": "pages", "value": self.content_page1.id},
-            ],
-            profile_fields=[
-                {"type": "gender", "value": "female"},
-            ],
+        self.ordered_content_set = OrderedContentSet(name="Test set")
+        self.ordered_content_set.pages.append(
+            ("pages", {"contentpage": self.content_page1})
         )
+        self.ordered_content_set.profile_fields.append(("gender", "female"))
+        self.ordered_content_set.save()
+
+        self.client = Client()
 
     def test_orderedcontent_endpoint(self):
-        self.client = Client()
         # it should return a list of ordered sets and show the profile fields
         response = self.client.get("/api/v2/orderedcontent/")
         content = json.loads(response.content)
@@ -239,7 +237,6 @@ class OrderedContentSetTestCase(TestCase):
         )
 
     def test_orderedcontent_detail_endpoint(self):
-        self.client = Client()
         # it should return the list of pages that are part of the ordered content set
         response = self.client.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/"
@@ -251,7 +248,14 @@ class OrderedContentSetTestCase(TestCase):
         )
         self.assertEquals(
             content["pages"][0],
-            {"id": self.content_page1.id, "title": self.content_page1.title},
+            {
+                "id": self.content_page1.id,
+                "title": self.content_page1.title,
+                "time": None,
+                "unit": None,
+                "before_or_after": None,
+                "contact_field": None,
+            },
         )
 
     def test_orderedcontent_detail_endpoint_rel_pages_flag(self):
@@ -261,7 +265,6 @@ class OrderedContentSetTestCase(TestCase):
         ]
         self.content_page1.save_revision().publish()
 
-        self.client = Client()
         # it should return the list of pages that are part of the ordered content set
         response = self.client.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_related=true"
@@ -276,12 +279,15 @@ class OrderedContentSetTestCase(TestCase):
             {
                 "id": self.content_page1.id,
                 "title": self.content_page1.title,
+                "time": None,
+                "unit": None,
+                "before_or_after": None,
+                "contact_field": None,
                 "related_pages": [rel_page.id],
             },
         )
 
     def test_orderedcontent_detail_endpoint_tags_flag(self):
-        self.client = Client()
         # it should return the list of pages that are part of the ordered content set
         response = self.client.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_tags=true"
