@@ -223,13 +223,29 @@ class OrderedContentSetTestCase(TestCase):
         self.ordered_content_set.profile_fields.append(("gender", "female"))
         self.ordered_content_set.save()
 
+        self.ordered_content_set_timed = OrderedContentSet(name="Test set")
+        self.ordered_content_set_timed.pages.append(
+            (
+                "pages",
+                {
+                    "contentpage": self.content_page1,
+                    "time": 5,
+                    "unit": "Days",
+                    "before_or_after": "Before",
+                    "contact_field": "EDD",
+                },
+            )
+        )
+        self.ordered_content_set_timed.profile_fields.append(("gender", "female"))
+        self.ordered_content_set_timed.save()
+
         self.client = Client()
 
     def test_orderedcontent_endpoint(self):
         # it should return a list of ordered sets and show the profile fields
         response = self.client.get("/api/v2/orderedcontent/")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 1)
+        self.assertEquals(content["count"], 2)
         self.assertEquals(content["results"][0]["name"], self.ordered_content_set.name)
         self.assertEquals(
             content["results"][0]["profile_fields"][0],
@@ -255,6 +271,28 @@ class OrderedContentSetTestCase(TestCase):
                 "unit": None,
                 "before_or_after": None,
                 "contact_field": None,
+            },
+        )
+
+    def test_orderedcontent_detail_endpoint_timed(self):
+        # it should return the list of pages that are part of the ordered content set
+        response = self.client.get(
+            f"/api/v2/orderedcontent/{self.ordered_content_set_timed.id}/"
+        )
+        content = json.loads(response.content)
+        self.assertEquals(content["name"], self.ordered_content_set_timed.name)
+        self.assertEquals(
+            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
+        )
+        self.assertEquals(
+            content["pages"][0],
+            {
+                "id": self.content_page1.id,
+                "title": self.content_page1.title,
+                "time": 5,
+                "unit": "Days",
+                "before_or_after": "Before",
+                "contact_field": "EDD",
             },
         )
 
