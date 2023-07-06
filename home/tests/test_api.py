@@ -1,4 +1,5 @@
 import json
+import queue
 from pathlib import Path
 
 from django.test import Client, TestCase
@@ -20,7 +21,7 @@ class PaginationTestCase(TestCase):
     def setUp(self):
         path = Path("home/tests/content2.csv")
         with path.open(mode="rb") as f:
-            import_content(f, "CSV")
+            import_content(f, "CSV", queue.Queue())
         self.content_page1 = ContentPage.objects.first()
 
     def test_tag_filtering(self):
@@ -213,7 +214,7 @@ class OrderedContentSetTestCase(TestCase):
     def setUp(self):
         path = Path("home/tests/content2.csv")
         with path.open(mode="rb") as f:
-            import_content(f, "CSV")
+            import_content(f, "CSV", queue.Queue())
         self.content_page1 = ContentPage.objects.first()
         self.ordered_content_set = OrderedContentSet.objects.create(
             name="Test set",

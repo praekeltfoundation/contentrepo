@@ -26,7 +26,7 @@
 {% block main_content %}
     {% if loading %}
         <div class="meter animate" id="meter">
-            <span id="loadingBar" style="width: 50%"><span></span></span>
+            <span id="loadingBar" style="width: 1%"><span></span></span>
         </div>
     {% else %}
       <form action="{% url 'import_orderedcontentset' %}" method="POST" enctype="multipart/form-data">
