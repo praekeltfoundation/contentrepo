@@ -4,6 +4,7 @@ import io
 from dataclasses import dataclass
 from io import BytesIO
 from json import dumps
+from logging import getLogger
 from math import ceil
 from typing import List, Tuple, Union
 
@@ -65,6 +66,8 @@ EXPORT_FIELDNAMES = [
     "media_link",
     "related_pages",
 ]
+
+logger = getLogger(__name__)
 
 
 def import_content(file, filetype, progress_queue, purge=True, locale="en"):
@@ -672,36 +675,30 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
 def import_ordered_sets(file, filetype, progress_queue, purge=False):
     def create_ordered_set_from_row(row):
         set_name = row["Name"]
-        set_profile_fields = []
+
+        ordered_set = OrderedContentSet.objects.filter(name=set_name).first()
+        if not ordered_set:
+            ordered_set = OrderedContentSet(name=set_name)
+
+        ordered_set.profile_fields = []
         for field in [f.strip() for f in row["Profile Fields"].split(",")]:
             if not field or field == "-":
                 continue
             [field_name, field_value] = field.split(":")
-            set_profile_fields.append({"type": field_name, "value": field_value})
-        set_pages = []
+            ordered_set.profile_fields.append((field_name, field_value))
+
+        ordered_set.pages = []
         for page_slug in [p.strip() for p in row["Page Slugs"].split(",")]:
             if not page_slug or page_slug == "-":
                 continue
             page = ContentPage.objects.filter(slug=page_slug).first()
             if page:
-                set_pages.append({"type": "pages", "value": page.id})
+                ordered_set.pages.append(("pages", {"contentpage": page}))
             else:
-                print(f"Content page not found for slug '{page_slug}'")
+                logger.warning(f"Content page not found for slug '{page_slug}'")
 
-        existing_ordered_set = OrderedContentSet.objects.filter(name=set_name).first()
-        if existing_ordered_set:
-            existing_ordered_set.profile_fields = set_profile_fields
-            existing_ordered_set.pages = set_pages
-            existing_ordered_set.save()
-            ordered_set = existing_ordered_set
-        else:
-            ordered_set = OrderedContentSet(
-                name=set_name,
-                profile_fields=set_profile_fields,
-                pages=set_pages,
-            )
-            ordered_set.save()
-        return ordered_set or None
+        ordered_set.save()
+        return ordered_set
 
     file = file.read()
     lines = []
