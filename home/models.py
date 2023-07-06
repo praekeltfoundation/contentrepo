@@ -71,11 +71,11 @@ class MediaBlock(AbstractMediaChooserBlock):
 
 def get_valid_profile_values(field):
     site = Site.objects.get(is_default_site=True)
-    site_settins, _ = SiteSettings.objects.get_or_create(site=site)
+    site_settings, _ = SiteSettings.for_site(site)
 
     profile_values = {}
 
-    for profile_block in site.sitesettings.profile_field_options:
+    for profile_block in site_settings.profile_field_options:
         profile_values[profile_block.block_type] = [b for b in profile_block.value]
     try:
         return profile_values[field]
