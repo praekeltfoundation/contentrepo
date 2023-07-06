@@ -23,6 +23,7 @@ class PaginationTestCase(TestCase):
         with path.open(mode="rb") as f:
             import_content(f, "CSV", queue.Queue())
         self.content_page1 = ContentPage.objects.first()
+        self.content_page2 = ContentPage.objects.last()
 
     def test_tag_filtering(self):
         self.client = Client()
@@ -43,6 +44,59 @@ class PaginationTestCase(TestCase):
         content = json.loads(response.content)
         # exclude home pages and index pages
         self.assertEquals(content["count"], 3)
+
+    def test_whatsapp_draft(self):
+        self.client = Client()
+        self.content_page2.unpublish()
+        page_id = self.content_page2.id
+        url = f"/api/v2/pages/{page_id}/?whatsapp=True&qa=True"
+        # it should return specific page that is in draft
+        response = self.client.get(url)
+        content = json.loads(response.content)
+        message = "\n".join(
+            [
+                "*Self-help programs* 🌬️",
+                "",
+                "Reply with a number to take part in a *free* self-help program created by WHO.",
+                "",
+                "1. Quit tobacco 🚭",
+                "_Stop smoking with the help of a guided, 42-day program._",
+                "2. Manage your stress 🧘🏽‍♀️",
+                "_Learn how to cope with stress and improve your wellbeing._",
+            ]
+        )
+        # the page is not live but whatsapp content is returned
+        self.assertEquals(self.content_page2.live, False)
+        self.assertEquals(
+            content["body"]["text"]["value"]["message"].replace("\r", ""),
+            message,
+        )
+
+    def test_messenger_draft(self):
+        self.client = Client()
+        self.content_page2.unpublish()
+        page_id = self.content_page2.id
+        url = f"/api/v2/pages/{page_id}/?messenger=True&qa=True"
+        # it should return specific page that is in draft
+        response = self.client.get(url)
+
+        message = "\n".join(
+            [
+                "*Self-help programs* 🌬️",
+                "",
+                "Reply with a number to take part in a *free* self-help program created by WHO.",
+                "",
+                "1. Quit tobacco 🚭",
+                "_Stop smoking with the help of a guided, 42-day program._",
+                "2. Manage your stress 🧘🏽‍♀️",
+                "_Learn how to cope with stress and improve your wellbeing._",
+            ]
+        )
+        content = json.loads(response.content)
+
+        # the page is not live but messenger content is returned
+        self.assertEquals(self.content_page2.live, False)
+        self.assertEquals(content["body"]["text"]["message"].replace("\r", ""), message)
 
     def test_pagination(self):
         self.client = Client()
