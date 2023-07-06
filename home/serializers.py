@@ -301,6 +301,46 @@ class PagesField(serializers.Field):
         return pages
 
 
+class OrderedPagesField(serializers.Field):
+    def get_attribute(self, instance):
+        return instance
+
+    def get_page_as_content_page(self, page):
+        if page.id:
+            return ContentPage.objects.filter(id=page.id).first()
+
+    def to_representation(self, instance):
+        request = self.context["request"]
+        pages = []
+        for member in instance.pages:
+            page = self.get_page_as_content_page(member.value.get("contentpage"))
+            title = page.title
+            if "whatsapp" in request.GET and page.enable_whatsapp is True:
+                if page.whatsapp_title:
+                    title = page.whatsapp_title
+            elif "messenger" in request.GET and page.enable_messenger is True:
+                if page.messenger_title:
+                    title = page.messenger_title
+            elif "viber" in request.GET and page.enable_viber is True:
+                if page.viber_title:
+                    title = page.viber_title
+            page_data = {
+                "id": page.id,
+                "title": title,
+                "time": member.value.get("time"),
+                "unit": member.value.get("unit"),
+                "before_or_after": member.value.get("before_or_after"),
+                "contact_field": member.value.get("contact_field"),
+            }
+            if "show_related" in request.GET and bool(request.GET["show_related"]):
+                page_data["related_pages"] = [p.value.id for p in page.related_pages]
+            if "show_tags" in request.GET and bool(request.GET["show_tags"]):
+                page_data["tags"] = [x.name for x in page.tags.all()]
+
+            pages.append(page_data)
+        return pages
+
+
 class ProfileFieldsField(serializers.Field):
     """
     Serializes the "profile_fields" field.
@@ -323,5 +363,5 @@ class ProfileFieldsField(serializers.Field):
 
 class OrderedContentSetSerializer(BaseSerializer):
     name = NameField(read_only=True)
-    pages = PagesField(read_only=True)
+    pages = OrderedPagesField(read_only=True)
     profile_fields = ProfileFieldsField(read_only=True)
