@@ -669,7 +669,7 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
         writer.writerow(row)
 
 
-def import_ordered_sets(file, filetype, purge=False):
+def import_ordered_sets(file, filetype, progress_queue, purge=False):
     def create_ordered_set_from_row(row):
         set_name = row["Name"]
         set_profile_fields = []
@@ -719,10 +719,15 @@ def import_ordered_sets(file, filetype, purge=False):
         for dictionary in reader:
             lines.append(dictionary)
 
+    # 10% progress for loading file
+    progress_queue.put_nowait(10)
+
     for index, row in enumerate(lines):
         os = create_ordered_set_from_row(row)
         if not os:
             print(f"Ordered Content Set not created for row {index + 1}")
+        # 10-100% for loading ordered content sets
+        progress_queue.put_nowait(10 + index * 90 / len(lines))
 
 
 @dataclass

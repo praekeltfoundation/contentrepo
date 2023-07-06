@@ -162,7 +162,9 @@ class OrderedContentSetUploadThread(UploadThread):
 
     def run(self):
         try:
-            import_ordered_sets(self.file, self.file_type, self.purge)
+            import_ordered_sets(
+                self.file, self.file_type, self.progress_queue, self.purge
+            )
         except Exception:
             self.result_queue.put((messages.ERROR, "Ordered content set import failed"))
             logger.exception("Ordered content set import failed")
@@ -199,7 +201,15 @@ class OrderedContentSetUploadView(View):
                 return JsonResponse({"loading": False})
             except queue.Empty:
                 # No message means that the task is still running
-                return JsonResponse({"loading": True})
+                # Get the latest task progress and return that too
+                progress = None
+                try:
+                    while True:
+                        progress = thread.progress_queue.get_nowait()
+                except queue.Empty:
+                    pass
+
+                return JsonResponse({"loading": True, "progress": progress})
         form = self.form_class()
         return render(
             request, self.template_name, {"form": form, "loading": thread is not None}
