@@ -71,6 +71,7 @@ class MediaBlock(AbstractMediaChooserBlock):
 
 def get_valid_profile_values(field):
     site = Site.objects.get(is_default_site=True)
+    site_settins, _ = SiteSettings.objects.get_or_create(site=site)
 
     profile_values = {}
 
