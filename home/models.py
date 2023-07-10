@@ -71,16 +71,16 @@ class MediaBlock(AbstractMediaChooserBlock):
 
 def get_valid_profile_values(field):
     site = Site.objects.get(is_default_site=True)
-    if site and site.sitesettings:
-        profile_values = {}
+    site_settings = SiteSettings.for_site(site)
 
-        for profile_block in site.sitesettings.profile_field_options:
-            profile_values[profile_block.block_type] = [b for b in profile_block.value]
-        try:
-            return profile_values[field]
-        except KeyError:
-            return []
-    return []
+    profile_values = {}
+
+    for profile_block in site_settings.profile_field_options:
+        profile_values[profile_block.block_type] = [b for b in profile_block.value]
+    try:
+        return profile_values[field]
+    except KeyError:
+        return []
 
 
 def get_gender_choices():
@@ -566,7 +566,9 @@ class ContentPage(Page, ContentImportMixin):
 
 
 class OrderedContentSet(index.Indexed, models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(
+        max_length=255, help_text="The name of the ordered content set."
+    )
 
     def get_gender(self):
         for item in self.profile_fields.raw_data:
@@ -607,11 +609,47 @@ class OrderedContentSet(index.Indexed, models.Model):
     ]
     pages = StreamField(
         [
-            ("pages", blocks.PageChooserBlock()),
+            (
+                "pages",
+                blocks.StructBlock(
+                    [
+                        ("contentpage", blocks.PageChooserBlock()),
+                        ("time", blocks.IntegerBlock(min_value=0, required=False)),
+                        (
+                            "unit",
+                            blocks.ChoiceBlock(
+                                choices=[
+                                    ("minutes", "Minutes"),
+                                    ("hours", "Hours"),
+                                    ("days", "Days"),
+                                    ("months", "Months"),
+                                ],
+                                required=False,
+                            ),
+                        ),
+                        (
+                            "before_or_after",
+                            blocks.ChoiceBlock(
+                                choices=[
+                                    ("after", "After"),
+                                    ("before", "Before"),
+                                ],
+                                required=False,
+                            ),
+                        ),
+                        (
+                            "contact_field",
+                            blocks.CharBlock(
+                                required=False,
+                            ),
+                        ),
+                    ]
+                ),
+            ),
         ],
+        use_json_field=True,
         blank=True,
         null=True,
-        use_json_field=True,
     )
 
     panels = [
@@ -661,7 +699,7 @@ class PageView(models.Model):
         default="web",
         max_length=20,
     )
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     page = models.ForeignKey(
         ContentPage, related_name="views", null=False, on_delete=models.CASCADE
     )

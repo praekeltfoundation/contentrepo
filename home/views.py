@@ -1,13 +1,16 @@
 import json
+import logging
+import queue
 import threading
 
 import django_filters
+from django.contrib import messages
 from django.db import connection as db_connection
 from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
 from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
-from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from django.views import View
@@ -28,6 +31,8 @@ from .mixins import SpreadsheetExportMixin
 from .models import ContentPage, ContentPageRating, OrderedContentSet, PageView
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
 from .utils import import_content, import_ordered_sets
+
+logger = logging.getLogger(__name__)
 
 
 class CustomIndexView(SpreadsheetExportMixin, IndexView):
@@ -125,6 +130,8 @@ class UploadThread(threading.Thread):
     def __init__(self, file, file_type, **kwargs):
         self.file = file
         self.file_type = file_type
+        self.result_queue = queue.Queue()
+        self.progress_queue = queue.Queue()
         super(UploadThread, self).__init__(**kwargs)
 
 
@@ -135,7 +142,17 @@ class ContentUploadThread(UploadThread):
         super(ContentUploadThread, self).__init__(**kwargs)
 
     def run(self):
-        import_content(self.file, self.file_type, self.purge, self.locale)
+        try:
+            import_content(
+                self.file, self.file_type, self.progress_queue, self.purge, self.locale
+            )
+        except Exception:
+            self.result_queue.put((messages.ERROR, "Content import failed"))
+            logger.exception("Content import failed")
+        else:
+            self.result_queue.put((messages.SUCCESS, "Content import successful"))
+        # Wait until the user has fetched the result message to close the thread
+        self.result_queue.join()
 
 
 class OrderedContentSetUploadThread(UploadThread):
@@ -144,7 +161,19 @@ class OrderedContentSetUploadThread(UploadThread):
         super(OrderedContentSetUploadThread, self).__init__(**kwargs)
 
     def run(self):
-        import_ordered_sets(self.file, self.file_type, self.purge)
+        try:
+            import_ordered_sets(
+                self.file, self.file_type, self.progress_queue, self.purge
+            )
+        except Exception:
+            self.result_queue.put((messages.ERROR, "Ordered content set import failed"))
+            logger.exception("Ordered content set import failed")
+        else:
+            self.result_queue.put(
+                (messages.SUCCESS, "Ordered content set import successful")
+            )
+        # Wait until the user has fetched the result message to close the thread
+        self.result_queue.join()
 
 
 class OrderedContentSetUploadView(View):
@@ -152,13 +181,39 @@ class OrderedContentSetUploadView(View):
     template_name = "orderedcontentset_upload.html"
 
     def get(self, request, *args, **kwargs):
-        loading = "OrderedContentSetUploadThread" in [
-            th.name for th in threading.enumerate()
-        ]
+        thread = next(
+            (
+                t
+                for t in threading.enumerate()
+                if t.name == "OrderedContentSetUploadThread"
+            ),
+            None,
+        )
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
-            return HttpResponse(loading)
+            if not thread:
+                return JsonResponse({"loading": False})
+            try:
+                # If there's a result message from the thread, send it to the user,
+                # and call task_done to end the thread.
+                level, text = thread.result_queue.get_nowait()
+                messages.add_message(request, level, text)
+                thread.result_queue.task_done()
+                return JsonResponse({"loading": False})
+            except queue.Empty:
+                # No message means that the task is still running
+                # Get the latest task progress and return that too
+                progress = None
+                try:
+                    while True:
+                        progress = thread.progress_queue.get_nowait()
+                except queue.Empty:
+                    pass
+
+                return JsonResponse({"loading": True, "progress": progress})
         form = self.form_class()
-        return render(request, self.template_name, {"form": form, "loading": loading})
+        return render(
+            request, self.template_name, {"form": form, "loading": thread is not None}
+        )
 
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST, request.FILES)
@@ -184,11 +239,35 @@ class ContentUploadView(View):
     template_name = "upload.html"
 
     def get(self, request, *args, **kwargs):
-        loading = "ContentUploadThread" in [th.name for th in threading.enumerate()]
+        thread = next(
+            (t for t in threading.enumerate() if t.name == "ContentUploadThread"), None
+        )
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
-            return HttpResponse(loading)
+            if not thread:
+                return JsonResponse({"loading": False})
+
+            try:
+                # If there's a result message from the thread, send it to the user,
+                # and call task_done to end the thread.
+                level, text = thread.result_queue.get_nowait()
+                messages.add_message(request, level, text)
+                thread.result_queue.task_done()
+                return JsonResponse({"loading": False})
+            except queue.Empty:
+                # No message means that the task is still running
+                # Get the latest task progress and return that too
+                progress = None
+                try:
+                    while True:
+                        progress = thread.progress_queue.get_nowait()
+                except queue.Empty:
+                    pass
+
+                return JsonResponse({"loading": True, "progress": progress})
         form = self.form_class()
-        return render(request, self.template_name, {"form": form, "loading": loading})
+        return render(
+            request, self.template_name, {"form": form, "loading": thread is not None}
+        )
 
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST, request.FILES)

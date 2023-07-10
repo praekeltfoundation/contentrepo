@@ -4,6 +4,7 @@ import io
 from dataclasses import dataclass
 from io import BytesIO
 from json import dumps
+from logging import getLogger
 from math import ceil
 from typing import List, Tuple, Union
 
@@ -66,8 +67,10 @@ EXPORT_FIELDNAMES = [
     "related_pages",
 ]
 
+logger = getLogger(__name__)
 
-def import_content(file, filetype, purge=True, locale="en"):
+
+def import_content(file, filetype, progress_queue, purge=True, locale="en"):
     def set_variation_blocks(body_values, message_number):
         variation_blocks = []
         for variation_message in variation_messages:
@@ -340,9 +343,15 @@ def import_content(file, filetype, purge=True, locale="en"):
         for dictionary in reader:
             lines.append(dictionary)
 
+    # 10% progress for loading file
+    progress_queue.put_nowait(10)
+
     if purge in ["True", "yes", True]:
         ContentPage.objects.all().delete()
         ContentPageIndex.objects.all().delete()
+
+    # 10-20% progress for purging
+    progress_queue.put_nowait(20)
 
     if isinstance(locale, str):
         locale = Locale.objects.get(language_code=locale)
@@ -428,6 +437,9 @@ def import_content(file, filetype, purge=True, locale="en"):
         else:
             print(f"Content page not created for {row}")
 
+        # 20-80% progress for uploading content
+        progress_queue.put_nowait(20 + (index * 60 / len(lines)))
+
     # add related pages
     for row in lines:
         related_pages_raw_data = []
@@ -448,6 +460,8 @@ def import_content(file, filetype, purge=True, locale="en"):
             if related_pages_raw_data:
                 page.related_pages = dumps(related_pages_raw_data)
                 page.save_revision().publish()
+        # 80-100% progress for uploading content
+        progress_queue.put_nowait(80 + (index * 20 / len(lines)))
 
 
 def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
@@ -658,39 +672,33 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
         writer.writerow(row)
 
 
-def import_ordered_sets(file, filetype, purge=False):
+def import_ordered_sets(file, filetype, progress_queue, purge=False):
     def create_ordered_set_from_row(row):
         set_name = row["Name"]
-        set_profile_fields = []
+
+        ordered_set = OrderedContentSet.objects.filter(name=set_name).first()
+        if not ordered_set:
+            ordered_set = OrderedContentSet(name=set_name)
+
+        ordered_set.profile_fields = []
         for field in [f.strip() for f in row["Profile Fields"].split(",")]:
             if not field or field == "-":
                 continue
             [field_name, field_value] = field.split(":")
-            set_profile_fields.append({"type": field_name, "value": field_value})
-        set_pages = []
+            ordered_set.profile_fields.append((field_name, field_value))
+
+        ordered_set.pages = []
         for page_slug in [p.strip() for p in row["Page Slugs"].split(",")]:
             if not page_slug or page_slug == "-":
                 continue
             page = ContentPage.objects.filter(slug=page_slug).first()
             if page:
-                set_pages.append({"type": "pages", "value": page.id})
+                ordered_set.pages.append(("pages", {"contentpage": page}))
             else:
-                print(f"Content page not found for slug '{page_slug}'")
+                logger.warning(f"Content page not found for slug '{page_slug}'")
 
-        existing_ordered_set = OrderedContentSet.objects.filter(name=set_name).first()
-        if existing_ordered_set:
-            existing_ordered_set.profile_fields = set_profile_fields
-            existing_ordered_set.pages = set_pages
-            existing_ordered_set.save()
-            ordered_set = existing_ordered_set
-        else:
-            ordered_set = OrderedContentSet(
-                name=set_name,
-                profile_fields=set_profile_fields,
-                pages=set_pages,
-            )
-            ordered_set.save()
-        return ordered_set or None
+        ordered_set.save()
+        return ordered_set
 
     file = file.read()
     lines = []
@@ -708,10 +716,15 @@ def import_ordered_sets(file, filetype, purge=False):
         for dictionary in reader:
             lines.append(dictionary)
 
+    # 10% progress for loading file
+    progress_queue.put_nowait(10)
+
     for index, row in enumerate(lines):
         os = create_ordered_set_from_row(row)
         if not os:
             print(f"Ordered Content Set not created for row {index + 1}")
+        # 10-100% for loading ordered content sets
+        progress_queue.put_nowait(10 + index * 90 / len(lines))
 
 
 @dataclass

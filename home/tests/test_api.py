@@ -1,4 +1,5 @@
 import json
+import queue
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
@@ -21,11 +22,12 @@ class PaginationTestCase(TestCase):
     def setUp(self):
         path = Path("home/tests/content2.csv")
         with path.open(mode="rb") as f:
-            import_content(f, "CSV")
+            import_content(f, "CSV", queue.Queue())
         self.content_page1 = ContentPage.objects.first()
         self.user_credentials = {"username": "test", "password": "test"}
         self.user = get_user_model().objects.create_user(**self.user_credentials)
         self.client.login(**self.user_credentials)
+        self.content_page2 = ContentPage.objects.last()
 
     def test_login_required(self):
         """
@@ -51,13 +53,67 @@ class PaginationTestCase(TestCase):
         # it should return all pages for no tag
         response = self.client.get("/api/v2/pages/")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 5)
+        # exclude home pages and index pages
+        self.assertEquals(content["count"], 3)
+
+    def test_whatsapp_draft(self):
+        self.content_page2.unpublish()
+        page_id = self.content_page2.id
+        url = f"/api/v2/pages/{page_id}/?whatsapp=True&qa=True"
+        # it should return specific page that is in draft
+        response = self.client.get(url)
+        content = json.loads(response.content)
+        message = "\n".join(
+            [
+                "*Self-help programs* 🌬️",
+                "",
+                "Reply with a number to take part in a *free* self-help program created by WHO.",
+                "",
+                "1. Quit tobacco 🚭",
+                "_Stop smoking with the help of a guided, 42-day program._",
+                "2. Manage your stress 🧘🏽‍♀️",
+                "_Learn how to cope with stress and improve your wellbeing._",
+            ]
+        )
+        # the page is not live but whatsapp content is returned
+        self.assertEquals(self.content_page2.live, False)
+        self.assertEquals(
+            content["body"]["text"]["value"]["message"].replace("\r", ""),
+            message,
+        )
+
+    def test_messenger_draft(self):
+        self.content_page2.unpublish()
+        page_id = self.content_page2.id
+        url = f"/api/v2/pages/{page_id}/?messenger=True&qa=True"
+        # it should return specific page that is in draft
+        response = self.client.get(url)
+
+        message = "\n".join(
+            [
+                "*Self-help programs* 🌬️",
+                "",
+                "Reply with a number to take part in a *free* self-help program created by WHO.",
+                "",
+                "1. Quit tobacco 🚭",
+                "_Stop smoking with the help of a guided, 42-day program._",
+                "2. Manage your stress 🧘🏽‍♀️",
+                "_Learn how to cope with stress and improve your wellbeing._",
+            ]
+        )
+        content = json.loads(response.content)
+
+        # the page is not live but messenger content is returned
+        self.assertEquals(self.content_page2.live, False)
+        self.assertEquals(content["body"]["text"]["message"].replace("\r", ""), message)
 
     def test_pagination(self):
         # it should return the web body if enable_whatsapp=false
         self.content_page1.enable_whatsapp = False
         self.content_page1.save_revision().publish()
-        response = self.client.get("/api/v2/pages/5/?whatsapp=True")
+        response = self.client.get(
+            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True"
+        )
         content = json.loads(response.content)
         self.assertNotEquals(content["body"]["text"], "Whatsapp Body 1")
         self.assertEquals(content["body"]["text"], [])
@@ -68,7 +124,9 @@ class PaginationTestCase(TestCase):
 
         # it should only return the first paragraph if no specific message
         # is requested
-        response = self.client.get("/api/v2/pages/5/?whatsapp=True")
+        response = self.client.get(
+            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True"
+        )
         content = json.loads(response.content)
         self.assertEquals(content["body"]["message"], 1)
         self.assertEquals(content["body"]["previous_message"], None)
@@ -82,14 +140,18 @@ class PaginationTestCase(TestCase):
 
         # it should return an appropriate error if requested message index
         # is out of range
-        response = self.client.get("/api/v2/pages/5/?whatsapp=True&message=3")
+        response = self.client.get(
+            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=3"
+        )
         content = json.loads(response.content)
         self.assertEquals(response.status_code, 400)
         self.assertEquals(content, ["The requested message does not exist"])
 
         # it should return an appropriate error if requested message is not
         # a positive integer value
-        response = self.client.get("/api/v2/pages/5/?whatsapp=True&message=notint")
+        response = self.client.get(
+            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=notint"
+        )
         content = json.loads(response.content)
         self.assertEquals(response.status_code, 400)
         self.assertEquals(
@@ -115,7 +177,9 @@ class PaginationTestCase(TestCase):
 
         # it should only return the 11th paragraph if 11th message
         # is requested
-        response = self.client.get("/api/v2/pages/5/?whatsapp=True&message=11")
+        response = self.client.get(
+            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=11"
+        )
         content = json.loads(response.content)
         self.assertEquals(content["body"]["message"], 11)
         self.assertEquals(content["body"]["next_message"], 12)
@@ -200,31 +264,53 @@ class PaginationTestCase(TestCase):
             content["body"]["text"]["value"]["message"], "Test WhatsApp Message 1"
         )
 
+    def test_detail_view_no_content_page(self):
+        # it should return the validation error for content page that doesn't exist
+        response = self.client.get("/api/v2/pages/1/")
+        content = response.json()
+
+        self.assertEquals(content, {"page": ["Page matching query does not exist."]})
+        self.assertEquals(content.get("page"), ["Page matching query does not exist."])
+
 
 class OrderedContentSetTestCase(TestCase):
     def setUp(self):
         path = Path("home/tests/content2.csv")
         with path.open(mode="rb") as f:
-            import_content(f, "CSV")
+            import_content(f, "CSV", queue.Queue())
         self.content_page1 = ContentPage.objects.first()
-        self.ordered_content_set = OrderedContentSet.objects.create(
-            name="Test set",
-            pages=[
-                {"type": "pages", "value": self.content_page1.id},
-            ],
-            profile_fields=[
-                {"type": "gender", "value": "female"},
-            ],
+        self.ordered_content_set = OrderedContentSet(name="Test set")
+        self.ordered_content_set.pages.append(
+            ("pages", {"contentpage": self.content_page1})
+        )
+        self.ordered_content_set.profile_fields.append(("gender", "female"))
+        self.ordered_content_set.save()
+
+        self.ordered_content_set_timed = OrderedContentSet(name="Test set")
+        self.ordered_content_set_timed.pages.append(
+            (
+                "pages",
+                {
+                    "contentpage": self.content_page1,
+                    "time": 5,
+                    "unit": "Days",
+                    "before_or_after": "Before",
+                    "contact_field": "EDD",
+                },
+            )
         )
         self.user_credentials = {"username": "test", "password": "test"}
         self.user = get_user_model().objects.create_user(**self.user_credentials)
         self.client.login(**self.user_credentials)
 
+        self.ordered_content_set_timed.profile_fields.append(("gender", "female"))
+        self.ordered_content_set_timed.save()
+
     def test_orderedcontent_endpoint(self):
         # it should return a list of ordered sets and show the profile fields
         response = self.client.get("/api/v2/orderedcontent/")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 1)
+        self.assertEquals(content["count"], 2)
         self.assertEquals(content["results"][0]["name"], self.ordered_content_set.name)
         self.assertEquals(
             content["results"][0]["profile_fields"][0],
@@ -243,7 +329,36 @@ class OrderedContentSetTestCase(TestCase):
         )
         self.assertEquals(
             content["pages"][0],
-            {"id": self.content_page1.id, "title": self.content_page1.title},
+            {
+                "id": self.content_page1.id,
+                "title": self.content_page1.title,
+                "time": None,
+                "unit": None,
+                "before_or_after": None,
+                "contact_field": None,
+            },
+        )
+
+    def test_orderedcontent_detail_endpoint_timed(self):
+        # it should return the list of pages that are part of the ordered content set
+        response = self.client.get(
+            f"/api/v2/orderedcontent/{self.ordered_content_set_timed.id}/"
+        )
+        content = json.loads(response.content)
+        self.assertEquals(content["name"], self.ordered_content_set_timed.name)
+        self.assertEquals(
+            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
+        )
+        self.assertEquals(
+            content["pages"][0],
+            {
+                "id": self.content_page1.id,
+                "title": self.content_page1.title,
+                "time": 5,
+                "unit": "Days",
+                "before_or_after": "Before",
+                "contact_field": "EDD",
+            },
         )
 
     def test_orderedcontent_detail_endpoint_rel_pages_flag(self):
@@ -267,6 +382,10 @@ class OrderedContentSetTestCase(TestCase):
             {
                 "id": self.content_page1.id,
                 "title": self.content_page1.title,
+                "time": None,
+                "unit": None,
+                "before_or_after": None,
+                "contact_field": None,
                 "related_pages": [rel_page.id],
             },
         )
