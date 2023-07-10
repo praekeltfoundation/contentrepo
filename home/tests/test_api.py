@@ -2,6 +2,7 @@ import json
 import queue
 from pathlib import Path
 
+from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from wagtail import blocks
 
@@ -23,10 +24,20 @@ class PaginationTestCase(TestCase):
         with path.open(mode="rb") as f:
             import_content(f, "CSV", queue.Queue())
         self.content_page1 = ContentPage.objects.first()
+        self.user_credentials = {"username": "test", "password": "test"}
+        self.user = get_user_model().objects.create_user(**self.user_credentials)
+        self.client.login(**self.user_credentials)
         self.content_page2 = ContentPage.objects.last()
 
+    def test_login_required(self):
+        """
+        Users that aren't logged in shouldn't be allowed to access the API
+        """
+        client = Client()
+        response = client.get("/api/v2/pages/?tag=menu")
+        self.assertEqual(response.status_code, 401)
+
     def test_tag_filtering(self):
-        self.client = Client()
         # it should return 1 page for correct tag
         response = self.client.get("/api/v2/pages/?tag=menu")
         content = json.loads(response.content)
@@ -46,7 +57,6 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["count"], 3)
 
     def test_whatsapp_draft(self):
-        self.client = Client()
         self.content_page2.unpublish()
         page_id = self.content_page2.id
         url = f"/api/v2/pages/{page_id}/?whatsapp=True&qa=True"
@@ -73,7 +83,6 @@ class PaginationTestCase(TestCase):
         )
 
     def test_messenger_draft(self):
-        self.client = Client()
         self.content_page2.unpublish()
         page_id = self.content_page2.id
         url = f"/api/v2/pages/{page_id}/?messenger=True&qa=True"
@@ -99,7 +108,6 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["body"]["text"]["message"].replace("\r", ""), message)
 
     def test_pagination(self):
-        self.client = Client()
         # it should return the web body if enable_whatsapp=false
         self.content_page1.enable_whatsapp = False
         self.content_page1.save_revision().publish()
@@ -291,10 +299,12 @@ class OrderedContentSetTestCase(TestCase):
                 },
             )
         )
+        self.user_credentials = {"username": "test", "password": "test"}
+        self.user = get_user_model().objects.create_user(**self.user_credentials)
+        self.client.login(**self.user_credentials)
+
         self.ordered_content_set_timed.profile_fields.append(("gender", "female"))
         self.ordered_content_set_timed.save()
-
-        self.client = Client()
 
     def test_orderedcontent_endpoint(self):
         # it should return a list of ordered sets and show the profile fields

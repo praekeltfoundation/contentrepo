@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import include, path, reverse_lazy
 from django.views.generic.base import RedirectView
 from rest_framework import routers
+from rest_framework.authtoken.views import obtain_auth_token
 from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
@@ -62,6 +63,7 @@ urlpatterns = urlpatterns + [
     # Wagtail's page serving mechanism. This should be the last pattern in
     # the list:
     path("api/v2/", api_router.urls),
+    path("api/v2/token/", obtain_auth_token),
     path("api/v2/custom/", include(custom_v2router.urls)),
     path("", include(wagtail_urls)),
     # Alternatively, if you want Wagtail pages to be served from a subpath

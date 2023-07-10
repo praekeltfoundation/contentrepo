@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from home.models import ContentPage
@@ -5,6 +6,11 @@ from home.tests.utils import create_page
 
 
 class MainMenuTestCase(TestCase):
+    def setUp(self):
+        self.user_credentials = {"username": "test", "password": "test"}
+        self.user = get_user_model().objects.create_user(**self.user_credentials)
+        self.client.login(**self.user_credentials)
+
     def test_main_menu(self):
         """
         Should return all pages with the mainmenu tag + their children
@@ -62,6 +68,11 @@ class MainMenuTestCase(TestCase):
 
 
 class SubMenuTestCase(TestCase):
+    def setUp(self):
+        self.user_credentials = {"username": "test", "password": "test"}
+        self.user = get_user_model().objects.create_user(**self.user_credentials)
+        self.client.login(**self.user_credentials)
+
     def test_submenu(self):
         """
         Should return all child pages of the parent id supplied
@@ -119,6 +130,11 @@ class SubMenuTestCase(TestCase):
 
 
 class SuggestedContentTestCase(TestCase):
+    def setUp(self):
+        self.user_credentials = {"username": "test", "password": "test"}
+        self.user = get_user_model().objects.create_user(**self.user_credentials)
+        self.client.login(**self.user_credentials)
+
     def test_suggestedcontent(self):
         """
         Should return id and title of 3 random descendands of the page id provided.
