@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v1.0.0
+
+This is the first major release, as well as the first LTS release.
+
 ### Changed
 
 - Made authentication for the API mandatory (#136)
