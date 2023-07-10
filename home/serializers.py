@@ -127,7 +127,10 @@ class BodyField(serializers.Field):
         else:
             message = 0
 
-        if "whatsapp" in request.GET and page.enable_whatsapp is True:
+        if "whatsapp" in request.GET and (
+            page.enable_whatsapp is True
+            or ("qa" in request.GET and request.GET["qa"] == "True")
+        ):
             if page.whatsapp_body != []:
                 try:
                     return OrderedDict(
@@ -153,7 +156,10 @@ class BodyField(serializers.Field):
                     )
                 except IndexError:
                     raise ValidationError("The requested message does not exist")
-        elif "messenger" in request.GET and page.enable_messenger is True:
+        elif "messenger" in request.GET and (
+            page.enable_messenger is True
+            or ("qa" in request.GET and request.GET["qa"] == "True")
+        ):
             if page.messenger_body != []:
                 try:
                     return OrderedDict(
@@ -173,7 +179,10 @@ class BodyField(serializers.Field):
                     )
                 except IndexError:
                     raise ValidationError("The requested message does not exist")
-        elif "viber" in request.GET and page.enable_viber is True:
+        elif "viber" in request.GET and (
+            page.enable_viber is True
+            or ("qa" in request.GET and request.GET["qa"] == "True")
+        ):
             if page.viber_body != []:
                 try:
                     return OrderedDict(
