@@ -1,0 +1,6 @@
+{% extends "wagtailadmin/login.html" %}
+{% load wagtailsettings_tags %}
+{% get_settings %}
+
+
+{% block branding_login %}{{ settings.home.SiteSettings.login_message }}{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "wagtailadmin/admin_base.html" %}
+{% load wagtailsettings_tags static %}
+{% get_settings %}
+
+
+{% block branding_favicon %}
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" />
+{% endblock %}
+{% block branding_welcome %}{{ settings.home.SiteSettings.title }}{% endblock %}

@@ -31,6 +31,26 @@ from wagtail.admin.panels import (  # isort:skip
 
 @register_setting
 class SiteSettings(BaseSiteSetting):
+    title = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        help_text="The branding title shown in the CMS",
+    )
+    login_message = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="The login message shown on the login page",
+    )
+    welcome_message = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="The welcome message shown after logging in",
+    )
+    logo = models.ImageField(blank=True, null=True, upload_to="images")
+    favicon = models.ImageField(blank=True, null=True, upload_to="images")
     profile_field_options = StreamField(
         [
             (
