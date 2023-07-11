@@ -1,5 +1,6 @@
 import os
 
+import dj_database_url
 import environ
 
 env = environ.Env()
@@ -76,6 +77,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "wagtail.contrib.settings.context_processors.settings",
             ],
         },
     },
@@ -85,10 +87,13 @@ WSGI_APPLICATION = "contentrepo.wsgi.application"
 
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    }
+    "default": dj_database_url.config(
+        default=os.environ.get(
+            "CONTENTREPO_DATABASE",
+            "postgres://postgres@localhost/contentrepo",
+        ),
+        engine="django.db.backends.postgresql",
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -189,6 +194,14 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",  # noqa
     "PAGE_SIZE": env.int("PAGE_SIZE", 5),
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
 }
 
 SPECTACULAR_SETTINGS = {

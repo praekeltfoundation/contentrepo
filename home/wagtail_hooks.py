@@ -1,3 +1,4 @@
+from django.template.defaultfilters import truncatechars
 from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
@@ -78,6 +79,7 @@ def register_page_views_report_url():
 
 
 class ContentPageAdmin(ModelAdmin):
+    body_truncate_size = 200
     model = ContentPage
     menu_label = "ContentPages"
     menu_icon = "pilcrow"
@@ -126,28 +128,25 @@ class ContentPageAdmin(ModelAdmin):
     tag.short_description = "Tags"
 
     def wa_body(self, obj):
-        return [m.value["message"] for m in obj.whatsapp_body]
+        body = "\n".join(m.value["message"] for m in obj.whatsapp_body)
+        return truncatechars(str(body), self.body_truncate_size)
 
     wa_body.short_description = "Whatsapp Body"
 
     def mess_body(self, obj):
-        body = ""
-        for message in obj.messenger_body:
-            body = body + message.value["message"]
-        return body
+        body = "\n".join(m.value["message"] for m in obj.messenger_body)
+        return truncatechars(str(body), self.body_truncate_size)
 
     mess_body.short_description = "Messenger Body"
 
     def vib_body(self, obj):
-        body = ""
-        for message in obj.viber_body:
-            body = body + message.value["message"]
-        return body
+        body = "\n".join(m.value["message"] for m in obj.viber_body)
+        return truncatechars(str(body), self.body_truncate_size)
 
     vib_body.short_description = "Viber Body"
 
     def web_body(self, obj):
-        return obj.body
+        return truncatechars(str(obj.body), self.body_truncate_size)
 
     web_body.short_description = "Web Body"
 
@@ -174,7 +173,12 @@ class OrderedContentSetAdmin(ModelAdmin):
 
     def page(self, obj):
         if obj.pages:
-            return [p.value.slug if p.value else "" for p in obj.pages]
+            return [
+                p.value["contentpage"].slug
+                if p.value and "contentpage" in p.value
+                else ""
+                for p in obj.pages
+            ]
         return ["-"]
 
     page.short_description = "Page Slugs"

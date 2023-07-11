@@ -163,18 +163,24 @@ def suggestedcontent(request):
 
     suggested_pages = []
     for topic_id in topics_viewed:
-        for page in (
-            ContentPage.objects.get(id=topic_id)
-            .get_descendants()
-            .filter(numchild=0)
-            .live()
-        ):
-            suggested_pages.append(page)
+        if topic_id != "":
+            try:
+                pages = (
+                    ContentPage.objects.get(id=topic_id)
+                    .get_descendants()
+                    .filter(numchild=0)
+                    .live()
+                )
+            except ContentPage.DoesNotExist:
+                pages = []
+
+            for page in pages:
+                suggested_pages.append(page)
 
     data = {
         "results": [
             {"id": page.id, "title": page.title}
-            for page in random.sample(suggested_pages, 3)
+            for page in random.sample(suggested_pages, min(3, len(suggested_pages)))
         ]
     }
 

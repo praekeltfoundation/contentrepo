@@ -1,10 +1,16 @@
 {% extends "wagtailadmin/base.html" %}
 
-{% load wagtailadmin_tags wagtailcore_tags i18n static %}
-
+{% load wagtailadmin_tags wagtailcore_tags i18n static wagtailsettings_tags%}
+{% get_settings %}
 {% block furniture %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/contentrepo.css' %}">
-    <template data-wagtail-sidebar-branding-logo>{% block branding_logo %}{% endblock %}</template>
+    <template data-wagtail-sidebar-branding-logo>{% block branding_logo %}
+      {% if settings.home.SiteSettings.favicon %}
+        <img src={{settings.home.SiteSettings.favicon.url }} alt={{settings.home.SiteSettings.title}} width="80" />
+      {% else %}
+        {{ block.super}}
+      {% endif %}
+{% endblock %}</template>
     {% sidebar_props %}
     <aside id="wagtail-sidebar" class="sidebar-loading" data-wagtail-sidebar aria-label="{% trans 'Sidebar' %}"></aside>
     <main class="content-wrapper w-overflow-x-hidden" id="main">

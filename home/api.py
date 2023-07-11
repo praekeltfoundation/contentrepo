@@ -1,5 +1,6 @@
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from wagtail.api.v2.router import WagtailAPIRouter
@@ -25,6 +26,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
             "tag",
             "trigger",
             "page",
+            "qa",
             "s",
         ]
     )
@@ -35,7 +37,11 @@ class ContentPagesViewSet(PagesAPIViewSet):
         super(ContentPagesViewSet, self).get(self, request, *args, **kwargs)
 
     def detail_view(self, request, pk):
-        ContentPage.objects.get(id=pk).save_page_view(request.query_params)
+        try:
+            ContentPage.objects.get(id=pk).save_page_view(request.query_params)
+        except ContentPage.DoesNotExist:
+            raise ValidationError({"page": ["Page matching query does not exist."]})
+
         return super().detail_view(request, pk)
 
     @method_decorator(cache_page(60 * 60 * 2))
@@ -43,7 +49,12 @@ class ContentPagesViewSet(PagesAPIViewSet):
         super(ContentPagesViewSet, self).list(self, request, *args, **kwargs)
 
     def get_queryset(self):
+        qa = self.request.query_params.get("qa")
         queryset = ContentPage.objects.live()
+
+        if qa:
+            queryset = queryset | ContentPage.objects.not_live()
+
         tag = self.request.query_params.get("tag")
         if tag is not None:
             ids = []
