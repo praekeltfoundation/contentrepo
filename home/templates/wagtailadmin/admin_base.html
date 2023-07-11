@@ -1,5 +1,5 @@
 {% extends "wagtailadmin/admin_base.html" %}
-{% load wagtailsettings_tags static %}
+{% load wagtailsettings_tags %}
 {% get_settings %}
 
 
@@ -10,4 +10,10 @@
         {{ block.super}}
       {% endif %}
   {% endblock %}
-{% block branding_welcome %}{{ settings.home.SiteSettings.title }}{% endblock %}
+{% block branding_title %}
+  {% if settings.home.SiteSettings.title %}
+    {{ settings.home.SiteSettings.title }}
+  {% else %}
+    {{ block.super}}
+  {% endif %}
+{% endblock %}
