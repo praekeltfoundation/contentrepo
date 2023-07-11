@@ -3,7 +3,11 @@
 {% get_settings %}
 
 
-{% block branding_favicon %}
-    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" />
-{% endblock %}
+  {% block branding_favicon %}
+      {% if settings.home.SiteSettings.favicon %}
+        <link rel="shortcut icon" href={{settings.home.SiteSettings.favicon.url }} />
+      {% else %}
+        {{ block.super}}
+      {% endif %}
+  {% endblock %}
 {% block branding_welcome %}{{ settings.home.SiteSettings.title }}{% endblock %}

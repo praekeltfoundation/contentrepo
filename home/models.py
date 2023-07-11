@@ -83,6 +83,22 @@ class SiteSettings(BaseSiteSetting):
         },
     )
 
+    first_tab_panels = [
+        FieldPanel('title'),
+        FieldPanel('login_message'),
+        FieldPanel('welcome_message'),
+        FieldPanel('logo'),
+        FieldPanel('favicon'),
+    ]
+    second_tab_panels = [
+        FieldPanel('profile_field_options'),
+    ]
+
+    edit_handler = TabbedInterface([
+        ObjectList(first_tab_panels, heading='Branding'),
+        ObjectList(second_tab_panels, heading='Profiling'),
+    ])
+
 
 class MediaBlock(AbstractMediaChooserBlock):
     def render_basic(self, value, context=None):

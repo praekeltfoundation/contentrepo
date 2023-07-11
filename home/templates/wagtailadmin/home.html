@@ -3,4 +3,10 @@
 {% get_settings %}
 
 
-{% block branding_welcome %}{{ settings.home.SiteSettings.welcome_message }}{% endblock %}
+{% block branding_welcome %}
+  {% if settings.home.SiteSettings.welcome_message %}
+    {{ settings.home.SiteSettings.welcome_message }}
+  {% else %}
+    {{ block.super}}
+  {% endif %}
+{% endblock %}

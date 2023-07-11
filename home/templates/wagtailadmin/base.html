@@ -5,7 +5,7 @@
 {% block furniture %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/contentrepo.css' %}">
     <template data-wagtail-sidebar-branding-logo>{% block branding_logo %}
-    <img src="{% static 'images/zoe1.jpg' %}" alt={{settings.title}} width="80" />
+    <img src={{settings.home.SiteSettings.logo.url }} alt={{settings.home.SiteSettings.title}} width="80" />
 {% endblock %}</template>
     {% sidebar_props %}
     <aside id="wagtail-sidebar" class="sidebar-loading" data-wagtail-sidebar aria-label="{% trans 'Sidebar' %}"></aside>
