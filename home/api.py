@@ -7,6 +7,7 @@ from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
 from wagtail.images.api.v2.views import ImagesAPIViewSet
+from wagtail.models import ContentType, Revision
 
 from .models import OrderedContentSet
 from .serializers import ContentPageSerializer, OrderedContentSetSerializer
@@ -52,7 +53,14 @@ class ContentPagesViewSet(PagesAPIViewSet):
         queryset = ContentPage.objects.live()
 
         if qa:
-            queryset = queryset | ContentPage.objects.not_live()
+            contentpage_type_id = ContentType.objects.get(model="contentpage").id
+            #  the big problem here is that you dont seem to be able to get a ContentPage Queryset from a Revision Queryset
+            queryset = (
+                Revision.objects.order_by("object_id", "-created_at")
+                .distinct("object_id")
+                .filter(content_type=contentpage_type_id)
+                .values_list("content_object")
+            )
 
         tag = self.request.query_params.get("tag")
         if tag is not None:
