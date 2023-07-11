@@ -1,0 +1,12 @@
+{% extends "wagtailadmin/home.html" %}
+{% load wagtailsettings_tags %}
+{% get_settings %}
+
+
+{% block branding_welcome %}
+  {% if settings.home.SiteSettings.welcome_message %}
+    {{ settings.home.SiteSettings.welcome_message }}
+  {% else %}
+    {{ block.super}}
+  {% endif %}
+{% endblock %}
