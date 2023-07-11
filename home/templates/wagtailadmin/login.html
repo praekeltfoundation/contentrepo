@@ -4,8 +4,8 @@
 
 
 {% block branding_login %}
-  {% if settings.home.SiteSettings.welcome_message %}
-    {{ settings.home.SiteSettings.welcome_message }}
+  {% if settings.home.SiteSettings.login_message %}
+    {{ settings.home.SiteSettings.login_message }}
   {% else %}
     {{ block.super}}
   {% endif %}
