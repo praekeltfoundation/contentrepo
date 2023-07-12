@@ -3,6 +3,8 @@
 This content repository allows easy content management via a headless CMS, using [wagtail](https://wagtail.io/) that is meant for web and various messaging platforms.
 
 ## Releases
+The current LTS release is: 1.0
+
 [Semantic versioning](https://semver.org/) is in use in this project.
 1. Feature releases
     - Feature releases are a MAJOR.MINOR combination, eg. `1.2`
