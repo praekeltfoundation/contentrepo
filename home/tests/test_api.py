@@ -68,7 +68,9 @@ class PaginationTestCase(TestCase):
         self.content_page2.enable_viber = False
         self.content_page2.save_revision().publish()
         # messenger page
-        [page3] = ContentPage.objects.exclude(pk__in=[self.content_page1,self.content_page2])[:1]
+        [page3] = ContentPage.objects.exclude(
+            pk__in=[self.content_page1, self.content_page2]
+        )[:1]
         page3.enable_web = False
         page3.enable_whatsapp = False
         page3.enable_viber = False
