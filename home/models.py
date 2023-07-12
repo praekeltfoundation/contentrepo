@@ -618,13 +618,49 @@ class ContentPage(Page, ContentImportMixin):
 def update_embedding(sender, instance, *args, **kwargs):
     from .utils import preprocess_content_for_embedding
 
-    body = preprocess_content_for_embedding(instance.body[0].value.source)
+    embedding = {}
+    if instance.enable_web:
+        content = []
+        for block in instance.body:
+            content.append(block.value["message"])
+        body = preprocess_content_for_embedding("/n/n".join(content))
+        embedding["web"] = {
+            "values": [
+                float(i) for i in model.encode(body)
+            ]
+        }
+    if instance.enable_whatsapp:
+        content = []
+        for block in instance.whatsapp_body:
+            content.append(block.value["message"])
+        body = preprocess_content_for_embedding("/n/n".join(content))
+        embedding["whatsapp"] = {
+            "values": [
+                float(i) for i in model.encode(body)
+            ]
+        }
+    if instance.enable_messenger:
+        content = []
+        for block in instance.messenger_body:
+            content.append(block.value["message"])
+        body = preprocess_content_for_embedding("/n/n".join(content))
+        embedding["messenger"] = {
+            "values": [
+                float(i) for i in model.encode(body)
+            ]
+        }
+    if instance.enable_viber:
+        content = []
+        for block in instance.viber_body:
+            content.append(block.value["message"])
+        body = preprocess_content_for_embedding("/n/n".join(content))
+        embedding["viber"] = {
+            "values": [
+                float(i) for i in model.encode(body)
+            ]
+        }
 
-    instance.embedding = {
-        "values": [
-            float(i) for i in model.encode(body)
-        ]
-    }
+    instance.embedding = embedding
 
 
 class OrderedContentSet(index.Indexed, models.Model):
