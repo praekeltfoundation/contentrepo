@@ -3,11 +3,11 @@ from django.views.decorators.cache import cache_page
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
 from wagtail.images.api.v2.views import ImagesAPIViewSet
-from wagtail.models import ContentType, Revision
 
 from .models import OrderedContentSet
 from .serializers import ContentPageSerializer, OrderedContentSetSerializer
@@ -38,7 +38,14 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
     def detail_view(self, request, pk):
         try:
-            ContentPage.objects.get(id=pk).save_page_view(request.query_params)
+            if "qa" in request.GET and request.GET["qa"] == "True":
+                instance = ContentPage.objects.get(
+                    id=pk
+                ).get_latest_revision_as_object()
+                serializer = self.get_serializer(instance)
+                return Response(serializer.data)
+            else:
+                ContentPage.objects.get(id=pk).save_page_view(request.query_params)
         except ContentPage.DoesNotExist:
             raise ValidationError({"page": ["Page matching query does not exist."]})
 
@@ -53,14 +60,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
         queryset = ContentPage.objects.live()
 
         if qa:
-            contentpage_type_id = ContentType.objects.get(model="contentpage").id
-            #  the big problem here is that you dont seem to be able to get a ContentPage Queryset from a Revision Queryset
-            queryset = (
-                Revision.objects.order_by("object_id", "-created_at")
-                .distinct("object_id")
-                .filter(content_type=contentpage_type_id)
-                .values_list("content_object")
-            )
+            queryset = queryset | ContentPage.objects.not_live()
 
         tag = self.request.query_params.get("tag")
         if tag is not None:
