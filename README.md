@@ -22,6 +22,9 @@ This content repository allows easy content management via a headless CMS, using
 - **API authentication:** The API requires authentication to access. This can be through an authentication token, basic authentication, or session cookie.
 - **Suggested content:** Return a random sample of child pages from a supplied list of parent pages.
 - **Search:** Find content pages through a search query.
+- **Internationalisation:** Content can be translated into different locales.
+- **Reports:** Reports on page views, to see how well a content page is doing, and stale content, to see which content needs to be updated.
+- **Workflow management:** Can create or modify content in a draft state; comment, collaborate, and refine it; and define a workflow for how the changes can make their way into being published.
 
 
 ## Releases
