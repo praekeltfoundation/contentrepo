@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## v1.0.0
+
+## v1.0.0-dev.1
+
+### Added
+
+- Documented list of features (#151)
+
+### Fixed
+
+- Duplicate migration number (#150)
+
+
+## v1.0.0-dev.0
 
 This is the first major release, as well as the first LTS release.
 
