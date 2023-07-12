@@ -22,7 +22,6 @@ from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
-from .utils import preprocess_content_for_embedding
 from .whatsapp import create_whatsapp_template
 
 from .constants import (  # isort:skip
@@ -617,6 +616,8 @@ class ContentPage(Page, ContentImportMixin):
 
 @receiver(pre_save, sender=ContentPage)
 def update_embedding(sender, instance, *args, **kwargs):
+    from .utils import preprocess_content_for_embedding
+
     body = preprocess_content_for_embedding(instance.body[0].value.source)
 
     instance.embedding = {
