@@ -26,11 +26,13 @@ from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 from wagtail.contrib.modeladmin.views import IndexView
 
+from home.import_content_pages import ContentImporter
+
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
 from .mixins import SpreadsheetExportMixin
 from .models import ContentPage, ContentPageRating, OrderedContentSet, PageView
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
-from .utils import import_content, import_ordered_sets
+from .utils import import_ordered_sets
 
 logger = logging.getLogger(__name__)
 
@@ -143,9 +145,10 @@ class ContentUploadThread(UploadThread):
 
     def run(self):
         try:
-            import_content(
+            importer = ContentImporter(
                 self.file, self.file_type, self.progress_queue, self.purge, self.locale
             )
+            importer.perform_import()
         except Exception:
             self.result_queue.put((messages.ERROR, "Content import failed"))
             logger.exception("Content import failed")
@@ -276,8 +279,8 @@ class ContentUploadView(View):
                 ContentPage.objects.all().delete()
             ContentUploadThread(
                 form.cleaned_data["purge"],
-                form.cleaned_data["locale"],
-                file=request.FILES["file"],
+                form.cleaned_data["locale"].language_code,
+                file=request.FILES["file"].read(),
                 file_type=form.cleaned_data["file_type"],
                 name="ContentUploadThread",
             ).start()

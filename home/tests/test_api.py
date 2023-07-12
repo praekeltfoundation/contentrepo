@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from wagtail import blocks
 
-from home.utils import import_content
+from home.import_content_pages import ContentImporter
 
 from .utils import create_page
 
@@ -22,7 +22,7 @@ class PaginationTestCase(TestCase):
     def setUp(self):
         path = Path("home/tests/content2.csv")
         with path.open(mode="rb") as f:
-            import_content(f, "CSV", queue.Queue())
+            ContentImporter(f.read(), "CSV", queue.Queue()).perform_import()
         self.content_page1 = ContentPage.objects.first()
         self.user_credentials = {"username": "test", "password": "test"}
         self.user = get_user_model().objects.create_user(**self.user_credentials)
@@ -277,7 +277,7 @@ class OrderedContentSetTestCase(TestCase):
     def setUp(self):
         path = Path("home/tests/content2.csv")
         with path.open(mode="rb") as f:
-            import_content(f, "CSV", queue.Queue())
+            ContentImporter(f.read(), "CSV", queue.Queue()).perform_import()
         self.content_page1 = ContentPage.objects.first()
         self.ordered_content_set = OrderedContentSet(name="Test set")
         self.ordered_content_set.pages.append(
