@@ -148,15 +148,15 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["body"]["text"]["message"].replace("\r", ""), message)
 
     def test_pagination(self):
-        # it should return the web body if enable_whatsapp=false
+        # it should not return the web body if enable_whatsapp=false
         self.content_page1.enable_whatsapp = False
         self.content_page1.save_revision().publish()
         response = self.client.get(
             f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True"
         )
-        content = json.loads(response.content)
-        self.assertNotEquals(content["body"]["text"], "Whatsapp Body 1")
-        self.assertEquals(content["body"]["text"], [])
+
+        content = response.content
+        self.assertEquals(content, b"")
 
         # it should only return the whatsapp body if enable_whatsapp=True
         self.content_page1.enable_whatsapp = True
