@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("home", "0032_alter_pageview_timestamp"),
+        ("home", "0033_alter_orderedcontentset_name_and_more"),
     ]
 
     operations = [
