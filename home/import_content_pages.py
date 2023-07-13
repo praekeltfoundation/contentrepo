@@ -12,9 +12,16 @@ from wagtail.blocks import StructValue  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
-from home.models import (ContentPage, ContentPageIndex, ContentQuickReply,
-                         ContentTrigger, HomePage, MessengerBlock, ViberBlock,
-                         WhatsappBlock)
+from home.models import (
+    ContentPage,
+    ContentPageIndex,
+    ContentQuickReply,
+    ContentTrigger,
+    HomePage,
+    MessengerBlock,
+    ViberBlock,
+    WhatsappBlock,
+)
 
 
 class ContentImporter:

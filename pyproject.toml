@@ -49,3 +49,6 @@ files = "home/import_content_pages.py"
 follow_imports = "skip"
 disallow_untyped_defs = true
 disallow_any_generics = true
+
+[tool.isort]
+profile = "black"
