@@ -22,12 +22,7 @@ from .models import (  # isort:skip
 class ContentPagesViewSet(PagesAPIViewSet):
     base_serializer_class = ContentPageSerializer
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
-        [
-            "tag",
-            "trigger",
-            "page",
-            "qa",
-        ]
+        ["tag", "trigger", "page", "qa", "whatsapp", "viber", "messenger", "web"]
     )
     pagination_class = PageNumberPagination
 
@@ -53,6 +48,15 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
         if qa:
             queryset = queryset | ContentPage.objects.not_live()
+
+        if "web" in self.request.query_params:
+            queryset = queryset.filter(enable_web=True)
+        elif "whatsapp" in self.request.query_params:
+            queryset = queryset.filter(enable_whatsapp=True)
+        elif "messenger" in self.request.query_params:
+            queryset = queryset.filter(enable_messenger=True)
+        elif "viber" in self.request.query_params:
+            queryset = queryset.filter(enable_viber=True)
 
         tag = self.request.query_params.get("tag")
         if tag is not None:

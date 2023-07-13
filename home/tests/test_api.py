@@ -56,6 +56,48 @@ class PaginationTestCase(TestCase):
         # exclude home pages and index pages
         self.assertEquals(content["count"], 3)
 
+    def test_platform_filtering(self):
+        # web page
+        self.content_page1.enable_messenger = False
+        self.content_page1.enable_whatsapp = False
+        self.content_page1.enable_viber = False
+        self.content_page1.save_revision().publish()
+        # whatsapp page
+        self.content_page2.enable_messenger = False
+        self.content_page2.enable_web = False
+        self.content_page2.enable_viber = False
+        self.content_page2.save_revision().publish()
+        # messenger page
+        [page3] = ContentPage.objects.exclude(
+            pk__in=[self.content_page1, self.content_page2]
+        )[:1]
+        page3.enable_web = False
+        page3.enable_whatsapp = False
+        page3.enable_viber = False
+        page3.save_revision().publish()
+
+        # it should return only web pages if filtered
+        response = self.client.get("/api/v2/pages/?web=true")
+        content = json.loads(response.content)
+        self.assertEquals(content["count"], 1)
+        # it should return only whatsapp pages if filtered
+        response = self.client.get("/api/v2/pages/?whatsapp=true")
+        content = json.loads(response.content)
+        self.assertEquals(content["count"], 1)
+        # it should return only messenger pages if filtered
+        response = self.client.get("/api/v2/pages/?messenger=true")
+        content = json.loads(response.content)
+        self.assertEquals(content["count"], 1)
+        # it should return only viber pages if filtered
+        response = self.client.get("/api/v2/pages/?viber=true")
+        content = json.loads(response.content)
+        self.assertEquals(content["count"], 0)
+        # it should return all pages for no filter
+        response = self.client.get("/api/v2/pages/")
+        content = json.loads(response.content)
+        # exclude home pages and index pages
+        self.assertEquals(content["count"], 3)
+
     def test_whatsapp_draft(self):
         self.content_page2.unpublish()
         page_id = self.content_page2.id
@@ -108,15 +150,15 @@ class PaginationTestCase(TestCase):
         self.assertEquals(content["body"]["text"]["message"].replace("\r", ""), message)
 
     def test_pagination(self):
-        # it should return the web body if enable_whatsapp=false
+        # it should not return the web body if enable_whatsapp=false
         self.content_page1.enable_whatsapp = False
         self.content_page1.save_revision().publish()
         response = self.client.get(
             f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True"
         )
-        content = json.loads(response.content)
-        self.assertNotEquals(content["body"]["text"], "Whatsapp Body 1")
-        self.assertEquals(content["body"]["text"], [])
+
+        content = response.content
+        self.assertEquals(content, b"")
 
         # it should only return the whatsapp body if enable_whatsapp=True
         self.content_page1.enable_whatsapp = True
