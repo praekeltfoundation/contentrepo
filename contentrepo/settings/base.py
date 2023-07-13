@@ -236,3 +236,20 @@ FB_BUSINESS_ID = env.str("FB_BUSINESS_ID", "")
 WHATSAPP_CREATE_TEMPLATES = env.bool("WHATSAPP_CREATE_TEMPLATES", False)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", "webmaster@localhost")
+SERVER_EMAIL = env.str("SERVER_EMAIL", "root@localhost")
+EMAIL_BACKEND = env.str("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_FILE_PATH = env.str("EMAIL_FILE_PATH", None)
+EMAIL_HOST = env.str("EMAIL_HOST", "localhost")
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", "")
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", "")
+EMAIL_PORT = env.int("EMAIL_PORT", 25)
+EMAIL_SUBJECT_PREFIX = env.str("EMAIL_SUBJECT_PREFIX", "[Django] ")
+EMAIL_USE_LOCALTIME = env.bool("EMAIL_USE_LOCALTIME", False)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", False)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", False)
+EMAIL_SSL_CERTFILE = env.str("EMAIL_SSL_CERTFILE", None)
+EMAIL_SSL_KEYFILE = env.str("EMAIL_SSL_KEYFILE", None)
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", None)
