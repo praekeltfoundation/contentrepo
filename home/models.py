@@ -159,6 +159,8 @@ class VariationBlock(blocks.StructBlock):
 
 
 class WhatsappBlock(blocks.StructBlock):
+    MEDIA_CAPTION_MAX_LENGTH = 1024
+
     image = ImageChooserBlock(required=False)
     document = DocumentChooserBlock(icon="document", required=False)
     media = MediaBlock(icon="media", required=False)
@@ -173,6 +175,26 @@ class WhatsappBlock(blocks.StructBlock):
     class Meta:
         icon = "user"
         form_classname = "whatsapp-message-block struct-block"
+
+    def clean(self, value):
+        result = super().clean(value)
+
+        if (
+            result["image"]
+            or result["document"]
+            or result["media"]
+            and len(result["message"] > self.MEDIA_CAPTION_MAX_LENGTH)
+        ):
+            raise StructBlockValidationError(
+                {
+                    "message": ValidationError(
+                        "A WhatsApp message with media cannot be longer than "
+                        f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
+                        f"{len(result['message'])} characters long"
+                    )
+                }
+            )
+        return result
 
 
 class ViberBlock(blocks.StructBlock):
@@ -473,29 +495,6 @@ class ContentPage(Page, ContentImportMixin):
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.whatsapp_template_prefix}_{self.get_latest_revision().pk}"
-
-    def clean(self):
-        message_with_media_length = 1024
-        errors = []
-        for message in self.whatsapp_body:
-            if (
-                (
-                    "image" in message.value
-                    and "document" in message.value
-                    and "media" in message.value
-                )
-                and (
-                    message.value["image"]
-                    or message.value["document"]
-                    or message.value["media"]
-                )
-                and len(message.value["message"]) > message_with_media_length
-            ):
-                errors.append(
-                    f"A WhatsApp message with media cannot be longer than {message_with_media_length} characters long, your message is {len(message.value['message'])} characters long"
-                )
-        if errors:
-            raise ValidationError(errors)
 
     def get_descendants(self, inclusive=False):
         return ContentPage.objects.descendant_of(self, inclusive)
