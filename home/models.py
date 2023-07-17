@@ -185,11 +185,8 @@ class WhatsappBlock(blocks.StructBlock):
     def clean(self, value):
         result = super().clean(value)
 
-        if (
-            result["image"]
-            or result["document"]
-            or result["media"]
-            and len(result["message"] > self.MEDIA_CAPTION_MAX_LENGTH)
+        if (result["image"] or result["document"] or result["media"]) and len(
+            result["message"] > self.MEDIA_CAPTION_MAX_LENGTH
         ):
             raise StructBlockValidationError(
                 {
