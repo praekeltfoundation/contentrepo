@@ -74,6 +74,7 @@ EXPORT_FIELDNAMES = [
 
 logger = getLogger(__name__)
 
+
 def cosine_similarity(A, B):
     return float((np.dot(A, B) / (np.linalg.norm(A) * np.linalg.norm(B))))
 
@@ -1240,29 +1241,44 @@ def _generate_regex_dashed_url(n_min_dashed_words_url):
 
 
 def preprocess_content_for_embedding(content):
-    content = unquote(content) # Replace %xx escapes with their single-character equivalent.
-    urls = re.findall(r"((?:https?:\/\/|www)(?:[^ ]+))", content) # Find URLs
-    for url in urls: # Replace URL portions with n_words_min or more words that are separated by dashes
+    content = unquote(
+        content
+    )  # Replace %xx escapes with their single-character equivalent.
+    urls = re.findall(r"((?:https?:\/\/|www)(?:[^ ]+))", content)  # Find URLs
+    for (
+        url
+    ) in (
+        urls
+    ):  # Replace URL portions with n_words_min or more words that are separated by dashes
         extract = re.findall(_generate_regex_dashed_url(2), url)
         extract = " ".join(extract)
         content = content.replace(url, extract)
-    content = "".join(content.split("*", 2)[2:]).replace('\n\n',' ').replace('\n',' ').replace('  ',' ').replace('*','') # Remove content piece title
-    if len(content)<2:
+    content = (
+        "".join(content.split("*", 2)[2:])
+        .replace("\n\n", " ")
+        .replace("\n", " ")
+        .replace("  ", " ")
+        .replace("*", "")
+    )  # Remove content piece title
+    if len(content) < 2:
         return content
-    if content[0]==' ': # Remove space trailing content title
+    if content[0] == " ":  # Remove space trailing content title
         content = content[1:]
-    emoji_pattern = re.compile("["
-    u"\U0001F600-\U0001F64F"  # emoticons
-    u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-    u"\U0001F680-\U0001F6FF"  # transport & map symbols
-    u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-    u"\U00002500-\U00002BEF"  # Chinese characters
-    u"\U00002702-\U000027B0"  # Dingbats
-    u"\U000024C2-\U0001F251"
-    u"\U0001f926-\U0001f937"
-    u"\U00010000-\U0010ffff"
-    u"\u200d"
-    u"\u2640-\u2642"
-    "]+", flags=re.UNICODE)
-    content = emoji_pattern.sub(r'', content) # Remove emojis
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F600-\U0001F64F"  # emoticons
+        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+        "\U0001F680-\U0001F6FF"  # transport & map symbols
+        "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+        "\U00002500-\U00002BEF"  # Chinese characters
+        "\U00002702-\U000027B0"  # Dingbats
+        "\U000024C2-\U0001F251"
+        "\U0001f926-\U0001f937"
+        "\U00010000-\U0010ffff"
+        "\u200d"
+        "\u2640-\u2642"
+        "]+",
+        flags=re.UNICODE,
+    )
+    content = emoji_pattern.sub(r"", content)  # Remove emojis
     return content

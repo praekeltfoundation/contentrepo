@@ -1,5 +1,3 @@
-import re
-
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -620,11 +618,7 @@ def update_embedding(sender, instance, *args, **kwargs):
 
     body = preprocess_content_for_embedding(instance.body[0].value.source)
 
-    instance.embedding = {
-        "values": [
-            float(i) for i in model.encode(body)
-        ]
-    }
+    instance.embedding = {"values": [float(i) for i in model.encode(body)]}
 
 
 class OrderedContentSet(index.Indexed, models.Model):
