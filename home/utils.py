@@ -79,7 +79,9 @@ def cosine_similarity(A, B):
     return float((np.dot(A, B) / (np.linalg.norm(A) * np.linalg.norm(B))))
 
 
-def retrieve_top_n_content_pieces(user_input, queryset, n=5, content_type=None, platform="web"):
+def retrieve_top_n_content_pieces(
+    user_input, queryset, n=5, content_type=None, platform="web"
+):
     # similar_embeddings = [{'faq_name':, 'faq_content':, 'embedding':}, ...] # We need to filter by content type and then retrieve their embeddings
     # Generate embedding for user text
     user_embedding = model.encode([user_input])
