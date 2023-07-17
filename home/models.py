@@ -622,7 +622,7 @@ def update_embedding(sender, instance, *args, **kwargs):
     if instance.enable_web:
         content = []
         for block in instance.body:
-            content.append(block.value["message"])
+            content.append(block.value.source)
         body = preprocess_content_for_embedding("/n/n".join(content))
         embedding["web"] = {
             "values": [
