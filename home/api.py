@@ -52,8 +52,8 @@ class ContentPagesViewSet(PagesAPIViewSet):
         return super().detail_view(request, pk)
 
     @method_decorator(cache_page(60 * 60 * 2))
-    def list(self, request, *args, **kwargs):
-        super(ContentPagesViewSet, self).list(self, request, *args, **kwargs)
+    def listing_view(self, request, *args, **kwargs):
+        return super().listing_view(request)
 
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
