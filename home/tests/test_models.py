@@ -1,8 +1,10 @@
 from unittest import mock
 
 from django.test import TestCase, override_settings
+from wagtail.blocks import StructBlockValidationError
+from wagtail.images import get_image_model
 
-from home.models import PageView
+from home.models import PageView, WhatsappBlock
 
 from .utils import create_page, create_page_rating
 
@@ -138,3 +140,48 @@ class ContentPageTests(TestCase):
             "Test WhatsApp Message 1",
             ["button 1", "button 2"],
         )
+
+
+class WhatsappBlockTests(TestCase):
+    def create_message_value(
+        self,
+        image=None,
+        document=None,
+        media=None,
+        message="",
+        variation_messages=None,
+        next_prompt="",
+    ):
+        return {
+            "image": image,
+            "document": document,
+            "media": media,
+            "message": message,
+            "variation_messages": variation_messages,
+            "next_prompt": next_prompt,
+        }
+
+    def create_image(self, width=0, height=0):
+        Image = get_image_model()
+        return Image.objects.create(width=width, height=height)
+
+    def test_clean_text_char_limit(self):
+        """Text messages should be limited to 4096 characters"""
+        WhatsappBlock().clean(self.create_message_value(message="a" * 4096))
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            WhatsappBlock().clean(self.create_message_value(message="a" * 4097))
+        self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
+
+    def test_clean_media_char_limit(self):
+        """Media messages should be limited to 1024 characters"""
+        image = self.create_image()
+        WhatsappBlock().clean(
+            self.create_message_value(image=image, message="a" * 1024)
+        )
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            WhatsappBlock().clean(
+                self.create_message_value(message="a" * 1025, image=image)
+            )
+        self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
