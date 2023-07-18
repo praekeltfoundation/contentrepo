@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+
+## v1.0.0-dev.4
+
+### Fixed
+
+- Fix regression in whatsapp media message character limit validation (#158)
+
+
 ## v1.0.0-dev.3
 
 ### Fixed
