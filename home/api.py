@@ -3,6 +3,7 @@ from django.views.decorators.cache import cache_page
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
@@ -32,15 +33,46 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
     def detail_view(self, request, pk):
         try:
-            ContentPage.objects.get(id=pk).save_page_view(request.query_params)
+            if "qa" in request.GET and request.GET["qa"] == "True":
+                instance = ContentPage.objects.get(
+                    id=pk
+                ).get_latest_revision_as_object()
+                serializer = self.get_serializer(instance)
+                return Response(serializer.data)
+            else:
+                ContentPage.objects.get(id=pk).save_page_view(request.query_params)
         except ContentPage.DoesNotExist:
             raise ValidationError({"page": ["Page matching query does not exist."]})
 
         return super().detail_view(request, pk)
 
     @method_decorator(cache_page(60 * 60 * 2))
-    def list(self, request, *args, **kwargs):
-        super(ContentPagesViewSet, self).list(self, request, *args, **kwargs)
+    def listing_view(self, request, *args, **kwargs):
+        # If this request is flagged as QA then we should display the pages that have the filtering tags
+        # or triggers in their draft versions
+        if "qa" in request.GET and request.GET["qa"] == "True":
+            tag = self.request.query_params.get("tag")
+            trigger = self.request.query_params.get("trigger")
+            have_new_triggers = []
+            have_new_tags = []
+            unpublished = ContentPage.objects.filter(has_unpublished_changes="True")
+            for page in unpublished:
+                latest_rev = page.get_latest_revision_as_object()
+                if trigger and latest_rev.triggers.filter(name=trigger).exists():
+                    have_new_triggers.append(page.id)
+                if tag and latest_rev.tags.filter(name=tag).exists():
+                    have_new_tags.append(page.id)
+
+            queryset = self.get_queryset()
+            self.check_query_parameters(queryset)
+            queryset = self.filter_queryset(queryset)
+            queryset = queryset | ContentPage.objects.filter(id__in=have_new_triggers)
+            queryset = queryset | ContentPage.objects.filter(id__in=have_new_tags)
+            queryset_list = self.paginate_queryset(queryset)
+            serializer = self.get_serializer(queryset_list, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        return super().listing_view(request)
 
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
