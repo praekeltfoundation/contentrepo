@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v1.0.0-dev.3
+
+### Fixed
+
+- Fix message character limit validation (#157)
+
 
 ## v1.0.0-dev.2
 
