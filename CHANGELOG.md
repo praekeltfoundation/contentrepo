@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v1.1.0-dev.0
+
+### Added
+
+- NLP model hosting added and used for ContentPage filtering via API (#133)
 
 ## v1.0.0-dev.2
 
