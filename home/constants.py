@@ -1,4 +1,5 @@
 # Define constants for use throughout the application
+from sentence_transformers import SentenceTransformer
 
 GENDER_CHOICES = [
     ("male", "Male"),
@@ -19,3 +20,5 @@ RELATIONSHIP_STATUS_CHOICES = [
     ("complicated", "It's Complicated"),
     ("empty", "Empty"),
 ]
+
+model = SentenceTransformer("all-mpnet-base-v2")

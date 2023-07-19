@@ -22,7 +22,7 @@ from .models import (  # isort:skip
 class ContentPagesViewSet(PagesAPIViewSet):
     base_serializer_class = ContentPageSerializer
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
-        ["tag", "trigger", "page", "qa", "whatsapp", "viber", "messenger", "web"]
+        ["tag", "trigger", "page", "qa", "whatsapp", "viber", "messenger", "web", "s"]
     )
     pagination_class = PageNumberPagination
 
@@ -69,6 +69,20 @@ class ContentPagesViewSet(PagesAPIViewSet):
             ids = []
             for t in TriggeredContent.objects.filter(tag__name__iexact=trigger.strip()):
                 ids.append(t.content_object_id)
+            queryset = queryset.filter(id__in=ids)
+        s = self.request.query_params.get("s")
+        if s is not None:
+            from .utils import retrieve_top_n_content_pieces
+
+            platform = "web"
+            if "whatsapp" in self.request.query_params:
+                platform = "whatsapp"
+            elif "messenger" in self.request.query_params:
+                platform = "messenger"
+            elif "viber" in self.request.query_params:
+                platform = "viber"
+
+            ids = retrieve_top_n_content_pieces(s, queryset, platform=platform)
             queryset = queryset.filter(id__in=ids)
         return queryset
 
