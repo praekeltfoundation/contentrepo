@@ -79,15 +79,21 @@ def cosine_similarity(A, B):
     return float((np.dot(A, B) / (np.linalg.norm(A) * np.linalg.norm(B))))
 
 
-def retrieve_top_n_content_pieces(user_input, queryset, n=5, content_type=None):
+def retrieve_top_n_content_pieces(
+    user_input, queryset, n=5, content_type=None, platform="web"
+):
     # similar_embeddings = [{'faq_name':, 'faq_content':, 'embedding':}, ...] # We need to filter by content type and then retrieve their embeddings
     # Generate embedding for user text
     user_embedding = model.encode([user_input])
 
     documents_retrieved = []
     for page in queryset:
+        try:
+            page_plat_embedding = page.embedding[platform]["values"]
+        except (KeyError, TypeError):
+            continue  # The page doesn't have embedding for this platform
         similarity_score = cosine_similarity(
-            user_embedding[0].tolist(), page.embedding["values"]
+            user_embedding[0].tolist(), page_plat_embedding
         )  # Replace with your cosine similarity calculation
         documents_retrieved.append((page.pk, page.title, page.body, similarity_score))
     documents_retrieved = sorted(documents_retrieved, key=lambda x: x[3], reverse=True)
