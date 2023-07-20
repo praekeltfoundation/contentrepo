@@ -55,6 +55,15 @@ class PaginationTestCase(TestCase):
         content = json.loads(response.content)
         # exclude home pages and index pages
         self.assertEquals(content["count"], 3)
+        # it should not return pages with tags in the draft
+        create_page(tags=["Menu"])
+        response = self.client.get("/api/v2/pages/?tag=Menu")
+        content = json.loads(response.content)
+        self.assertEquals(content["count"], 1)
+        # If QA flag is sent then it should return pages with tags in the draft
+        response = self.client.get("/api/v2/pages/?tag=Menu&qa=True")
+        content = json.loads(response.content)
+        self.assertEquals(content["count"], 2)
 
     def test_platform_filtering(self):
         # web page
