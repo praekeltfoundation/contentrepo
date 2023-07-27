@@ -742,7 +742,11 @@ def import_ordered_sets(file, filetype, progress_queue, purge=False):
             lines.append(row_dict)
     else:
         if isinstance(file, bytes):
-            file = file.decode("utf-8")
+            try:
+                file = file.decode("utf-8")
+            except UnicodeDecodeError:
+                file = file.decode("latin-1")
+
         reader = csv.DictReader(io.StringIO(file))
         for dictionary in reader:
             lines.append(dictionary)
