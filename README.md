@@ -54,6 +54,7 @@ Run the following in a virtual environment
 ```bash
 pip install -r requirements.txt
 pip intsall -r requirements-dev.txt
+createdb contentrepo
 ./manage.py migrate
 ./manage.py createsuperuser
 ./manage.py runserver
