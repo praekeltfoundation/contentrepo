@@ -3,19 +3,40 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - "*"
 
 jobs:
   push_to_registry:
-    name: Push Docker image to Docker Hub
+    name: Push Docker image to Docker Hub and ghcr.io
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
-      - name: Push to Docker Hub
-        uses: mr-smithers-excellent/docker-build-push@v2
+      - uses: actions/checkout@v3
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/metadata-action@v4
+        id: meta
+        with:
+          images: |
+            ${{ github.repository }}
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=sha,prefix={{branch}}-,enable=${{ github.ref_type != 'tag' && !contains(github.ref_name, '/') }}
+      - uses: docker/login-action@v2
+        name: Login to Docker Hub
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          image: praekeltfoundation/contentrepo
-          tags: true
-          registry: docker.io
+      - uses: docker/login-action@v2
+        name: Login to ghcr.io
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v4
+        name: Build and push image
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
