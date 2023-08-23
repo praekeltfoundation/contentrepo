@@ -210,15 +210,26 @@ SPECTACULAR_SETTINGS = {
 }
 
 AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")
-AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
-AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
 AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "")
 AWS_S3_CUSTOM_DOMAIN = (
     f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
 )
 AWS_DEFAULT_ACL = "public-read"
 
-if AWS_STORAGE_BUCKET_NAME and AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+_aws_creds_found = False
+
+# If running in EKS with an IAM role provided by a service account, we use that.
+# Otherwise we look for API creds.
+if "AWS_WEB_IDENTITY_TOKEN_FILE" in os.environ:
+    AWS_WEB_IDENTITY_TOKEN_FILE = os.environ.get("AWS_WEB_IDENTITY_TOKEN_FILE", "")
+    AWS_ROLE_NAME = os.environ.get("AWS_ROLE_NAME", "")
+    _aws_creds_found = True
+elif "AWS_ACCESS_KEY_ID" in os.environ:
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+    _aws_creds_found = True
+
+if AWS_STORAGE_BUCKET_NAME and _aws_creds_found:
     MEDIA_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
     INSTALLED_APPS += [
