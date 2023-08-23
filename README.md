@@ -52,8 +52,7 @@ The current LTS release is: 1.0
 ## Setting up locally
 Run the following in a virtual environment
 ```bash
-pip install -r requirements.txt
-pip intsall -r requirements-dev.txt
+pip install -e .[dev]
 ./manage.py migrate
 ./manage.py createsuperuser
 ./manage.py runserver
