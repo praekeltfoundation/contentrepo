@@ -1,7 +1,7 @@
 FROM ghcr.io/praekeltfoundation/docker-django-bootstrap-nw:py3.10-buster
 
 COPY . /app
-RUN pip install -e .
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -e .
 
 ENV DJANGO_SETTINGS_MODULE contentrepo.settings.production
 
