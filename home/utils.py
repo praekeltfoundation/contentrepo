@@ -2,6 +2,8 @@ import copy
 import csv
 import io
 import re
+import secrets
+import string
 from dataclasses import dataclass
 from io import BytesIO
 from json import dumps
@@ -28,6 +30,7 @@ from wagtail.models.sites import Site
 from wagtail.query import PageQuerySet
 from wagtail.rich_text import RichText
 from wagtailmedia.models import Media
+from markdownify import markdownify
 
 from .constants import model
 
@@ -1253,6 +1256,38 @@ def _generate_regex_dashed_url(n_min_dashed_words_url):
     return regexp
 
 
+def web_content(instance):
+    content = []
+    for block in instance.body:
+        content.append(block.value.source)
+    body = markdownify("/n/n".join(content))
+    return body
+
+
+def whatsapp_content(instance):
+    content = []
+    for block in instance.whatsapp_body:
+        content.append(block.value["message"])
+    body = markdownify("/n/n".join(content))
+    return body
+
+
+def messenger_content(instance):
+    content = []
+    for block in instance.messenger_body:
+        content.append(block.value["message"])
+    body = markdownify("/n/n".join(content))
+    return body
+
+
+def viber_content(instance):
+    content = []
+    for block in instance.viber_body:
+        content.append(block.value["message"])
+    body = markdownify("/n/n".join(content))
+    return body
+
+
 def preprocess_content_for_embedding(content):
     content = unquote(
         content
@@ -1295,3 +1330,8 @@ def preprocess_content_for_embedding(content):
     )
     content = emoji_pattern.sub(r"", content)  # Remove emojis
     return content
+
+
+def generate_id(length=12):
+    alphanumeric = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphanumeric) for _ in range(length))

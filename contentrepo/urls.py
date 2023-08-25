@@ -58,6 +58,13 @@ if settings.DEBUG:
     urlpatterns += staticfiles_urlpatterns()
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+if settings.LOAD_CHATBOT_ROUTES:
+    from home.llm import llm_chat
+
+    urlpatterns += [
+        path("api/v2/llm/", llm_chat),
+    ]
+
 urlpatterns = urlpatterns + [
     # For anything not caught by a more specific rule above, hand over to
     # Wagtail's page serving mechanism. This should be the last pattern in

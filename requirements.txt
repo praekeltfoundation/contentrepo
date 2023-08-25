@@ -13,3 +13,6 @@ django-storages
 responses
 sentry-sdk==1.15.0
 sentence_transformers
+openai==0.28.0
+tiktoken==0.4.0
+markdownify==0.11.6
