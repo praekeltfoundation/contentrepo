@@ -2,7 +2,6 @@
 from django.conf import settings
 from sentence_transformers import SentenceTransformer
 
-
 GENDER_CHOICES = [
     ("male", "Male"),
     ("female", "Female"),
