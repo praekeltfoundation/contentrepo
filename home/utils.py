@@ -82,6 +82,9 @@ def cosine_similarity(A, B):
 def retrieve_top_n_content_pieces(
     user_input, queryset, n=5, content_type=None, platform="web"
 ):
+    if not model:
+        return []
+
     # similar_embeddings = [{'faq_name':, 'faq_content':, 'embedding':}, ...] # We need to filter by content type and then retrieve their embeddings
     # Generate embedding for user text
     user_embedding = model.encode([user_input])
