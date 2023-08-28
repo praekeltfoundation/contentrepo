@@ -1,7 +1,4 @@
-import json
-
 from django.core.management.base import BaseCommand
-from wagtail.models import Page
 
 from home.models import ContentPage
 
@@ -15,8 +12,6 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        pages = (
-            ContentPage.objects.live()
-        )
+        pages = ContentPage.objects.live()
         for page in pages:
             page.save()
