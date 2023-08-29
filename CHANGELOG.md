@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v1.1.0-dev.2
+
+### Added
+
+- Support for IAM role-based auth when running in EKS (#163)
+- Update workflow actions and push to ghcr.io as well as Docker Hub (#164)
+- Flag for loading embedding model to reduce memory usage if not necessary (#166)
+- Management command to run existing content through embedding model (#167)
+
+### Fixed
+
+- File decoding error in Ordered Content Set import (#161)
+- Reduced Docker image size (#165)
+
 ## v1.1.0-dev.1
 
 ### Added
