@@ -145,6 +145,9 @@ STATIC_URL = "/static/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
+TEST_STATIC_ROOT = os.path.join(BASE_DIR, "home/tests/test_static")
+
+
 
 # Wagtail settings
 
