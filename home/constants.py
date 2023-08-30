@@ -1,4 +1,5 @@
 # Define constants for use throughout the application
+from django.conf import settings
 from sentence_transformers import SentenceTransformer
 
 GENDER_CHOICES = [
@@ -21,4 +22,8 @@ RELATIONSHIP_STATUS_CHOICES = [
     ("empty", "Empty"),
 ]
 
-model = SentenceTransformer("all-mpnet-base-v2")
+# The model used to identify embeddings in content
+# When changing this consider running update_content_embeddings management cmd
+model = None
+if settings.LOAD_TRANSFORMER_MODEL:
+    model = SentenceTransformer("all-mpnet-base-v2")

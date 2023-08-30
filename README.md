@@ -53,8 +53,6 @@ The current LTS release is: 1.0
 Run the following in a virtual environment
 ```bash
 pip install -e .[dev]
-pip install -r requirements.txt
-pip intsall -r requirements-dev.txt
 createdb contentrepo
 ./manage.py migrate
 ./manage.py createsuperuser

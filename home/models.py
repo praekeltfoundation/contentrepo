@@ -620,6 +620,9 @@ class ContentPage(Page, ContentImportMixin):
 def update_embedding(sender, instance, *args, **kwargs):
     from .utils import preprocess_content_for_embedding
 
+    if not model:
+        return
+
     embedding = {}
     if instance.enable_web:
         content = []
