@@ -61,7 +61,7 @@ class WhatsAppTests(TestCase):
     @responses.activate
     def test_create_whatsapp_template_with_image(self):
         img_name = "test.jpeg"
-        img_path = f"{settings.TEST_STATIC_ROOT}/{img_name}"
+        img_path = f"home/tests/test_static/{img_name}"
 
         f = open(img_path, "rb")
         image = Image(
@@ -97,9 +97,8 @@ class WhatsAppTests(TestCase):
 
         template_url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, template_url, json={})
-        #  To run the WhatsAppTests on their own, the ID of 2 below should be set to 1
-        #  This is due to other content being inported if you run the full set of tests
-        create_whatsapp_template("Test-Template", "Test Body", [], 2)
+
+        create_whatsapp_template("Test-Template", "Test Body", [], image.id)
 
         mock_get_session_data = {
             "file_length": 631,

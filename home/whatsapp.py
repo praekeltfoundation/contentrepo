@@ -5,7 +5,6 @@ from urllib.parse import urljoin
 import requests
 from django.conf import settings
 from wagtail.images import get_image_model
-from wagtail.images.models import Image
 
 
 def create_whatsapp_template(name, body, quick_replies=[], image_id=None):
@@ -57,9 +56,6 @@ def get_upload_session_id(image_id):
     headers = {
         "Content-Type": "application/json",
     }
-    images = Image.objects.all()
-    for i in images:
-        print(i.id)
 
     img_obj = get_image_model().objects.get(id=image_id)
     mime_type = mimetypes.guess_type(img_obj.file.name)[0]
