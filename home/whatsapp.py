@@ -52,7 +52,7 @@ def create_whatsapp_template(name, body, quick_replies=[], image_id=None):
 def get_upload_session_id(image_id):
     url = urljoin(
         settings.WHATSAPP_API_URL,
-        f"graph/v14.0/app/uploads",
+        "graph/v14.0/app/uploads",
     )
     headers = {
         "Content-Type": "application/json",

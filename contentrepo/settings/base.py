@@ -147,8 +147,6 @@ MEDIA_URL = "/media/"
 
 TEST_STATIC_ROOT = os.path.join(BASE_DIR, "home/tests/test_static")
 
-
-
 # Wagtail settings
 
 WAGTAIL_SITE_NAME = "contentrepo"
