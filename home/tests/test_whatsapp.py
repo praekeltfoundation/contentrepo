@@ -63,15 +63,14 @@ class WhatsAppTests(TestCase):
         img_name = "test.jpeg"
         img_path = f"home/tests/test_static/{img_name}"
 
-        f = open(img_path, "rb")
-        image = Image(
+        read_file = open(img_path, "rb")
+        saved_image = Image(
             title=img_name,
-            file=ImageFile(f, name=img_path),
+            file=ImageFile(read_file, name=img_path),
         )
-        mock_file_content = image.file
-
-        image.save()
-        f.seek(0)
+        saved_file = saved_image.file
+        saved_image.save()
+        read_file.seek(0)
 
         mock_session_id = "TEST_SESSION_ID"
         mock_session_url = "http://whatsapp/graph/v14.0/app/uploads"
@@ -80,7 +79,7 @@ class WhatsAppTests(TestCase):
         mock_start_upload_url = f"http://whatsapp/graph/{mock_session_id}"
         mock_image_handle = "TEST_IMAGE_HANDLE"
         req_files = {
-            "file": mock_file_content,
+            "file": saved_file,
             "number": settings.FB_BUSINESS_ID,
             "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         }
@@ -98,7 +97,7 @@ class WhatsAppTests(TestCase):
         template_url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, template_url, json={})
 
-        create_whatsapp_template("Test-Template", "Test Body", [], image.id)
+        create_whatsapp_template("Test-Template", "Test Body", [], saved_image.id)
 
         mock_get_session_data = {
             "file_length": 631,
