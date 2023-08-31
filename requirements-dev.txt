@@ -4,3 +4,4 @@ responses
 isort
 pytest
 pytest-django
+pytest-cov

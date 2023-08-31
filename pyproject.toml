@@ -47,3 +47,4 @@ exclude = '''
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "contentrepo.settings.dev"
+addopts = "--cov"
