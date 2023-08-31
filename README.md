@@ -53,6 +53,7 @@ The current LTS release is: 1.0
 Run the following in a virtual environment
 ```bash
 pip install -e .[dev]
+createdb contentrepo
 ./manage.py migrate
 ./manage.py createsuperuser
 ./manage.py runserver
