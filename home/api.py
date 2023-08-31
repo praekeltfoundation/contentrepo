@@ -76,7 +76,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
-        queryset = ContentPage.objects.live()
+        queryset = ContentPage.objects.live().prefetch_related("locale")
 
         if qa:
             queryset = queryset | ContentPage.objects.not_live()

@@ -286,6 +286,7 @@ class PagesField(serializers.Field):
         request = self.context["request"]
         pages = []
         for member in instance.pages:
+            print(member)
             page = self.get_page_as_content_page(member.value)
             title = page.title
             if "whatsapp" in request.GET and page.enable_whatsapp is True:
