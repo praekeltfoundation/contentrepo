@@ -7,7 +7,7 @@ from django.conf import settings
 from wagtail.images import get_image_model
 
 
-def create_whatsapp_template(name, body, quick_replies=[], image_id=None):
+def create_whatsapp_template(name, body, quick_replies=(), image_id=None):
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",

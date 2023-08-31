@@ -139,7 +139,7 @@ def import_content(file, filetype, progress_queue, purge=True, locale="en"):
                     body = body + [("paragraph", RichText(line))]
             return body
 
-    def get_body(messages, type_of_message, variation_messages=[]):
+    def get_body(messages, type_of_message, variation_messages=()):
         struct_blocks = []
         for message_number, raw in enumerate(messages, 1):
             im = None
@@ -256,7 +256,7 @@ def import_content(file, filetype, progress_queue, purge=True, locale="en"):
             locale=home_page.locale,
         )
 
-    def add_whatsapp(row, whatsapp_messages, page=None, variation_messages=[]):
+    def add_whatsapp(row, whatsapp_messages, page=None, variation_messages=()):
         if "whatsapp_title" not in row.keys() or not row["whatsapp_title"]:
             return page
 

@@ -16,7 +16,7 @@ from home.models import (  # isort:skip
 def create_page(
     title="Test Title",
     parent=None,
-    tags=[],
+    tags=(),
     is_whatsapp_template=False,
     add_variation=False,
     has_quick_replies=False,
