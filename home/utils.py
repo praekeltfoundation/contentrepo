@@ -237,7 +237,7 @@ def import_content(file, filetype, progress_queue, purge=True, locale="en"):
             home_page.add_child(instance=page)
 
     def add_web(row, page=None):
-        if "web_title" not in row.keys() or not row["web_title"]:
+        if not row.get("web_title"):
             return
 
         if page:  # update
@@ -257,7 +257,7 @@ def import_content(file, filetype, progress_queue, purge=True, locale="en"):
         )
 
     def add_whatsapp(row, whatsapp_messages, page=None, variation_messages=()):
-        if "whatsapp_title" not in row.keys() or not row["whatsapp_title"]:
+        if not row.get("whatsapp_title"):
             return page
 
         whatsapp_template_name = row.get("whatsapp_template_name", "")
@@ -286,7 +286,7 @@ def import_content(file, filetype, progress_queue, purge=True, locale="en"):
             return page
 
     def add_messenger(row, messenger_messages, page=None):
-        if "messenger_title" not in row.keys() or not row["messenger_title"]:
+        if not row.get("messenger_title"):
             return page
 
         if not page:
@@ -305,7 +305,7 @@ def import_content(file, filetype, progress_queue, purge=True, locale="en"):
             return page
 
     def add_viber(row, viber_messages, page=None):
-        if "viber_title" not in row.keys() or not row["viber_title"]:
+        if not row.get("viber_title"):
             return page
 
         if not page:
