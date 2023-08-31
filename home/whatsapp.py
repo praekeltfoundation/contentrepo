@@ -98,7 +98,7 @@ def upload_image(image_id):
         url,
         headers=headers,
         files={
-            "file": Path(upload_details["path_to_file"]).openopen("rb"),
+            "file": Path(upload_details["path_to_file"]).open("rb"),
             "number": settings.FB_BUSINESS_ID,
             "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         },
