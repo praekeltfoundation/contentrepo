@@ -54,3 +54,24 @@ filterwarnings = [
     "ignore::DeprecationWarning:l18n.translation:17",
     "ignore::DeprecationWarning:wagtail.images.views.serve:1",
 ]
+
+[tool.ruff]
+select = [
+    "E", "F", "W", # pycodestyle + pyflakes == flake8 - mccabe
+    "I",           # isort
+]
+target-version = "py310"
+ignore = [
+    "E501",  # TODO: Something about these long lines.
+]
+
+[tool.ruff.per-file-ignores]
+"contentrepo/settings/{dev,production}.py" = [
+    "F405",  # We import * in settings files.
+]
+"**/tests/**" = [
+    "S101",  # It's okay to use `assert` in tests.
+]
+"**/migrations/**" = [
+    "E501",  # Long lines are okay in generated code.
+]

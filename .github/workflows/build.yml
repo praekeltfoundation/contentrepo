@@ -36,12 +36,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
-    - name: Lint with flake8
+    - name: Lint
       run: |
-        # stop the build if there are Python syntax errors or undefined names
         black --check .
-        flake8 . --count --show-source --statistics
-        isort -c .
+        ruff .
     - name: Run tests
       run: |
         pytest
