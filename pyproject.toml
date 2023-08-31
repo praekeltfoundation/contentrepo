@@ -59,12 +59,16 @@ filterwarnings = [
 select = [
     "E", "F", "W", # pycodestyle + pyflakes == flake8 - mccabe
     "I",           # isort
+    # "UP",          # pyupgrade
     "S",           # flake8-bandit
     "B",           # flake8-bugbear
     "C4",          # flake8-comprehensions
+    # "DJ",          # flake8-django
     "PIE",         # flake8-pie
+    # "PT",          # flake8-pytest-style
     "SIM",         # flake8-simplify
     "PTH",         # flake8-use-pathlib
+    # "RUF",         # ruff-specific rules
 ]
 target-version = "py310"
 ignore = [
