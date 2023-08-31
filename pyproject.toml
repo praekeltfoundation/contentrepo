@@ -59,13 +59,18 @@ filterwarnings = [
 select = [
     "E", "F", "W", # pycodestyle + pyflakes == flake8 - mccabe
     "I",           # isort
+    "S",           # flake8-bandit
 ]
 target-version = "py310"
 ignore = [
     "E501",  # TODO: Something about these long lines.
+    "S113",  # TODO: Request timeouts.
 ]
 
 [tool.ruff.per-file-ignores]
+"contentrepo/settings/base.py" = [
+    "S105",  # TODO: Get rid of default DEFAULT_SECRET_KEY.
+]
 "contentrepo/settings/{dev,production}.py" = [
     "F405",  # We import * in settings files.
 ]
