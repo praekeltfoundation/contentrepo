@@ -17,7 +17,7 @@ class PageRatingTestCase(APITestCase):
 
     def test_homepage_redirect(self):
         response = self.client.get("/")
-        self.assertEquals("/admin/", response.url)
+        self.assertEqual("/admin/", response.url)
 
     def test_page_rating_success(self):
         user = get_user_model().objects.create_user("test")
@@ -36,12 +36,12 @@ class PageRatingTestCase(APITestCase):
             format="json",
         )
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_data = response.json()
         response_data.pop("timestamp")
         rating = ContentPageRating.objects.last()
-        self.assertEquals(
+        self.assertEqual(
             response.json(),
             {
                 "id": rating.id,
@@ -59,8 +59,8 @@ class PageRatingTestCase(APITestCase):
 
         response = self.client.post(self.url, {}, format="json")
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
             response.json(),
             {
                 "helpful": ["This field is required."],
@@ -75,8 +75,8 @@ class PageRatingTestCase(APITestCase):
 
         response = self.client.post(self.url, {"page": 123}, format="json")
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
             response.json(),
             {
                 "page": ["Page matching query does not exist."],

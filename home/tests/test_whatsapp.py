@@ -26,8 +26,8 @@ class WhatsAppTests(TestCase):
 
         request = responses.calls[0].request
 
-        self.assertEquals(request.headers["Authorization"], "Bearer fake-access-token")
-        self.assertEquals(request.body, json.dumps(data, indent=4))
+        self.assertEqual(request.headers["Authorization"], "Bearer fake-access-token")
+        self.assertEqual(request.body, json.dumps(data, indent=4))
 
     @responses.activate
     def test_create_whatsapp_template_with_buttons(self):
@@ -55,8 +55,8 @@ class WhatsAppTests(TestCase):
 
         request = responses.calls[0].request
 
-        self.assertEquals(request.headers["Authorization"], "Bearer fake-access-token")
-        self.assertEquals(request.body, json.dumps(data, indent=4))
+        self.assertEqual(request.headers["Authorization"], "Bearer fake-access-token")
+        self.assertEqual(request.body, json.dumps(data, indent=4))
 
     @responses.activate
     def test_create_whatsapp_template_with_image(self):
@@ -106,7 +106,7 @@ class WhatsAppTests(TestCase):
             "number": "27121231234",
         }
         get_session_id_request = responses.calls[0].request
-        self.assertEquals(
+        self.assertEqual(
             get_session_id_request.body, json.dumps(mock_get_session_data, indent=4)
         )
 
@@ -125,10 +125,10 @@ class WhatsAppTests(TestCase):
             ],
         }
 
-        self.assertEquals(
+        self.assertEqual(
             create_template_request.headers["Authorization"], "Bearer fake-access-token"
         )
-        self.assertEquals(
+        self.assertEqual(
             create_template_request.body,
             json.dumps(mock_create_template_data, indent=4),
         )
