@@ -61,6 +61,7 @@ select = [
     "I",           # isort
     "S",           # flake8-bandit
     "B",           # flake8-bugbear
+    "C4",          # flake8-comprehensions
 ]
 target-version = "py310"
 ignore = [

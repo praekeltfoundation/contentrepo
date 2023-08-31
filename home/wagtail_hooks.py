@@ -113,17 +113,17 @@ class ContentPageAdmin(ModelAdmin):
     list_export = ("locale", "title")
 
     def replies(self, obj):
-        return [x for x in obj.quick_replies.all()]
+        return list(obj.quick_replies.all())
 
     replies.short_description = "Quick Replies"
 
     def trigger(self, obj):
-        return [x for x in obj.triggers.all()]
+        return list(obj.triggers.all())
 
     trigger.short_description = "Triggers"
 
     def tag(self, obj):
-        return [x for x in obj.tags.all()]
+        return list(obj.tags.all())
 
     tag.short_description = "Tags"
 
