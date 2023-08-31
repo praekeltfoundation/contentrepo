@@ -1,5 +1,6 @@
 import json
 import mimetypes
+from pathlib import Path
 from urllib.parse import urljoin
 
 import requests
@@ -97,7 +98,7 @@ def upload_image(image_id):
         url,
         headers=headers,
         files={
-            "file": open(upload_details["path_to_file"], "rb"),
+            "file": Path(upload_details["path_to_file"]).openopen("rb"),
             "number": settings.FB_BUSINESS_ID,
             "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         },
