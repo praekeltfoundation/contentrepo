@@ -93,12 +93,12 @@ class PageRatingTestCase(APITestCase):
         page = create_page()
 
         rating_old = page.ratings.create(
-            **{"revision": page.get_latest_revision(), "helpful": True}
+            revision=page.get_latest_revision(), helpful=True
         )
         rating_new = page.ratings.create(
-            **{"revision": page.get_latest_revision(), "helpful": False}
+            revision=page.get_latest_revision(), helpful=False
         )
-        page.ratings.create(**{"revision": page.get_latest_revision(), "helpful": True})
+        page.ratings.create(revision=page.get_latest_revision(), helpful=True)
         response = self.client.get(
             f"{self.url}?"
             f"{urlencode({'timestamp_gt': rating_old.timestamp.isoformat()})}"
@@ -135,21 +135,9 @@ class PageViewsTestCase(APITestCase):
 
         page = create_page()
 
-        pageview_old = page.views.create(
-            **{
-                "revision": page.get_latest_revision(),
-            }
-        )
-        pageview_new = page.views.create(
-            **{
-                "revision": page.get_latest_revision(),
-            }
-        )
-        page.views.create(
-            **{
-                "revision": page.get_latest_revision(),
-            }
-        )
+        pageview_old = page.views.create(revision=page.get_latest_revision())
+        pageview_new = page.views.create(revision=page.get_latest_revision())
+        page.views.create(revision=page.get_latest_revision())
         response = self.client.get(
             f"{self.url}?"
             f"{urlencode({'timestamp_gt': pageview_old.timestamp.isoformat()})}"

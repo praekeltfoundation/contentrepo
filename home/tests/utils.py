@@ -79,10 +79,8 @@ def create_page(
 
 def create_page_rating(page, helpful=True, comment=""):
     return ContentPageRating.objects.create(
-        **{
-            "page": page,
-            "revision": page.get_latest_revision(),
-            "helpful": helpful,
-            "comment": comment,
-        }
+        page=page,
+        revision=page.get_latest_revision(),
+        helpful=helpful,
+        comment=comment,
     )
