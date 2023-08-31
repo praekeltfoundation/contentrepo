@@ -42,6 +42,6 @@ jobs:
         black --check .
         flake8 . --count --show-source --statistics
         isort -c .
-    - name: Django Test
+    - name: Run tests
       run: |
-        ./manage.py test --settings=contentrepo.settings.dev
+        pytest

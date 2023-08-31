@@ -44,3 +44,13 @@ exclude = '''
   | migrations
 )/
 '''
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "contentrepo.settings.dev"
+addopts = "--cov"
+filterwarnings = [
+    # We can't do anything about these warnings until upstream updates.
+    "ignore::django.utils.deprecation.RemovedInDjango50Warning:modelcluster.models:28",
+    "ignore::DeprecationWarning:l18n.translation:17",
+    "ignore::DeprecationWarning:wagtail.images.views.serve:1",
+]

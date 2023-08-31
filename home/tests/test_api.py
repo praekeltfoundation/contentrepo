@@ -41,29 +41,29 @@ class PaginationTestCase(TestCase):
         # it should return 1 page for correct tag
         response = self.client.get("/api/v2/pages/?tag=menu")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 1)
+        self.assertEqual(content["count"], 1)
         # it should return 1 page for Uppercase tag
         response = self.client.get("/api/v2/pages/?tag=Menu")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 1)
+        self.assertEqual(content["count"], 1)
         # it should not return any pages for bogus tag
         response = self.client.get("/api/v2/pages/?tag=bogus")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 0)
+        self.assertEqual(content["count"], 0)
         # it should return all pages for no tag
         response = self.client.get("/api/v2/pages/")
         content = json.loads(response.content)
         # exclude home pages and index pages
-        self.assertEquals(content["count"], 3)
+        self.assertEqual(content["count"], 3)
         # it should not return pages with tags in the draft
         create_page(tags=["Menu"])
         response = self.client.get("/api/v2/pages/?tag=Menu")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 1)
+        self.assertEqual(content["count"], 1)
         # If QA flag is sent then it should return pages with tags in the draft
         response = self.client.get("/api/v2/pages/?tag=Menu&qa=True")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 2)
+        self.assertEqual(content["count"], 2)
 
     def test_platform_filtering(self):
         # web page
@@ -88,24 +88,24 @@ class PaginationTestCase(TestCase):
         # it should return only web pages if filtered
         response = self.client.get("/api/v2/pages/?web=true")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 1)
+        self.assertEqual(content["count"], 1)
         # it should return only whatsapp pages if filtered
         response = self.client.get("/api/v2/pages/?whatsapp=true")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 1)
+        self.assertEqual(content["count"], 1)
         # it should return only messenger pages if filtered
         response = self.client.get("/api/v2/pages/?messenger=true")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 1)
+        self.assertEqual(content["count"], 1)
         # it should return only viber pages if filtered
         response = self.client.get("/api/v2/pages/?viber=true")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 0)
+        self.assertEqual(content["count"], 0)
         # it should return all pages for no filter
         response = self.client.get("/api/v2/pages/")
         content = json.loads(response.content)
         # exclude home pages and index pages
-        self.assertEquals(content["count"], 3)
+        self.assertEqual(content["count"], 3)
 
     def test_whatsapp_draft(self):
         self.content_page2.unpublish()
@@ -127,8 +127,8 @@ class PaginationTestCase(TestCase):
             ]
         )
         # the page is not live but whatsapp content is returned
-        self.assertEquals(self.content_page2.live, False)
-        self.assertEquals(
+        self.assertEqual(self.content_page2.live, False)
+        self.assertEqual(
             content["body"]["text"]["value"]["message"].replace("\r", ""),
             message,
         )
@@ -155,8 +155,8 @@ class PaginationTestCase(TestCase):
         content = json.loads(response.content)
 
         # the page is not live but messenger content is returned
-        self.assertEquals(self.content_page2.live, False)
-        self.assertEquals(content["body"]["text"]["message"].replace("\r", ""), message)
+        self.assertEqual(self.content_page2.live, False)
+        self.assertEqual(content["body"]["text"]["message"].replace("\r", ""), message)
 
     def test_pagination(self):
         # it should not return the web body if enable_whatsapp=false
@@ -167,7 +167,7 @@ class PaginationTestCase(TestCase):
         )
 
         content = response.content
-        self.assertEquals(content, b"")
+        self.assertEqual(content, b"")
 
         # it should only return the whatsapp body if enable_whatsapp=True
         self.content_page1.enable_whatsapp = True
@@ -179,10 +179,10 @@ class PaginationTestCase(TestCase):
             f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True"
         )
         content = json.loads(response.content)
-        self.assertEquals(content["body"]["message"], 1)
-        self.assertEquals(content["body"]["previous_message"], None)
-        self.assertEquals(content["body"]["total_messages"], 1)
-        self.assertEquals(
+        self.assertEqual(content["body"]["message"], 1)
+        self.assertEqual(content["body"]["previous_message"], None)
+        self.assertEqual(content["body"]["total_messages"], 1)
+        self.assertEqual(
             content["body"]["revision"], self.content_page1.get_latest_revision().id
         )
         self.assertTrue(
@@ -195,8 +195,8 @@ class PaginationTestCase(TestCase):
             f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=3"
         )
         content = json.loads(response.content)
-        self.assertEquals(response.status_code, 400)
-        self.assertEquals(content, ["The requested message does not exist"])
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(content, ["The requested message does not exist"])
 
         # it should return an appropriate error if requested message is not
         # a positive integer value
@@ -204,8 +204,8 @@ class PaginationTestCase(TestCase):
             f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=notint"
         )
         content = json.loads(response.content)
-        self.assertEquals(response.status_code, 400)
-        self.assertEquals(
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
             content,
             ["Please insert a positive integer " "for message in the query string"],
         )
@@ -232,14 +232,14 @@ class PaginationTestCase(TestCase):
             f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=11"
         )
         content = json.loads(response.content)
-        self.assertEquals(content["body"]["message"], 11)
-        self.assertEquals(content["body"]["next_message"], 12)
-        self.assertEquals(content["body"]["previous_message"], 10)
-        self.assertEquals(content["body"]["text"]["value"]["message"], "WA Message 11")
+        self.assertEqual(content["body"]["message"], 11)
+        self.assertEqual(content["body"]["next_message"], 12)
+        self.assertEqual(content["body"]["previous_message"], 10)
+        self.assertEqual(content["body"]["text"]["value"]["message"], "WA Message 11")
 
     def test_detail_view(self):
         ContentPage.objects.all().delete()
-        self.assertEquals(PageView.objects.count(), 0)
+        self.assertEqual(PageView.objects.count(), 0)
 
         page = create_page(tags=["tag1", "tag2"])
 
@@ -247,12 +247,12 @@ class PaginationTestCase(TestCase):
         response = self.client.get(f"/api/v2/pages/{page.id}/")
         content = response.json()
 
-        self.assertEquals(content["id"], page.id)
-        self.assertEquals(content["title"], page.title)
-        self.assertEquals(content["tags"], ["tag1", "tag2"])
+        self.assertEqual(content["id"], page.id)
+        self.assertEqual(content["title"], page.title)
+        self.assertEqual(content["tags"], ["tag1", "tag2"])
         self.assertFalse(content["has_children"])
 
-        self.assertEquals(PageView.objects.count(), 1)
+        self.assertEqual(PageView.objects.count(), 1)
 
         # if there are children pages
         create_page("child page", page.title)
@@ -262,23 +262,23 @@ class PaginationTestCase(TestCase):
 
         self.assertTrue(content["has_children"])
 
-        self.assertEquals(PageView.objects.count(), 2)
+        self.assertEqual(PageView.objects.count(), 2)
         view = PageView.objects.last()
-        self.assertEquals(view.message, None)
+        self.assertEqual(view.message, None)
 
         # if we select the whatsapp content
         response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
         content = response.json()
 
-        self.assertEquals(content["title"], page.whatsapp_title)
+        self.assertEqual(content["title"], page.whatsapp_title)
 
-        self.assertEquals(PageView.objects.count(), 3)
+        self.assertEqual(PageView.objects.count(), 3)
         view = PageView.objects.last()
-        self.assertEquals(view.message, 1)
+        self.assertEqual(view.message, 1)
 
     def test_detail_view_with_variations(self):
         ContentPage.objects.all().delete()
-        self.assertEquals(PageView.objects.count(), 0)
+        self.assertEqual(PageView.objects.count(), 0)
 
         # variations should be in the whatsapp content
         page = create_page(tags=["tag1", "tag2"], add_variation=True)
@@ -287,14 +287,14 @@ class PaginationTestCase(TestCase):
         content = response.json()
 
         var_content = content["body"]["text"]["value"]["variation_messages"]
-        self.assertEquals(1, len(var_content))
-        self.assertEquals(var_content[0]["profile_field"], "gender")
-        self.assertEquals(var_content[0]["value"], "female")
-        self.assertEquals(var_content[0]["message"], "Test Title - female variation")
+        self.assertEqual(1, len(var_content))
+        self.assertEqual(var_content[0]["profile_field"], "gender")
+        self.assertEqual(var_content[0]["value"], "female")
+        self.assertEqual(var_content[0]["message"], "Test Title - female variation")
 
-        self.assertEquals(PageView.objects.count(), 1)
+        self.assertEqual(PageView.objects.count(), 1)
         view = PageView.objects.last()
-        self.assertEquals(view.message, 1)
+        self.assertEqual(view.message, 1)
 
     def test_whatsapp_body(self):
         """
@@ -320,8 +320,8 @@ class PaginationTestCase(TestCase):
         response = self.client.get("/api/v2/pages/1/")
         content = response.json()
 
-        self.assertEquals(content, {"page": ["Page matching query does not exist."]})
-        self.assertEquals(content.get("page"), ["Page matching query does not exist."])
+        self.assertEqual(content, {"page": ["Page matching query does not exist."]})
+        self.assertEqual(content.get("page"), ["Page matching query does not exist."])
 
 
 class OrderedContentSetTestCase(TestCase):
@@ -361,9 +361,9 @@ class OrderedContentSetTestCase(TestCase):
         # it should return a list of ordered sets and show the profile fields
         response = self.client.get("/api/v2/orderedcontent/")
         content = json.loads(response.content)
-        self.assertEquals(content["count"], 2)
-        self.assertEquals(content["results"][0]["name"], self.ordered_content_set.name)
-        self.assertEquals(
+        self.assertEqual(content["count"], 2)
+        self.assertEqual(content["results"][0]["name"], self.ordered_content_set.name)
+        self.assertEqual(
             content["results"][0]["profile_fields"][0],
             {"profile_field": "gender", "value": "female"},
         )
@@ -374,11 +374,11 @@ class OrderedContentSetTestCase(TestCase):
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/"
         )
         content = json.loads(response.content)
-        self.assertEquals(content["name"], self.ordered_content_set.name)
-        self.assertEquals(
+        self.assertEqual(content["name"], self.ordered_content_set.name)
+        self.assertEqual(
             content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
         )
-        self.assertEquals(
+        self.assertEqual(
             content["pages"][0],
             {
                 "id": self.content_page1.id,
@@ -396,11 +396,11 @@ class OrderedContentSetTestCase(TestCase):
             f"/api/v2/orderedcontent/{self.ordered_content_set_timed.id}/"
         )
         content = json.loads(response.content)
-        self.assertEquals(content["name"], self.ordered_content_set_timed.name)
-        self.assertEquals(
+        self.assertEqual(content["name"], self.ordered_content_set_timed.name)
+        self.assertEqual(
             content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
         )
-        self.assertEquals(
+        self.assertEqual(
             content["pages"][0],
             {
                 "id": self.content_page1.id,
@@ -424,11 +424,11 @@ class OrderedContentSetTestCase(TestCase):
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_related=true"
         )
         content = json.loads(response.content)
-        self.assertEquals(content["name"], self.ordered_content_set.name)
-        self.assertEquals(
+        self.assertEqual(content["name"], self.ordered_content_set.name)
+        self.assertEqual(
             content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
         )
-        self.assertEquals(
+        self.assertEqual(
             content["pages"][0],
             {
                 "id": self.content_page1.id,
@@ -447,10 +447,10 @@ class OrderedContentSetTestCase(TestCase):
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_tags=true"
         )
         content = json.loads(response.content)
-        self.assertEquals(content["name"], self.ordered_content_set.name)
-        self.assertEquals(
+        self.assertEqual(content["name"], self.ordered_content_set.name)
+        self.assertEqual(
             content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
         )
-        self.assertEquals(
+        self.assertEqual(
             content["pages"][0]["tags"], [t.name for t in self.content_page1.tags.all()]
         )

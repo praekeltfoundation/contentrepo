@@ -2,3 +2,6 @@ flake8
 black
 responses
 isort
+pytest
+pytest-django
+pytest-cov
