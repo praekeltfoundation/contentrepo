@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v1.1.0-dev.3
+
+### Fixed
+
+- Content_page_index.html template does not exist
+- N+1 Query error
+
+
 ## v1.1.0-dev.2
 
 ### Added
