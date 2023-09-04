@@ -123,7 +123,7 @@ def get_valid_profile_values(field):
     profile_values = {}
 
     for profile_block in site_settings.profile_field_options:
-        profile_values[profile_block.block_type] = [b for b in profile_block.value]
+        profile_values[profile_block.block_type] = list(profile_block.value)
     try:
         return profile_values[field]
     except KeyError:
@@ -132,19 +132,19 @@ def get_valid_profile_values(field):
 
 def get_gender_choices():
     # Wrapper for get_profile_field_choices that can be passed as a callable
-    choices = {k: v for k, v in GENDER_CHOICES}
+    choices = dict(GENDER_CHOICES)
     return [(g, choices[g]) for g in get_valid_profile_values("gender")]
 
 
 def get_age_choices():
     # Wrapper for get_profile_field_choices that can be passed as a callable
-    choices = {k: v for k, v in AGE_CHOICES}
+    choices = dict(AGE_CHOICES)
     return [(a, choices[a]) for a in get_valid_profile_values("age")]
 
 
 def get_relationship_choices():
     # Wrapper for get_profile_field_choices that can be passed as a callable
-    choices = {k: v for k, v in RELATIONSHIP_STATUS_CHOICES}
+    choices = dict(RELATIONSHIP_STATUS_CHOICES)
     return [(r, choices[r]) for r in get_valid_profile_values("relationship")]
 
 

@@ -1,5 +1,6 @@
 import json
 from io import BytesIO
+from pathlib import Path
 
 import requests
 from django.core.files.images import ImageFile
@@ -54,10 +55,10 @@ class Command(BaseCommand):
         #         created_tag, _ = Tag.objects.get_or_create(name=tag)
         #         page.tags.add(created_tag)
 
-        path = options["path"]
+        path = Path(options["path"])
 
         ContentPage.objects.all().delete()
-        with open(path) as json_file:
+        with path.open() as json_file:
             data = json.load(json_file)
 
             for message in data["data"]:

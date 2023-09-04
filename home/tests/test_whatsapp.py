@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import responses
 from django.conf import settings
@@ -61,9 +62,9 @@ class WhatsAppTests(TestCase):
     @responses.activate
     def test_create_whatsapp_template_with_image(self):
         img_name = "test.jpeg"
-        img_path = f"home/tests/test_static/{img_name}"
+        img_path = Path("home/tests/test_static") / img_name
 
-        read_file = open(img_path, "rb")
+        read_file = img_path.open("rb")
         saved_image = Image(
             title=img_name,
             file=ImageFile(read_file, name=img_path),

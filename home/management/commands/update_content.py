@@ -1,4 +1,5 @@
 import csv
+from pathlib import Path
 
 from django.core.management.base import BaseCommand
 from taggit.models import Tag
@@ -29,8 +30,8 @@ class Command(BaseCommand):
                     row[field] = str(row[field]).strip()
             return row
 
-        path = options["path"]
-        with open(path, "rt") as f:
+        path = Path(options["path"])
+        with path.open("rt") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 row = clean_row(row)

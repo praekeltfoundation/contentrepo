@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from django.core.management.base import BaseCommand
 from taggit.models import Tag
@@ -26,9 +27,9 @@ class Command(BaseCommand):
                 created_tag, _ = Tag.objects.get_or_create(name=tag)
                 page.tags.add(created_tag)
 
-        path = options["path"]
+        path = Path(options["path"])
         home_page = HomePage.objects.first()
-        with open(path) as json_file:
+        with path.open() as json_file:
             data = json.load(json_file)
             for article in data["articles"]:
                 contentpage = ContentPage(

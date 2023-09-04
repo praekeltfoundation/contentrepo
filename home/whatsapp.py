@@ -1,5 +1,6 @@
 import json
 import mimetypes
+from pathlib import Path
 from urllib.parse import urljoin
 
 import requests
@@ -7,7 +8,7 @@ from django.conf import settings
 from wagtail.images import get_image_model
 
 
-def create_whatsapp_template(name, body, quick_replies=[], image_id=None):
+def create_whatsapp_template(name, body, quick_replies=(), image_id=None):
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
@@ -97,7 +98,7 @@ def upload_image(image_id):
         url,
         headers=headers,
         files={
-            "file": open(upload_details["path_to_file"], "rb"),
+            "file": Path(upload_details["path_to_file"]).open("rb"),
             "number": settings.FB_BUSINESS_ID,
             "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         },
