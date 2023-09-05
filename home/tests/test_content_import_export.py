@@ -40,7 +40,18 @@ def ignore_certain_fields(entry):
     #        import reads that.
     # FIXME: We should probably set contentpage.translation_key on import
     #        instead of messing about with tags.
-    ignored_fields = {"page_id", "translation_tag"}
+    # FIXME: Implement import/export for doc_link, image_link, media_link.
+    # FIXME: Implement import/export for next_prompt.
+    # FIXME: Add related page to import source.
+    ignored_fields = {
+        "page_id",
+        "translation_tag",
+        "doc_link",
+        "image_link",
+        "media_link",
+        "next_prompt",
+        "related_pages",
+    }
     return {k: v for k, v in entry.items() if k not in ignored_fields}
 
 
@@ -108,6 +119,32 @@ class ImportExportTestCase(TestCase):
          * Do we expect imported content to have leading spaces removed?
         """
         csv_bytes = self.import_csv(Path("home/tests/content2.csv"))
+        resp = self.client.get("/admin/home/contentpage/?export=csv")
+        content = resp.content
+        src, dst = csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+    def test_roundtrip_csv_less_simple(self):
+        """
+        Importing a less simple CSV file and then exporting it produces a
+        duplicate of the original file.
+
+        (This uses exported_content_20230905.csv.)
+
+        FIXME:
+         * This should probably be in a separate test for importing old exports.
+         * Do we actually need translation_tag to be added to tags?
+         * Do we need page.id to be imported? At the moment nothing in the
+           import reads that.
+         * We should probably set contentpage.translation_key on import instead
+           of messing about with tags.
+         * Do we expect imported content to have leading spaces removed?
+         * Implement import/export for doc_link, image_link, media_link.
+         * Implement import/export for next_prompt.
+         * Add related page to import source.
+        """
+        self.set_profile_field_options([("gender", ["male", "female", "empty"])])
+        csv_bytes = self.import_csv(Path("home/tests/exported_content_20230905.csv"))
         resp = self.client.get("/admin/home/contentpage/?export=csv")
         content = resp.content
         src, dst = csvs2dicts(csv_bytes, content)
