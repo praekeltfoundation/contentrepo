@@ -507,6 +507,10 @@ class ContentPage(Page, ContentImportMixin):
     def whatsapp_template_body(self):
         return self.whatsapp_body.raw_data[0]["value"]["message"]
 
+    @property
+    def whatsapp_template_image(self):
+        return self.whatsapp_body.raw_data[0]["value"]["image"]
+
     def create_whatsapp_template_name(self) -> str:
         return f"{self.whatsapp_template_prefix}_{self.get_latest_revision().pk}"
 
@@ -574,6 +578,8 @@ class ContentPage(Page, ContentImportMixin):
                 and sorted(self.quick_reply_buttons)
                 == sorted(previous_revision.quick_reply_buttons)
                 and self.is_whatsapp_template == previous_revision.is_whatsapp_template
+                and self.whatsapp_template_image
+                == previous_revision.whatsapp_template_image
             ):
                 return
         except AttributeError:
@@ -585,6 +591,7 @@ class ContentPage(Page, ContentImportMixin):
             self.whatsapp_template_name,
             self.whatsapp_template_body,
             sorted(self.quick_reply_buttons),
+            self.whatsapp_template_image,
         )
 
         return self.whatsapp_template_name
