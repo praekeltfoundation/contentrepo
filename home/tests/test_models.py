@@ -51,7 +51,7 @@ class ContentPageTests(TestCase):
     def test_template_create_on_save(self, mock_create_whatsapp_template):
         page = create_page(is_whatsapp_template=True)
         mock_create_whatsapp_template.assert_called_with(
-            f"WA_Title_{page.get_latest_revision().id}", "Test WhatsApp Message 1", []
+            f"WA_Title_{page.get_latest_revision().id}", "Test WhatsApp Message 1", [], None
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -61,7 +61,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_with(
             f"WA_Title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
-            ["button 1", "button 2"],
+            ["button 1", "button 2"], None
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -75,7 +75,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             f"WA_Title_{page.get_latest_revision().pk}",
             "Test WhatsApp Message 1",
-            ["button 1", "button 2"],
+            ["button 1", "button 2"], None
         )
 
         mock_create_whatsapp_template.reset_mock()
@@ -87,7 +87,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             expected_title,
             "Test WhatsApp Message 2",
-            ["button 1", "button 2"],
+            ["button 1", "button 2"], None
         )
         page.refresh_from_db()
         self.assertEqual(page.whatsapp_template_name, expected_title)
@@ -106,7 +106,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
-            ["button 1", "button 2"],
+            ["button 1", "button 2"], None
         )
 
         mock_create_whatsapp_template.reset_mock()
@@ -138,7 +138,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
-            ["button 1", "button 2"],
+            ["button 1", "button 2"], None
         )
 
 
