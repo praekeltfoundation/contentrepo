@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import responses
 from django.conf import settings
@@ -26,8 +27,8 @@ class WhatsAppTests(TestCase):
 
         request = responses.calls[0].request
 
-        self.assertEquals(request.headers["Authorization"], "Bearer fake-access-token")
-        self.assertEquals(request.body, json.dumps(data, indent=4))
+        self.assertEqual(request.headers["Authorization"], "Bearer fake-access-token")
+        self.assertEqual(request.body, json.dumps(data, indent=4))
 
     @responses.activate
     def test_create_whatsapp_template_with_buttons(self):
@@ -55,15 +56,15 @@ class WhatsAppTests(TestCase):
 
         request = responses.calls[0].request
 
-        self.assertEquals(request.headers["Authorization"], "Bearer fake-access-token")
-        self.assertEquals(request.body, json.dumps(data, indent=4))
+        self.assertEqual(request.headers["Authorization"], "Bearer fake-access-token")
+        self.assertEqual(request.body, json.dumps(data, indent=4))
 
     @responses.activate
     def test_create_whatsapp_template_with_image(self):
         img_name = "test.jpeg"
-        img_path = f"home/tests/test_static/{img_name}"
+        img_path = Path("home/tests/test_static") / img_name
 
-        read_file = open(img_path, "rb")
+        read_file = img_path.open("rb")
         saved_image = Image(
             title=img_name,
             file=ImageFile(read_file, name=img_path),
@@ -106,7 +107,7 @@ class WhatsAppTests(TestCase):
             "number": "27121231234",
         }
         get_session_id_request = responses.calls[0].request
-        self.assertEquals(
+        self.assertEqual(
             get_session_id_request.body, json.dumps(mock_get_session_data, indent=4)
         )
 
@@ -125,10 +126,10 @@ class WhatsAppTests(TestCase):
             ],
         }
 
-        self.assertEquals(
+        self.assertEqual(
             create_template_request.headers["Authorization"], "Bearer fake-access-token"
         )
-        self.assertEquals(
+        self.assertEqual(
             create_template_request.body,
             json.dumps(mock_create_template_data, indent=4),
         )

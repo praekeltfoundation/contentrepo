@@ -17,7 +17,7 @@ class PageRatingTestCase(APITestCase):
 
     def test_homepage_redirect(self):
         response = self.client.get("/")
-        self.assertEquals("/admin/", response.url)
+        self.assertEqual("/admin/", response.url)
 
     def test_page_rating_success(self):
         user = get_user_model().objects.create_user("test")
@@ -36,12 +36,12 @@ class PageRatingTestCase(APITestCase):
             format="json",
         )
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_data = response.json()
         response_data.pop("timestamp")
         rating = ContentPageRating.objects.last()
-        self.assertEquals(
+        self.assertEqual(
             response.json(),
             {
                 "id": rating.id,
@@ -59,8 +59,8 @@ class PageRatingTestCase(APITestCase):
 
         response = self.client.post(self.url, {}, format="json")
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
             response.json(),
             {
                 "helpful": ["This field is required."],
@@ -75,8 +75,8 @@ class PageRatingTestCase(APITestCase):
 
         response = self.client.post(self.url, {"page": 123}, format="json")
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
             response.json(),
             {
                 "page": ["Page matching query does not exist."],
@@ -93,12 +93,12 @@ class PageRatingTestCase(APITestCase):
         page = create_page()
 
         rating_old = page.ratings.create(
-            **{"revision": page.get_latest_revision(), "helpful": True}
+            revision=page.get_latest_revision(), helpful=True
         )
         rating_new = page.ratings.create(
-            **{"revision": page.get_latest_revision(), "helpful": False}
+            revision=page.get_latest_revision(), helpful=False
         )
-        page.ratings.create(**{"revision": page.get_latest_revision(), "helpful": True})
+        page.ratings.create(revision=page.get_latest_revision(), helpful=True)
         response = self.client.get(
             f"{self.url}?"
             f"{urlencode({'timestamp_gt': rating_old.timestamp.isoformat()})}"
@@ -135,21 +135,9 @@ class PageViewsTestCase(APITestCase):
 
         page = create_page()
 
-        pageview_old = page.views.create(
-            **{
-                "revision": page.get_latest_revision(),
-            }
-        )
-        pageview_new = page.views.create(
-            **{
-                "revision": page.get_latest_revision(),
-            }
-        )
-        page.views.create(
-            **{
-                "revision": page.get_latest_revision(),
-            }
-        )
+        pageview_old = page.views.create(revision=page.get_latest_revision())
+        pageview_new = page.views.create(revision=page.get_latest_revision())
+        page.views.create(revision=page.get_latest_revision())
         response = self.client.get(
             f"{self.url}?"
             f"{urlencode({'timestamp_gt': pageview_old.timestamp.isoformat()})}"

@@ -14,9 +14,11 @@ name: "CodeQL"
 on:
   push:
     branches: [ main ]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ main ]
+  ## This takes about half an hour to run, so let's not have it slow down dev
+  ## and review.
+  # pull_request:
+  #   # The branches below must be a subset of the branches above
+  #   branches: [ main ]
   schedule:
     - cron: '19 21 * * 2'
 

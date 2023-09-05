@@ -16,7 +16,7 @@ from home.models import (  # isort:skip
 def create_page(
     title="Test Title",
     parent=None,
-    tags=[],
+    tags=(),
     is_whatsapp_template=False,
     add_variation=False,
     has_quick_replies=False,
@@ -79,10 +79,8 @@ def create_page(
 
 def create_page_rating(page, helpful=True, comment=""):
     return ContentPageRating.objects.create(
-        **{
-            "page": page,
-            "revision": page.get_latest_revision(),
-            "helpful": helpful,
-            "comment": comment,
-        }
+        page=page,
+        revision=page.get_latest_revision(),
+        helpful=helpful,
+        comment=comment,
     )

@@ -1,4 +1,6 @@
-flake8
 black
+ruff
 responses
-isort
+pytest
+pytest-django
+pytest-cov
