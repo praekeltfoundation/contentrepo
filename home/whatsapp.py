@@ -62,7 +62,7 @@ def get_upload_session_id(image_id):
     img_obj = get_image_model().objects.get(id=image_id)
     mime_type = mimetypes.guess_type(img_obj.file.name)[0]
     file_size = img_obj.file.size
-    file_path = Path(settings.MEDIA_ROOT) /  img_obj.file.name
+    file_path = Path(settings.MEDIA_ROOT) / img_obj.file.name
     data = {
         "file_length": file_size,
         "file_type": mime_type,
