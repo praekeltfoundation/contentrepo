@@ -6,9 +6,10 @@ from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from wagtail.models import Locale
 from wagtail.models.sites import Site
 
-from home.models import SiteSettings
+from home.models import HomePage, SiteSettings
 from home.utils import import_content
 
 
@@ -97,9 +98,10 @@ class ImportExportTestCase(TestCase):
         site_settings.profile_field_options.extend(profile_field_options)
         site_settings.save()
 
-    def import_csv(self, csv_path):
+    def import_csv(self, csv_path, **kw):
+        csv_path = Path(csv_path)
         with csv_path.open(mode="rb") as f:
-            import_content(f, "CSV", queue.Queue())
+            import_content(f, "CSV", queue.Queue(), **kw)
         return csv_path.read_bytes()
 
     def test_roundtrip_csv_simple(self):
@@ -118,10 +120,9 @@ class ImportExportTestCase(TestCase):
            of messing about with tags.
          * Do we expect imported content to have leading spaces removed?
         """
-        csv_bytes = self.import_csv(Path("home/tests/content2.csv"))
+        csv_bytes = self.import_csv("home/tests/content2.csv")
         resp = self.client.get("/admin/home/contentpage/?export=csv")
-        content = resp.content
-        src, dst = csvs2dicts(csv_bytes, content)
+        src, dst = csvs2dicts(csv_bytes, resp.content)
         assert dst == src
 
     def test_roundtrip_csv_less_simple(self):
@@ -129,23 +130,48 @@ class ImportExportTestCase(TestCase):
         Importing a less simple CSV file and then exporting it produces a
         duplicate of the original file.
 
-        (This uses exported_content_20230905.csv.)
+        (This uses exported_content_20230905-variations.csv.)
 
         FIXME:
-         * This should probably be in a separate test for importing old exports.
-         * Do we actually need translation_tag to be added to tags?
-         * Do we need page.id to be imported? At the moment nothing in the
-           import reads that.
-         * We should probably set contentpage.translation_key on import instead
-           of messing about with tags.
-         * Do we expect imported content to have leading spaces removed?
          * Implement import/export for doc_link, image_link, media_link.
          * Implement import/export for next_prompt.
          * Add related page to import source.
         """
         self.set_profile_field_options([("gender", ["male", "female", "empty"])])
-        csv_bytes = self.import_csv(Path("home/tests/exported_content_20230905.csv"))
+        csv_bytes = self.import_csv("home/tests/exported_content_20230905-variations.csv")
         resp = self.client.get("/admin/home/contentpage/?export=csv")
         content = resp.content
         src, dst = csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+    def test_roundtrip_csv_translations(self):
+        """
+        Importing a CSV file containing translations and then exporting it
+        produces a duplicate of the original file.
+
+        (This uses exported_content_20230906-translations.csv and the two
+        language-specific subsets thereof.)
+
+        FIXME:
+         * We shouldn't need to import different languages separately.
+         * Slugs need to either be unique per site/deployment or the importer
+           needs to handle them only being unique per locale.
+        """
+
+        pt = Locale.objects.create(language_code="pt")
+        # Create a new homepage for Portuguese.
+        HomePage.objects.create(
+            locale=pt,
+            path="00010002",
+            depth=2,
+            title="Home (pt)",
+            slug="home-pt",
+        )
+
+        self.set_profile_field_options([("gender", ["male", "female", "empty"])])
+        self.import_csv("home/tests/translations-en.csv")
+        self.import_csv("home/tests/translations-pt.csv", locale="pt", purge=False)
+        csv_bytes = Path("home/tests/exported_content_20230906-translations.csv").read_bytes()
+        resp = self.client.get("/admin/home/contentpage/?export=csv")
+        src, dst = csvs2dicts(csv_bytes, resp.content)
         assert dst == src
