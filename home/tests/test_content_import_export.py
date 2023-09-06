@@ -138,7 +138,9 @@ class ImportExportTestCase(TestCase):
          * Add related page to import source.
         """
         self.set_profile_field_options([("gender", ["male", "female", "empty"])])
-        csv_bytes = self.import_csv("home/tests/exported_content_20230905-variations.csv")
+        csv_bytes = self.import_csv(
+            "home/tests/exported_content_20230905-variations.csv"
+        )
         resp = self.client.get("/admin/home/contentpage/?export=csv")
         content = resp.content
         src, dst = csvs2dicts(csv_bytes, content)
@@ -171,7 +173,9 @@ class ImportExportTestCase(TestCase):
         self.set_profile_field_options([("gender", ["male", "female", "empty"])])
         self.import_csv("home/tests/translations-en.csv")
         self.import_csv("home/tests/translations-pt.csv", locale="pt", purge=False)
-        csv_bytes = Path("home/tests/exported_content_20230906-translations.csv").read_bytes()
+        csv_bytes = Path(
+            "home/tests/exported_content_20230906-translations.csv"
+        ).read_bytes()
         resp = self.client.get("/admin/home/contentpage/?export=csv")
         src, dst = csvs2dicts(csv_bytes, resp.content)
         assert dst == src
