@@ -7,7 +7,6 @@ import requests
 from django.conf import settings
 from wagtail.images import get_image_model
 
-
 logger = getLogger(__name__)
 
 
