@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 import requests
 from django.conf import settings
 from wagtail.images import get_image_model
+from logging import getLogger
 
 
 def create_whatsapp_template(name, body, quick_replies=(), image_id=None):
@@ -102,6 +103,7 @@ def upload_image(image_id):
             "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         },
     )
-    print(response.content)
+    logger = getLogger(__name__)
+    logger.warning(response.content)
     response.raise_for_status()
     return response.json()["h"]
