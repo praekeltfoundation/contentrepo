@@ -1,11 +1,11 @@
 import json
 import mimetypes
+from logging import getLogger
 from urllib.parse import urljoin
 
 import requests
 from django.conf import settings
 from wagtail.images import get_image_model
-from logging import getLogger
 
 
 def create_whatsapp_template(name, body, quick_replies=(), image_id=None):
@@ -104,6 +104,7 @@ def upload_image(image_id):
         },
     )
     logger = getLogger(__name__)
-    logger.warning(response.content)
+    with upload_details["path_to_file"].open("rb") as f:
+        logger.warning(f"image data: {f.read()}")
     response.raise_for_status()
     return response.json()["h"]
