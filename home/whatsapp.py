@@ -102,5 +102,6 @@ def upload_image(image_id):
             "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         },
     )
+    print(response.content)
     response.raise_for_status()
     return response.json()["h"]
