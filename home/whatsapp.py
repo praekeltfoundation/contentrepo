@@ -8,6 +8,9 @@ from django.conf import settings
 from wagtail.images import get_image_model
 
 
+logger = getLogger(__name__)
+
+
 def create_whatsapp_template(name, body, quick_replies=(), image_id=None):
     url = urljoin(
         settings.WHATSAPP_API_URL,
@@ -60,10 +63,9 @@ def get_upload_session_id(image_id):
 
     img_obj = get_image_model().objects.get(id=image_id)
     mime_type = mimetypes.guess_type(img_obj.file.name)[0]
-    file_size = img_obj.file.size
-    file_path = img_obj.file
+    image_file = img_obj.file
     data = {
-        "file_length": file_size,
+        "file_length": image_file.size,
         "file_type": mime_type,
         "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         "number": settings.FB_BUSINESS_ID,
@@ -76,7 +78,7 @@ def get_upload_session_id(image_id):
     )
     upload_details = {
         "upload_session_id": response.json()["id"],
-        "path_to_file": file_path,
+        "image_file": image_file,
     }
 
     response.raise_for_status()
@@ -98,13 +100,13 @@ def upload_image(image_id):
         url,
         headers=headers,
         files={
-            "file": upload_details["path_to_file"].open("rb"),
+            "file": upload_details["image_file"].open("rb"),
             "number": settings.FB_BUSINESS_ID,
             "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         },
     )
-    logger = getLogger(__name__)
-    with upload_details["path_to_file"].open("rb") as f:
-        logger.warning(f"image data: {f.read()}")
+
+    if not response.ok:
+        logger.warning(f"Image Upload Response content: {response.content}")
     response.raise_for_status()
     return response.json()["h"]
