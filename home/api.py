@@ -104,7 +104,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
             queryset = queryset.filter(id__in=ids)
         s = self.request.query_params.get("s")
         if s is not None:
-            from .utils import retrieve_top_n_content_pieces
+            from .word_embedding import retrieve_top_n_content_pieces
 
             platform = "web"
             if "whatsapp" in self.request.query_params:

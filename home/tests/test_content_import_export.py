@@ -9,8 +9,8 @@ from django.test import TestCase
 from wagtail.models import Locale
 from wagtail.models.sites import Site
 
+from home.content_import_export import import_content
 from home.models import HomePage, SiteSettings
-from home.utils import import_content
 
 
 def filter_both(filter_func):

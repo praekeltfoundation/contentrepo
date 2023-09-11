@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.http import HttpResponse
 
-from .utils import export_csv_content, export_xlsx_content
+from .content_import_export import export_csv_content, export_xlsx_content
 
 
 class SpreadsheetExportMixin:

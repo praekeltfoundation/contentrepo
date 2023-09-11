@@ -618,7 +618,7 @@ class ContentPage(Page, ContentImportMixin):
 
 @receiver(pre_save, sender=ContentPage)
 def update_embedding(sender, instance, *args, **kwargs):
-    from .utils import preprocess_content_for_embedding
+    from .word_embedding import preprocess_content_for_embedding
 
     if not model:
         return
