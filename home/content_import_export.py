@@ -8,6 +8,7 @@ from logging import getLogger
 from math import ceil
 from typing import List, Tuple, Union
 
+from django.db import transaction
 from django.http import HttpResponse
 from openpyxl import load_workbook
 from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
@@ -70,6 +71,7 @@ EXPORT_FIELDNAMES = [
 logger = getLogger(__name__)
 
 
+@transaction.atomic
 def import_content(file, filetype, progress_queue, purge=True, locale="en"):
     def set_variation_blocks(body_values, message_number):
         variation_blocks = []
