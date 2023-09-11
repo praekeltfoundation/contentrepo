@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from wagtail import blocks
 
-from home.utils import import_content
+from home.content_import_export import import_content
 
 from .utils import create_page
 
