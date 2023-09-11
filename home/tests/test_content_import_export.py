@@ -43,7 +43,6 @@ def ignore_certain_fields(entry):
     #        instead of messing about with tags.
     # FIXME: Implement import/export for doc_link, image_link, media_link.
     # FIXME: Implement import/export for next_prompt.
-    # FIXME: Add related page to import source.
     ignored_fields = {
         "page_id",
         "translation_tag",
@@ -51,7 +50,6 @@ def ignore_certain_fields(entry):
         "image_link",
         "media_link",
         "next_prompt",
-        "related_pages",
     }
     return {k: v for k, v in entry.items() if k not in ignored_fields}
 
@@ -130,16 +128,15 @@ class ImportExportTestCase(TestCase):
         Importing a less simple CSV file and then exporting it produces a
         duplicate of the original file.
 
-        (This uses exported_content_20230905-variations.csv.)
+        (This uses exported_content_20230911-variations-linked-page.csv.)
 
         FIXME:
          * Implement import/export for doc_link, image_link, media_link.
          * Implement import/export for next_prompt.
-         * Add related page to import source.
         """
         self.set_profile_field_options([("gender", ["male", "female", "empty"])])
         csv_bytes = self.import_csv(
-            "home/tests/exported_content_20230905-variations.csv"
+            "home/tests/exported_content_20230911-variations-linked-page.csv"
         )
         resp = self.client.get("/admin/home/contentpage/?export=csv")
         content = resp.content
