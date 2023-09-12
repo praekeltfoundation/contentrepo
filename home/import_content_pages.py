@@ -1,3 +1,4 @@
+import contextlib
 import csv
 from dataclasses import dataclass, field, fields
 from datetime import datetime
@@ -97,7 +98,7 @@ class ContentImporter:
         rows: list[ContentRow] = []
         for row in worksheet.iter_rows(min_row=2, values_only=True):
             r = {}
-            for name, cell in zip(header, row):
+            for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
                 if name and cell:
                     r[name] = clean_excel_cell(cell)
             rows.append(ContentRow.from_flat(r))
@@ -105,7 +106,7 @@ class ContentImporter:
 
     def parse_csv(self) -> list["ContentRow"]:
         reader = csv.DictReader(StringIO(self.file_content.decode()))
-        return list(ContentRow.from_flat(row) for row in reader)
+        return [ContentRow.from_flat(row) for row in reader]
 
     def set_progress(self, message: str, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
@@ -128,10 +129,9 @@ class ContentImporter:
         except ContentPageIndex.DoesNotExist:
             index = ContentPageIndex(slug=row.slug)
         index.title = row.web_title
-        try:
+        with contextlib.suppress(NodeAlreadySaved):
             self.home_page.add_child(instance=index)
-        except NodeAlreadySaved:
-            pass
+
         index.save_revision().publish()
 
     def create_shadow_content_page_from_row(self, row: "ContentRow") -> None:
@@ -251,10 +251,8 @@ class ShadowContentPage:
         self.add_quick_replies_to_page(page)
         self.add_triggers_to_page(page)
 
-        try:
+        with contextlib.suppress(NodeAlreadySaved):
             parent.add_child(instance=page)
-        except NodeAlreadySaved:
-            pass
 
         page.save_revision().publish()
 
