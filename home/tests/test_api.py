@@ -56,7 +56,7 @@ class PaginationTestCase(TestCase):
         # exclude home pages and index pages
         self.assertEqual(content["count"], 3)
         # it should not return pages with tags in the draft
-        create_page(tags=["Menu"])
+        create_page(tags=["Menu"]).unpublish()
         response = self.client.get("/api/v2/pages/?tag=Menu")
         content = json.loads(response.content)
         self.assertEqual(content["count"], 1)
@@ -238,14 +238,8 @@ class PaginationTestCase(TestCase):
         self.assertEqual(content["body"]["text"]["value"]["message"], "WA Message 11")
 
     def test_number_of_queries(self):
-        DUMMY_CACHE = {
-            "default": {
-                "BACKEND": "django.core.cache.backends.dummy.DummyCache",
-            }
-        }
-        with self.settings(CACHES=DUMMY_CACHE):
-            with self.assertNumQueries(14):
-                self.client.get("/api/v2/pages/")
+        with self.assertNumQueries(14):
+            self.client.get("/api/v2/pages/")
 
     def test_detail_view(self):
         ContentPage.objects.all().delete()
