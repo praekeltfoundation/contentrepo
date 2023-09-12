@@ -85,6 +85,14 @@ class PaginationTestCase(TestCase):
         page3.enable_viber = False
         page3.save_revision().publish()
 
+        # Print all pages to try figure out why this test is failing in CI.
+        response = self.client.get("/api/v2/pages/")
+        content = json.loads(response.content)
+        print("Full result:", content)
+        print("Results:")
+        for result in content["results"]:
+            print(" *", result)
+
         # it should return only web pages if filtered
         response = self.client.get("/api/v2/pages/?web=true")
         content = json.loads(response.content)
