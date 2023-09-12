@@ -40,6 +40,7 @@ jobs:
       run: |
         black --check .
         ruff .
+        mypy
     - name: Run tests
       run: |
         pytest

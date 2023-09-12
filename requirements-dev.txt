@@ -4,3 +4,5 @@ responses
 pytest
 pytest-django
 pytest-cov
+mypy
+types-openpyxl
