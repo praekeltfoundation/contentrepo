@@ -118,6 +118,8 @@ class ImportExportTestCase(TestCase):
          * We should probably set contentpage.translation_key on import instead
            of messing about with tags.
          * Do we expect imported content to have leading spaces removed?
+         * Should we set enable_web and friends based on body, title, or an
+           enable field that we'll need to add to the export?
         """
         csv_bytes = self.import_csv("home/tests/content2.csv")
         resp = self.client.get("/admin/home/contentpage/?export=csv")
