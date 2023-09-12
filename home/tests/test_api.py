@@ -56,7 +56,7 @@ class PaginationTestCase(TestCase):
         # exclude home pages and index pages
         self.assertEqual(content["count"], 3)
         # it should not return pages with tags in the draft
-        create_page(tags=["Menu"])
+        create_page(tags=["Menu"]).unpublish()
         response = self.client.get("/api/v2/pages/?tag=Menu")
         content = json.loads(response.content)
         self.assertEqual(content["count"], 1)
