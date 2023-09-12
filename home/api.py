@@ -23,7 +23,7 @@ from .models import (  # isort:skip
 class ContentPagesViewSet(PagesAPIViewSet):
     base_serializer_class = ContentPageSerializer
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
-        ["tag", "trigger", "page", "qa", "whatsapp", "viber", "messenger", "web", "s"]
+        ["tag", "trigger", "page", "qa", "whatsapp", "viber", "messenger", "web", "s", "order_by"]
     )
     pagination_class = PageNumberPagination
 
@@ -116,6 +116,9 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
             ids = retrieve_top_n_content_pieces(s, queryset, platform=platform)
             queryset = queryset.filter(id__in=ids)
+        order_by = self.request.query_params.get("order_by")
+        if order_by is not None:
+            queryset = queryset.order_by(order_by)
         return queryset
 
 
