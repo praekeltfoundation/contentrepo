@@ -4,6 +4,7 @@ from functools import wraps
 from io import StringIO
 from pathlib import Path
 
+import pytest
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from wagtail.models import Locale
@@ -173,6 +174,24 @@ class ImportExportTestCase(TestCase):
         csv_bytes = Path(
             "home/tests/exported_content_20230906-translations.csv"
         ).read_bytes()
+        resp = self.client.get("/admin/home/contentpage/?export=csv")
+        src, dst = csvs2dicts(csv_bytes, resp.content)
+        assert dst == src
+
+    def test_import_error(self):
+        """
+        Importing an invalid CSV file leaves the db as-is.
+
+        (This uses content2.csv from test_api.py. and broken.csv)
+        """
+        # Start with some existing content.
+        csv_bytes = self.import_csv("home/tests/content2.csv")
+
+        # This CSV doesn't have any of the fields we expect.
+        with pytest.raises(KeyError):
+            self.import_csv("home/tests/broken.csv")
+
+        # The export should match the existing content.
         resp = self.client.get("/admin/home/contentpage/?export=csv")
         src, dst = csvs2dicts(csv_bytes, resp.content)
         assert dst == src
