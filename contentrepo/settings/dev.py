@@ -14,3 +14,12 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 WHATSAPP_API_URL = "http://whatsapp"
 WHATSAPP_ACCESS_TOKEN = "fake-access-token"  # noqa: S105 (This is a test config.)
 FB_BUSINESS_ID = "27121231234"
+
+
+# NOTE: We don't want the cache getting in the way during tests, but this also
+# means we're not testing the cache behaviour.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+    }
+}
