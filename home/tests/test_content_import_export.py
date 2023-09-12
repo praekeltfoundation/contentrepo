@@ -188,7 +188,7 @@ class ImportExportTestCase(TestCase):
         csv_bytes = self.import_csv("home/tests/content2.csv")
 
         # This CSV doesn't have any of the fields we expect.
-        with pytest.raises(KeyError):
+        with pytest.raises((KeyError, TypeError)):
             self.import_csv("home/tests/broken.csv")
 
         # The export should match the existing content.

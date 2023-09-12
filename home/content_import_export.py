@@ -73,6 +73,13 @@ logger = getLogger(__name__)
 
 @transaction.atomic
 def import_content(file, filetype, progress_queue, purge=True, locale="en"):
+    from .import_content_pages import ContentImporter
+
+    importer = ContentImporter(file.read(), filetype, progress_queue, purge, locale)
+    importer.perform_import()
+
+
+def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
     def set_variation_blocks(body_values, message_number):
         variation_blocks = []
         for variation_message in variation_messages:
