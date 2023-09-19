@@ -129,6 +129,8 @@ class ContentImporter:
         except ContentPageIndex.DoesNotExist:
             index = ContentPageIndex(slug=row.slug)
         index.title = row.web_title
+        if row.translation_tag:
+            index.translation_key = row.translation_tag
         with contextlib.suppress(NodeAlreadySaved):
             self.home_page.add_child(instance=index)
 

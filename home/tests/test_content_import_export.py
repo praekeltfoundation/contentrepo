@@ -37,25 +37,27 @@ def remove_translation_tag_from_tags(src, dst):
     if not src["translation_tag"]:
         return src, dst
     dtags = [tag for tag in dst["tags"].split(", ") if tag != src["translation_tag"]]
-    return src, {**dst, "tags": ", ".join(dtags)}
+    return src, dst | {"tags": ", ".join(dtags)}
 
 
 @filter_both
 def ignore_certain_fields(entry):
     # FIXME: Do we need page.id to be imported? At the moment nothing in the
     #        import reads that.
-    # FIXME: We should probably set contentpage.translation_key on import
-    #        instead of messing about with tags.
     # FIXME: Implement import/export for doc_link, image_link, media_link.
-    # FIXME: Implement import/export for next_prompt.
     ignored_fields = {
         "page_id",
-        "translation_tag",
         "doc_link",
         "image_link",
         "media_link",
         "next_prompt",
     }
+    return {k: v for k, v in entry.items() if k not in ignored_fields}
+
+
+@filter_both
+def ignore_old_fields(entry):
+    ignored_fields = {"next_prompt", "translation_tag"}
     return {k: v for k, v in entry.items() if k not in ignored_fields}
 
 
@@ -66,18 +68,25 @@ def strip_leading_whitespace(entry):
     return {**entry, **bodies}
 
 
-FILTER_FUNCS = [
+EXPORT_FILTER_FUNCS = [
     add_new_fields,
-    remove_translation_tag_from_tags,
     ignore_certain_fields,
     strip_leading_whitespace,
 ]
 
+OLD_EXPORT_FILTER_FUNCS = [
+    remove_translation_tag_from_tags,
+    ignore_old_fields,
+]
 
-def filter_exports(src_entries, dst_entries):
+
+def filter_exports(src_entries, dst_entries, old_importer):
     for src, dst in zip(src_entries, dst_entries, strict=True):
-        for ff in FILTER_FUNCS:
+        for ff in EXPORT_FILTER_FUNCS:
             src, dst = ff(src, dst)
+        if old_importer:
+            for ff in OLD_EXPORT_FILTER_FUNCS:
+                src, dst = ff(src, dst)
         yield src, dst
 
 
@@ -85,8 +94,9 @@ def csv2dicts(csv_bytes):
     return list(csv.DictReader(StringIO(csv_bytes.decode())))
 
 
-def csvs2dicts(src_bytes, dst_bytes):
-    return zip(*filter_exports(csv2dicts(src_bytes), csv2dicts(dst_bytes)), strict=True)
+def csvs2dicts(src_bytes, dst_bytes, old_importer):
+    src, dst = csv2dicts(src_bytes), csv2dicts(dst_bytes)
+    return zip(*filter_exports(src, dst, old_importer), strict=True)
 
 
 def _models2dicts(model_instances):
@@ -230,17 +240,17 @@ PAGE_FILTER_FUNCS = [
     normalise_revisions,
     remove_timestamps,
     normalise_body_ids,
-    remove_translation_key,
     null_to_emptystr,
 ]
 
 OLD_PAGE_FILTER_FUNCS = [
+    remove_translation_key,
     add_body_fields,
     enable_web,
 ]
 
 
-def get_page_json(old_importer=False):
+def get_page_json(old_importer):
     """
     Serialize all ContentPage and ContentPageIndex instances and normalize
     things that vary across import/export.
@@ -273,6 +283,9 @@ class ImportExportBaseTestCase(TestCase):
             import_content(f, "CSV", queue.Queue(), **kw)
         return csv_path.read_bytes()
 
+    def csvs2dicts(self, src_bytes, dst_bytes):
+        return csvs2dicts(src_bytes, dst_bytes, old_importer=False)
+
 
 class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
     def test_roundtrip_csv_simple(self):
@@ -287,15 +300,13 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
          * Do we actually need translation_tag to be added to tags?
          * Do we need page.id to be imported? At the moment nothing in the
            import reads that.
-         * We should probably set contentpage.translation_key on import instead
-           of messing about with tags.
          * Do we expect imported content to have leading spaces removed?
          * Should we set enable_web and friends based on body, title, or an
            enable field that we'll need to add to the export?
         """
         csv_bytes = self.import_csv("home/tests/content2.csv")
         resp = self.client.get("/admin/home/contentpage/?export=csv")
-        src, dst = csvs2dicts(csv_bytes, resp.content)
+        src, dst = self.csvs2dicts(csv_bytes, resp.content)
         assert dst == src
 
     def test_roundtrip_csv_less_simple(self):
@@ -307,7 +318,6 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
 
         FIXME:
          * Implement import/export for doc_link, image_link, media_link.
-         * Implement import/export for next_prompt.
         """
         self.set_profile_field_options([("gender", ["male", "female", "empty"])])
         csv_bytes = self.import_csv(
@@ -315,7 +325,7 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
         )
         resp = self.client.get("/admin/home/contentpage/?export=csv")
         content = resp.content
-        src, dst = csvs2dicts(csv_bytes, content)
+        src, dst = self.csvs2dicts(csv_bytes, content)
         assert dst == src
 
     def test_roundtrip_csv_translations(self):
@@ -343,7 +353,7 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
             "home/tests/exported_content_20230906-translations.csv"
         ).read_bytes()
         resp = self.client.get("/admin/home/contentpage/?export=csv")
-        src, dst = csvs2dicts(csv_bytes, resp.content)
+        src, dst = self.csvs2dicts(csv_bytes, resp.content)
         assert dst == src
 
     def test_import_error(self):
@@ -361,7 +371,7 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
 
         # The export should match the existing content.
         resp = self.client.get("/admin/home/contentpage/?export=csv")
-        src, dst = csvs2dicts(csv_bytes, resp.content)
+        src, dst = self.csvs2dicts(csv_bytes, resp.content)
         assert dst == src
 
 
@@ -372,13 +382,16 @@ class OldImportExportRoundtripTestCase(ImportExportRoundtripTestCase):
             old_import_content(f, "CSV", queue.Queue(), **kw)
         return csv_path.read_bytes()
 
+    def csvs2dicts(self, src_bytes, dst_bytes):
+        return csvs2dicts(src_bytes, dst_bytes, old_importer=True)
+
 
 class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
     def reimport_csv(self, csv_bytes, **kw):
         import_content(BytesIO(csv_bytes), "CSV", queue.Queue(), **kw)
 
     def get_page_json(self):
-        return get_page_json()
+        return get_page_json(old_importer=False)
 
     def test_roundtrip_db_simple_csv(self):
         """
@@ -386,7 +399,6 @@ class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
         was before, except for page_ids, timestamps, and body item ids.
 
         FIXME:
-         * Copy translation_tag to translation_key for ContentPageIndex as well.
          * Determine whether we need to maintain StreamField block ids. (I
            think we don't.)
          * Confirm that there's no meaningful difference between null and ""
