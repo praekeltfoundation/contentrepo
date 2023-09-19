@@ -338,18 +338,17 @@ class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        mm_ftu_title = "main menu first time user"
-        mm_ftu = PageBuilder.build_cp(
+        ha_menu = PageBuilder.build_cp(
             parent=main_menu,
-            slug="main-menu-first-time-user",
-            title=mm_ftu_title,
+            slug="ha-menu",
+            title="HealthAlert menu",
             bodies=[
-                WABody(mm_ftu_title, [WABlk("*Welcome to HealthAlert* WA")]),
-                MBody(mm_ftu_title, [MBlk("Welcome to HealthAlert M")]),
+                WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")]),
+                MBody("HealthAlert menu", [MBlk("Welcome to HealthAlert M")]),
             ],
         )
         _health_info = PageBuilder.build_cp(
-            parent=mm_ftu,
+            parent=ha_menu,
             slug="health-info",
             title="health info",
             bodies=[
@@ -358,7 +357,7 @@ class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
             ],
         )
         _self_help = PageBuilder.build_cp(
-            parent=mm_ftu,
+            parent=ha_menu,
             slug="self-help",
             title="self-help",
             bodies=[
