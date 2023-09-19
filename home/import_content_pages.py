@@ -284,7 +284,7 @@ class ShadowContentPage:
         page.viber_title = self.viber_title
         page.viber_body.clear()
         for message in self.formatted_viber_body:
-            page.viber_body.append("viber_message", message)
+            page.viber_body.append(("viber_message", message))
 
     def add_tags_to_page(self, page: ContentPage) -> None:
         page.tags.clear()

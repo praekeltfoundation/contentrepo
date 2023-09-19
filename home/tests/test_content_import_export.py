@@ -15,7 +15,7 @@ from wagtail.models.sites import Site
 from home.content_import_export import import_content
 from home.models import ContentPage, ContentPageIndex, HomePage, SiteSettings
 
-from .page_builder import MBlk, MBody, PageBuilder, WABlk, WABody
+from .page_builder import MBlk, MBody, PageBuilder, VBlk, VBody, WABlk, WABody
 
 
 def filter_both(filter_func):
@@ -328,7 +328,6 @@ class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
         was before, except for page_ids, timestamps, and body item ids.
 
         FIXME:
-         * Fix viber import.
          * Copy translation_tag to translation_key for ContentPageIndex as well.
          * Determine whether we need to maintain StreamField block ids. (I
            think we don't.)
@@ -363,7 +362,7 @@ class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
             bodies=[
                 WABody("self-help", [WABlk("*Self-help programs* WA")]),
                 MBody("self-help", [MBlk("*Self-help programs* M")]),
-                # VBody("self-help", [VBlk("*Self-help programs* V")]),
+                VBody("self-help", [VBlk("*Self-help programs* V")]),
             ],
         )
 
