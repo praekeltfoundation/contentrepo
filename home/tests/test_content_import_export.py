@@ -15,6 +15,8 @@ from wagtail.models.sites import Site
 from home.content_import_export import import_content
 from home.models import ContentPage, ContentPageIndex, HomePage, SiteSettings
 
+from .page_builder import MBlk, MBody, PageBuilder, WABlk, WABody
+
 
 def filter_both(filter_func):
     @wraps(filter_func)
@@ -165,12 +167,33 @@ def remove_translation_key(pages):
     return _remove_fields(pages, {"translation_key"})
 
 
+def _null_to_emptystr(page):
+    fields = {**page["fields"]}
+    for k in ["subtitle", "whatsapp_title", "messenger_title", "viber_title"]:
+        if k in fields and fields[k] is None:
+            fields[k] = ""
+    if "whatsapp_body" in fields:
+        body_list = json.loads(fields["whatsapp_body"])
+        for body in body_list:
+            if not body["value"]["next_prompt"]:
+                body["value"]["next_prompt"] = ""
+        fields["whatsapp_body"] = json.dumps(body_list)
+    return page | {"fields": fields}
+
+
+def null_to_emptystr(pages):
+    # FIXME: Confirm that there's no meaningful difference here, potentially
+    #        make these fields non-nullable.
+    return [_null_to_emptystr(p) for p in pages]
+
+
 PAGE_FILTER_FUNCS = [
     normalise_pks,
     normalise_revisions,
     remove_timestamps,
     normalise_body_ids,
     remove_translation_key,
+    null_to_emptystr,
 ]
 
 
@@ -262,15 +285,9 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
            needs to handle them only being unique per locale.
         """
 
-        pt = Locale.objects.create(language_code="pt")
         # Create a new homepage for Portuguese.
-        HomePage.objects.create(
-            locale=pt,
-            path="00010002",
-            depth=2,
-            title="Home (pt)",
-            slug="home-pt",
-        )
+        pt = Locale.objects.create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         self.set_profile_field_options([("gender", ["male", "female", "empty"])])
         self.import_csv("home/tests/translations-en.csv")
@@ -311,13 +328,45 @@ class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
         was before, except for page_ids, timestamps, and body item ids.
 
         FIXME:
-         * Build pages in the test rather than importing from a CSV.
+         * Fix viber import.
          * Copy translation_tag to translation_key for ContentPageIndex as well.
          * Determine whether we need to maintain StreamField block ids. (I
            think we don't.)
+         * Confirm that there's no meaningful difference between null and ""
+           for the nullable fields that the importer sets to "", potentially
+           make these fields non-nullable.
         """
-        # Start with some existing content.
-        self.import_csv("home/tests/content2.csv")
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        mm_ftu_title = "main menu first time user"
+        mm_ftu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="main-menu-first-time-user",
+            title=mm_ftu_title,
+            bodies=[
+                WABody(mm_ftu_title, [WABlk("*Welcome to HealthAlert* WA")]),
+                MBody(mm_ftu_title, [MBlk("Welcome to HealthAlert M")]),
+            ],
+        )
+        _health_info = PageBuilder.build_cp(
+            parent=mm_ftu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody("health info", [WABlk("*Health information* WA")]),
+                MBody("health info", [MBlk("*Health information* M")]),
+            ],
+        )
+        _self_help = PageBuilder.build_cp(
+            parent=mm_ftu,
+            slug="self-help",
+            title="self-help",
+            bodies=[
+                WABody("self-help", [WABlk("*Self-help programs* WA")]),
+                MBody("self-help", [MBlk("*Self-help programs* M")]),
+                # VBody("self-help", [VBlk("*Self-help programs* V")]),
+            ],
+        )
 
         orig = get_page_json()
 
