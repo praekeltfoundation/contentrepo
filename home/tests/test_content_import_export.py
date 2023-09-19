@@ -12,7 +12,7 @@ from django.test import TestCase
 from wagtail.models import Locale, Page
 from wagtail.models.sites import Site
 
-from home.content_import_export import import_content
+from home.content_import_export import import_content, old_import_content
 from home.models import ContentPage, ContentPageIndex, HomePage, SiteSettings
 
 from .page_builder import MBlk, MBody, PageBuilder, VBlk, VBody, WABlk, WABody
@@ -103,6 +103,22 @@ def _get_page_json():
     return [p | {"fields": {**pages[p["pk"]], **p["fields"]}} for p in content_pages]
 
 
+def per_page(filter_func):
+    @wraps(filter_func)
+    def fp(pages):
+        return [filter_func(page) for page in pages]
+
+    return fp
+
+
+@per_page
+def bodies_to_dicts(page):
+    fields = {
+        k: json.loads(v) if k.endswith("body") else v for k, v in page["fields"].items()
+    }
+    return page | {"fields": fields}
+
+
 def normalise_pks(pages):
     min_pk = min(p["pk"] for p in pages)
     return [p | {"pk": p["pk"] - min_pk} for p in pages]
@@ -139,17 +155,16 @@ def remove_timestamps(pages):
     return _remove_fields(pages, PAGE_TIMESTAMP_FIELDS)
 
 
-def _normalise_body_field_ids(page, body_name, body_str):
-    body_list = json.loads(body_str)
-
+def _normalise_body_field_ids(page, body_name, body_list):
     for i, body in enumerate(body_list):
         assert "id" in body
         body["id"] = f"fake:{page['pk']}:{body_name}:{i}"
+    return body_list
 
-    return json.dumps(body_list)
 
-
-def _normalise_body_ids(page):
+@per_page
+def normalise_body_ids(page):
+    # FIXME: Does it matter if these change?
     fields = {
         k: _normalise_body_field_ids(page, k, v) if k.endswith("body") else v
         for k, v in page["fields"].items()
@@ -157,34 +172,57 @@ def _normalise_body_ids(page):
     return page | {"fields": fields}
 
 
-def normalise_body_ids(pages):
-    # FIXME: Does it matter if these change?
-    return [_normalise_body_ids(p) for p in pages]
-
-
 def remove_translation_key(pages):
     # FIXME: translation_key should be preserved across imports.
     return _remove_fields(pages, {"translation_key"})
 
 
-def _null_to_emptystr(page):
+@per_page
+def null_to_emptystr(page):
+    # FIXME: Confirm that there's no meaningful difference here, potentially
+    #        make these fields non-nullable.
     fields = {**page["fields"]}
     for k in ["subtitle", "whatsapp_title", "messenger_title", "viber_title"]:
         if k in fields and fields[k] is None:
             fields[k] = ""
     if "whatsapp_body" in fields:
-        body_list = json.loads(fields["whatsapp_body"])
-        for body in body_list:
+        for body in fields["whatsapp_body"]:
             if not body["value"]["next_prompt"]:
                 body["value"]["next_prompt"] = ""
-        fields["whatsapp_body"] = json.dumps(body_list)
     return page | {"fields": fields}
 
 
-def null_to_emptystr(pages):
-    # FIXME: Confirm that there's no meaningful difference here, potentially
-    #        make these fields non-nullable.
-    return [_null_to_emptystr(p) for p in pages]
+def _add_fields(body, extra_fields):
+    body["value"] = extra_fields | body["value"]
+
+
+@per_page
+def add_body_fields(page):
+    if "whatsapp_body" in page["fields"]:
+        for body in page["fields"]["whatsapp_body"]:
+            _add_fields(
+                body,
+                {
+                    "document": None,
+                    "image": None,
+                    "media": None,
+                    "next_prompt": "",
+                    "variation_messages": [],
+                },
+            )
+    if "messenger_body" in page["fields"]:
+        for body in page["fields"]["messenger_body"]:
+            _add_fields(body, {"image": None})
+    if "viber_body" in page["fields"]:
+        for body in page["fields"]["viber_body"]:
+            _add_fields(body, {"image": None})
+    return page
+
+
+@per_page
+def enable_web(page):
+    page["fields"]["enable_web"] = True
+    return page
 
 
 PAGE_FILTER_FUNCS = [
@@ -196,13 +234,22 @@ PAGE_FILTER_FUNCS = [
     null_to_emptystr,
 ]
 
+OLD_PAGE_FILTER_FUNCS = [
+    add_body_fields,
+    enable_web,
+]
 
-def get_page_json():
+
+def get_page_json(old_importer=False):
     """
     Serialize all ContentPage and ContentPageIndex instances and normalize
     things that vary across import/export.
     """
     pages = _get_page_json()
+    pages = bodies_to_dicts(pages)
+    if old_importer:
+        for ff in OLD_PAGE_FILTER_FUNCS:
+            pages = ff(pages)
     for ff in PAGE_FILTER_FUNCS:
         pages = ff(pages)
     return sorted(pages, key=lambda p: p["pk"])
@@ -318,9 +365,20 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
         assert dst == src
 
 
+class OldImportExportRoundtripTestCase(ImportExportRoundtripTestCase):
+    def import_csv(self, csv_path, **kw):
+        csv_path = Path(csv_path)
+        with csv_path.open(mode="rb") as f:
+            old_import_content(f, "CSV", queue.Queue(), **kw)
+        return csv_path.read_bytes()
+
+
 class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
     def reimport_csv(self, csv_bytes, **kw):
         import_content(BytesIO(csv_bytes), "CSV", queue.Queue(), **kw)
+
+    def get_page_json(self):
+        return get_page_json()
 
     def test_roundtrip_db_simple_csv(self):
         """
@@ -366,10 +424,18 @@ class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
             ],
         )
 
-        orig = get_page_json()
+        orig = self.get_page_json()
 
         resp = self.client.get("/admin/home/contentpage/?export=csv")
         self.reimport_csv(resp.content)
 
-        imported = get_page_json()
+        imported = self.get_page_json()
         assert imported == orig
+
+
+class OldExportImportRoundtripTestCase(ExportImportRoundtripTestCase):
+    def reimport_csv(self, csv_bytes, **kw):
+        old_import_content(BytesIO(csv_bytes), "CSV", queue.Queue(), **kw)
+
+    def get_page_json(self):
+        return get_page_json(old_importer=True)

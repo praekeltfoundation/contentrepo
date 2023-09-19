@@ -79,6 +79,7 @@ def import_content(file, filetype, progress_queue, purge=True, locale="en"):
     importer.perform_import()
 
 
+@transaction.atomic
 def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
     def set_variation_blocks(body_values, message_number):
         variation_blocks = []
