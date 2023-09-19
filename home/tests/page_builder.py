@@ -1,7 +1,7 @@
-from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any, ClassVar, Generic, TypeVar
 
+from wagtail.blocks import StructBlock  # type: ignore
 from wagtail.models import Page  # type: ignore
 
 from home.models import (
@@ -16,20 +16,22 @@ TPage = TypeVar("TPage", bound=Page)
 
 
 @dataclass
-class ContentBlock(ABC):
+class ContentBlock:
+    BLOCK_TYPE_STR: ClassVar[str]
+    BLOCK_TYPE: ClassVar[type[StructBlock]]
+
     message: str
 
-    @abstractmethod
     def to_body(self) -> Any:
-        ...
+        return (self.BLOCK_TYPE_STR, self.BLOCK_TYPE().to_python(asdict(self)))
 
 
 TCBlk = TypeVar("TCBlk", bound=ContentBlock)
 
 
 @dataclass
-class ContentBody(ABC, Generic[TCBlk]):
-    ATTR_STR = "REPLACEME"
+class ContentBody(Generic[TCBlk]):
+    ATTR_STR: ClassVar[str]
 
     title: str
     blocks: list[ContentBlock]
@@ -45,26 +47,26 @@ class ContentBody(ABC, Generic[TCBlk]):
 
 @dataclass
 class WABlk(ContentBlock):
-    # TODO: More body things.
+    BLOCK_TYPE_STR = "Whatsapp_Message"
+    BLOCK_TYPE = WhatsappBlock
 
-    def to_body(self) -> Any:
-        return ("Whatsapp_Message", WhatsappBlock().to_python(asdict(self)))
+    # TODO: More body things.
 
 
 @dataclass
 class MBlk(ContentBlock):
-    # TODO: More body things.
+    BLOCK_TYPE_STR = "messenger_block"
+    BLOCK_TYPE = MessengerBlock
 
-    def to_body(self) -> Any:
-        return ("messenger_block", MessengerBlock().to_python(asdict(self)))
+    # TODO: More body things.
 
 
 @dataclass
 class VBlk(ContentBlock):
-    # TODO: More body things.
+    BLOCK_TYPE_STR = "viber_message"
+    BLOCK_TYPE = ViberBlock
 
-    def to_body(self) -> Any:
-        return ("viber_message", ViberBlock().to_python(asdict(self)))
+    # TODO: More body things.
 
 
 class WABody(ContentBody[WABlk]):
