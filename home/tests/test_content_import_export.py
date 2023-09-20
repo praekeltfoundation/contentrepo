@@ -90,12 +90,12 @@ OLD_EXPORT_FILTER_FUNCS = [
 ]
 
 
-def filter_exports(srcs: ExpDicts, dsts: ExpDicts, old_importer: bool) -> ExpDictsPair:
+def filter_exports(srcs: ExpDicts, dsts: ExpDicts, importer: str) -> ExpDictsPair:
     fsrcs, fdsts = [], []
     for src, dst in zip(srcs, dsts, strict=True):
         for ff in EXPORT_FILTER_FUNCS:
             src, dst = ff(src, dst)
-        if old_importer:
+        if importer == "old":
             for ff in OLD_EXPORT_FILTER_FUNCS:
                 src, dst = ff(src, dst)
         fsrcs.append(src)
@@ -105,11 +105,6 @@ def filter_exports(srcs: ExpDicts, dsts: ExpDicts, old_importer: bool) -> ExpDic
 
 def csv2dicts(csv_bytes: bytes) -> ExpDicts:
     return list(csv.DictReader(StringIO(csv_bytes.decode())))
-
-
-def csvs2dicts(src_bytes: bytes, dst_bytes: bytes, old_importer: bool) -> ExpDictsPair:
-    src, dst = csv2dicts(src_bytes), csv2dicts(dst_bytes)
-    return filter_exports(src, dst, old_importer)
 
 
 DbDict = dict[str, Any]
@@ -275,125 +270,11 @@ PFOption = tuple[str, list[str]]
 PFOptions = list[PFOption]
 
 
-class ImportExportBaseTestCase(TestCase):
-    def setUp(self) -> None:
-        self.user_credentials = {"username": "test", "password": "test"}
-        self.user = get_user_model().objects.create_superuser(**self.user_credentials)
-        self.client.login(**self.user_credentials)
-
-    def set_profile_field_options(self, profile_field_options: PFOptions) -> None:
-        site = Site.objects.get(is_default_site=True)
-        site_settings = SiteSettings.for_site(site)
-        site_settings.profile_field_options.extend(profile_field_options)
-        site_settings.save()
-
-
-class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
-    def import_csv(self, csv_path_str: str, **kw: Any) -> bytes:
-        csv_path = Path(csv_path_str)
-        with csv_path.open(mode="rb") as f:
-            import_content(f, "CSV", Queue(), **kw)
-        return csv_path.read_bytes()
-
-    def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
-        return csvs2dicts(src_bytes, dst_bytes, old_importer=False)
-
-    def test_roundtrip_csv_simple(self) -> None:
-        """
-        Importing a simple CSV file and then exporting it produces a duplicate
-        of the original file.
-
-        (This uses content2.csv from test_api.py.)
-
-        FIXME:
-         * This should probably be in a separate test for importing old exports.
-         * Do we actually need translation_tag to be added to tags?
-         * Do we need page.id to be imported? At the moment nothing in the
-           import reads that.
-         * Do we expect imported content to have leading spaces removed?
-         * Should we set enable_web and friends based on body, title, or an
-           enable field that we'll need to add to the export?
-        """
-        csv_bytes = self.import_csv("home/tests/content2.csv")
-        resp = self.client.get("/admin/home/contentpage/?export=csv")
-        src, dst = self.csvs2dicts(csv_bytes, resp.content)
-        assert dst == src
-
-    def test_roundtrip_csv_less_simple(self) -> None:
-        """
-        Importing a less simple CSV file and then exporting it produces a
-        duplicate of the original file.
-
-        (This uses exported_content_20230911-variations-linked-page.csv.)
-
-        FIXME:
-         * Implement import/export for doc_link, image_link, media_link.
-        """
-        self.set_profile_field_options([("gender", ["male", "female", "empty"])])
-        csv_bytes = self.import_csv(
-            "home/tests/exported_content_20230911-variations-linked-page.csv"
-        )
-        resp = self.client.get("/admin/home/contentpage/?export=csv")
-        content = resp.content
-        src, dst = self.csvs2dicts(csv_bytes, content)
-        assert dst == src
-
-    def test_roundtrip_csv_translations(self) -> None:
-        """
-        Importing a CSV file containing translations and then exporting it
-        produces a duplicate of the original file.
-
-        (This uses exported_content_20230906-translations.csv and the two
-        language-specific subsets thereof.)
-
-        FIXME:
-         * We shouldn't need to import different languages separately.
-         * Slugs need to either be unique per site/deployment or the importer
-           needs to handle them only being unique per locale.
-        """
-
-        # Create a new homepage for Portuguese.
-        pt = Locale.objects.create(language_code="pt")
-        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
-
-        self.set_profile_field_options([("gender", ["male", "female", "empty"])])
-        self.import_csv("home/tests/translations-en.csv")
-        self.import_csv("home/tests/translations-pt.csv", locale="pt", purge=False)
-        csv_bytes = Path(
-            "home/tests/exported_content_20230906-translations.csv"
-        ).read_bytes()
-        resp = self.client.get("/admin/home/contentpage/?export=csv")
-        src, dst = self.csvs2dicts(csv_bytes, resp.content)
-        assert dst == src
-
-    def test_import_error(self) -> None:
-        """
-        Importing an invalid CSV file leaves the db as-is.
-
-        (This uses content2.csv from test_api.py and broken.csv.)
-        """
-        # Start with some existing content.
-        csv_bytes = self.import_csv("home/tests/content2.csv")
-
-        # This CSV doesn't have any of the fields we expect.
-        with pytest.raises((KeyError, TypeError)):
-            self.import_csv("home/tests/broken.csv")
-
-        # The export should match the existing content.
-        resp = self.client.get("/admin/home/contentpage/?export=csv")
-        src, dst = self.csvs2dicts(csv_bytes, resp.content)
-        assert dst == src
-
-
-class OldImportExportRoundtripTestCase(ImportExportRoundtripTestCase):
-    def import_csv(self, csv_path_str: str, **kw: Any) -> bytes:
-        csv_path = Path(csv_path_str)
-        with csv_path.open(mode="rb") as f:
-            old_import_content(f, "CSV", Queue(), **kw)
-        return csv_path.read_bytes()
-
-    def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
-        return csvs2dicts(src_bytes, dst_bytes, old_importer=True)
+def set_profile_field_options(profile_field_options: PFOptions) -> None:
+    site = Site.objects.get(is_default_site=True)
+    site_settings = SiteSettings.for_site(site)
+    site_settings.profile_field_options.extend(profile_field_options)
+    site_settings.save()
 
 
 @dataclass
@@ -416,11 +297,19 @@ class ImportExportFixture:
         resp = self.admin_client.get(f"/admin/home/contentpage/?export={self.format}")
         return resp.content
 
-    def import_content(self, export_bytes: bytes, **kw: Any) -> None:
+    def import_content(self, content_bytes: bytes, **kw: Any) -> None:
         """
         Import given content in the configured format with the configured importer.
         """
-        self._import_content(BytesIO(export_bytes), self.format.upper(), Queue(), **kw)
+        self._import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
+
+    def import_file(self, path_str: bytes, **kw: Any) -> None:
+        """
+        Import given content file in the configured format with the configured importer.
+        """
+        content = Path(path_str).read_bytes()
+        self.import_content(content, **kw)
+        return content
 
     def export_reimport(self) -> None:
         """
@@ -441,10 +330,118 @@ class ImportExportFixture:
             pages = ff(pages)
         return sorted(pages, key=lambda p: p["pk"])
 
+    def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
+        src = csv2dicts(src_bytes)
+        dst = csv2dicts(dst_bytes)
+        return filter_exports(src, dst, self.importer)
+
+
+@pytest.fixture(params=["old", "new"])
+def csv_impexp(request: Any, admin_client: Any) -> ImportExportFixture:
+    return ImportExportFixture(admin_client, request.param, "csv")
+
+
+@pytest.mark.django_db
+class TestImportExportRoundtrip:
+    """
+    Test importing and reexporting content produces an export that is
+    equilavent to the original imported content.
+
+    NOTE: This is not a Django (or even unittest) TestCase. It's just a
+        container for related tests.
+    """
+
+    def test_roundtrip_csv_simple(self, csv_impexp: ImportExportFixture) -> None:
+        """
+        Importing a simple CSV file and then exporting it produces a duplicate
+        of the original file.
+
+        (This uses content2.csv from test_api.py.)
+
+        FIXME:
+         * This should probably be in a separate test for importing old exports.
+         * Do we actually need translation_tag to be added to tags?
+         * Do we need page.id to be imported? At the moment nothing in the
+           import reads that.
+         * Do we expect imported content to have leading spaces removed?
+         * Should we set enable_web and friends based on body, title, or an
+           enable field that we'll need to add to the export?
+        """
+        csv_bytes = csv_impexp.import_file("home/tests/content2.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+    def test_roundtrip_csv_less_simple(self, csv_impexp: ImportExportFixture) -> None:
+        """
+        Importing a less simple CSV file and then exporting it produces a
+        duplicate of the original file.
+
+        (This uses exported_content_20230911-variations-linked-page.csv.)
+
+        FIXME:
+         * Implement import/export for doc_link, image_link, media_link.
+        """
+        set_profile_field_options([("gender", ["male", "female", "empty"])])
+        csv_bytes = csv_impexp.import_file(
+            "home/tests/exported_content_20230911-variations-linked-page.csv"
+        )
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+    def test_roundtrip_csv_translations(self, csv_impexp: ImportExportFixture) -> None:
+        """
+        Importing a CSV file containing translations and then exporting it
+        produces a duplicate of the original file.
+
+        (This uses exported_content_20230906-translations.csv and the two
+        language-specific subsets thereof.)
+
+        FIXME:
+         * We shouldn't need to import different languages separately.
+         * Slugs need to either be unique per site/deployment or the importer
+           needs to handle them only being unique per locale.
+        """
+
+        # Create a new homepage for Portuguese.
+        pt = Locale.objects.create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        set_profile_field_options([("gender", ["male", "female", "empty"])])
+        csv_impexp.import_file("home/tests/translations-en.csv")
+        csv_impexp.import_file(
+            "home/tests/translations-pt.csv", locale="pt", purge=False
+        )
+        csv_bytes = Path(
+            "home/tests/exported_content_20230906-translations.csv"
+        ).read_bytes()
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+    def test_import_error(self, csv_impexp: ImportExportFixture) -> None:
+        """
+        Importing an invalid CSV file leaves the db as-is.
+
+        (This uses content2.csv from test_api.py and broken.csv.)
+        """
+        # Start with some existing content.
+        csv_bytes = csv_impexp.import_file("home/tests/content2.csv")
+
+        # This CSV doesn't have any of the fields we expect.
+        with pytest.raises((KeyError, TypeError)):
+            csv_impexp.import_file("home/tests/broken.csv")
+
+        # The export should match the existing content.
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
-def impexp(request: Any, admin_client: Any) -> ImportExportFixture:
+def impext(request: Any, admin_client: Any) -> ImportExportFixture:
     importer, format = request.param.split("-")
     return ImportExportFixture(admin_client, importer, format)
 
@@ -459,7 +456,7 @@ class TestExportImportRoundtrip:
         container for related tests.
     """
 
-    def test_roundtrip_simple(self, impexp: ImportExportFixture) -> None:
+    def test_roundtrip_simple(self, impext: ImportExportFixture) -> None:
         """
         Exporting and then importing leaves the db in the same state it was
         before, except for page_ids, timestamps, and body item ids.
@@ -502,7 +499,7 @@ class TestExportImportRoundtrip:
             ],
         )
 
-        orig = impexp.get_page_json()
-        impexp.export_reimport()
-        imported = impexp.get_page_json()
+        orig = impext.get_page_json()
+        impext.export_reimport()
+        imported = impext.get_page_json()
         assert imported == orig
