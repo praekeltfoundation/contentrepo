@@ -1,9 +1,11 @@
 import csv
 import json
-import queue
+from dataclasses import dataclass
 from functools import wraps
 from io import BytesIO, StringIO
 from pathlib import Path
+from queue import Queue
+from typing import Any
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -103,7 +105,7 @@ def _models2dicts(model_instances):
     return json.loads(serializers.serialize("json", model_instances))
 
 
-def _get_page_json():
+def get_page_json():
     page_objs = Page.objects.type(ContentPage, ContentPageIndex).all()
     pages = {p["pk"]: p["fields"] for p in _models2dicts(page_objs)}
     content_pages = [
@@ -250,21 +252,6 @@ OLD_PAGE_FILTER_FUNCS = [
 ]
 
 
-def get_page_json(old_importer):
-    """
-    Serialize all ContentPage and ContentPageIndex instances and normalize
-    things that vary across import/export.
-    """
-    pages = _get_page_json()
-    pages = bodies_to_dicts(pages)
-    if old_importer:
-        for ff in OLD_PAGE_FILTER_FUNCS:
-            pages = ff(pages)
-    for ff in PAGE_FILTER_FUNCS:
-        pages = ff(pages)
-    return sorted(pages, key=lambda p: p["pk"])
-
-
 class ImportExportBaseTestCase(TestCase):
     def setUp(self):
         self.user_credentials = {"username": "test", "password": "test"}
@@ -277,17 +264,17 @@ class ImportExportBaseTestCase(TestCase):
         site_settings.profile_field_options.extend(profile_field_options)
         site_settings.save()
 
+
+class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
     def import_csv(self, csv_path, **kw):
         csv_path = Path(csv_path)
         with csv_path.open(mode="rb") as f:
-            import_content(f, "CSV", queue.Queue(), **kw)
+            import_content(f, "CSV", Queue(), **kw)
         return csv_path.read_bytes()
 
     def csvs2dicts(self, src_bytes, dst_bytes):
         return csvs2dicts(src_bytes, dst_bytes, old_importer=False)
 
-
-class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
     def test_roundtrip_csv_simple(self):
         """
         Importing a simple CSV file and then exporting it produces a duplicate
@@ -379,24 +366,80 @@ class OldImportExportRoundtripTestCase(ImportExportRoundtripTestCase):
     def import_csv(self, csv_path, **kw):
         csv_path = Path(csv_path)
         with csv_path.open(mode="rb") as f:
-            old_import_content(f, "CSV", queue.Queue(), **kw)
+            old_import_content(f, "CSV", Queue(), **kw)
         return csv_path.read_bytes()
 
     def csvs2dicts(self, src_bytes, dst_bytes):
         return csvs2dicts(src_bytes, dst_bytes, old_importer=True)
 
 
-class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
-    def reimport_csv(self, csv_bytes, **kw):
-        import_content(BytesIO(csv_bytes), "CSV", queue.Queue(), **kw)
+@dataclass
+class ImportExportFixture:
+    admin_client: Any
+    importer: str
+    format: str
 
-    def get_page_json(self):
-        return get_page_json(old_importer=False)
+    @property
+    def _import_content(self):
+        return {
+            "new": import_content,
+            "old": old_import_content,
+        }[self.importer]
 
-    def test_roundtrip_db_simple_csv(self):
+    def export_content(self) -> bytes:
         """
-        Exporting to CSV and then importing leaves the db in the same state it
-        was before, except for page_ids, timestamps, and body item ids.
+        Export all content in the configured format.
+        """
+        resp = self.admin_client.get(f"/admin/home/contentpage/?export={self.format}")
+        return resp.content
+
+    def import_content(self, export_bytes: bytes, **kw):
+        """
+        Import given content in the configured format with the configured importer.
+        """
+        self._import_content(BytesIO(export_bytes), self.format.upper(), Queue(), **kw)
+
+    def export_reimport(self):
+        """
+        Export all content, then immediately reimport it.
+        """
+        self.import_content(self.export_content())
+
+    def get_page_json(self) -> list[dict]:
+        """
+        Serialize all ContentPage and ContentPageIndex instances and normalize
+        things that vary across import/export.
+        """
+        pages = bodies_to_dicts(get_page_json())
+        if self.importer == "old":
+            for ff in OLD_PAGE_FILTER_FUNCS:
+                pages = ff(pages)
+        for ff in PAGE_FILTER_FUNCS:
+            pages = ff(pages)
+        return sorted(pages, key=lambda p: p["pk"])
+
+
+# "old-xlsx" has at least three bugs, so we don't bother testing it.
+@pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
+def impexp(request, admin_client):
+    importer, format = request.param.split("-")
+    return ImportExportFixture(admin_client, importer, format)
+
+
+@pytest.mark.django_db
+class TestExportImportRoundtrip:
+    """
+    Test that the db state after exporting and reimporting content is
+    equilavent to what it was before.
+
+    NOTE: This is not a Django (or even unittest) TestCase. It's just a
+        container for related tests.
+    """
+
+    def test_roundtrip_simple(self, impexp):
+        """
+        Exporting and then importing leaves the db in the same state it was
+        before, except for page_ids, timestamps, and body item ids.
 
         FIXME:
          * Determine whether we need to maintain StreamField block ids. (I
@@ -436,18 +479,7 @@ class ExportImportRoundtripTestCase(ImportExportBaseTestCase):
             ],
         )
 
-        orig = self.get_page_json()
-
-        resp = self.client.get("/admin/home/contentpage/?export=csv")
-        self.reimport_csv(resp.content)
-
-        imported = self.get_page_json()
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
         assert imported == orig
-
-
-class OldExportImportRoundtripTestCase(ExportImportRoundtripTestCase):
-    def reimport_csv(self, csv_bytes, **kw):
-        old_import_content(BytesIO(csv_bytes), "CSV", queue.Queue(), **kw)
-
-    def get_page_json(self):
-        return get_page_json(old_importer=True)
