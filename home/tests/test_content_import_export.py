@@ -1,5 +1,6 @@
 import csv
 import json
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from functools import wraps
 from io import BytesIO, StringIO
@@ -8,33 +9,40 @@ from queue import Queue
 from typing import Any
 
 import pytest
-from django.contrib.auth import get_user_model
-from django.core import serializers
-from django.test import TestCase
-from wagtail.models import Locale, Page
-from wagtail.models.sites import Site
+from django.contrib.auth import get_user_model  # type: ignore
+from django.core import serializers  # type: ignore
+from django.test import TestCase  # type: ignore
+from wagtail.models import Locale, Page  # type: ignore
+from wagtail.models.sites import Site  # type: ignore
 
 from home.content_import_export import import_content, old_import_content
 from home.models import ContentPage, ContentPageIndex, HomePage, SiteSettings
 
 from .page_builder import MBlk, MBody, PageBuilder, VBlk, VBody, WABlk, WABody
 
+ExpDict = dict[str, Any]
+ExpPair = tuple[ExpDict, ExpDict]
+ExpDicts = Iterable[ExpDict]
+ExpDictsPair = tuple[ExpDicts, ExpDicts]
 
-def filter_both(filter_func):
+
+def filter_both(
+    filter_func: Callable[[ExpDict], ExpDict]
+) -> Callable[[ExpDict, ExpDict], ExpPair]:
     @wraps(filter_func)
-    def ff(src, dst):
+    def ff(src: ExpDict, dst: ExpDict) -> ExpPair:
         return filter_func(src), filter_func(dst)
 
     return ff
 
 
 @filter_both
-def add_new_fields(entry):
+def add_new_fields(entry: ExpDict) -> ExpDict:
     # FIXME: This should probably be in a separate test for importing old exports.
     return {"whatsapp_template_name": "", **entry}
 
 
-def remove_translation_tag_from_tags(src, dst):
+def remove_translation_tag_from_tags(src: ExpDict, dst: ExpDict) -> ExpPair:
     # FIXME: Do we actually need translation_tag to be added to tags?
     if not src["translation_tag"]:
         return src, dst
@@ -43,7 +51,7 @@ def remove_translation_tag_from_tags(src, dst):
 
 
 @filter_both
-def ignore_certain_fields(entry):
+def ignore_certain_fields(entry: ExpDict) -> ExpDict:
     # FIXME: Do we need page.id to be imported? At the moment nothing in the
     #        import reads that.
     # FIXME: Implement import/export for doc_link, image_link, media_link.
@@ -58,13 +66,13 @@ def ignore_certain_fields(entry):
 
 
 @filter_both
-def ignore_old_fields(entry):
+def ignore_old_fields(entry: ExpDict) -> ExpDict:
     ignored_fields = {"next_prompt", "translation_tag"}
     return {k: v for k, v in entry.items() if k not in ignored_fields}
 
 
 @filter_both
-def strip_leading_whitespace(entry):
+def strip_leading_whitespace(entry: ExpDict) -> ExpDict:
     # FIXME: Do we expect imported content to have leading spaces removed?
     bodies = {k: v.lstrip(" ") for k, v in entry.items() if k.endswith("_body")}
     return {**entry, **bodies}
@@ -82,30 +90,37 @@ OLD_EXPORT_FILTER_FUNCS = [
 ]
 
 
-def filter_exports(src_entries, dst_entries, old_importer):
-    for src, dst in zip(src_entries, dst_entries, strict=True):
+def filter_exports(srcs: ExpDicts, dsts: ExpDicts, old_importer: bool) -> ExpDictsPair:
+    fsrcs, fdsts = [], []
+    for src, dst in zip(srcs, dsts, strict=True):
         for ff in EXPORT_FILTER_FUNCS:
             src, dst = ff(src, dst)
         if old_importer:
             for ff in OLD_EXPORT_FILTER_FUNCS:
                 src, dst = ff(src, dst)
-        yield src, dst
+        fsrcs.append(src)
+        fdsts.append(dst)
+    return fsrcs, fdsts
 
 
-def csv2dicts(csv_bytes):
+def csv2dicts(csv_bytes: bytes) -> ExpDicts:
     return list(csv.DictReader(StringIO(csv_bytes.decode())))
 
 
-def csvs2dicts(src_bytes, dst_bytes, old_importer):
+def csvs2dicts(src_bytes: bytes, dst_bytes: bytes, old_importer: bool) -> ExpDictsPair:
     src, dst = csv2dicts(src_bytes), csv2dicts(dst_bytes)
-    return zip(*filter_exports(src, dst, old_importer), strict=True)
+    return filter_exports(src, dst, old_importer)
 
 
-def _models2dicts(model_instances):
+DbDict = dict[str, Any]
+DbDicts = Iterable[DbDict]
+
+
+def _models2dicts(model_instances: Any) -> DbDicts:
     return json.loads(serializers.serialize("json", model_instances))
 
 
-def get_page_json():
+def get_page_json() -> DbDicts:
     page_objs = Page.objects.type(ContentPage, ContentPageIndex).all()
     pages = {p["pk"]: p["fields"] for p in _models2dicts(page_objs)}
     content_pages = [
@@ -115,34 +130,36 @@ def get_page_json():
     return [p | {"fields": {**pages[p["pk"]], **p["fields"]}} for p in content_pages]
 
 
-def per_page(filter_func):
+def per_page(filter_func: Callable[[DbDict], DbDict]) -> Callable[[DbDicts], DbDicts]:
     @wraps(filter_func)
-    def fp(pages):
+    def fp(pages: DbDicts) -> DbDicts:
         return [filter_func(page) for page in pages]
 
     return fp
 
 
 @per_page
-def bodies_to_dicts(page):
+def bodies_to_dicts(page: DbDict) -> DbDict:
     fields = {
         k: json.loads(v) if k.endswith("body") else v for k, v in page["fields"].items()
     }
     return page | {"fields": fields}
 
 
-def normalise_pks(pages):
+def normalise_pks(pages: DbDicts) -> DbDicts:
     min_pk = min(p["pk"] for p in pages)
     return [p | {"pk": p["pk"] - min_pk} for p in pages]
 
 
-def _update_field(pages, field_name, update_fn):
+def _update_field(
+    pages: DbDicts, field_name: str, update_fn: Callable[[Any], Any]
+) -> DbDicts:
     for p in pages:
         fields = p["fields"]
         yield p | {"fields": {**fields, field_name: update_fn(fields[field_name])}}
 
 
-def normalise_revisions(pages):
+def normalise_revisions(pages: DbDicts) -> DbDicts:
     min_latest = min(p["fields"]["latest_revision"] for p in pages)
     min_live = min(p["fields"]["live_revision"] for p in pages)
     pages = _update_field(pages, "latest_revision", lambda v: v - min_latest)
@@ -150,7 +167,7 @@ def normalise_revisions(pages):
     return pages
 
 
-def _remove_fields(pages, field_names):
+def _remove_fields(pages: DbDicts, field_names: set[str]) -> DbDicts:
     for p in pages:
         fields = {k: v for k, v in p["fields"].items() if k not in field_names}
         yield p | {"fields": fields}
@@ -163,11 +180,13 @@ PAGE_TIMESTAMP_FIELDS = {
 }
 
 
-def remove_timestamps(pages):
+def remove_timestamps(pages: DbDicts) -> DbDicts:
     return _remove_fields(pages, PAGE_TIMESTAMP_FIELDS)
 
 
-def _normalise_body_field_ids(page, body_name, body_list):
+def _normalise_body_field_ids(
+    page: DbDict, body_name: str, body_list: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     for i, body in enumerate(body_list):
         assert "id" in body
         body["id"] = f"fake:{page['pk']}:{body_name}:{i}"
@@ -175,7 +194,7 @@ def _normalise_body_field_ids(page, body_name, body_list):
 
 
 @per_page
-def normalise_body_ids(page):
+def normalise_body_ids(page: DbDict) -> DbDict:
     # FIXME: Does it matter if these change?
     fields = {
         k: _normalise_body_field_ids(page, k, v) if k.endswith("body") else v
@@ -184,13 +203,13 @@ def normalise_body_ids(page):
     return page | {"fields": fields}
 
 
-def remove_translation_key(pages):
+def remove_translation_key(pages: DbDicts) -> DbDicts:
     # FIXME: translation_key should be preserved across imports.
     return _remove_fields(pages, {"translation_key"})
 
 
 @per_page
-def null_to_emptystr(page):
+def null_to_emptystr(page: DbDict) -> DbDict:
     # FIXME: Confirm that there's no meaningful difference here, potentially
     #        make these fields non-nullable.
     fields = {**page["fields"]}
@@ -204,12 +223,12 @@ def null_to_emptystr(page):
     return page | {"fields": fields}
 
 
-def _add_fields(body, extra_fields):
+def _add_fields(body: dict[str, Any], extra_fields: dict[str, Any]) -> None:
     body["value"] = extra_fields | body["value"]
 
 
 @per_page
-def add_body_fields(page):
+def add_body_fields(page: DbDict) -> DbDict:
     if "whatsapp_body" in page["fields"]:
         for body in page["fields"]["whatsapp_body"]:
             _add_fields(
@@ -232,7 +251,7 @@ def add_body_fields(page):
 
 
 @per_page
-def enable_web(page):
+def enable_web(page: DbDict) -> DbDict:
     page["fields"]["enable_web"] = True
     return page
 
@@ -252,13 +271,17 @@ OLD_PAGE_FILTER_FUNCS = [
 ]
 
 
+PFOption = tuple[str, list[str]]
+PFOptions = list[PFOption]
+
+
 class ImportExportBaseTestCase(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user_credentials = {"username": "test", "password": "test"}
         self.user = get_user_model().objects.create_superuser(**self.user_credentials)
         self.client.login(**self.user_credentials)
 
-    def set_profile_field_options(self, profile_field_options):
+    def set_profile_field_options(self, profile_field_options: PFOptions) -> None:
         site = Site.objects.get(is_default_site=True)
         site_settings = SiteSettings.for_site(site)
         site_settings.profile_field_options.extend(profile_field_options)
@@ -266,16 +289,16 @@ class ImportExportBaseTestCase(TestCase):
 
 
 class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
-    def import_csv(self, csv_path, **kw):
-        csv_path = Path(csv_path)
+    def import_csv(self, csv_path_str: str, **kw: Any) -> bytes:
+        csv_path = Path(csv_path_str)
         with csv_path.open(mode="rb") as f:
             import_content(f, "CSV", Queue(), **kw)
         return csv_path.read_bytes()
 
-    def csvs2dicts(self, src_bytes, dst_bytes):
+    def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
         return csvs2dicts(src_bytes, dst_bytes, old_importer=False)
 
-    def test_roundtrip_csv_simple(self):
+    def test_roundtrip_csv_simple(self) -> None:
         """
         Importing a simple CSV file and then exporting it produces a duplicate
         of the original file.
@@ -296,7 +319,7 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
         src, dst = self.csvs2dicts(csv_bytes, resp.content)
         assert dst == src
 
-    def test_roundtrip_csv_less_simple(self):
+    def test_roundtrip_csv_less_simple(self) -> None:
         """
         Importing a less simple CSV file and then exporting it produces a
         duplicate of the original file.
@@ -315,7 +338,7 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
         src, dst = self.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_csv_translations(self):
+    def test_roundtrip_csv_translations(self) -> None:
         """
         Importing a CSV file containing translations and then exporting it
         produces a duplicate of the original file.
@@ -343,7 +366,7 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
         src, dst = self.csvs2dicts(csv_bytes, resp.content)
         assert dst == src
 
-    def test_import_error(self):
+    def test_import_error(self) -> None:
         """
         Importing an invalid CSV file leaves the db as-is.
 
@@ -363,13 +386,13 @@ class ImportExportRoundtripTestCase(ImportExportBaseTestCase):
 
 
 class OldImportExportRoundtripTestCase(ImportExportRoundtripTestCase):
-    def import_csv(self, csv_path, **kw):
-        csv_path = Path(csv_path)
+    def import_csv(self, csv_path_str: str, **kw: Any) -> bytes:
+        csv_path = Path(csv_path_str)
         with csv_path.open(mode="rb") as f:
             old_import_content(f, "CSV", Queue(), **kw)
         return csv_path.read_bytes()
 
-    def csvs2dicts(self, src_bytes, dst_bytes):
+    def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
         return csvs2dicts(src_bytes, dst_bytes, old_importer=True)
 
 
@@ -380,7 +403,7 @@ class ImportExportFixture:
     format: str
 
     @property
-    def _import_content(self):
+    def _import_content(self) -> Callable[..., None]:
         return {
             "new": import_content,
             "old": old_import_content,
@@ -393,19 +416,19 @@ class ImportExportFixture:
         resp = self.admin_client.get(f"/admin/home/contentpage/?export={self.format}")
         return resp.content
 
-    def import_content(self, export_bytes: bytes, **kw):
+    def import_content(self, export_bytes: bytes, **kw: Any) -> None:
         """
         Import given content in the configured format with the configured importer.
         """
         self._import_content(BytesIO(export_bytes), self.format.upper(), Queue(), **kw)
 
-    def export_reimport(self):
+    def export_reimport(self) -> None:
         """
         Export all content, then immediately reimport it.
         """
         self.import_content(self.export_content())
 
-    def get_page_json(self) -> list[dict]:
+    def get_page_json(self) -> DbDicts:
         """
         Serialize all ContentPage and ContentPageIndex instances and normalize
         things that vary across import/export.
@@ -421,7 +444,7 @@ class ImportExportFixture:
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
-def impexp(request, admin_client):
+def impexp(request: Any, admin_client: Any) -> ImportExportFixture:
     importer, format = request.param.split("-")
     return ImportExportFixture(admin_client, importer, format)
 
@@ -436,7 +459,7 @@ class TestExportImportRoundtrip:
         container for related tests.
     """
 
-    def test_roundtrip_simple(self, impexp):
+    def test_roundtrip_simple(self, impexp: ImportExportFixture) -> None:
         """
         Exporting and then importing leaves the db in the same state it was
         before, except for page_ids, timestamps, and body item ids.

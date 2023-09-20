@@ -26,15 +26,14 @@ class ContentBlock:
         return (self.BLOCK_TYPE_STR, self.BLOCK_TYPE().to_python(asdict(self)))
 
 
-TCBlk = TypeVar("TCBlk", bound=ContentBlock)
+TCBlk = TypeVar("TCBlk", bound=ContentBlock, covariant=True)
 
 
 @dataclass
 class ContentBody(Generic[TCBlk]):
     ATTR_STR: ClassVar[str]
-
     title: str
-    blocks: list[ContentBlock]
+    blocks: list[TCBlk]
     enable: bool = True
 
     def set_on(self, page: ContentPage) -> None:
