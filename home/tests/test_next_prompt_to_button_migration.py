@@ -2,8 +2,6 @@ import importlib
 
 from django.test import TestCase
 
-from home.models import ContentPage, HomePage
-
 migration = importlib.import_module(
     "home.migrations.0037_alter_contentpage_whatsapp_body"
 )
@@ -19,24 +17,10 @@ class TestNextPromptToButtonMigration(TestCase):
     """
 
     def test_button_created(self):
-        homepage = HomePage.objects.first()
-        page = ContentPage(
-            title="test",
-            slug="text",
-            whatsapp_body=[
-                {
-                    "type": "Whatsapp_Message",
-                    "value": {"message": "test message", "next_prompt": "Tell me more"},
-                }
-            ],
-        )
-        homepage.add_child(instance=page)
-        page.save_revision()
+        message = {"value": {"message": "test message", "next_prompt": "Tell me more"}}
+        copy_next_prompt_to_next_button_for_message(message)
 
-        message = page.whatsapp_body[0].value
-        copy_next_prompt_to_next_button_for_message({"value": message})
-
-        [button] = message["buttons"]
+        [button] = message["value"]["buttons"]
         button.pop("id")
         self.assertEqual(
             button, {"type": "next_message", "value": {"title": "Tell me more"}}

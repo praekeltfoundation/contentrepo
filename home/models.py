@@ -194,11 +194,6 @@ class WhatsappBlock(blocks.StructBlock):
         validators=(MaxLengthValidator(4096),),
     )
     variation_messages = blocks.ListBlock(VariationBlock(), default=[])
-    next_prompt = blocks.CharBlock(
-        help_text="prompt text for next message",
-        required=False,
-        validators=(MaxLengthValidator(20),),
-    )
     buttons = blocks.StreamBlock(
         [("next_message", NextMessageButton()), ("go_to_page", GoToPageButton())],
         required=False,

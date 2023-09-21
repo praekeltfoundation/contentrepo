@@ -155,7 +155,6 @@ class WhatsappBlockTests(TestCase):
         media=None,
         message="",
         variation_messages=None,
-        next_prompt="",
     ):
         return {
             "image": image,
@@ -163,7 +162,6 @@ class WhatsappBlockTests(TestCase):
             "media": media,
             "message": message,
             "variation_messages": variation_messages,
-            "next_prompt": next_prompt,
         }
 
     def create_image(self, width=0, height=0):

@@ -304,7 +304,6 @@ class PaginationTestCase(TestCase):
         view = PageView.objects.last()
         self.assertEqual(view.message, 1)
 
-
     def test_whatsapp_body(self):
         """
         Should have the WhatsApp specific fields included in the body; if it's a
@@ -332,6 +331,7 @@ class PaginationTestCase(TestCase):
         self.assertEqual(content, {"page": ["Page matching query does not exist."]})
         self.assertEqual(content.get("page"), ["Page matching query does not exist."])
 
+
 class WhatsAppMessagesTestCase(TestCase):
     def setUp(self):
         self.user_credentials = {"username": "test", "password": "test"}
@@ -346,7 +346,12 @@ class WhatsAppMessagesTestCase(TestCase):
             whatsapp_body=[
                 {
                     "type": "Whatsapp_Message",
-                    "value": {"message": "test message", "buttons": [{"type": "next_message", "value": {"title": "Tell me more"}}]},
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {"type": "next_message", "value": {"title": "Tell me more"}}
+                        ],
+                    },
                 }
             ],
         )
@@ -358,7 +363,9 @@ class WhatsAppMessagesTestCase(TestCase):
         content = response.json()
         [button] = content["body"]["text"]["value"]["buttons"]
         button.pop("id")
-        self.assertEqual(button, {"type": "next_message", "value": {"title": "Tell me more"}})
+        self.assertEqual(
+            button, {"type": "next_message", "value": {"title": "Tell me more"}}
+        )
 
 
 class OrderedContentSetTestCase(TestCase):
