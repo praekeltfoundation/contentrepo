@@ -9,9 +9,7 @@ from queue import Queue
 from typing import Any
 
 import pytest
-from django.contrib.auth import get_user_model  # type: ignore
 from django.core import serializers  # type: ignore
-from django.test import TestCase  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 
@@ -303,7 +301,7 @@ class ImportExportFixture:
         """
         self._import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
 
-    def import_file(self, path_str: bytes, **kw: Any) -> None:
+    def import_file(self, path_str: str, **kw: Any) -> bytes:
         """
         Import given content file in the configured format with the configured importer.
         """
