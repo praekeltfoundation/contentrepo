@@ -16,7 +16,7 @@ from wagtail.models.sites import Site  # type: ignore
 from home.content_import_export import import_content, old_import_content
 from home.models import ContentPage, ContentPageIndex, HomePage, SiteSettings
 
-from .page_builder import MBlk, MBody, PageBuilder, VBlk, VBody, WABlk, WABody
+from .page_builder import MBlk, MBody, PageBuilder, VarMsg, VBlk, VBody, WABlk, WABody
 
 ExpDict = dict[str, Any]
 ExpPair = tuple[ExpDict, ExpDict]
@@ -58,7 +58,6 @@ def ignore_certain_fields(entry: ExpDict) -> ExpDict:
         "doc_link",
         "image_link",
         "media_link",
-        "next_prompt",
     }
     return {k: v for k, v in entry.items() if k not in ignored_fields}
 
@@ -177,12 +176,22 @@ def remove_timestamps(pages: DbDicts) -> DbDicts:
     return _remove_fields(pages, PAGE_TIMESTAMP_FIELDS)
 
 
+def _normalise_varmsg_ids(page_id: str, var_list: list[dict[str, Any]]) -> None:
+    for i, varmsg in enumerate(var_list):
+        assert "id" in varmsg
+        varmsg["id"] = f"{page_id}:var:{i}"
+        for ir, rest in enumerate(varmsg["value"]["variation_restrictions"]):
+            rest["id"] = f"{page_id}:var:{i}:var:{ir}"
+
+
 def _normalise_body_field_ids(
     page: DbDict, body_name: str, body_list: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
     for i, body in enumerate(body_list):
         assert "id" in body
         body["id"] = f"fake:{page['pk']}:{body_name}:{i}"
+        if "variation_messages" in body["value"]:
+            _normalise_varmsg_ids(body["id"], body["value"]["variation_messages"])
     return body_list
 
 
@@ -211,7 +220,7 @@ def null_to_emptystr(page: DbDict) -> DbDict:
             fields[k] = ""
     if "whatsapp_body" in fields:
         for body in fields["whatsapp_body"]:
-            if not body["value"]["next_prompt"]:
+            if "next_prompt" in body["value"] and not body["value"]["next_prompt"]:
                 body["value"]["next_prompt"] = ""
     return page | {"fields": fields}
 
@@ -244,6 +253,14 @@ def add_body_fields(page: DbDict) -> DbDict:
 
 
 @per_page
+def remove_next_prompt(page: DbDict) -> DbDict:
+    if "whatsapp_body" in page["fields"]:
+        for body in page["fields"]["whatsapp_body"]:
+            body["value"].pop("next_prompt", None)
+    return page
+
+
+@per_page
 def enable_web(page: DbDict) -> DbDict:
     page["fields"]["enable_web"] = True
     return page
@@ -260,6 +277,7 @@ PAGE_FILTER_FUNCS = [
 OLD_PAGE_FILTER_FUNCS = [
     remove_translation_key,
     add_body_fields,
+    remove_next_prompt,
     enable_web,
 ]
 
@@ -439,7 +457,7 @@ class TestImportExportRoundtrip:
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
-def impext(request: Any, admin_client: Any) -> ImportExportFixture:
+def impexp(request: Any, admin_client: Any) -> ImportExportFixture:
     importer, format = request.param.split("-")
     return ImportExportFixture(admin_client, importer, format)
 
@@ -454,7 +472,7 @@ class TestExportImportRoundtrip:
         container for related tests.
     """
 
-    def test_roundtrip_simple(self, impext: ImportExportFixture) -> None:
+    def test_roundtrip_simple(self, impexp: ImportExportFixture) -> None:
         """
         Exporting and then importing leaves the db in the same state it was
         before, except for page_ids, timestamps, and body item ids.
@@ -497,7 +515,42 @@ class TestExportImportRoundtrip:
             ],
         )
 
-        orig = impext.get_page_json()
-        impext.export_reimport()
-        imported = impext.get_page_json()
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    def test_roundtrip_variations(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages with variation messages (and next prompts) are preserved
+        across export/import.
+        """
+        set_profile_field_options([("gender", ["male", "female", "empty"])])
+
+        home_page = HomePage.objects.first()
+        imp_exp = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
+
+        cp_imp_exp_wablks = [
+            WABlk(
+                "Message 1",
+                next_prompt="Next message",
+                variation_messages=[VarMsg("Var'n for Gender Male", gender="male")],
+            ),
+            WABlk(
+                "Message2, variable placeholders as well {{0}}",
+                next_prompt="Next message",
+                variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
+            ),
+            WABlk("Message 3 with no variation", next_prompt="end"),
+        ]
+        _cp_imp_exp = PageBuilder.build_cp(
+            parent=imp_exp,
+            slug="cp-import-export",
+            title="CP-Import/export",
+            bodies=[WABody("WA import export data", cp_imp_exp_wablks)],
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
         assert imported == orig

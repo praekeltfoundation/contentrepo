@@ -1,5 +1,5 @@
-from dataclasses import asdict, dataclass
-from typing import Any, ClassVar, Generic, TypeVar
+from dataclasses import asdict, dataclass, field
+from typing import Any, ClassVar, Generic, Iterable, TypeVar
 
 from wagtail.blocks import StructBlock  # type: ignore
 from wagtail.models import Page  # type: ignore
@@ -8,11 +8,32 @@ from home.models import (
     ContentPage,
     ContentPageIndex,
     MessengerBlock,
+    # VariationBlock,
     ViberBlock,
     WhatsappBlock,
 )
 
 TPage = TypeVar("TPage", bound=Page)
+
+
+@dataclass
+class VarMsg:
+    message: str
+    # Variation restrictions:
+    gender: str | None = None
+    age: str | None = None
+    relationship: str | None = None
+
+    def variations(self) -> Iterable[dict[str, str]]:
+        if self.gender:
+            yield {"type": "gender", "value": self.gender}
+        if self.age:
+            yield {"type": "age", "value": self.age}
+        if self.relationship:
+            yield {"type": "relationship", "value": self.relationship}
+
+    def to_dict(self) -> Any:
+        return {"message": self.message, "variation_restrictions": self.variations()}
 
 
 @dataclass
@@ -22,8 +43,11 @@ class ContentBlock:
 
     message: str
 
-    def to_body(self) -> Any:
-        return (self.BLOCK_TYPE_STR, self.BLOCK_TYPE().to_python(asdict(self)))
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def to_block(self) -> Any:
+        return (self.BLOCK_TYPE_STR, self.BLOCK_TYPE().to_python(self.to_dict()))
 
 
 TCBlk = TypeVar("TCBlk", bound=ContentBlock, covariant=True)
@@ -41,7 +65,7 @@ class ContentBody(Generic[TCBlk]):
         setattr(page, f"{self.ATTR_STR}_title", self.title)
         page_body = getattr(page, f"{self.ATTR_STR}_body")
         for body in self.blocks:
-            page_body.append(body.to_body())
+            page_body.append(body.to_block())
 
 
 @dataclass
@@ -50,6 +74,12 @@ class WABlk(ContentBlock):
     BLOCK_TYPE = WhatsappBlock
 
     # TODO: More body things.
+    variation_messages: list[VarMsg] = field(default_factory=list)
+    next_prompt: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        varmsgs = [vm.to_dict() for vm in self.variation_messages]
+        return asdict(self) | {"variation_messages": varmsgs}
 
 
 @dataclass
