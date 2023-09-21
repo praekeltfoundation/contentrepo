@@ -32,13 +32,15 @@ class ContentImporter:
         file_type: str,
         progress_queue: Queue[int],
         purge: bool | str = True,
-        locale: str = "en",
+        locale: Locale | str = "en",
     ):
+        if isinstance(locale, str):
+            locale = Locale.objects.get(language_code=locale)
         self.file_content = file_content
         self.file_type = file_type
         self.progress_queue = progress_queue
         self.purge = purge in ["True", "yes", True]
-        self.locale_language_code = locale
+        self.locale = locale
         self.shadow_pages: dict[str, ShadowContentPage] = {}
 
     def perform_import(self) -> None:
@@ -114,10 +116,6 @@ class ContentImporter:
     def delete_existing_content(self) -> None:
         ContentPage.objects.all().delete()
         ContentPageIndex.objects.all().delete()
-
-    @cached_property
-    def locale(self) -> Locale:
-        return Locale.objects.get(language_code=self.locale_language_code)
 
     @cached_property
     def home_page(self) -> HomePage:
