@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 from django.core import serializers  # type: ignore
+from openpyxl import load_workbook
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 
@@ -152,6 +153,8 @@ def _update_field(
 
 
 def normalise_revisions(pages: DbDicts) -> DbDicts:
+    if "latest_revision" not in list(pages)[0]["fields"]:
+        return pages
     min_latest = min(p["fields"]["latest_revision"] for p in pages)
     min_live = min(p["fields"]["live_revision"] for p in pages)
     pages = _update_field(pages, "latest_revision", lambda v: v - min_latest)
@@ -206,8 +209,15 @@ def normalise_body_ids(page: DbDict) -> DbDict:
 
 
 def remove_translation_key(pages: DbDicts) -> DbDicts:
-    # FIXME: translation_key should be preserved across imports.
+    # For old importer.
     return _remove_fields(pages, {"translation_key"})
+
+
+def remove_revisions(pages: DbDicts) -> DbDicts:
+    # For old importer. Sometimes (maybe for the ContentPages imported after
+    # the first language?) we get higher revision numbers. Let's just strip
+    # them all and be done with it.
+    return _remove_fields(pages, {"latest_revision", "live_revision"})
 
 
 @per_page
@@ -276,6 +286,7 @@ PAGE_FILTER_FUNCS = [
 
 OLD_PAGE_FILTER_FUNCS = [
     remove_translation_key,
+    remove_revisions,
     add_body_fields,
     remove_next_prompt,
     enable_web,
@@ -306,12 +317,69 @@ class ImportExportFixture:
             "old": old_import_content,
         }[self.importer]
 
-    def export_content(self) -> bytes:
+    @property
+    def _filter_export(self) -> Callable[..., bytes]:
+        return {
+            "csv": self._filter_export_CSV,
+            "xlsx": self._filter_export_XLSX,
+        }[self.format]
+
+    def _filter_export_row(self, row: ExpDict, locale: str | None) -> bool:
         """
-        Export all content in the configured format.
+        Determine whether to keep a given export row.
         """
-        resp = self.admin_client.get(f"/admin/home/contentpage/?export={self.format}")
-        return resp.content
+        if locale:
+            if row["locale"] not in [None, "", locale]:
+                return False
+        return True
+
+    def _filter_export_CSV(self, content: bytes, locale: str | None) -> bytes:
+        reader = csv.DictReader(StringIO(content.decode()))
+        assert reader.fieldnames is not None
+        out_content = StringIO()
+        writer = csv.DictWriter(out_content, fieldnames=reader.fieldnames)
+        writer.writeheader()
+        for row in reader:
+            if self._filter_export_row(row, locale=locale):
+                writer.writerow(row)
+        return out_content.getvalue().encode()
+
+    def _filter_export_XLSX(self, content: bytes, locale: str | None) -> bytes:
+        workbook = load_workbook(BytesIO(content))
+        worksheet = workbook.worksheets[0]
+        header = next(worksheet.iter_rows(max_row=1, values_only=True))
+
+        rows_to_remove: list[int] = []
+        for i, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True)):
+            r = {k: v for k, v in zip(header, row, strict=True) if isinstance(k, str)}
+            if not self._filter_export_row(r, locale=locale):
+                rows_to_remove.append(i + 2)
+        for row_num in reversed(rows_to_remove):
+            worksheet.delete_rows(row_num)
+
+        out_content = BytesIO()
+        workbook.save(out_content)
+        return out_content.getvalue()
+
+    def export_content(self, locale: str | None = None) -> bytes:
+        """
+        Export all (or filtered) content in the configured format.
+
+        FIXME:
+         * If we filter the export by locale, we only get ContentPage entries
+           for the given language, but we still get ContentPageIndex rows for
+           all languages.
+        """
+        url = f"/admin/home/contentpage/?export={self.format}"
+        if locale:
+            loc = Locale.objects.get(language_code=locale)
+            locale = str(loc)
+            url = f"{url}&locale__id__exact={loc.id}"
+        content = self.admin_client.get(url).content
+        # Hopefully we can get rid of this at some point.
+        if locale:
+            content = self._filter_export(content, locale=locale)
+        return content
 
     def import_content(self, content_bytes: bytes, **kw: Any) -> None:
         """
@@ -319,11 +387,13 @@ class ImportExportFixture:
         """
         self._import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
 
-    def import_file(self, path_str: str, **kw: Any) -> bytes:
+    def import_file(
+        self, path_str: str, path_base: str = "home/tests", **kw: Any
+    ) -> bytes:
         """
         Import given content file in the configured format with the configured importer.
         """
-        content = Path(path_str).read_bytes()
+        content = (Path(path_base) / path_str).read_bytes()
         self.import_content(content, **kw)
         return content
 
@@ -383,7 +453,7 @@ class TestImportExportRoundtrip:
          * Should we set enable_web and friends based on body, title, or an
            enable field that we'll need to add to the export?
         """
-        csv_bytes = csv_impexp.import_file("home/tests/content2.csv")
+        csv_bytes = csv_impexp.import_file("content2.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
@@ -400,7 +470,7 @@ class TestImportExportRoundtrip:
         """
         set_profile_field_options([("gender", ["male", "female", "empty"])])
         csv_bytes = csv_impexp.import_file(
-            "home/tests/exported_content_20230911-variations-linked-page.csv"
+            "exported_content_20230911-variations-linked-page.csv"
         )
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
@@ -421,14 +491,12 @@ class TestImportExportRoundtrip:
         """
 
         # Create a new homepage for Portuguese.
-        pt = Locale.objects.create(language_code="pt")
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options([("gender", ["male", "female", "empty"])])
-        csv_impexp.import_file("home/tests/translations-en.csv")
-        csv_impexp.import_file(
-            "home/tests/translations-pt.csv", locale="pt", purge=False
-        )
+        csv_impexp.import_file("translations-en.csv")
+        csv_impexp.import_file("translations-pt.csv", locale="pt", purge=False)
         csv_bytes = Path(
             "home/tests/exported_content_20230906-translations.csv"
         ).read_bytes()
@@ -443,11 +511,11 @@ class TestImportExportRoundtrip:
         (This uses content2.csv from test_api.py and broken.csv.)
         """
         # Start with some existing content.
-        csv_bytes = csv_impexp.import_file("home/tests/content2.csv")
+        csv_bytes = csv_impexp.import_file("content2.csv")
 
         # This CSV doesn't have any of the fields we expect.
         with pytest.raises((KeyError, TypeError)):
-            csv_impexp.import_file("home/tests/broken.csv")
+            csv_impexp.import_file("broken.csv")
 
         # The export should match the existing content.
         content = csv_impexp.export_content()
@@ -552,5 +620,80 @@ class TestExportImportRoundtrip:
 
         orig = impexp.get_page_json()
         impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    def test_roundtrip_translations(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages in multiple languages are preserved across export/import.
+
+        FIXME:
+         * We shouldn't need to import different languages separately.
+        """
+        # Create a new homepage for Portuguese.
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        # English pages
+        home_en = HomePage.objects.get(locale__language_code="en")
+        _app_rem = PageBuilder.build_cpi(
+            parent=home_en, slug="appointment-reminders", title="Appointment reminders"
+        )
+        _sbm = PageBuilder.build_cpi(
+            parent=home_en, slug="stage-based-messages", title="Stage-based messages"
+        )
+        _him = PageBuilder.build_cpi(
+            parent=home_en, slug="health-info-messages", title="Health info messages"
+        )
+        _wtt = PageBuilder.build_cpi(
+            parent=home_en,
+            slug="whatsapp-template-testing",
+            title="whatsapp template testing",
+        )
+        imp_exp = PageBuilder.build_cpi(
+            parent=home_en, slug="import-export", title="Import Export"
+        )
+        non_templ_wablks = [
+            WABlk("this is a non template message"),
+            WABlk("this message has a doc"),
+            WABlk("this message comes with audio"),
+        ]
+        non_tmpl = PageBuilder.build_cp(
+            parent=imp_exp,
+            slug="non-template",
+            title="Non template messages",
+            bodies=[WABody("non template OCS", non_templ_wablks)],
+        )
+
+        # Portuguese pages
+        home_pt = HomePage.objects.get(locale__language_code="pt")
+        imp_exp_pt = PageBuilder.build_cpi(
+            parent=home_pt,
+            slug="import-export-pt",
+            title="Import Export (pt)",
+            translated_from=imp_exp,
+        )
+        non_templ_wablks_pt = [
+            WABlk("this is a non template message (pt)"),
+            WABlk("this message has a doc (pt)"),
+            WABlk("this message comes with audio (pt)"),
+        ]
+        non_tmpl_pt = PageBuilder.build_cp(
+            parent=imp_exp_pt,
+            slug="non-template-pt",
+            title="Non template messages",
+            bodies=[WABody("non template OCS", non_templ_wablks_pt)],
+            translated_from=non_tmpl,
+        )
+
+        assert imp_exp.translation_key == imp_exp_pt.translation_key
+        assert non_tmpl.translation_key == non_tmpl_pt.translation_key
+
+        orig = impexp.get_page_json()
+        content_en = impexp.export_content(locale="en")
+        content_pt = impexp.export_content(locale="pt")
+
+        impexp.import_content(content_en, locale="en")
+        impexp.import_content(content_pt, locale="pt", purge=False)
         imported = impexp.get_page_json()
         assert imported == orig

@@ -133,14 +133,31 @@ class PageBuilder(Generic[TPage]):
         return cls(parent, slug, title, page_type=ContentPage)
 
     @classmethod
-    def build_cpi(cls, parent: Page, slug: str, title: str) -> ContentPageIndex:
-        return cls.cpi(parent, slug, title).build()
+    def build_cpi(
+        cls,
+        parent: Page,
+        slug: str,
+        title: str,
+        translated_from: ContentPageIndex | None = None,
+    ) -> ContentPageIndex:
+        builder = cls.cpi(parent, slug, title)
+        if translated_from:
+            builder = builder.translated_from(translated_from)
+        return builder.build()
 
     @classmethod
     def build_cp(
-        cls, parent: Page, slug: str, title: str, bodies: list[ContentBody[TCBlk]]
+        cls,
+        parent: Page,
+        slug: str,
+        title: str,
+        bodies: list[ContentBody[TCBlk]],
+        translated_from: ContentPage | None = None,
     ) -> ContentPage:
-        return cls.cp(parent, slug, title).add_bodies(*bodies).build()
+        builder = cls.cp(parent, slug, title).add_bodies(*bodies)
+        if translated_from:
+            builder = builder.translated_from(translated_from)
+        return builder.build()
 
     def build(self, publish: bool = True) -> TPage:
         self.parent.add_child(instance=self.page)
@@ -152,4 +169,8 @@ class PageBuilder(Generic[TPage]):
     def add_bodies(self, *bodies: ContentBody[TCBlk]) -> "PageBuilder[TPage]":
         for body in bodies:
             body.set_on(self.page)
+        return self
+
+    def translated_from(self, page: TPage) -> "PageBuilder[TPage]":
+        self.page.translation_key = page.translation_key
         return self
