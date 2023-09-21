@@ -167,6 +167,21 @@ class VariationBlock(blocks.StructBlock):
     )
 
 
+class NextMessageButton(blocks.StructBlock):
+    title = blocks.CharBlock(
+        help_text="text for the button, up to 20 characters.",
+        validators=(MaxLengthValidator(20),),
+    )
+
+
+class GoToPageButton(blocks.StructBlock):
+    title = blocks.CharBlock(
+        help_text="text for the button, up to 20 characters.",
+        validators=(MaxLengthValidator(20),),
+    )
+    page = blocks.PageChooserBlock(help_text="page the button should go to")
+
+
 class WhatsappBlock(blocks.StructBlock):
     MEDIA_CAPTION_MAX_LENGTH = 1024
 
@@ -183,6 +198,11 @@ class WhatsappBlock(blocks.StructBlock):
         help_text="prompt text for next message",
         required=False,
         validators=(MaxLengthValidator(20),),
+    )
+    buttons = blocks.StreamBlock(
+        [("next_message", NextMessageButton()), ("go_to_page", GoToPageButton())],
+        required=False,
+        max_num=3,
     )
 
     class Meta:
