@@ -4,7 +4,7 @@ from django.test import TestCase, override_settings
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
 
-from home.models import PageView, WhatsappBlock
+from home.models import GoToPageButton, NextMessageButton, PageView, WhatsappBlock
 
 from .utils import create_page, create_page_rating
 
@@ -188,3 +188,16 @@ class WhatsappBlockTests(TestCase):
                 self.create_message_value(message="a" * 1025, image=image)
             )
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
+
+    def test_buttons_char_limit(self):
+        """Button labels have a character limit"""
+        NextMessageButton().clean({"title": "test"})
+        GoToPageButton().clean({"title": "test", "page": 1})
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            NextMessageButton().clean({"title": "a" * 21})
+        self.assertEqual(list(e.exception.block_errors.keys()), ["title"])
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            GoToPageButton().clean({"title": "a" * 21})
+        self.assertEqual(list(e.exception.block_errors.keys()), ["title"])
