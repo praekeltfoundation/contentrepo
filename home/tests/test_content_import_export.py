@@ -623,6 +623,42 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
+    def test_roundtrip_tags(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages with tags are preserved across export/import.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")]),
+                MBody("HealthAlert menu", [MBlk("Welcome to HealthAlert M")]),
+            ],
+            tags=["tag1", "tag2"],
+        )
+        _health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[MBody("health info", [MBlk("*Health information* M")])],
+            tags=["tag2", "tag3"],
+        )
+        _self_help = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="self-help",
+            title="self-help",
+            bodies=[WABody("self-help", [WABlk("*Self-help programs* WA")])],
+            tags=["tag4"],
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
     def test_roundtrip_translations(self, impexp: ImportExportFixture) -> None:
         """
         ContentPages in multiple languages are preserved across export/import.

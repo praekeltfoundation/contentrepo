@@ -1,6 +1,7 @@
 from dataclasses import asdict, dataclass, field
 from typing import Any, ClassVar, Generic, Iterable, TypeVar
 
+from taggit.models import Tag  # type: ignore
 from wagtail.blocks import StructBlock  # type: ignore
 from wagtail.models import Page  # type: ignore
 
@@ -152,9 +153,12 @@ class PageBuilder(Generic[TPage]):
         slug: str,
         title: str,
         bodies: list[ContentBody[TCBlk]],
+        tags: list[str] | None = None,
         translated_from: ContentPage | None = None,
     ) -> ContentPage:
         builder = cls.cp(parent, slug, title).add_bodies(*bodies)
+        if tags:
+            builder = builder.add_tags(*tags)
         if translated_from:
             builder = builder.translated_from(translated_from)
         return builder.build()
@@ -169,6 +173,12 @@ class PageBuilder(Generic[TPage]):
     def add_bodies(self, *bodies: ContentBody[TCBlk]) -> "PageBuilder[TPage]":
         for body in bodies:
             body.set_on(self.page)
+        return self
+
+    def add_tags(self, *tag_strs: str) -> "PageBuilder[TPage]":
+        for tag_str in tag_strs:
+            tag, _ = Tag.objects.get_or_create(name=tag_str)
+            self.page.tags.add(tag)
         return self
 
     def translated_from(self, page: TPage) -> "PageBuilder[TPage]":
