@@ -114,6 +114,9 @@ class VBody(ContentBody[VBlk]):
 class PageBuilder(Generic[TPage]):
     """
     Builder for various Page objects.
+
+    NOTE: Related pages need to be linked after all relevant pages are saved,
+        so that's handled separately.
     """
 
     page: TPage
@@ -168,6 +171,8 @@ class PageBuilder(Generic[TPage]):
         rev = self.page.save_revision()
         if publish:
             rev.publish()
+        # The page instance is out of date after revision operations, so reload.
+        self.page.refresh_from_db()
         return self.page
 
     def add_bodies(self, *bodies: ContentBody[TCBlk]) -> "PageBuilder[TPage]":
@@ -184,3 +189,15 @@ class PageBuilder(Generic[TPage]):
     def translated_from(self, page: TPage) -> "PageBuilder[TPage]":
         self.page.translation_key = page.translation_key
         return self
+
+    @staticmethod
+    def link_related(
+        page: ContentPage, related_pages: Iterable[Page], publish: bool = True
+    ) -> ContentPage:
+        for related_page in related_pages:
+            page.related_pages.append(("related_page", related_page))
+        rev = page.save_revision()
+        if publish:
+            rev.publish()
+        page.refresh_from_db()
+        return page

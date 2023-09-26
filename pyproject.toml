@@ -46,7 +46,7 @@ exclude = '''
 '''
 
 [tool.mypy]
-files = "home/import_content_pages.py,home/tests/page_builder.py,home/tests/test_content_import_export.py"
+files = "home/import_content_pages.py,home/tests/helpers.py,home/tests/page_builder.py,home/tests/test_content_import_export.py,home/tests/test_page_builder.py"
 follow_imports = "skip"
 disallow_untyped_defs = true
 disallow_any_generics = true

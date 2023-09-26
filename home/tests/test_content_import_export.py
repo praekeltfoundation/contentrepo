@@ -12,11 +12,11 @@ import pytest
 from django.core import serializers  # type: ignore
 from openpyxl import load_workbook
 from wagtail.models import Locale, Page  # type: ignore
-from wagtail.models.sites import Site  # type: ignore
 
 from home.content_import_export import import_content, old_import_content
-from home.models import ContentPage, ContentPageIndex, HomePage, SiteSettings
+from home.models import ContentPage, ContentPageIndex, HomePage
 
+from .helpers import set_profile_field_options
 from .page_builder import MBlk, MBody, PageBuilder, VarMsg, VBlk, VBody, WABlk, WABody
 
 ExpDict = dict[str, Any]
@@ -131,17 +131,31 @@ def per_page(filter_func: Callable[[DbDict], DbDict]) -> Callable[[DbDicts], DbD
     return fp
 
 
+def _is_json_field(field_name: str) -> bool:
+    return field_name.endswith("body") or field_name in {"related_pages"}
+
+
 @per_page
-def bodies_to_dicts(page: DbDict) -> DbDict:
+def decode_json_fields(page: DbDict) -> DbDict:
     fields = {
-        k: json.loads(v) if k.endswith("body") else v for k, v in page["fields"].items()
+        k: json.loads(v) if _is_json_field(k) else v for k, v in page["fields"].items()
     }
     return page | {"fields": fields}
 
 
+def _normalise_pks(page: DbDict, min_pk: int) -> DbDict:
+    fields = page["fields"]
+    if "related_pages" in fields:
+        related_pages = [
+            rp | {"value": rp["value"] - min_pk} for rp in fields["related_pages"]
+        ]
+        fields = fields | {"related_pages": related_pages}
+    return page | {"fields": fields, "pk": page["pk"] - min_pk}
+
+
 def normalise_pks(pages: DbDicts) -> DbDicts:
     min_pk = min(p["pk"] for p in pages)
-    return [p | {"pk": p["pk"] - min_pk} for p in pages]
+    return [_normalise_pks(p, min_pk) for p in pages]
 
 
 def _update_field(
@@ -203,6 +217,25 @@ def normalise_body_ids(page: DbDict) -> DbDict:
     # FIXME: Does it matter if these change?
     fields = {
         k: _normalise_body_field_ids(page, k, v) if k.endswith("body") else v
+        for k, v in page["fields"].items()
+    }
+    return page | {"fields": fields}
+
+
+def _normalise_related_page_ids(
+    page: DbDict, rp_list: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    for i, rp in enumerate(rp_list):
+        assert "id" in rp
+        rp["id"] = f"fake:{page['pk']}:related_page:{i}"
+    return rp_list
+
+
+@per_page
+def normalise_related_page_ids(page: DbDict) -> DbDict:
+    # FIXME: Does it matter if these change?
+    fields = {
+        k: _normalise_related_page_ids(page, v) if k == "related_pages" else v
         for k, v in page["fields"].items()
     }
     return page | {"fields": fields}
@@ -281,6 +314,7 @@ PAGE_FILTER_FUNCS = [
     normalise_revisions,
     remove_timestamps,
     normalise_body_ids,
+    normalise_related_page_ids,
     null_to_emptystr,
 ]
 
@@ -291,17 +325,6 @@ OLD_PAGE_FILTER_FUNCS = [
     remove_next_prompt,
     enable_web,
 ]
-
-
-PFOption = tuple[str, list[str]]
-PFOptions = list[PFOption]
-
-
-def set_profile_field_options(profile_field_options: PFOptions) -> None:
-    site = Site.objects.get(is_default_site=True)
-    site_settings = SiteSettings.for_site(site)
-    site_settings.profile_field_options.extend(profile_field_options)
-    site_settings.save()
 
 
 @dataclass
@@ -408,7 +431,7 @@ class ImportExportFixture:
         Serialize all ContentPage and ContentPageIndex instances and normalize
         things that vary across import/export.
         """
-        pages = bodies_to_dicts(get_page_json())
+        pages = decode_json_fields(get_page_json())
         if self.importer == "old":
             for ff in OLD_PAGE_FILTER_FUNCS:
                 pages = ff(pages)
@@ -623,9 +646,10 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_roundtrip_tags(self, impexp: ImportExportFixture) -> None:
+    def test_roundtrip_tags_and_related(self, impexp: ImportExportFixture) -> None:
         """
-        ContentPages with tags are preserved across export/import.
+        ContentPages with tags and related pages are preserved across
+        export/import.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
@@ -639,20 +663,22 @@ class TestExportImportRoundtrip:
             ],
             tags=["tag1", "tag2"],
         )
-        _health_info = PageBuilder.build_cp(
+        health_info = PageBuilder.build_cp(
             parent=ha_menu,
             slug="health-info",
             title="health info",
             bodies=[MBody("health info", [MBlk("*Health information* M")])],
             tags=["tag2", "tag3"],
         )
-        _self_help = PageBuilder.build_cp(
+        self_help = PageBuilder.build_cp(
             parent=ha_menu,
             slug="self-help",
             title="self-help",
             bodies=[WABody("self-help", [WABlk("*Self-help programs* WA")])],
             tags=["tag4"],
         )
+        PageBuilder.link_related(health_info, [self_help])
+        PageBuilder.link_related(self_help, [health_info])
 
         orig = impexp.get_page_json()
         impexp.export_reimport()
