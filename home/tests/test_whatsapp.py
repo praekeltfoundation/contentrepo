@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 import responses
-from django.conf import settings
 from django.core.files.images import ImageFile
 from responses.matchers import multipart_matcher
 from wagtail.images.models import Image
@@ -61,7 +60,8 @@ class TestWhatsApp:
         assert request.body == json.dumps(data, indent=4)
 
     @responses.activate
-    def test_create_whatsapp_template_with_image(self):
+    def test_create_whatsapp_template_with_image(self, tmp_path, settings):
+        settings.MEDIA_ROOT = tmp_path
         img_name = "test.jpeg"
         img_path = Path("home/tests/test_static") / img_name
 
