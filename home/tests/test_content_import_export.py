@@ -611,6 +611,39 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
+    def test_multiple_message(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages with multiple message block are preserved across
+        export/import.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")]),
+                MBody("HealthAlert menu", [MBlk("Welcome to HealthAlert M")]),
+                VBody("HealthAlert menu", [VBlk("Welcome to HealthAlert V")]),
+            ],
+        )
+        _health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody("health info", [WABlk(m) for m in ["wa1", "wa2", "wa3"]]),
+                MBody("health info", [MBlk(m) for m in ["m1", "m2", "m3"]]),
+                VBody("health info", [VBlk(m) for m in ["v1", "v2", "v3"]]),
+            ],
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
     def test_variations(self, impexp: ImportExportFixture) -> None:
         """
         ContentPages with variation messages (and next prompts) are preserved
