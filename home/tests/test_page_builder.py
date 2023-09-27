@@ -133,7 +133,7 @@ def test_build_variations() -> None:
     messages. (This also tests multiple WhatsApp messages and non-empty
     next_prompt.)
     """
-    set_profile_field_options([("gender", ["male", "female", "empty"])])
+    set_profile_field_options()
     home_page = HomePage.objects.first()
     imp_exp = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
 
@@ -141,12 +141,15 @@ def test_build_variations() -> None:
         WABlk(
             "Message 1",
             next_prompt="Next message",
-            variation_messages=[VarMsg("Male", gender="male")],
+            variation_messages=[
+                VarMsg("Single male", gender="male", relationship="single"),
+                VarMsg("Comp male", gender="male", relationship="complicated"),
+            ],
         ),
         WABlk(
             "Message 2, variable placeholders as well {{0}}",
             next_prompt="Next message",
-            variation_messages=[VarMsg("Not say", gender="empty")],
+            variation_messages=[VarMsg("Teen", age="15-18")],
         ),
         WABlk("Message 3 with no variation", next_prompt="end"),
     ]
@@ -157,19 +160,22 @@ def test_build_variations() -> None:
         bodies=[WABody("WA import export data", cp_imp_exp_wablks)],
     )
 
+    v_single_male = [("gender", "male"), ("relationship", "single")]
+    v_complicated_male = [("gender", "male"), ("relationship", "complicated")]
     wa_msgs: list[dict[str, Any]] = [
         {
             "message": "Message 1",
             "next_prompt": "Next message",
             "variation_messages": [
-                {"message": "Male", "variation_restrictions": [("gender", "male")]}
+                {"message": "Single male", "variation_restrictions": v_single_male},
+                {"message": "Comp male", "variation_restrictions": v_complicated_male},
             ],
         },
         {
             "message": "Message 2, variable placeholders as well {{0}}",
             "next_prompt": "Next message",
             "variation_messages": [
-                {"message": "Not say", "variation_restrictions": [("gender", "empty")]}
+                {"message": "Teen", "variation_restrictions": [("age", "15-18")]}
             ],
         },
         {

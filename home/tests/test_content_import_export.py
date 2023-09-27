@@ -491,7 +491,7 @@ class TestImportExportRoundtrip:
         FIXME:
          * Implement import/export for doc_link, image_link, media_link.
         """
-        set_profile_field_options([("gender", ["male", "female", "empty"])])
+        set_profile_field_options()
         csv_bytes = csv_impexp.import_file(
             "exported_content_20230911-variations-linked-page.csv"
         )
@@ -517,7 +517,7 @@ class TestImportExportRoundtrip:
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
-        set_profile_field_options([("gender", ["male", "female", "empty"])])
+        set_profile_field_options()
         csv_impexp.import_file("translations-en.csv")
         csv_impexp.import_file("translations-pt.csv", locale="pt", purge=False)
         csv_bytes = Path(
@@ -615,20 +615,29 @@ class TestExportImportRoundtrip:
         """
         ContentPages with variation messages (and next prompts) are preserved
         across export/import.
+
+        NOTE: The old importer can't handle multiple restrictions on a
+            variation, so it gets a slightly simpler dataset.
         """
-        set_profile_field_options([("gender", ["male", "female", "empty"])])
+        set_profile_field_options()
 
         home_page = HomePage.objects.first()
         imp_exp = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
 
+        m1vars = [
+            VarMsg("Single male", gender="male", relationship="single"),
+            VarMsg("Complicated male", gender="male", relationship="complicated"),
+        ]
+        if impexp.importer == "old":
+            m1vars = [
+                VarMsg("Single", relationship="single"),
+                VarMsg("Complicated", relationship="complicated"),
+            ]
+
         cp_imp_exp_wablks = [
+            WABlk("Message 1", next_prompt="Next message", variation_messages=m1vars),
             WABlk(
-                "Message 1",
-                next_prompt="Next message",
-                variation_messages=[VarMsg("Var'n for Gender Male", gender="male")],
-            ),
-            WABlk(
-                "Message2, variable placeholders as well {{0}}",
+                "Message 2, variable placeholders as well {{0}}",
                 next_prompt="Next message",
                 variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
             ),
