@@ -8,8 +8,9 @@ from wagtail.models import Page  # type: ignore
 from home.models import (
     ContentPage,
     ContentPageIndex,
+    ContentQuickReply,
+    ContentTrigger,
     MessengerBlock,
-    # VariationBlock,
     ViberBlock,
     WhatsappBlock,
 )
@@ -157,11 +158,17 @@ class PageBuilder(Generic[TPage]):
         title: str,
         bodies: list[ContentBody[TCBlk]],
         tags: list[str] | None = None,
+        triggers: list[str] | None = None,
+        quick_replies: list[str] | None = None,
         translated_from: ContentPage | None = None,
     ) -> ContentPage:
         builder = cls.cp(parent, slug, title).add_bodies(*bodies)
         if tags:
             builder = builder.add_tags(*tags)
+        if triggers:
+            builder = builder.add_triggers(*triggers)
+        if quick_replies:
+            builder = builder.add_quick_replies(*quick_replies)
         if translated_from:
             builder = builder.translated_from(translated_from)
         return builder.build()
@@ -184,6 +191,18 @@ class PageBuilder(Generic[TPage]):
         for tag_str in tag_strs:
             tag, _ = Tag.objects.get_or_create(name=tag_str)
             self.page.tags.add(tag)
+        return self
+
+    def add_triggers(self, *trigger_strs: str) -> "PageBuilder[TPage]":
+        for trigger_str in trigger_strs:
+            trigger, _ = ContentTrigger.objects.get_or_create(name=trigger_str)
+            self.page.triggers.add(trigger)
+        return self
+
+    def add_quick_replies(self, *qr_strs: str) -> "PageBuilder[TPage]":
+        for qr_str in qr_strs:
+            qr, _ = ContentQuickReply.objects.get_or_create(name=qr_str)
+            self.page.quick_replies.add(qr)
         return self
 
     def translated_from(self, page: TPage) -> "PageBuilder[TPage]":

@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from typing import Any
 from uuid import UUID
 
@@ -30,6 +31,13 @@ def unwagtail(val):  # type: ignore[no-untyped-def] # No type info
             return [unwagtail(v) for v in val]
         case _:
             return val
+
+
+def tagslugs(taglikes: Iterable[dict[str, str]]) -> list[str]:
+    """
+    Extract slug fields from tag-like dicts.
+    """
+    return [t["slug"] for t in taglikes]
 
 
 def page_for(page: Page) -> Page:
@@ -257,15 +265,15 @@ def test_link_related_pages() -> None:
 
     assert isinstance(ha_menu, ContentPage)
     assert ha_menu.depth == 4
-    assert [t["slug"] for t in ha_menu.tags.values()] == ["tag1", "tag2"]
+    assert tagslugs(ha_menu.tags.values()) == ["tag1", "tag2"]
 
     assert isinstance(health_info, ContentPage)
     assert health_info.depth == 5
-    assert [t["slug"] for t in health_info.tags.values()] == ["tag2", "tag3"]
+    assert tagslugs(health_info.tags.values()) == ["tag2", "tag3"]
 
     assert isinstance(self_help, ContentPage)
     assert self_help.depth == 5
-    assert [t["slug"] for t in self_help.tags.values()] == ["tag4"]
+    assert tagslugs(self_help.tags.values()) == ["tag4"]
 
     assert unwagtail(ha_menu.related_pages) == []
     assert unwagtail(health_info.related_pages) == []
@@ -286,6 +294,56 @@ def test_link_related_pages() -> None:
         ("related_page", page_for(health_info)),
         ("related_page", page_for(ha_menu)),
     ]
+
+
+@pytest.mark.django_db
+def test_triggers_and_quick_replies() -> None:
+    """
+    PageBuilder.build_cp correctly builds a ContentPage with triggers and quick
+    replies.
+    """
+    home_page = HomePage.objects.first()
+    main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+    ha_menu = PageBuilder.build_cp(
+        parent=main_menu,
+        slug="ha-menu",
+        title="HealthAlert menu",
+        bodies=[
+            WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")]),
+            MBody("HealthAlert menu", [MBlk("Welcome to HealthAlert M")]),
+        ],
+        triggers=["trigger1", "trigger2"],
+    )
+    health_info = PageBuilder.build_cp(
+        parent=ha_menu,
+        slug="health-info",
+        title="health info",
+        bodies=[MBody("health info", [MBlk("*Health information* M")])],
+        triggers=["trigger2", "trigger3"],
+        quick_replies=["button1", "button2"],
+    )
+    self_help = PageBuilder.build_cp(
+        parent=ha_menu,
+        slug="self-help",
+        title="self-help",
+        bodies=[WABody("self-help", [WABlk("*Self-help programs* WA")])],
+        quick_replies=["button3", "button2"],
+    )
+
+    assert isinstance(ha_menu, ContentPage)
+    assert ha_menu.depth == 4
+    assert tagslugs(ha_menu.triggers.values()) == ["trigger1", "trigger2"]
+    assert tagslugs(ha_menu.quick_replies.values()) == []
+
+    assert isinstance(health_info, ContentPage)
+    assert health_info.depth == 5
+    assert tagslugs(health_info.triggers.values()) == ["trigger2", "trigger3"]
+    assert tagslugs(health_info.quick_replies.values()) == ["button1", "button2"]
+
+    assert isinstance(self_help, ContentPage)
+    assert self_help.depth == 5
+    assert tagslugs(self_help.triggers.values()) == []
+    assert tagslugs(self_help.quick_replies.values()) == ["button3", "button2"]
 
 
 @pytest.mark.django_db
