@@ -1,17 +1,17 @@
 import json
 from pathlib import Path
 
+import pytest
 import responses
-from django.conf import settings
 from django.core.files.images import ImageFile
-from django.test import TestCase
 from responses.matchers import multipart_matcher
 from wagtail.images.models import Image
 
 from home.whatsapp import create_whatsapp_template
 
 
-class WhatsAppTests(TestCase):
+@pytest.mark.django_db
+class TestWhatsApp:
     @responses.activate
     def test_create_whatsapp_template(self):
         data = {
@@ -27,8 +27,8 @@ class WhatsAppTests(TestCase):
 
         request = responses.calls[0].request
 
-        self.assertEqual(request.headers["Authorization"], "Bearer fake-access-token")
-        self.assertEqual(request.body, json.dumps(data, indent=4))
+        assert request.headers["Authorization"] == "Bearer fake-access-token"
+        assert request.body == json.dumps(data, indent=4)
 
     @responses.activate
     def test_create_whatsapp_template_with_buttons(self):
@@ -56,11 +56,12 @@ class WhatsAppTests(TestCase):
 
         request = responses.calls[0].request
 
-        self.assertEqual(request.headers["Authorization"], "Bearer fake-access-token")
-        self.assertEqual(request.body, json.dumps(data, indent=4))
+        assert request.headers["Authorization"] == "Bearer fake-access-token"
+        assert request.body == json.dumps(data, indent=4)
 
     @responses.activate
-    def test_create_whatsapp_template_with_image(self):
+    def test_create_whatsapp_template_with_image(self, tmp_path, settings):
+        settings.MEDIA_ROOT = tmp_path
         img_name = "test.jpeg"
         img_path = Path("home/tests/test_static") / img_name
 
@@ -107,8 +108,8 @@ class WhatsAppTests(TestCase):
             "number": "27121231234",
         }
         get_session_id_request = responses.calls[0].request
-        self.assertEqual(
-            get_session_id_request.body, json.dumps(mock_get_session_data, indent=4)
+        assert get_session_id_request.body == json.dumps(
+            mock_get_session_data, indent=4
         )
 
         create_template_request = responses.calls[2].request
@@ -126,10 +127,10 @@ class WhatsAppTests(TestCase):
             ],
         }
 
-        self.assertEqual(
-            create_template_request.headers["Authorization"], "Bearer fake-access-token"
+        assert (
+            create_template_request.headers["Authorization"]
+            == "Bearer fake-access-token"
         )
-        self.assertEqual(
-            create_template_request.body,
-            json.dumps(mock_create_template_data, indent=4),
+        assert create_template_request.body == json.dumps(
+            mock_create_template_data, indent=4
         )
