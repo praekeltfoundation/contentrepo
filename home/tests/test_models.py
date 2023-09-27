@@ -155,6 +155,7 @@ class WhatsappBlockTests(TestCase):
         media=None,
         message="",
         variation_messages=None,
+        buttons=None,
     ):
         return {
             "image": image,
@@ -162,6 +163,7 @@ class WhatsappBlockTests(TestCase):
             "media": media,
             "message": message,
             "variation_messages": variation_messages,
+            "buttons": buttons or [],
         }
 
     def create_image(self, width=0, height=0):
@@ -189,8 +191,25 @@ class WhatsappBlockTests(TestCase):
             )
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
 
+    def test_buttons_limit(self):
+        """WhatsApp messages can only have up to 3 buttons"""
+        buttons_block = WhatsappBlock().child_blocks["buttons"]
+        buttons = buttons_block.to_python(
+            [{"type": "next_message", "value": {"title": "test"}} for _ in range(3)]
+        )
+        WhatsappBlock().clean(self.create_message_value(message="a", buttons=buttons))
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            buttons = buttons_block.to_python(
+                [{"type": "next_message", "value": {"title": "test"}} for _ in range(4)]
+            )
+            WhatsappBlock().clean(
+                self.create_message_value(message="a", buttons=buttons)
+            )
+        self.assertEqual(list(e.exception.block_errors.keys()), ["buttons"])
+
     def test_buttons_char_limit(self):
-        """Button labels have a character limit"""
+        """WhatsApp button labels have a character limit"""
         NextMessageButton().clean({"title": "test"})
         GoToPageButton().clean({"title": "test", "page": 1})
 
