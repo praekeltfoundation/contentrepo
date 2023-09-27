@@ -162,6 +162,7 @@ class PageBuilder(Generic[TPage]):
         tags: Iterable[str] | None = None,
         triggers: Iterable[str] | None = None,
         quick_replies: Iterable[str] | None = None,
+        whatsapp_template_name: str | None = None,
         translated_from: ContentPage | None = None,
     ) -> ContentPage:
         builder = cls.cp(parent, slug, title).add_bodies(*bodies)
@@ -173,6 +174,8 @@ class PageBuilder(Generic[TPage]):
             builder = builder.add_triggers(*triggers)
         if quick_replies:
             builder = builder.add_quick_replies(*quick_replies)
+        if whatsapp_template_name:
+            builder = builder.set_whatsapp_template_name(whatsapp_template_name)
         if translated_from:
             builder = builder.translated_from(translated_from)
         return builder.build()
@@ -214,6 +217,11 @@ class PageBuilder(Generic[TPage]):
         for qr_str in qr_strs:
             qr, _ = ContentQuickReply.objects.get_or_create(name=qr_str)
             self.page.quick_replies.add(qr)
+        return self
+
+    def set_whatsapp_template_name(self, name: str) -> "PageBuilder[TPage]":
+        self.page.is_whatsapp_template = True
+        self.page.whatsapp_template_name = name
         return self
 
     def translated_from(self, page: TPage) -> "PageBuilder[TPage]":

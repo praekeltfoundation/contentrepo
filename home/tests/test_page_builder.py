@@ -406,6 +406,38 @@ def test_triggers_and_quick_replies() -> None:
 
 
 @pytest.mark.django_db
+def test_whatsapp_template() -> None:
+    """
+    PageBuilder.build_cp correctly builds a ContentPage that is a Whatsapp
+    template.
+    """
+    home_page = HomePage.objects.first()
+    main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+    ha_menu = PageBuilder.build_cp(
+        parent=main_menu,
+        slug="ha-menu",
+        title="HealthAlert menu",
+        bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+    )
+    health_info = PageBuilder.build_cp(
+        parent=ha_menu,
+        slug="health-info",
+        title="health info",
+        bodies=[WABody("health info", [WABlk("*Health information* WA")])],
+        whatsapp_template_name="template-health-info",
+    )
+
+    assert isinstance(ha_menu, ContentPage)
+    assert ha_menu.depth == 4
+    assert ha_menu.is_whatsapp_template is False
+
+    assert isinstance(health_info, ContentPage)
+    assert health_info.depth == 5
+    assert health_info.is_whatsapp_template is True
+    assert health_info.whatsapp_template_name == "template-health-info"
+
+
+@pytest.mark.django_db
 def test_translated_pages() -> None:
     """
     PageBuilder.build_cpi and PageBuilder.build_cp correctly build translated

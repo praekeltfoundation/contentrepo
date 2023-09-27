@@ -419,6 +419,10 @@ class ImportExportFixture:
         # Hopefully we can get rid of this at some point.
         if locale:
             content = self._filter_export(content, locale=locale)
+        if self.format == "csv":
+            print("-v-CONTENT-v-")
+            print(content.decode())
+            print("-^-CONTENT-^-")
         return content
 
     def import_content(self, content_bytes: bytes, **kw: Any) -> None:
@@ -797,6 +801,36 @@ class TestExportImportRoundtrip:
             title="self-help",
             bodies=[WABody("self-help", [WABlk("*Self-help programs* WA")])],
             quick_replies=["button3", "button2"],
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    @pytest.mark.xfail(reason="We apparently don't export whatsapp_template_name.")
+    def test_whatsapp_template(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages that are whatsapp templates are preserved across
+        export/import.
+
+        FIXME:
+         * Export whatsapp_template_name so we can import it.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+        )
+        _health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[WABody("health info", [WABlk("*Health information* WA")])],
+            whatsapp_template_name="template-health-info",
         )
 
         orig = impexp.get_page_json()
