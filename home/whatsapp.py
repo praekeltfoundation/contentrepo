@@ -1,4 +1,5 @@
 import json
+import os
 import mimetypes
 from pathlib import Path
 from urllib.parse import urljoin
@@ -83,7 +84,8 @@ def get_upload_session_id(image_id):
 
     upload_details = {
         "upload_session_id": response.json()["id"],
-        "path_to_file": file_path,
+        "upload_file": img_obj.file,
+        "mime_type": mime_type,
     }
 
     response.raise_for_status()
@@ -101,17 +103,21 @@ def upload_image(image_id):
     headers = {
         "file_offset": "0",
     }
+    file_path = upload_details['upload_file'].path
+    print(f"FILEPATH = '{file_path}'")
+    file_name = os.path.basename(file_path).split('/')[-1]
+    print(f"FILENAME = '{file_name}'")
     files_data = {
-            "file": Path(upload_details["path_to_file"]).open("rb"),
-            "number": settings.FB_BUSINESS_ID,
-            "access_token": settings.WHATSAPP_ACCESS_TOKEN,
-        }
+        "file": ( file_name, upload_details['upload_file'].open("rb"), upload_details['mime_type']),
+    }
+    form_data =  {"number": settings.FB_BUSINESS_ID, "access_token": settings.WHATSAPP_ACCESS_TOKEN}
     print("FILES DATA")
     print(files_data)
     response = requests.post(
         url,
         headers=headers,
         files=files_data,
+        data=form_data
     )
     print("RESPONSE TEXT FOR START UPLOAD")
     print(response.text)
