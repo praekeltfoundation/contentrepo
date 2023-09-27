@@ -6,12 +6,9 @@ import pytest
 from wagtail.blocks import StreamValue, StructValue  # type: ignore
 from wagtail.blocks.list_block import ListValue  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
+from wagtail.rich_text import RichText  # type: ignore
 
-from home.models import (
-    ContentPage,
-    ContentPageIndex,
-    HomePage,
-)
+from home.models import ContentPage, ContentPageIndex, HomePage
 
 from .helpers import set_profile_field_options
 from .page_builder import MBlk, MBody, PageBuilder, VarMsg, VBlk, VBody, WABlk, WABody
@@ -29,6 +26,8 @@ def unwagtail(val):  # type: ignore[no-untyped-def] # No type info
             return {k: unwagtail(v) for k, v in val.items()}
         case ListValue():  # type: ignore[misc] # No type info
             return [unwagtail(v) for v in val]
+        case RichText():  # type: ignore[misc] # No type info
+            return val.source
         case _:
             return val
 
@@ -132,6 +131,66 @@ def test_build_simple_pages() -> None:
     assert ha_menu.whatsapp_title == "HealthAlert menu"
 
     assert main_menu.translation_key != ha_menu.translation_key
+
+
+@pytest.mark.django_db
+def test_build_web_content() -> None:
+    """
+    PageBuilder.build_cp correctly builds a ContentPageIndex with a web
+    content.
+    """
+    home_page = HomePage.objects.first()
+
+    main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+    ha_menu = PageBuilder.build_cp(
+        parent=main_menu,
+        slug="ha-menu",
+        title="HealthAlert menu",
+        bodies=[],
+        web_body=["Paragraph 1.", "Paragraph 2."],
+    )
+
+    assert isinstance(main_menu, ContentPageIndex)
+    assert main_menu.depth == 3
+    assert main_menu.numchild == 1
+    assert main_menu.slug == "main-menu"
+
+    assert isinstance(ha_menu, ContentPage)
+    assert unwagtail(ha_menu.body) == [
+        ("paragraph", "Paragraph 1."),
+        ("paragraph", "Paragraph 2."),
+    ]
+    assert ha_menu.depth == 4
+    assert ha_menu.draft_title == "HealthAlert menu"
+    assert ha_menu.embedding is None
+    assert ha_menu.enable_messenger is False
+    assert ha_menu.enable_viber is False
+    assert ha_menu.enable_web is True
+    assert ha_menu.enable_whatsapp is False
+    assert ha_menu.has_unpublished_changes is False
+    assert ha_menu.include_in_footer is False
+    assert ha_menu.is_whatsapp_template is False
+    assert ha_menu.live is True
+    assert ha_menu.live_revision == ha_menu.latest_revision
+    assert ha_menu.locale == Locale.objects.get(language_code="en")
+    assert unwagtail(ha_menu.messenger_body) == []
+    assert ha_menu.messenger_title is None
+    assert ha_menu.numchild == 0
+    assert unwagtail(ha_menu.related_pages) == []
+    assert ha_menu.search_description == ""
+    assert ha_menu.seo_title == ""
+    assert ha_menu.show_in_menus is False
+    assert ha_menu.slug == "ha-menu"
+    assert ha_menu.subtitle is None
+    assert list(ha_menu.tags.values()) == []
+    assert ha_menu.title == "HealthAlert menu"
+    assert isinstance(ha_menu.translation_key, UUID)
+    assert ha_menu.url_path == "/home/main-menu/ha-menu/"
+    assert unwagtail(ha_menu.viber_body) == []
+    assert ha_menu.viber_title is None
+    assert unwagtail(ha_menu.whatsapp_body) == []
+    assert ha_menu.whatsapp_template_name == ""
+    assert ha_menu.whatsapp_title is None
 
 
 @pytest.mark.django_db

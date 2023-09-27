@@ -1,8 +1,9 @@
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
-from typing import Any, ClassVar, Generic, Iterable, TypeVar
+from typing import Any, ClassVar, Generic, TypeVar
 
 from taggit.models import Tag  # type: ignore
-from wagtail.blocks import StructBlock  # type: ignore
+from wagtail.blocks import RichTextBlock, StructBlock  # type: ignore
 from wagtail.models import Page  # type: ignore
 
 from home.models import (
@@ -156,13 +157,16 @@ class PageBuilder(Generic[TPage]):
         parent: Page,
         slug: str,
         title: str,
-        bodies: list[ContentBody[TCBlk]],
-        tags: list[str] | None = None,
-        triggers: list[str] | None = None,
-        quick_replies: list[str] | None = None,
+        bodies: Iterable[ContentBody[TCBlk]],
+        web_body: Iterable[str] | None = None,
+        tags: Iterable[str] | None = None,
+        triggers: Iterable[str] | None = None,
+        quick_replies: Iterable[str] | None = None,
         translated_from: ContentPage | None = None,
     ) -> ContentPage:
         builder = cls.cp(parent, slug, title).add_bodies(*bodies)
+        if web_body:
+            builder = builder.add_web_body(*web_body)
         if tags:
             builder = builder.add_tags(*tags)
         if triggers:
@@ -181,6 +185,13 @@ class PageBuilder(Generic[TPage]):
         # The page instance is out of date after revision operations, so reload.
         self.page.refresh_from_db()
         return self.page
+
+    def add_web_body(self, *paragraphs: str) -> "PageBuilder[TPage]":
+        # TODO: Support images?
+        self.page.enable_web = True
+        for paragraph in paragraphs:
+            self.page.body.append(("paragraph", RichTextBlock().to_python(paragraph)))
+        return self
 
     def add_bodies(self, *bodies: ContentBody[TCBlk]) -> "PageBuilder[TPage]":
         for body in bodies:

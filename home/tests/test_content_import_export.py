@@ -1,5 +1,6 @@
 import csv
 import json
+import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from functools import wraps
@@ -295,6 +296,21 @@ def add_body_fields(page: DbDict) -> DbDict:
     return page
 
 
+WEB_PARA_RE = re.compile(r'^<div class="block-paragraph">(.*)</div>$')
+
+
+@per_page
+def clean_web_paragraphs(page: DbDict) -> DbDict:
+    # FIXME: Handle this at export time, I guess.
+    if "body" in page["fields"]:
+        body = [
+            b | {"value": WEB_PARA_RE.sub(r"\1", b["value"])}
+            for b in page["fields"]["body"]
+        ]
+        page = page | {"fields": page["fields"] | {"body": body}}
+    return page
+
+
 @per_page
 def remove_next_prompt(page: DbDict) -> DbDict:
     if "whatsapp_body" in page["fields"]:
@@ -315,6 +331,7 @@ PAGE_FILTER_FUNCS = [
     remove_timestamps,
     normalise_body_ids,
     normalise_related_page_ids,
+    clean_web_paragraphs,
     null_to_emptystr,
 ]
 
@@ -611,7 +628,29 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_multiple_message(self, impexp: ImportExportFixture) -> None:
+    def test_web_content(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages with web content are preserved across export/import.
+
+        FIXME:
+         * The exporter currently emits rendered web content instead of the source data.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[],
+            web_body=["Paragraph 1.", "Paragraph 2."],
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    def test_multiple_messages(self, impexp: ImportExportFixture) -> None:
         """
         ContentPages with multiple message block are preserved across
         export/import.
