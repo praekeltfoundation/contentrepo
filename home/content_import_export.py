@@ -943,6 +943,7 @@ class ContentSheetRow:
             content_sheet_row.web_title = page.title
             content_sheet_row.web_subtitle = page.subtitle
             content_sheet_row.web_body = str(page.body)
+            content_sheet_row.whatsapp_template_name = page.whatsapp_template_name
             content_sheet_row.whatsapp_title = page.whatsapp_title
             content_sheet_row.messenger_title = page.messenger_title
             content_sheet_row.viber_title = page.viber_title

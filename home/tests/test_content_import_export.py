@@ -808,14 +808,10 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    @pytest.mark.xfail(reason="We apparently don't export whatsapp_template_name.")
     def test_whatsapp_template(self, impexp: ImportExportFixture) -> None:
         """
         ContentPages that are whatsapp templates are preserved across
         export/import.
-
-        FIXME:
-         * Export whatsapp_template_name so we can import it.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
