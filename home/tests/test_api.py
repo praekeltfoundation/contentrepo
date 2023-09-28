@@ -70,6 +70,9 @@ class PaginationTestCase(TestCase):
         self.content_page1.enable_messenger = False
         self.content_page1.enable_whatsapp = False
         self.content_page1.enable_viber = False
+        # This page has web_title, but not web_body. It's unclear what the
+        # importer should do in that case, so enable web explicitly.
+        self.content_page1.enable_web = True
         self.content_page1.save_revision().publish()
         # whatsapp page
         self.content_page2.enable_messenger = False
