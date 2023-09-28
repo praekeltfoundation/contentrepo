@@ -96,7 +96,7 @@ def upload_image(image_id):
         "file_offset": "0",
     }
     file_path = upload_details["upload_file"].path
-    file_name = Path.name(file_path).split("/")[-1]
+    file_name = Path(file_path).name.split("/")[-1]
     files_data = {
         "file": (
             file_name,
