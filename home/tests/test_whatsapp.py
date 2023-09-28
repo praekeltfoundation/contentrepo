@@ -68,7 +68,7 @@ class TestWhatsApp:
         read_file = img_path.open("rb")
         saved_image = Image(
             title=img_name,
-            file=ImageFile(read_file, name=img_path),
+            file=ImageFile(read_file, name=img_name),
         )
         saved_file = saved_image.file
         saved_image.save()
@@ -80,8 +80,10 @@ class TestWhatsApp:
 
         mock_start_upload_url = f"http://whatsapp/graph/{mock_session_id}"
         mock_image_handle = "TEST_IMAGE_HANDLE"
-        req_files = {
-            "file": saved_file,
+        mock_files_data = {
+            "file": (saved_file),
+        }
+        mock_form_data = {
             "number": settings.FB_BUSINESS_ID,
             "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         }
@@ -89,13 +91,8 @@ class TestWhatsApp:
             responses.POST,
             mock_start_upload_url,
             json={"h": mock_image_handle},
-            match=[
-                multipart_matcher(
-                    req_files,
-                )
-            ],
+            match=[multipart_matcher(mock_files_data, data=mock_form_data)],
         )
-
         template_url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, template_url, json={})
 
