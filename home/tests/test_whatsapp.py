@@ -81,7 +81,7 @@ class TestWhatsApp:
         mock_start_upload_url = f"http://whatsapp/graph/{mock_session_id}"
         mock_image_handle = "TEST_IMAGE_HANDLE"
         mock_files_data = {
-            "file": (img_name, saved_file, "image/jpeg"),
+            "file": (saved_file),
         }
         mock_form_data = {
             "number": settings.FB_BUSINESS_ID,

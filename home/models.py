@@ -561,7 +561,6 @@ class ContentPage(Page, ContentImportMixin):
         return self.quick_reply_items.all().values_list("tag__name", flat=True)
 
     def submit_whatsapp_template(self, previous_revision):
-        print("Running submit_whatsapp_template")
         """
         Submits a request to the WhatsApp API to create a template for this content
 
