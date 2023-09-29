@@ -1,10 +1,12 @@
 import contextlib
 import csv
+import json
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from functools import cached_property
 from io import BytesIO, StringIO
 from queue import Queue
+from uuid import uuid4
 
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
@@ -147,38 +149,28 @@ class ContentImporter:
             parent=row.parent,
             related_pages=row.related_pages,
         )
+        self.shadow_pages[row.slug] = page
+
+        self.add_message_to_shadow_content_page_from_row(row)
 
         if row.is_whatsapp_message:
-            page.enable_whatsapp = True
             page.whatsapp_title = row.whatsapp_title
             if row.is_whatsapp_template_message:
                 page.is_whatsapp_template = True
                 page.whatsapp_template_name = row.whatsapp_template_name
-            page.whatsapp_body.append(
-                ShadowWhatsappBlock(
-                    message=row.whatsapp_body,
-                    next_prompt=row.next_prompt,
-                )
-            )
             # TODO: Media
             # Currently media is exported as a URL, which just has an ID. This doesn't
             # actually help us much, as IDs can differ between instances, so we need
             # a better way of exporting and importing media here
 
         if row.is_messenger_message:
-            page.enable_messenger = True
             page.messenger_title = row.messenger_title
-            page.messenger_body.append(ShadowMessengerBlock(message=row.messenger_body))
 
         if row.is_viber_message:
-            page.enable_viber = True
             page.viber_title = row.viber_title
-            page.viber_body.append(ShadowViberBlock(message=row.viber_body))
 
         if row.translation_tag:
             page.translation_key = row.translation_tag
-
-        self.shadow_pages[row.slug] = page
 
     def add_variation_to_shadow_content_page_from_row(self, row: "ContentRow") -> None:
         page = self.shadow_pages[row.slug]
@@ -193,10 +185,26 @@ class ContentImporter:
         page = self.shadow_pages[row.slug]
         if row.is_whatsapp_message:
             page.enable_whatsapp = True
+            buttons = []
+            for button in row.buttons:
+                if button["type"] == "next_message":
+                    buttons.append({"id": str(uuid4()), "type": button["type"], "value": {"title": button["title"]}})
+                # go_to_page buttons need to be added at the end once we've created
+                # all the page IDs
+            if row.next_prompt:
+                buttons.append(
+                    {
+                        "id": str(uuid4()),
+                        "type": "next_message",
+                        "value": {
+                        "title": row.next_prompt,
+                        }
+                    }
+                )
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
                     message=row.whatsapp_body,
-                    next_prompt=row.next_prompt,
+                    buttons=buttons,
                 )
             )
 
@@ -341,7 +349,7 @@ class ShadowContentPage:
 @dataclass(slots=True)
 class ShadowWhatsappBlock:
     message: str = ""
-    next_prompt: str = ""
+    buttons: list[dict] = field(default_factory=list)
     variation_messages: list["ShadowVariationBlock"] = field(default_factory=list)
 
     @property
@@ -350,7 +358,7 @@ class ShadowWhatsappBlock:
     ) -> dict[str, str | list[dict[str, str | list[dict[str, str]]]]]:
         return {
             "message": self.message,
-            "next_prompt": self.next_prompt,
+            "buttons": self.buttons,
             "variation_messages": [m.wagtail_format for m in self.variation_messages],
         }
 
@@ -411,6 +419,7 @@ class ContentRow:
     triggers: list[str] = field(default_factory=list)
     locale: str = ""
     next_prompt: str = ""
+    buttons: list[dict] = field(default_factory=list)
     image_link: str = ""
     doc_link: str = ""
     media_link: str = ""
@@ -431,6 +440,7 @@ class ContentRow:
             quick_replies=deserialise_list(row.pop("quick_replies", "")),
             triggers=deserialise_list(row.pop("triggers", "")),
             related_pages=deserialise_list(row.pop("related_pages", "")),
+            buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
             **row,
         )
 

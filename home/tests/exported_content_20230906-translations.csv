@@ -1,10 +1,10 @@
-structure,message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,whatsapp_template_name,variation_title,variation_body,messenger_title,messenger_body,viber_title,viber_body,translation_tag,tags,quick_replies,triggers,locale,next_prompt,image_link,doc_link,media_link,related_pages
+structure,message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,whatsapp_template_name,variation_title,variation_body,messenger_title,messenger_body,viber_title,viber_body,translation_tag,tags,quick_replies,triggers,locale,buttons,image_link,doc_link,media_link,related_pages
 Menu 1,0,5,appointment-reminders,,Appointment reminders,,,,,,,,,,,,8cff04aa-cf08-4120-88b4-e2269b7d5d80,,,,English,,,,,
 Menu 2,0,6,stage-based-messages,,Stage-based messages,,,,,,,,,,,,5f2d9e63-f047-41ab-921a-c5ca7c04d643,,,,English,,,,,
 Menu 3,0,7,health-info-messages,,Health info messages,,,,,,,,,,,,3db069a4-7112-4e66-a9a2-f35c6c18055a,,,,English,,,,,
 Menu 4,0,17,whatsapp-template-testing,,whatsapp template testing,,,,,,,,,,,,5f7221f4-146a-48c2-b2e3-c8491aaead9d,,,,English,,,,,
 Menu 5,0,164,import-export,,Import Export,,,,,,,,,,,,497bdc1f-43fc-4925-80a1-e68cb942faa4,,,,English,,,,,
 Menu 1,0,175,import-export-p,,Import Export,,,,,,,,,,,,497bdc1f-43fc-4925-80a1-e68cb942faa4,,,,Portuguese,,,,,
-Sub 1.1,1,177,non-template,Import Export,Non template messages,,,non template OCS,this is a non template message,,,,,,,,7879b520-bf7f-4585-9802-3b385c3f716d,,,,Portuguese,,/admin/images/usage/4/,,,
-,2,177,non-template,,,,,,this message has a doc,,,,,,,,,,,,,,,/admin/documents/usage/1/,,
-,3,177,non-template,,,,,,this message comes with audio,,,,,,,,,,,,,,,,/admin/media/usage/1/,
+Sub 1.1,1,177,non-template,Import Export,Non template messages,,,non template OCS,this is a non template message,,,,,,,,7879b520-bf7f-4585-9802-3b385c3f716d,,,,Portuguese,[],/admin/images/usage/4/,,,
+,2,177,non-template,,,,,,this message has a doc,,,,,,,,,,,,,[],,/admin/documents/usage/1/,,
+,3,177,non-template,,,,,,this message comes with audio,,,,,,,,,,,,,[],,,/admin/media/usage/1/,

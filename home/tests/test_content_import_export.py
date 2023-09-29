@@ -66,7 +66,7 @@ def ignore_certain_fields(entry: ExpDict) -> ExpDict:
 
 @filter_both
 def ignore_old_fields(entry: ExpDict) -> ExpDict:
-    ignored_fields = {"next_prompt", "translation_tag"}
+    ignored_fields = {"next_prompt", "translation_tag", "buttons"}
     return {k: v for k, v in entry.items() if k not in ignored_fields}
 
 
@@ -318,6 +318,22 @@ def remove_next_prompt(page: DbDict) -> DbDict:
             body["value"].pop("next_prompt", None)
     return page
 
+@per_page
+def remove_buttons(page: DbDict) -> DbDict:
+    if "whatsapp_body" in page["fields"]:
+        for body in page["fields"]["whatsapp_body"]:
+            body["value"].pop("buttons", None)
+    return page
+
+@per_page
+def remove_button_ids(page: DbDict) -> DbDict:
+    if "whatsapp_body" in page["fields"]:
+        for body in page["fields"]["whatsapp_body"]:
+            buttons = body["value"].get("buttons", [])
+            for button in buttons:
+                button.pop("id", None)
+    return page
+
 
 @per_page
 def enable_web(page: DbDict) -> DbDict:
@@ -333,6 +349,7 @@ PAGE_FILTER_FUNCS = [
     normalise_related_page_ids,
     clean_web_paragraphs,
     null_to_emptystr,
+    remove_button_ids,
 ]
 
 OLD_PAGE_FILTER_FUNCS = [
@@ -340,6 +357,7 @@ OLD_PAGE_FILTER_FUNCS = [
     remove_revisions,
     add_body_fields,
     remove_next_prompt,
+    remove_buttons,
     enable_web,
 ]
 
@@ -711,13 +729,20 @@ class TestExportImportRoundtrip:
             ]
 
         cp_imp_exp_wablks = [
-            WABlk("Message 1", next_prompt="Next message", variation_messages=m1vars),
+            WABlk(
+                "Message 1",
+                buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
+                variation_messages=m1vars
+                ),
             WABlk(
                 "Message 2, variable placeholders as well {{0}}",
-                next_prompt="Next message",
+                buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
                 variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
             ),
-            WABlk("Message 3 with no variation", next_prompt="end"),
+            WABlk(
+                "Message 3 with no variation",
+                buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
+            ),
         ]
         _cp_imp_exp = PageBuilder.build_cp(
             parent=imp_exp,
