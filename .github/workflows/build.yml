@@ -32,6 +32,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
+        exit 1  # FIXME: Temp failure to check that future steps don't run.
     - name: Check formatting
       # Lints/tests should always run, even if other lints/tests have failed.
       if: success() || failure() && steps.install-deps.outcome == 'success'
