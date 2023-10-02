@@ -3,8 +3,9 @@ on:
   push:
     tags:
       - "v*"
-    branches:
-      - "*"
+    # FIXME: Temporarily disabled for this branch.
+    # branches:
+    #   - "*"
 
 jobs:
   push_to_registry:
