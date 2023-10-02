@@ -783,12 +783,20 @@ class Message:
         return dumps(result)
 
     @classmethod
-    def serialise_next_message_button(cls, button: blocks.StreamValue.StreamChild) -> dict:
+    def serialise_next_message_button(
+        cls, button: blocks.StreamValue.StreamChild
+    ) -> dict:
         return {"type": button.block_type, "title": button.value["title"]}
 
     @classmethod
-    def serialise_go_to_page_button(cls, button: blocks.StreamValue.StreamChild) -> dict:
-        return {"type": button.block_type, "title": button.value["title"], "slug": button.value["page"].slug}
+    def serialise_go_to_page_button(
+        cls, button: blocks.StreamValue.StreamChild
+    ) -> dict:
+        return {
+            "type": button.block_type,
+            "title": button.value["title"],
+            "slug": button.value["page"].slug,
+        }
 
 
 @dataclass

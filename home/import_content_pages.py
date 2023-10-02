@@ -6,6 +6,7 @@ from datetime import datetime
 from functools import cached_property
 from io import BytesIO, StringIO
 from queue import Queue
+from typing import Any
 from uuid import uuid4
 
 from openpyxl import load_workbook
@@ -188,7 +189,13 @@ class ContentImporter:
             buttons = []
             for button in row.buttons:
                 if button["type"] == "next_message":
-                    buttons.append({"id": str(uuid4()), "type": button["type"], "value": {"title": button["title"]}})
+                    buttons.append(
+                        {
+                            "id": str(uuid4()),
+                            "type": button["type"],
+                            "value": {"title": button["title"]},
+                        }
+                    )
                 # go_to_page buttons need to be added at the end once we've created
                 # all the page IDs
             if row.next_prompt:
@@ -197,8 +204,8 @@ class ContentImporter:
                         "id": str(uuid4()),
                         "type": "next_message",
                         "value": {
-                        "title": row.next_prompt,
-                        }
+                            "title": row.next_prompt,
+                        },
                     }
                 )
             page.whatsapp_body.append(
@@ -349,7 +356,7 @@ class ShadowContentPage:
 @dataclass(slots=True)
 class ShadowWhatsappBlock:
     message: str = ""
-    buttons: list[dict] = field(default_factory=list)
+    buttons: list[dict[str, Any]] = field(default_factory=list)
     variation_messages: list["ShadowVariationBlock"] = field(default_factory=list)
 
     @property
@@ -419,7 +426,7 @@ class ContentRow:
     triggers: list[str] = field(default_factory=list)
     locale: str = ""
     next_prompt: str = ""
-    buttons: list[dict] = field(default_factory=list)
+    buttons: list[dict[str, Any]] = field(default_factory=list)
     image_link: str = ""
     doc_link: str = ""
     media_link: str = ""

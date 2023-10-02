@@ -1,3 +1,4 @@
+# type: ignore  # Migrations are untyped, and doing it here gets really messy.
 import importlib
 
 from django.test import TestCase

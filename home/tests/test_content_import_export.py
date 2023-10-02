@@ -318,12 +318,14 @@ def remove_next_prompt(page: DbDict) -> DbDict:
             body["value"].pop("next_prompt", None)
     return page
 
+
 @per_page
 def remove_buttons(page: DbDict) -> DbDict:
     if "whatsapp_body" in page["fields"]:
         for body in page["fields"]["whatsapp_body"]:
             body["value"].pop("buttons", None)
     return page
+
 
 @per_page
 def remove_button_ids(page: DbDict) -> DbDict:
@@ -732,8 +734,8 @@ class TestExportImportRoundtrip:
             WABlk(
                 "Message 1",
                 buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
-                variation_messages=m1vars
-                ),
+                variation_messages=m1vars,
+            ),
             WABlk(
                 "Message 2, variable placeholders as well {{0}}",
                 buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
