@@ -1,6 +1,7 @@
 import contextlib
 import csv
 import json
+from collections import defaultdict
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from functools import cached_property
@@ -45,6 +46,9 @@ class ContentImporter:
         self.purge = purge in ["True", "yes", True]
         self.locale = locale
         self.shadow_pages: dict[str, ShadowContentPage] = {}
+        self.go_to_page_buttons: dict[
+            str, dict[int, list[dict[str, Any]]]
+        ] = defaultdict(lambda: defaultdict(list))
 
     def perform_import(self) -> None:
         rows = self.parse_file()
@@ -57,6 +61,7 @@ class ContentImporter:
         self.process_rows(rows)
         self.save_pages()
         self.link_related_pages()
+        self.add_go_to_page_buttons()
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         for row in rows:
@@ -72,7 +77,10 @@ class ContentImporter:
     def save_pages(self) -> None:
         for i, page in enumerate(self.shadow_pages.values()):
             if page.parent:
-                parent = Page.objects.get(title=page.parent, locale=self.locale)
+                # TODO: We should need to use something unique for `parent`
+                parent = Page.objects.filter(
+                    title=page.parent, locale=self.locale
+                ).first()
             else:
                 parent = self.home_page
             page.save(parent)
@@ -85,6 +93,18 @@ class ContentImporter:
             self.set_progress(
                 "Linking related pages", 80 + 10 * i // len(self.shadow_pages)
             )
+
+    def add_go_to_page_buttons(self) -> None:
+        for slug, messages in self.go_to_page_buttons.items():
+            page = ContentPage.objects.get(slug=slug)
+            for message_index, buttons in messages.items():
+                for button in buttons:
+                    title = button["title"]
+                    related_page = ContentPage.objects.get(slug=button["slug"])
+                    page.whatsapp_body[message_index].value["buttons"].append(
+                        ("go_to_page", {"page": related_page, "title": title})
+                    )
+            page.save_revision().publish()
 
     def parse_file(self) -> list["ContentRow"]:
         if self.file_type == "XLSX":
@@ -196,8 +216,10 @@ class ContentImporter:
                             "value": {"title": button["title"]},
                         }
                     )
-                # go_to_page buttons need to be added at the end once we've created
-                # all the page IDs
+                elif button["type"] == "go_to_page":
+                    self.go_to_page_buttons[row.slug][len(page.whatsapp_body)].append(
+                        button
+                    )
             if row.next_prompt:
                 buttons.append(
                     {
