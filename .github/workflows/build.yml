@@ -5,9 +5,12 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        postgres_version: ['12', '13', '14']
     services:
       postgres:
-        image: postgres:11.16
+        image: postgres:${{ matrix.postgres_version }}
         env:
           POSTGRES_DB: contentrepo
           POSTGRES_USER: postgres
