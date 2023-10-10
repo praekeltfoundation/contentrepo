@@ -61,6 +61,7 @@ EXPORT_FIELDNAMES = [
     "quick_replies",
     "triggers",
     "locale",
+    "next_prompt",
     "buttons",
     "image_link",
     "doc_link",
@@ -309,6 +310,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             "whataspp_template_name",
             "variation_title",
             "variation_body",
+            "next_prompt",
             "buttons",
             "viber_title",
             "viber_body",
@@ -506,6 +508,7 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
         "quick_replies": 118,
         "triggers": 118,
         "locale": 118,
+        "next_prompt": 118,
         "buttons": 118,
         "image_link": 118,
         "doc_link": 118,
@@ -738,6 +741,7 @@ class Message:
     image_name: str = None
     media_name: str = None
     document_name: str = None
+    next_prompt: str = None
     buttons: str = None
 
     @classmethod
@@ -763,6 +767,11 @@ class Message:
         message.media_name = (
             platform_body_element.value["media"]
             if "media" in platform_body_element.value
+            else None
+        )
+        message.next_prompt = (
+            platform_body_element.value["next_prompt"]
+            if "next_prompt" in platform_body_element.value
             else None
         )
         message.buttons = (
@@ -888,6 +897,11 @@ class MessageContainer:
             if "media_name" in platform_body_element.value
             else None
         )
+        message["next_prompt"] = (
+            platform_body_element.value["next_prompt"].strip()
+            if "next_prompt" in platform_body_element.value
+            else None
+        )
         message["buttons"] = (
             platform_body_element.value["buttons"]
             if "buttons" in platform_body_element.value
@@ -918,6 +932,7 @@ class ContentSheetRow:
     quick_replies: str = ""
     triggers: str = ""
     locale: str = ""
+    next_prompt: str = ""
     buttons: str = ""
     image_link: str = ""
     doc_link: str = ""
@@ -1048,6 +1063,7 @@ class ContentSheetRow:
             self.quick_replies,
             self.triggers,
             self.locale,
+            self.next_prompt,
             self.buttons,
             self.image_link,
             self.doc_link,
@@ -1106,6 +1122,7 @@ class ContentSheetRow:
         ):
             self.viber_body = message_container.viber[0].body
 
+        self.next_prompt = self._get_next_prompt(message_container)
         self.buttons = self._get_buttons(message_container)
         self.doc_link = self._get_doc_link(message_container)
         self.image_link = self._get_image_link(message_container)
@@ -1139,6 +1156,9 @@ class ContentSheetRow:
                     new_content_sheet_row.viber_body = message_container.viber[
                         message_index
                     ].body
+                new_content_sheet_row.next_prompt = self._get_next_prompt(
+                    message_container, message_index
+                )
                 new_content_sheet_row.buttons = self._get_buttons(
                     message_container, message_index
                 )
@@ -1211,6 +1231,18 @@ class ContentSheetRow:
         media = Media.objects.filter(title=media_name).first()
         if media:
             return media.usage_url
+        return ""
+
+    def _get_next_prompt(
+        self, message_container: MessageContainer, index: int = 0
+    ) -> str:
+        """Iterate over a dict of all whatsapp, messenger and viber messages to find next prompts,
+        if a next prompt is found in any of the platforms, the url will be saved to the sheet
+        This will take the one found, can be extended to a list of urls
+        """
+        next_prompt = message_container.find_first_attachment(index, "next_prompt")
+        if next_prompt:
+            return next_prompt
         return ""
 
     def _get_buttons(self, message_container: MessageContainer, index: int = 0) -> str:

@@ -122,6 +122,7 @@ def test_build_simple_pages() -> None:
                 "image": None,
                 "media": None,
                 "message": "*Welcome to HealthAlert* WA",
+                "next_prompt": None,
                 "buttons": [],
                 "variation_messages": [],
             },
@@ -207,6 +208,7 @@ def test_build_variations() -> None:
     cp_imp_exp_wablks = [
         WABlk(
             "Message 1",
+            next_prompt="Next message",
             buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
             variation_messages=[
                 VarMsg("Single male", gender="male", relationship="single"),
@@ -215,12 +217,14 @@ def test_build_variations() -> None:
         ),
         WABlk(
             "Message 2, variable placeholders as well {{0}}",
+            next_prompt="Next message",
             buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
             variation_messages=[VarMsg("Teen", age="15-18")],
         ),
         WABlk(
             "Message 3 with no variation",
-            buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
+            next_prompt="end",
+            buttons=[{"type": "next_message", "value": {"title": "end"}}],
         ),
     ]
     cp_imp_exp = PageBuilder.build_cp(
@@ -235,6 +239,7 @@ def test_build_variations() -> None:
     wa_msgs: list[dict[str, Any]] = [
         {
             "message": "Message 1",
+            "next_prompt": "Next message",
             "buttons": [("next_message", {"title": "Next message"})],
             "variation_messages": [
                 {"message": "Single male", "variation_restrictions": v_single_male},
@@ -243,6 +248,7 @@ def test_build_variations() -> None:
         },
         {
             "message": "Message 2, variable placeholders as well {{0}}",
+            "next_prompt": "Next message",
             "buttons": [("next_message", {"title": "Next message"})],
             "variation_messages": [
                 {"message": "Teen", "variation_restrictions": [("age", "15-18")]}
@@ -250,7 +256,8 @@ def test_build_variations() -> None:
         },
         {
             "message": "Message 3 with no variation",
-            "buttons": [("next_message", {"title": "Next message"})],
+            "next_prompt": "end",
+            "buttons": [("next_message", {"title": "end"})],
             "variation_messages": [],
         },
     ]
