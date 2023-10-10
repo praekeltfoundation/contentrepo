@@ -220,16 +220,6 @@ class ContentImporter:
                     self.go_to_page_buttons[row.slug][len(page.whatsapp_body)].append(
                         button
                     )
-            if row.next_prompt:
-                buttons.append(
-                    {
-                        "id": str(uuid4()),
-                        "type": "next_message",
-                        "value": {
-                            "title": row.next_prompt,
-                        },
-                    }
-                )
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
                     message=row.whatsapp_body,
