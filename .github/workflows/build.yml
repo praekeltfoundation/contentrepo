@@ -22,24 +22,31 @@ jobs:
     env:
       CONTENTREPO_DATABASE: postgres://postgres:postgres@localhost:5432/contentrepo
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Start Redis
-      uses: supercharge/redis-github-action@1.2.0
-      with:
-        redis-version: ${{ matrix.redis-version }}
     - name: Install dependencies
+      id: install-deps
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
-    - name: Lint
+    - name: Check formatting
+      # Lints/tests should always run, even if other lints/tests have failed.
+      if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
         black --check .
-        ruff .
-    - name: Run tests
+    - name: Lint
+      if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        pytest
+        ruff .
+    - name: Check types
+      if: success() || failure() && steps.install-deps.outcome == 'success'
+      run: |
+        mypy
+    - name: Run tests
+      if: success() || failure() && steps.install-deps.outcome == 'success'
+      run: |
+        pytest -vv

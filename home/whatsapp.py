@@ -1,6 +1,5 @@
 import json
 import mimetypes
-from pathlib import Path
 from urllib.parse import urljoin
 
 import requests
@@ -61,7 +60,7 @@ def get_upload_session_id(image_id):
     img_obj = get_image_model().objects.get(id=image_id)
     mime_type = mimetypes.guess_type(img_obj.file.name)[0]
     file_size = img_obj.file.size
-    file_path = img_obj.file.path
+
     data = {
         "file_length": file_size,
         "file_type": mime_type,
@@ -74,9 +73,10 @@ def get_upload_session_id(image_id):
         headers=headers,
         data=json.dumps(data, indent=4),
     )
+
     upload_details = {
         "upload_session_id": response.json()["id"],
-        "path_to_file": file_path,
+        "upload_file": img_obj.file,
     }
 
     response.raise_for_status()
@@ -93,15 +93,13 @@ def upload_image(image_id):
     headers = {
         "file_offset": "0",
     }
-
-    response = requests.post(
-        url,
-        headers=headers,
-        files={
-            "file": Path(upload_details["path_to_file"]).open("rb"),
-            "number": settings.FB_BUSINESS_ID,
-            "access_token": settings.WHATSAPP_ACCESS_TOKEN,
-        },
-    )
+    files_data = {
+        "file": (upload_details["upload_file"]).open("rb"),
+    }
+    form_data = {
+        "number": settings.FB_BUSINESS_ID,
+        "access_token": settings.WHATSAPP_ACCESS_TOKEN,
+    }
+    response = requests.post(url=url, headers=headers, files=files_data, data=form_data)
     response.raise_for_status()
     return response.json()["h"]

@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from wagtail import blocks
 
-from home.utils import import_content
+from home.content_import_export import import_content
 
 from .utils import create_page
 
@@ -56,7 +56,7 @@ class PaginationTestCase(TestCase):
         # exclude home pages and index pages
         self.assertEqual(content["count"], 3)
         # it should not return pages with tags in the draft
-        create_page(tags=["Menu"])
+        create_page(tags=["Menu"]).unpublish()
         response = self.client.get("/api/v2/pages/?tag=Menu")
         content = json.loads(response.content)
         self.assertEqual(content["count"], 1)
@@ -70,6 +70,9 @@ class PaginationTestCase(TestCase):
         self.content_page1.enable_messenger = False
         self.content_page1.enable_whatsapp = False
         self.content_page1.enable_viber = False
+        # This page has web_title, but not web_body. It's unclear what the
+        # importer should do in that case, so enable web explicitly.
+        self.content_page1.enable_web = True
         self.content_page1.save_revision().publish()
         # whatsapp page
         self.content_page2.enable_messenger = False
@@ -238,14 +241,8 @@ class PaginationTestCase(TestCase):
         self.assertEqual(content["body"]["text"]["value"]["message"], "WA Message 11")
 
     def test_number_of_queries(self):
-        DUMMY_CACHE = {
-            "default": {
-                "BACKEND": "django.core.cache.backends.dummy.DummyCache",
-            }
-        }
-        with self.settings(CACHES=DUMMY_CACHE):
-            with self.assertNumQueries(14):
-                self.client.get("/api/v2/pages/")
+        with self.assertNumQueries(14):
+            self.client.get("/api/v2/pages/")
 
     def test_detail_view(self):
         ContentPage.objects.all().delete()
