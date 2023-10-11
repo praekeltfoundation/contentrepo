@@ -78,9 +78,7 @@ class ContentImporter:
         for i, page in enumerate(self.shadow_pages.values()):
             if page.parent:
                 # TODO: We should need to use something unique for `parent`
-                parent = Page.objects.filter(
-                    title=page.parent, locale=self.locale
-                ).first()
+                parent = Page.objects.get(title=page.parent, locale=self.locale)
             else:
                 parent = self.home_page
             page.save(parent)
