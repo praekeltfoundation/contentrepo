@@ -148,6 +148,10 @@ def get_relationship_choices():
     return [(r, choices[r]) for r in get_valid_profile_values("relationship")]
 
 
+class ExampleValuesBlock(blocks.StructBlock):
+    example_values = blocks.CharBlock(label="Example Value",)
+
+
 class VariationBlock(blocks.StructBlock):
     variation_restrictions = blocks.StreamBlock(
         [
@@ -178,6 +182,7 @@ class WhatsappBlock(blocks.StructBlock):
         "media cannot exceed 1024 characters.",
         validators=(MaxLengthValidator(4096),),
     )
+    example_values = blocks.ListBlock(ExampleValuesBlock(), default=[], label="Variable Example Values", help_text="Please add example values for all variables used in a WhatsApp template")
     variation_messages = blocks.ListBlock(VariationBlock(), default=[])
     next_prompt = blocks.CharBlock(
         help_text="prompt text for next message",
