@@ -733,6 +733,7 @@ class TestExportImportRoundtrip:
         cp_imp_exp_wablks = [
             WABlk(
                 "Message 1",
+                next_prompt="Next message",
                 buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
                 variation_messages=m1vars,
             ),
@@ -741,10 +742,7 @@ class TestExportImportRoundtrip:
                 buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
                 variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
             ),
-            WABlk(
-                "Message 3 with no variation",
-                buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
-            ),
+            WABlk("Message 3 with no variation", next_prompt="Next message"),
         ]
         _cp_imp_exp = PageBuilder.build_cp(
             parent=imp_exp,
