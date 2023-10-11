@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+- Buttons StreamBlock for WhatsApp messages
+
+### Changed
+- Migrated next_prompt on WhatsApp messages to buttons
+
+### Deprecated
+- next_prompt on WhatsApp messages is deprecated, use buttons instead. Will be removed on the next major release
+
 ## v1.1.0-dev.3
 
 ### Fixed

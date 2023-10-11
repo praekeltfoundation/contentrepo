@@ -62,6 +62,7 @@ EXPORT_FIELDNAMES = [
     "triggers",
     "locale",
     "next_prompt",
+    "buttons",
     "image_link",
     "doc_link",
     "media_link",
@@ -310,6 +311,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             "variation_title",
             "variation_body",
             "next_prompt",
+            "buttons",
             "viber_title",
             "viber_body",
             "messenger_title",
@@ -507,6 +509,7 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
         "triggers": 118,
         "locale": 118,
         "next_prompt": 118,
+        "buttons": 118,
         "image_link": 118,
         "doc_link": 118,
         "media_link": 118,
@@ -739,6 +742,7 @@ class Message:
     media_name: str = None
     document_name: str = None
     next_prompt: str = None
+    buttons: str = None
 
     @classmethod
     def from_platform_body_element(
@@ -770,7 +774,38 @@ class Message:
             if "next_prompt" in platform_body_element.value
             else None
         )
+        message.buttons = (
+            cls.serialise_buttons(platform_body_element.value["buttons"])
+            if "buttons" in platform_body_element.value
+            else ""
+        )
         return message
+
+    @classmethod
+    def serialise_buttons(cls, buttons: blocks.StreamValue.StreamChild) -> str:
+        result = []
+        for button in buttons:
+            if button.block_type == "next_message":
+                result.append(cls.serialise_next_message_button(button))
+            elif button.block_type == "go_to_page":
+                result.append(cls.serialise_go_to_page_button(button))
+        return dumps(result)
+
+    @classmethod
+    def serialise_next_message_button(
+        cls, button: blocks.StreamValue.StreamChild
+    ) -> dict:
+        return {"type": button.block_type, "title": button.value["title"]}
+
+    @classmethod
+    def serialise_go_to_page_button(
+        cls, button: blocks.StreamValue.StreamChild
+    ) -> dict:
+        return {
+            "type": button.block_type,
+            "title": button.value["title"],
+            "slug": button.value["page"].slug,
+        }
 
 
 @dataclass
@@ -867,6 +902,11 @@ class MessageContainer:
             if "next_prompt" in platform_body_element.value
             else None
         )
+        message["buttons"] = (
+            platform_body_element.value["buttons"]
+            if "buttons" in platform_body_element.value
+            else None
+        )
 
         return message
 
@@ -893,6 +933,7 @@ class ContentSheetRow:
     triggers: str = ""
     locale: str = ""
     next_prompt: str = ""
+    buttons: str = ""
     image_link: str = ""
     doc_link: str = ""
     media_link: str = ""
@@ -1023,6 +1064,7 @@ class ContentSheetRow:
             self.triggers,
             self.locale,
             self.next_prompt,
+            self.buttons,
             self.image_link,
             self.doc_link,
             self.media_link,
@@ -1081,6 +1123,7 @@ class ContentSheetRow:
             self.viber_body = message_container.viber[0].body
 
         self.next_prompt = self._get_next_prompt(message_container)
+        self.buttons = self._get_buttons(message_container)
         self.doc_link = self._get_doc_link(message_container)
         self.image_link = self._get_image_link(message_container)
         self.media_link = self._get_media_link(message_container)
@@ -1114,6 +1157,9 @@ class ContentSheetRow:
                         message_index
                     ].body
                 new_content_sheet_row.next_prompt = self._get_next_prompt(
+                    message_container, message_index
+                )
+                new_content_sheet_row.buttons = self._get_buttons(
                     message_container, message_index
                 )
                 new_content_sheet_row.doc_link = self._get_doc_link(
@@ -1197,4 +1243,13 @@ class ContentSheetRow:
         next_prompt = message_container.find_first_attachment(index, "next_prompt")
         if next_prompt:
             return next_prompt
+        return ""
+
+    def _get_buttons(self, message_container: MessageContainer, index: int = 0) -> str:
+        """Iterate over a dict of all whatsapp, messenger and viber messages to find buttons,
+        if buttons are found in any of the platforms, the buttons will be saved to the sheet
+        """
+        buttons = message_container.find_first_attachment(index, "buttons")
+        if buttons:
+            return buttons
         return ""
