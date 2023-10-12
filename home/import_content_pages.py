@@ -1,10 +1,14 @@
 import contextlib
 import csv
+import json
+from collections import defaultdict
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from functools import cached_property
 from io import BytesIO, StringIO
 from queue import Queue
+from typing import Any
+from uuid import uuid4
 
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
@@ -42,6 +46,9 @@ class ContentImporter:
         self.purge = purge in ["True", "yes", True]
         self.locale = locale
         self.shadow_pages: dict[str, ShadowContentPage] = {}
+        self.go_to_page_buttons: dict[
+            str, dict[int, list[dict[str, Any]]]
+        ] = defaultdict(lambda: defaultdict(list))
 
     def perform_import(self) -> None:
         rows = self.parse_file()
@@ -54,6 +61,7 @@ class ContentImporter:
         self.process_rows(rows)
         self.save_pages()
         self.link_related_pages()
+        self.add_go_to_page_buttons()
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         for row in rows:
@@ -69,6 +77,7 @@ class ContentImporter:
     def save_pages(self) -> None:
         for i, page in enumerate(self.shadow_pages.values()):
             if page.parent:
+                # TODO: We should need to use something unique for `parent`
                 parent = Page.objects.get(title=page.parent, locale=self.locale)
             else:
                 parent = self.home_page
@@ -82,6 +91,18 @@ class ContentImporter:
             self.set_progress(
                 "Linking related pages", 80 + 10 * i // len(self.shadow_pages)
             )
+
+    def add_go_to_page_buttons(self) -> None:
+        for slug, messages in self.go_to_page_buttons.items():
+            page = ContentPage.objects.get(slug=slug)
+            for message_index, buttons in messages.items():
+                for button in buttons:
+                    title = button["title"]
+                    related_page = ContentPage.objects.get(slug=button["slug"])
+                    page.whatsapp_body[message_index].value["buttons"].append(
+                        ("go_to_page", {"page": related_page, "title": title})
+                    )
+            page.save_revision().publish()
 
     def parse_file(self) -> list["ContentRow"]:
         if self.file_type == "XLSX":
@@ -147,38 +168,28 @@ class ContentImporter:
             parent=row.parent,
             related_pages=row.related_pages,
         )
+        self.shadow_pages[row.slug] = page
+
+        self.add_message_to_shadow_content_page_from_row(row)
 
         if row.is_whatsapp_message:
-            page.enable_whatsapp = True
             page.whatsapp_title = row.whatsapp_title
             if row.is_whatsapp_template_message:
                 page.is_whatsapp_template = True
                 page.whatsapp_template_name = row.whatsapp_template_name
-            page.whatsapp_body.append(
-                ShadowWhatsappBlock(
-                    message=row.whatsapp_body,
-                    next_prompt=row.next_prompt,
-                )
-            )
             # TODO: Media
             # Currently media is exported as a URL, which just has an ID. This doesn't
             # actually help us much, as IDs can differ between instances, so we need
             # a better way of exporting and importing media here
 
         if row.is_messenger_message:
-            page.enable_messenger = True
             page.messenger_title = row.messenger_title
-            page.messenger_body.append(ShadowMessengerBlock(message=row.messenger_body))
 
         if row.is_viber_message:
-            page.enable_viber = True
             page.viber_title = row.viber_title
-            page.viber_body.append(ShadowViberBlock(message=row.viber_body))
 
         if row.translation_tag:
             page.translation_key = row.translation_tag
-
-        self.shadow_pages[row.slug] = page
 
     def add_variation_to_shadow_content_page_from_row(self, row: "ContentRow") -> None:
         page = self.shadow_pages[row.slug]
@@ -193,10 +204,25 @@ class ContentImporter:
         page = self.shadow_pages[row.slug]
         if row.is_whatsapp_message:
             page.enable_whatsapp = True
+            buttons = []
+            for button in row.buttons:
+                if button["type"] == "next_message":
+                    buttons.append(
+                        {
+                            "id": str(uuid4()),
+                            "type": button["type"],
+                            "value": {"title": button["title"]},
+                        }
+                    )
+                elif button["type"] == "go_to_page":
+                    self.go_to_page_buttons[row.slug][len(page.whatsapp_body)].append(
+                        button
+                    )
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
                     message=row.whatsapp_body,
                     next_prompt=row.next_prompt,
+                    buttons=buttons,
                 )
             )
 
@@ -342,6 +368,7 @@ class ShadowContentPage:
 class ShadowWhatsappBlock:
     message: str = ""
     next_prompt: str = ""
+    buttons: list[dict[str, Any]] = field(default_factory=list)
     variation_messages: list["ShadowVariationBlock"] = field(default_factory=list)
 
     @property
@@ -351,6 +378,7 @@ class ShadowWhatsappBlock:
         return {
             "message": self.message,
             "next_prompt": self.next_prompt,
+            "buttons": self.buttons,
             "variation_messages": [m.wagtail_format for m in self.variation_messages],
         }
 
@@ -411,6 +439,7 @@ class ContentRow:
     triggers: list[str] = field(default_factory=list)
     locale: str = ""
     next_prompt: str = ""
+    buttons: list[dict[str, Any]] = field(default_factory=list)
     image_link: str = ""
     doc_link: str = ""
     media_link: str = ""
@@ -431,6 +460,7 @@ class ContentRow:
             quick_replies=deserialise_list(row.pop("quick_replies", "")),
             triggers=deserialise_list(row.pop("triggers", "")),
             related_pages=deserialise_list(row.pop("related_pages", "")),
+            buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
             **row,
         )
 
