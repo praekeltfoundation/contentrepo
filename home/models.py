@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
+from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
@@ -315,6 +316,11 @@ class QuickReplyContent(ItemBase):
 
 
 class ContentPage(Page, ContentImportMixin):
+    class WhatsAppTemplateCategory(models.TextChoices):
+        AUTHENTICATION = "AUTHENTICATION", _("Authentication")
+        MARKETING = "MARKETING", _("Marketing")
+        UTILITY = "UTILITY", _("Utility")
+
     parent_page_type = [
         "ContentPageIndex",
     ]
@@ -377,6 +383,11 @@ class ContentPage(Page, ContentImportMixin):
     # whatsapp page setup
     is_whatsapp_template = models.BooleanField("Is Template", default=False)
     whatsapp_template_name = models.CharField(max_length=512, blank=True, default="")
+    whatsapp_template_category = models.CharField(
+        max_length=14,
+        choices=WhatsAppTemplateCategory.choices,
+        default=WhatsAppTemplateCategory.UTILITY,
+    )
     whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
     whatsapp_body = StreamField(
         [
@@ -398,6 +409,7 @@ class ContentPage(Page, ContentImportMixin):
             [
                 FieldPanel("whatsapp_title"),
                 FieldPanel("is_whatsapp_template"),
+                FieldPanel("whatsapp_template_category"),
                 FieldPanel("whatsapp_body"),
             ],
             heading="Whatsapp",
@@ -611,6 +623,7 @@ class ContentPage(Page, ContentImportMixin):
         create_whatsapp_template(
             self.whatsapp_template_name,
             self.whatsapp_template_body,
+            str(self.whatsapp_template_category),
             sorted(self.quick_reply_buttons),
             self.whatsapp_template_image,
         )
