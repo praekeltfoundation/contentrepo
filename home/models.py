@@ -189,7 +189,7 @@ class GoToPageButton(blocks.StructBlock):
 
 
 class WhatsappBlock(blocks.StructBlock):
-    MEDIA_CAPTION_MAX_LENGTH = 10
+    MEDIA_CAPTION_MAX_LENGTH = 1024
 
     image = ImageChooserBlock(required=False)
     document = DocumentChooserBlock(icon="document", required=False)
@@ -241,8 +241,8 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
                 f"{len(result['message'])} characters long"
             )
-
-        raise StructBlockValidationError(errors)
+        if errors:
+            raise StructBlockValidationError(errors)
         return result
 
 

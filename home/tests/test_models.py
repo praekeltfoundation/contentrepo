@@ -155,6 +155,7 @@ class WhatsappBlockTests(TestCase):
         media=None,
         message="",
         variation_messages=None,
+        example_values=None,
         next_prompt="",
         buttons=None,
     ):
@@ -163,6 +164,7 @@ class WhatsappBlockTests(TestCase):
             "document": document,
             "media": media,
             "message": message,
+            "example_values": example_values,
             "variation_messages": variation_messages,
             "next_prompt": next_prompt,
             "buttons": buttons or [],
