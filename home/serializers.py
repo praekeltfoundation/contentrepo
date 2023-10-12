@@ -152,6 +152,10 @@ class BodyField(serializers.Field):
                             ("revision", page.get_latest_revision().id),
                             ("is_whatsapp_template", page.is_whatsapp_template),
                             ("whatsapp_template_name", page.whatsapp_template_name),
+                            (
+                                "whatsapp_template_category",
+                                page.whatsapp_template_category,
+                            ),
                         ]
                     )
                 except IndexError:
