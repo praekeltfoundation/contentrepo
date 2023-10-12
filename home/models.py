@@ -149,7 +149,9 @@ def get_relationship_choices():
 
 
 class ExampleValuesBlock(blocks.StructBlock):
-    example_values = blocks.CharBlock(label="Example Value",)
+    example_values = blocks.CharBlock(
+        label="Example Value",
+    )
 
 
 class VariationBlock(blocks.StructBlock):
@@ -172,7 +174,7 @@ class VariationBlock(blocks.StructBlock):
 
 
 class WhatsappBlock(blocks.StructBlock):
-    MEDIA_CAPTION_MAX_LENGTH = 1024
+    MEDIA_CAPTION_MAX_LENGTH = 10
 
     image = ImageChooserBlock(required=False)
     document = DocumentChooserBlock(icon="document", required=False)
@@ -182,7 +184,12 @@ class WhatsappBlock(blocks.StructBlock):
         "media cannot exceed 1024 characters.",
         validators=(MaxLengthValidator(4096),),
     )
-    example_values = blocks.ListBlock(ExampleValuesBlock(), default=[], label="Variable Example Values", help_text="Please add example values for all variables used in a WhatsApp template")
+    example_values = blocks.ListBlock(
+        ExampleValuesBlock(),
+        default=[],
+        label="Variable Example Values",
+        help_text="Please add example values for all variables used in a WhatsApp template",
+    )
     variation_messages = blocks.ListBlock(VariationBlock(), default=[])
     next_prompt = blocks.CharBlock(
         help_text="prompt text for next message",
@@ -196,19 +203,25 @@ class WhatsappBlock(blocks.StructBlock):
 
     def clean(self, value):
         result = super().clean(value)
+        num_vars_in_msg = result["message"].count("{{")
+        errors = {}
+        if num_vars_in_msg > 0:
+            num_example_values = len(result["example_values"])
+            if num_vars_in_msg != num_example_values:
+                errors["example_values"] = ValidationError(
+                    "The number of example values provided does not match the number of variables used in the template"
+                )
 
         if (result["image"] or result["document"] or result["media"]) and len(
             result["message"]
         ) > self.MEDIA_CAPTION_MAX_LENGTH:
-            raise StructBlockValidationError(
-                {
-                    "message": ValidationError(
-                        "A WhatsApp message with media cannot be longer than "
-                        f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
-                        f"{len(result['message'])} characters long"
-                    )
-                }
+            errors["message"] = ValidationError(
+                "A WhatsApp message with media cannot be longer than "
+                f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
+                f"{len(result['message'])} characters long"
             )
+
+        raise StructBlockValidationError(errors)
         return result
 
 
