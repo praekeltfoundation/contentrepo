@@ -8,10 +8,10 @@ import wagtail.documents.blocks
 import wagtail.fields
 import wagtail.images.blocks
 from django.db import migrations
-from wagtail.blocks.migrations.migrate_operation import MigrateStreamData
 from wagtail.blocks.migrations.operations import BaseBlockOperation
 
 import home.models
+
 
 def copy_next_prompt_to_next_button_for_message(message):
         next_prompt = message["value"].get("next_prompt")
