@@ -613,6 +613,8 @@ class ContentPage(Page, ContentImportMixin):
                 and self.is_whatsapp_template == previous_revision.is_whatsapp_template
                 and self.whatsapp_template_image
                 == previous_revision.whatsapp_template_image
+                and self.whatsapp_template_category
+                == previous_revision.whatsapp_template_category
             ):
                 return
         except AttributeError:
