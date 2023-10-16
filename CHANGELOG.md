@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Migrated next_prompt on WhatsApp messages to buttons
+- Refactored ContentPage import. Translation keys are now added as translation keys instead of as tags
 - Improved testing for import and export
 
 ### Deprecated
