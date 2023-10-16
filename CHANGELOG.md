@@ -5,13 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v1.1.0-dev.3
+
+### Fixed
+- ContentPage imports that fail now rollback changes
 
 ### Added
 - Buttons StreamBlock for WhatsApp messages
+- API endpoint for media content
+- Support for creating WhatsApp templates with images
+- Run tests with PostgreSQL 12, 13 and 14
 
 ### Changed
 - Migrated next_prompt on WhatsApp messages to buttons
+- Improved testing for import and export
 
 ### Deprecated
 - next_prompt on WhatsApp messages is deprecated, use buttons instead. Will be removed on the next major release
