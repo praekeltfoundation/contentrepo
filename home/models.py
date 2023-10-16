@@ -233,6 +233,8 @@ class WhatsappBlock(blocks.StructBlock):
                     "The number of example values provided does not match the number of variables used in the template"
                 )
 
+            print(f"EV|{result['example_values']}")
+            print(f"VM|{result['variation_messages']}")
         if (result["image"] or result["document"] or result["media"]) and len(
             result["message"]
         ) > self.MEDIA_CAPTION_MAX_LENGTH:
@@ -513,6 +515,7 @@ class ContentPage(Page, ContentImportMixin):
         APIField("title"),
         APIField("subtitle"),
         APIField("body"),
+        APIField("whatsapp_template_example_values"),
         APIField("tags"),
         APIField("triggers"),
         APIField("quick_replies"),
@@ -549,6 +552,10 @@ class ContentPage(Page, ContentImportMixin):
     @property
     def whatsapp_template_image(self):
         return self.whatsapp_body.raw_data[0]["value"]["image"]
+
+    @property
+    def whatsapp_template_example_values(self):
+        return self.whatsapp_body.raw_data[0]["value"]["example_values"]
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.whatsapp_template_prefix}_{self.get_latest_revision().pk}"

@@ -18,6 +18,7 @@ def create_page(
     parent=None,
     tags=(),
     is_whatsapp_template=False,
+    add_example_values=False,
     add_variation=False,
     has_quick_replies=False,
     whatsapp_template_name="",
@@ -31,6 +32,9 @@ def create_page(
             ("variation_messages", blocks.ListBlock(VariationBlock())),
         ]
     )
+    if add_example_values:
+        pass
+
     variation_messages = []
     if add_variation:
         variation_messages = [

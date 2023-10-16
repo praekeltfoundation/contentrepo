@@ -31,6 +31,40 @@ class TestWhatsApp:
         assert request.body == json.dumps(data, indent=4)
 
     @responses.activate
+    def test_create_whatsapp_template_with_example_values(self):
+        data = {
+            "category": "UTILITY",
+            "name": "test-template",
+            "language": "en_US",
+            "components": [
+                {
+                    "type": "BODY",
+                    "text": "Hi {{1}}. You are testing as a {{2}}",
+                    "example": {
+                        "body_text": [
+                            "Fritz",
+                            "beta tester",
+                        ]
+                    },
+                },
+            ],
+        }
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        create_whatsapp_template(
+            "Test-Template",
+            "Hi {{1}}. You are testing as a {{2}}",
+            [],
+            None,
+            ["Fritz", "beta tester"],
+        )
+
+        request = responses.calls[0].request
+        assert request.headers["Authorization"] == "Bearer fake-access-token"
+        assert request.body == json.dumps(data, indent=4)
+
+    @responses.activate
     def test_create_whatsapp_template_with_buttons(self):
         data = {
             "category": "UTILITY",
@@ -51,7 +85,9 @@ class TestWhatsApp:
         responses.add(responses.POST, url, json={})
 
         create_whatsapp_template(
-            "Test-Template", "Test Body", ["Test button1", "test button2"]
+            "Test-Template",
+            "Test Body",
+            ["Test button1", "test button2"],
         )
 
         request = responses.calls[0].request
