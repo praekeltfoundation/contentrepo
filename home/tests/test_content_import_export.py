@@ -328,6 +328,14 @@ def remove_buttons(page: DbDict) -> DbDict:
 
 
 @per_page
+def remove_example_values(page: DbDict) -> DbDict:
+    if "whatsapp_body" in page["fields"]:
+        for body in page["fields"]["whatsapp_body"]:
+            body["value"].pop("example_values", None)
+    return page
+
+
+@per_page
 def remove_button_ids(page: DbDict) -> DbDict:
     if "whatsapp_body" in page["fields"]:
         for body in page["fields"]["whatsapp_body"]:
@@ -360,6 +368,7 @@ OLD_PAGE_FILTER_FUNCS = [
     add_body_fields,
     remove_next_prompt,
     remove_buttons,
+    remove_example_values,
     enable_web,
 ]
 

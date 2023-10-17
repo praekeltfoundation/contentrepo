@@ -1,3 +1,5 @@
+import re
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
@@ -193,6 +195,14 @@ class WhatsappBlock(blocks.StructBlock):
         "media cannot exceed 1024 characters.",
         validators=(MaxLengthValidator(4096),),
     )
+    example_values = blocks.ListBlock(
+        blocks.CharBlock(
+            label="Example Value",
+        ),
+        default=[],
+        label="Variable Example Values",
+        help_text="Please add example values for all variables used in a WhatsApp template",
+    )
     variation_messages = blocks.ListBlock(VariationBlock(), default=[])
     # TODO: next_prompt is deprecated, and should be removed in the next major version
     next_prompt = blocks.CharBlock(
@@ -212,19 +222,26 @@ class WhatsappBlock(blocks.StructBlock):
 
     def clean(self, value):
         result = super().clean(value)
+        num_vars_in_msg = len(re.findall(r"{{\d+}}", result["message"]))
+        errors = {}
+        if num_vars_in_msg > 0:
+            num_example_values = len(result["example_values"])
+            if num_vars_in_msg != num_example_values:
+                errors["example_values"] = ValidationError(
+                    f"The number of example values provided ({num_example_values}) "
+                    f"does not match the number of variables used in the template ({num_vars_in_msg})",
+                )
 
         if (result["image"] or result["document"] or result["media"]) and len(
             result["message"]
         ) > self.MEDIA_CAPTION_MAX_LENGTH:
-            raise StructBlockValidationError(
-                {
-                    "message": ValidationError(
-                        "A WhatsApp message with media cannot be longer than "
-                        f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
-                        f"{len(result['message'])} characters long"
-                    )
-                }
+            errors["message"] = ValidationError(
+                "A WhatsApp message with media cannot be longer than "
+                f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
+                f"{len(result['message'])} characters long"
             )
+        if errors:
+            raise StructBlockValidationError(errors)
         return result
 
 
@@ -495,6 +512,7 @@ class ContentPage(Page, ContentImportMixin):
         APIField("title"),
         APIField("subtitle"),
         APIField("body"),
+        APIField("whatsapp_template_example_values"),
         APIField("tags"),
         APIField("triggers"),
         APIField("quick_replies"),
@@ -531,6 +549,13 @@ class ContentPage(Page, ContentImportMixin):
     @property
     def whatsapp_template_image(self):
         return self.whatsapp_body.raw_data[0]["value"]["image"]
+
+    @property
+    def whatsapp_template_example_values(self):
+        example_values = self.whatsapp_body.raw_data[0]["value"].get(
+            "example_values", []
+        )
+        return [v["value"] for v in example_values]
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.whatsapp_template_prefix}_{self.get_latest_revision().pk}"
@@ -613,6 +638,7 @@ class ContentPage(Page, ContentImportMixin):
             self.whatsapp_template_body,
             sorted(self.quick_reply_buttons),
             self.whatsapp_template_image,
+            self.whatsapp_template_example_values,
         )
 
         return self.whatsapp_template_name
