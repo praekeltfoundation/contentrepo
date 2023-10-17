@@ -593,12 +593,25 @@ class ContentPage(Page, ContentImportMixin):
     def quick_reply_buttons(self):
         return self.quick_reply_items.all().values_list("tag__name", flat=True)
 
+    @property
+    def whatsapp_template_fields(self):
+        """
+        Returns a tuple of fields that can be used to determine template equality
+        """
+        return (
+            self.whatsapp_template_body,
+            sorted(self.quick_reply_buttons),
+            self.is_whatsapp_template,
+            self.whatsapp_template_image,
+            self.whatsapp_template_category,
+        )
+
     def submit_whatsapp_template(self, previous_revision):
         """
         Submits a request to the WhatsApp API to create a template for this content
 
         Only submits if the create templates is enabled, if the page is a whatsapp
-        template, and if the content or buttons are different to the previous revision
+        template, and if the template fields are different to the previous revision
         """
         if not settings.WHATSAPP_CREATE_TEMPLATES:
             return
@@ -607,14 +620,8 @@ class ContentPage(Page, ContentImportMixin):
         try:
             previous_revision = previous_revision.as_object()
             if (
-                self.whatsapp_template_body == previous_revision.whatsapp_template_body
-                and sorted(self.quick_reply_buttons)
-                == sorted(previous_revision.quick_reply_buttons)
-                and self.is_whatsapp_template == previous_revision.is_whatsapp_template
-                and self.whatsapp_template_image
-                == previous_revision.whatsapp_template_image
-                and self.whatsapp_template_category
-                == previous_revision.whatsapp_template_category
+                self.whatsapp_template_fields
+                == previous_revision.whatsapp_template_fields
             ):
                 return
         except AttributeError:
