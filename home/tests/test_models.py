@@ -56,6 +56,7 @@ class ContentPageTests(TestCase):
             "UTILITY",
             [],
             None,
+            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -68,6 +69,22 @@ class ContentPageTests(TestCase):
             "UTILITY",
             ["button 1", "button 2"],
             None,
+            [],
+        )
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_create_with_example_values_on_save(
+        self, mock_create_whatsapp_template
+    ):
+        page = create_page(is_whatsapp_template=True, add_example_values=True)
+        mock_create_whatsapp_template.assert_called_with(
+            f"WA_Title_{page.get_latest_revision().id}",
+            "Test WhatsApp Message with two variables, {{1}} and {{2}}",
+            "UTILITY",
+            [],
+            None,
+            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -84,6 +101,7 @@ class ContentPageTests(TestCase):
             "UTILITY",
             ["button 1", "button 2"],
             None,
+            [],
         )
 
         mock_create_whatsapp_template.reset_mock()
@@ -98,6 +116,7 @@ class ContentPageTests(TestCase):
             "UTILITY",
             ["button 1", "button 2"],
             None,
+            [],
         )
         page.refresh_from_db()
         self.assertEqual(page.whatsapp_template_name, expected_title)
@@ -119,6 +138,7 @@ class ContentPageTests(TestCase):
             "UTILITY",
             ["button 1", "button 2"],
             None,
+            [],
         )
 
         mock_create_whatsapp_template.reset_mock()
@@ -153,6 +173,7 @@ class ContentPageTests(TestCase):
             "UTILITY",
             ["button 1", "button 2"],
             None,
+            [],
         )
 
 
@@ -164,6 +185,7 @@ class WhatsappBlockTests(TestCase):
         media=None,
         message="",
         variation_messages=None,
+        example_values=None,
         next_prompt="",
         buttons=None,
     ):
@@ -172,6 +194,7 @@ class WhatsappBlockTests(TestCase):
             "document": document,
             "media": media,
             "message": message,
+            "example_values": example_values,
             "variation_messages": variation_messages,
             "next_prompt": next_prompt,
             "buttons": buttons or [],
