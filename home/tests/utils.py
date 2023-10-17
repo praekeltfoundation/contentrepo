@@ -32,8 +32,11 @@ def create_page(
             ("variation_messages", blocks.ListBlock(VariationBlock())),
         ]
     )
+    message = "Test WhatsApp Message 1"
+    example_values = []
     if add_example_values:
-        pass
+        message = "Test WhatsApp Message with two variables, {{1}} and {{2}}"
+        example_values = ["Example Value 1", "Example Value 2"]
 
     variation_messages = []
     if add_variation:
@@ -45,10 +48,11 @@ def create_page(
         ]
     block_value = block.to_python(
         {
-            "message": "Test WhatsApp Message 1",
+            "message": message,
             "image": None,
             "media": None,
             "document": None,
+            "example_values": example_values,
             "variation_messages": variation_messages,
         }
     )

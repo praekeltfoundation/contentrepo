@@ -70,6 +70,19 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
+    def test_template_create_with_example_values_on_save(
+        self, mock_create_whatsapp_template
+    ):
+        page = create_page(is_whatsapp_template=True, add_example_values=True)
+        mock_create_whatsapp_template.assert_called_with(
+            f"WA_Title_{page.get_latest_revision().id}",
+            "Test WhatsApp Message with two variables, {{1}} and {{2}}",
+            [],
+            None,
+        )
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
     def test_template_updated_on_change(self, mock_create_whatsapp_template):
         """
         If the content is changed, the template should be resubmitted with an updated
