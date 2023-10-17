@@ -55,6 +55,7 @@ class ContentPageTests(TestCase):
             "Test WhatsApp Message 1",
             [],
             None,
+            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -66,6 +67,7 @@ class ContentPageTests(TestCase):
             "Test WhatsApp Message 1",
             ["button 1", "button 2"],
             None,
+            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -79,6 +81,7 @@ class ContentPageTests(TestCase):
             "Test WhatsApp Message with two variables, {{1}} and {{2}}",
             [],
             None,
+            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -94,6 +97,7 @@ class ContentPageTests(TestCase):
             "Test WhatsApp Message 1",
             ["button 1", "button 2"],
             None,
+            [],
         )
 
         mock_create_whatsapp_template.reset_mock()
@@ -103,7 +107,11 @@ class ContentPageTests(TestCase):
 
         expected_title = f"WA_Title_{page.get_latest_revision().pk}"
         mock_create_whatsapp_template.assert_called_once_with(
-            expected_title, "Test WhatsApp Message 2", ["button 1", "button 2"], None
+            expected_title,
+            "Test WhatsApp Message 2",
+            ["button 1", "button 2"],
+            None,
+            [],
         )
         page.refresh_from_db()
         self.assertEqual(page.whatsapp_template_name, expected_title)
@@ -124,6 +132,7 @@ class ContentPageTests(TestCase):
             "Test WhatsApp Message 1",
             ["button 1", "button 2"],
             None,
+            [],
         )
 
         mock_create_whatsapp_template.reset_mock()
@@ -157,6 +166,7 @@ class ContentPageTests(TestCase):
             "Test WhatsApp Message 1",
             ["button 1", "button 2"],
             None,
+            [],
         )
 
 

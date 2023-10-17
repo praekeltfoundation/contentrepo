@@ -10,8 +10,6 @@ from wagtail.images import get_image_model
 def create_whatsapp_template(
     name, body, quick_replies=(), image_id=None, example_values=None
 ):
-    if example_values is None:
-        example_values = []
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
@@ -27,7 +25,7 @@ def create_whatsapp_template(
                 "type": "BODY",
                 "text": body,
                 "example": {
-                    "body_text": example_values,
+                    "body_text": [example_values],
                 },
             }
         ]

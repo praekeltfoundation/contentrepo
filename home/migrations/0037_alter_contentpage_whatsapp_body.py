@@ -217,7 +217,7 @@ class Migration(migrations.Migration):
                 use_json_field=True,
             ),
         ),
-         MigrateStreamData(
+        MigrateStreamData(
             app_name="home",
             model_name="ContentPage",
             field_name="whatsapp_body",

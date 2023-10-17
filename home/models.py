@@ -233,8 +233,6 @@ class WhatsappBlock(blocks.StructBlock):
                     "The number of example values provided does not match the number of variables used in the template"
                 )
 
-            print(f"EV|{result['example_values']}")
-            print(f"VM|{result['variation_messages']}")
         if (result["image"] or result["document"] or result["media"]) and len(
             result["message"]
         ) > self.MEDIA_CAPTION_MAX_LENGTH:
@@ -555,7 +553,17 @@ class ContentPage(Page, ContentImportMixin):
 
     @property
     def whatsapp_template_example_values(self):
-        return self.whatsapp_body.raw_data[0]["value"]["example_values"]
+        # TO CHECK IN REVIEW - I know there must be a cleaner way of doing this, but I can't seem to come up with it
+        example_values_clean = []
+        if "example_values" in self.whatsapp_body.raw_data[0]["value"]:
+            example_values_raw = self.whatsapp_body.raw_data[0]["value"][
+                "example_values"
+            ]
+            for x in range(len(example_values_raw)):
+                example_values_clean.append(
+                    example_values_raw[x]["value"]["example_values"]
+                )
+        return example_values_clean
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.whatsapp_template_prefix}_{self.get_latest_revision().pk}"
@@ -638,6 +646,7 @@ class ContentPage(Page, ContentImportMixin):
             self.whatsapp_template_body,
             sorted(self.quick_reply_buttons),
             self.whatsapp_template_image,
+            self.whatsapp_template_example_values,
         )
 
         return self.whatsapp_template_name

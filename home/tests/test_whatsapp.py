@@ -42,8 +42,10 @@ class TestWhatsApp:
                     "text": "Hi {{1}}. You are testing as a {{2}}",
                     "example": {
                         "body_text": [
-                            "Fritz",
-                            "beta tester",
+                            [
+                                "Fritz",
+                                "beta tester",
+                            ]
                         ]
                     },
                 },
