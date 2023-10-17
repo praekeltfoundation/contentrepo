@@ -54,6 +54,7 @@ def create_whatsapp_template(
         "language": "en_US",
         "components": components,
     }
+    print(json.dumps(data, indent=4))
     response = requests.post(
         url,
         headers=headers,

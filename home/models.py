@@ -1,3 +1,5 @@
+import re
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
@@ -220,13 +222,14 @@ class WhatsappBlock(blocks.StructBlock):
 
     def clean(self, value):
         result = super().clean(value)
-        num_vars_in_msg = result["message"].count("{{")
+        num_vars_in_msg = len(re.findall(r"{{\d+}}", result["message"]))
         errors = {}
         if num_vars_in_msg > 0:
             num_example_values = len(result["example_values"])
             if num_vars_in_msg != num_example_values:
                 errors["example_values"] = ValidationError(
-                    "The number of example values provided does not match the number of variables used in the template"
+                    f"The number of example values provided ({num_example_values}) "
+                    f"does not match the number of variables used in the template ({num_vars_in_msg})",
                 )
 
         if (result["image"] or result["document"] or result["media"]) and len(
@@ -549,17 +552,10 @@ class ContentPage(Page, ContentImportMixin):
 
     @property
     def whatsapp_template_example_values(self):
-        # TO CHECK IN REVIEW - I know there must be a cleaner way of doing this, but I can't seem to come up with it
-        example_values_clean = []
-        if "example_values" in self.whatsapp_body.raw_data[0]["value"]:
-            example_values_raw = self.whatsapp_body.raw_data[0]["value"][
-                "example_values"
-            ]
-            for x in range(len(example_values_raw)):
-                example_values_clean.append(
-                    example_values_raw[x]["value"]["example_values"]
-                )
-        return example_values_clean
+        example_values = self.whatsapp_body.raw_data[0]["value"].get(
+            "example_values", []
+        )
+        return [v["value"] for v in example_values]
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.whatsapp_template_prefix}_{self.get_latest_revision().pk}"
