@@ -8,6 +8,7 @@ import wagtail.documents.blocks
 import wagtail.fields
 import wagtail.images.blocks
 from django.db import migrations
+from wagtail.blocks.migrations.migrate_operation import MigrateStreamData
 from wagtail.blocks.migrations.operations import BaseBlockOperation
 
 import home.models
@@ -216,4 +217,11 @@ class Migration(migrations.Migration):
                 use_json_field=True,
             ),
         ),
+         MigrateStreamData(
+            app_name="home",
+            model_name="ContentPage",
+            field_name="whatsapp_body",
+            operations_and_block_paths=[(CopyNextPromptToNextButtonOperation(), "")]
+        ),
     ]
+
