@@ -74,7 +74,7 @@ logger = getLogger(__name__)
 
 
 @transaction.atomic
-def import_content(file, filetype, progress_queue, purge=True, locale="en"):
+def import_content(file, filetype, progress_queue, purge=True, locale=None):
     from .import_content_pages import ContentImporter
 
     importer = ContentImporter(file.read(), filetype, progress_queue, purge, locale)
