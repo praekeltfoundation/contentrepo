@@ -7,6 +7,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
+from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
@@ -332,6 +333,11 @@ class QuickReplyContent(ItemBase):
 
 
 class ContentPage(Page, ContentImportMixin):
+    class WhatsAppTemplateCategory(models.TextChoices):
+        AUTHENTICATION = "AUTHENTICATION", _("Authentication")
+        MARKETING = "MARKETING", _("Marketing")
+        UTILITY = "UTILITY", _("Utility")
+
     parent_page_type = [
         "ContentPageIndex",
     ]
@@ -394,6 +400,11 @@ class ContentPage(Page, ContentImportMixin):
     # whatsapp page setup
     is_whatsapp_template = models.BooleanField("Is Template", default=False)
     whatsapp_template_name = models.CharField(max_length=512, blank=True, default="")
+    whatsapp_template_category = models.CharField(
+        max_length=14,
+        choices=WhatsAppTemplateCategory.choices,
+        default=WhatsAppTemplateCategory.UTILITY,
+    )
     whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
     whatsapp_body = StreamField(
         [
@@ -415,6 +426,7 @@ class ContentPage(Page, ContentImportMixin):
             [
                 FieldPanel("whatsapp_title"),
                 FieldPanel("is_whatsapp_template"),
+                FieldPanel("whatsapp_template_category"),
                 FieldPanel("whatsapp_body"),
             ],
             heading="Whatsapp",
@@ -606,12 +618,25 @@ class ContentPage(Page, ContentImportMixin):
     def quick_reply_buttons(self):
         return self.quick_reply_items.all().values_list("tag__name", flat=True)
 
+    @property
+    def whatsapp_template_fields(self):
+        """
+        Returns a tuple of fields that can be used to determine template equality
+        """
+        return (
+            self.whatsapp_template_body,
+            sorted(self.quick_reply_buttons),
+            self.is_whatsapp_template,
+            self.whatsapp_template_image,
+            self.whatsapp_template_category,
+        )
+
     def submit_whatsapp_template(self, previous_revision):
         """
         Submits a request to the WhatsApp API to create a template for this content
 
         Only submits if the create templates is enabled, if the page is a whatsapp
-        template, and if the content or buttons are different to the previous revision
+        template, and if the template fields are different to the previous revision
         """
         if not settings.WHATSAPP_CREATE_TEMPLATES:
             return
@@ -620,12 +645,8 @@ class ContentPage(Page, ContentImportMixin):
         try:
             previous_revision = previous_revision.as_object()
             if (
-                self.whatsapp_template_body == previous_revision.whatsapp_template_body
-                and sorted(self.quick_reply_buttons)
-                == sorted(previous_revision.quick_reply_buttons)
-                and self.is_whatsapp_template == previous_revision.is_whatsapp_template
-                and self.whatsapp_template_image
-                == previous_revision.whatsapp_template_image
+                self.whatsapp_template_fields
+                == previous_revision.whatsapp_template_fields
             ):
                 return
         except AttributeError:
@@ -636,6 +657,7 @@ class ContentPage(Page, ContentImportMixin):
         create_whatsapp_template(
             self.whatsapp_template_name,
             self.whatsapp_template_body,
+            str(self.whatsapp_template_category),
             sorted(self.quick_reply_buttons),
             self.whatsapp_template_image,
             self.whatsapp_template_example_values,

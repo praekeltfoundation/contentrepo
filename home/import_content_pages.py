@@ -177,6 +177,7 @@ class ContentImporter:
             if row.is_whatsapp_template_message:
                 page.is_whatsapp_template = True
                 page.whatsapp_template_name = row.whatsapp_template_name
+                page.whatsapp_template_category = row.whatsapp_template_category
             # TODO: Media
             # Currently media is exported as a URL, which just has an ID. This doesn't
             # actually help us much, as IDs can differ between instances, so we need
@@ -251,6 +252,7 @@ class ShadowContentPage:
     whatsapp_title: str = ""
     whatsapp_body: list["ShadowWhatsappBlock"] = field(default_factory=list)
     whatsapp_template_name: str = ""
+    whatsapp_template_category: str = "UTILITY"
     enable_messenger: bool = False
     messenger_title: str = ""
     messenger_body: list["ShadowMessengerBlock"] = field(default_factory=list)
@@ -294,6 +296,7 @@ class ShadowContentPage:
         page.is_whatsapp_template = self.is_whatsapp_template
         page.whatsapp_title = self.whatsapp_title
         page.whatsapp_template_name = self.whatsapp_template_name
+        page.whatsapp_template_category = self.whatsapp_template_category
         page.whatsapp_body.clear()
         for message in self.formatted_whatsapp_body:
             page.whatsapp_body.append(("Whatsapp_Message", message))
@@ -427,6 +430,7 @@ class ContentRow:
     whatsapp_title: str = ""
     whatsapp_body: str = ""
     whatsapp_template_name: str = ""
+    whatsapp_template_category: str = ""
     variation_title: dict[str, str] = field(default_factory=dict)
     variation_body: str = ""
     messenger_title: str = ""

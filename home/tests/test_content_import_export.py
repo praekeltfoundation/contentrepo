@@ -39,7 +39,12 @@ def filter_both(
 @filter_both
 def add_new_fields(entry: ExpDict) -> ExpDict:
     # FIXME: This should probably be in a separate test for importing old exports.
-    return {"whatsapp_template_name": "", **entry}
+    return {
+        "whatsapp_template_name": "",
+        **entry,
+        "whatsapp_template_category": entry.get("whatsapp_template_category")
+        or "UTILITY",
+    }
 
 
 def remove_translation_tag_from_tags(src: ExpDict, dst: ExpDict) -> ExpPair:

@@ -53,6 +53,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_with(
             f"WA_Title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
+            "UTILITY",
             [],
             None,
             [],
@@ -65,6 +66,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_with(
             f"WA_Title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
+            "UTILITY",
             ["button 1", "button 2"],
             None,
             [],
@@ -79,6 +81,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_with(
             f"WA_Title_{page.get_latest_revision().id}",
             "Test WhatsApp Message with two variables, {{1}} and {{2}}",
+            "UTILITY",
             [],
             None,
             [],
@@ -95,6 +98,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             f"WA_Title_{page.get_latest_revision().pk}",
             "Test WhatsApp Message 1",
+            "UTILITY",
             ["button 1", "button 2"],
             None,
             [],
@@ -109,6 +113,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             expected_title,
             "Test WhatsApp Message 2",
+            "UTILITY",
             ["button 1", "button 2"],
             None,
             [],
@@ -130,6 +135,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
+            "UTILITY",
             ["button 1", "button 2"],
             None,
             [],
@@ -164,6 +170,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
+            "UTILITY",
             ["button 1", "button 2"],
             None,
             [],

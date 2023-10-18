@@ -367,6 +367,33 @@ class WhatsAppMessagesTestCase(TestCase):
             button, {"type": "next_message", "value": {"title": "Tell me more"}}
         )
 
+    def test_whatsapp_template(self):
+        page = ContentPage(
+            title="test",
+            slug="text",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {"type": "next_message", "value": {"title": "Tell me more"}}
+                        ],
+                    },
+                }
+            ],
+            whatsapp_template_category="MARKETING",
+        )
+        homepage = HomePage.objects.first()
+        homepage.add_child(instance=page)
+        page.save_revision().publish()
+
+        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
+        content = response.json()
+        body = content["body"]
+        self.assertEqual(body["whatsapp_template_category"], "MARKETING")
+
 
 class OrderedContentSetTestCase(TestCase):
     def setUp(self):
