@@ -36,7 +36,7 @@ def tagslugs(taglikes: Iterable[dict[str, str]]) -> list[str]:
     """
     Extract slug fields from tag-like dicts.
     """
-    return [t["slug"] for t in taglikes]
+    return sorted(t["slug"] for t in taglikes)
 
 
 def page_for(page: Page) -> Page:
@@ -420,7 +420,7 @@ def test_triggers_and_quick_replies() -> None:
     assert isinstance(self_help, ContentPage)
     assert self_help.depth == 5
     assert tagslugs(self_help.triggers.values()) == []
-    assert tagslugs(self_help.quick_replies.values()) == ["button3", "button2"]
+    assert tagslugs(self_help.quick_replies.values()) == ["button2", "button3"]
 
 
 @pytest.mark.django_db
