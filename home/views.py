@@ -272,8 +272,6 @@ class ContentUploadView(View):
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST, request.FILES)
         if form.is_valid():
-            if form.cleaned_data["purge"] == "True":
-                ContentPage.objects.all().delete()
             ContentUploadThread(
                 form.cleaned_data["purge"],
                 form.cleaned_data["locale"],
