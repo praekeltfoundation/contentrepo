@@ -334,7 +334,6 @@ class QuickReplyContent(ItemBase):
 
 class ContentPage(Page, ContentImportMixin):
     class WhatsAppTemplateCategory(models.TextChoices):
-        AUTHENTICATION = "AUTHENTICATION", _("Authentication")
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
 
