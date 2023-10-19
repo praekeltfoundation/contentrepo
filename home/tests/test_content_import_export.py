@@ -344,6 +344,15 @@ def remove_button_ids(page: DbDict) -> DbDict:
                 button.pop("id", None)
     return page
 
+@per_page
+def remove_example_value_ids(page: DbDict) -> DbDict:
+    if "whatsapp_body" in page["fields"]:
+        for body in page["fields"]["whatsapp_body"]:
+            example_values = body["value"].get("example_values", [])
+            for example_value in example_values:
+                example_value.pop("id", None)
+    return page
+
 
 @per_page
 def enable_web(page: DbDict) -> DbDict:
@@ -360,6 +369,7 @@ PAGE_FILTER_FUNCS = [
     clean_web_paragraphs,
     null_to_emptystr,
     remove_button_ids,
+    remove_example_value_ids
 ]
 
 OLD_PAGE_FILTER_FUNCS = [
@@ -475,6 +485,8 @@ class ImportExportFixture:
         Export all content, then immediately reimport it.
         """
         self.import_content(self.export_content())
+        
+
 
     def get_page_json(self) -> DbDicts:
         """
@@ -941,4 +953,37 @@ class TestExportImportRoundtrip:
         impexp.import_content(content_en, locale="en")
         impexp.import_content(content_pt, locale="pt", purge=False)
         imported = impexp.get_page_json()
+        assert imported == orig
+    
+    def test_example_values(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages with example values in whatsapp messages are preserved
+        across export/import.
+        """
+        if impexp.importer == "old":
+            pytest.skip("Old importer can't handle example values.")    
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+        )
+
+        example_values = ["Example value 1", "Example value 2"]
+        _health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[WABody("health info", [WABlk("*Health information* WA", example_values=example_values)])],
+            whatsapp_template_name="template-health-info",
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        #print(f"EXP = {content}")
         assert imported == orig
