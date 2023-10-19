@@ -642,15 +642,19 @@ class ContentPage(Page, ContentImportMixin):
             return
         if not self.is_whatsapp_template:
             return
+
+        # If there are any missing fields in the previous revision, then carry on
         try:
             previous_revision = previous_revision.as_object()
-            if (
-                self.whatsapp_template_fields
-                == previous_revision.whatsapp_template_fields
-            ):
+            previous_revision_fields = previous_revision.whatsapp_template_fields
+        except (IndexError, AttributeError):
+            previous_revision_fields = ()
+        # If there are any missing fields in this revision, then don't submit template
+        try:
+            if self.whatsapp_template_fields == previous_revision_fields:
                 return
-        except AttributeError:
-            pass
+        except (IndexError, AttributeError):
+            return
 
         self.whatsapp_template_name = self.create_whatsapp_template_name()
 
