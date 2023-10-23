@@ -4,7 +4,6 @@ import json
 from collections import defaultdict
 from dataclasses import dataclass, field, fields
 from datetime import datetime
-from functools import cached_property
 from io import BytesIO, StringIO
 from queue import Queue
 from typing import Any
@@ -14,6 +13,7 @@ from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
 from wagtail.blocks import StructValue  # type: ignore
+from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
@@ -29,6 +29,18 @@ from home.models import (
 )
 
 
+def language_code_from_display_name(display_name: str) -> str:
+    codes = []
+    for lang_code, lang_dn in get_content_languages().items():
+        if lang_dn == display_name:
+            codes.append(lang_code)
+    if not codes:
+        raise ValueError(f"Language not found: {display_name}")
+    if len(codes) > 1:
+        raise ValueError(f"Multiple codes for language: {display_name} -> {codes}")
+    return codes[0]
+
+
 class ContentImporter:
     def __init__(
         self,
@@ -36,7 +48,7 @@ class ContentImporter:
         file_type: str,
         progress_queue: Queue[int],
         purge: bool | str = True,
-        locale: Locale | str = "en",
+        locale: Locale | str | None = None,
     ):
         if isinstance(locale, str):
             locale = Locale.objects.get(language_code=locale)
@@ -66,6 +78,9 @@ class ContentImporter:
     def process_rows(self, rows: list["ContentRow"]) -> None:
         for row in rows:
             if row.is_page_index:
+                if self.locale and row.locale != self.locale.get_display_name():
+                    # This page index isn't for the locale we're importing, so skip it.
+                    continue
                 self.create_content_page_index_from_row(row)
             elif row.is_content_page:
                 self.create_shadow_content_page_from_row(row)
@@ -76,11 +91,14 @@ class ContentImporter:
 
     def save_pages(self) -> None:
         for i, page in enumerate(self.shadow_pages.values()):
+            if self.locale and page.locale != self.locale:
+                # This page isn't for the locale we're importing, so skip it.
+                continue
             if page.parent:
                 # TODO: We should need to use something unique for `parent`
-                parent = Page.objects.get(title=page.parent, locale=self.locale)
+                parent = Page.objects.get(title=page.parent, locale=page.locale)
             else:
-                parent = self.home_page
+                parent = self.home_page(page.locale)
             page.save(parent)
             self.set_progress("Importing pages", 10 + 70 * i // len(self.shadow_pages))
 
@@ -138,9 +156,8 @@ class ContentImporter:
         ContentPage.objects.all().delete()
         ContentPageIndex.objects.all().delete()
 
-    @cached_property
-    def home_page(self) -> HomePage:
-        return HomePage.objects.get(locale=self.locale)
+    def home_page(self, locale: Locale) -> HomePage:
+        return HomePage.objects.get(locale=locale)
 
     def create_content_page_index_from_row(self, row: "ContentRow") -> None:
         try:
@@ -150,15 +167,19 @@ class ContentImporter:
         index.title = row.web_title
         if row.translation_tag:
             index.translation_key = row.translation_tag
+        language_code = language_code_from_display_name(row.locale)
+        locale = Locale.objects.get(language_code=language_code)
         with contextlib.suppress(NodeAlreadySaved):
-            self.home_page.add_child(instance=index)
+            self.home_page(locale).add_child(instance=index)
 
         index.save_revision().publish()
 
     def create_shadow_content_page_from_row(self, row: "ContentRow") -> None:
+        language_code = language_code_from_display_name(row.locale)
         page = ShadowContentPage(
             slug=row.slug,
             title=row.web_title,
+            locale=Locale.objects.get(language_code=language_code),
             subtitle=row.web_subtitle,
             body=row.web_body,
             enable_web=bool(row.web_body),
@@ -177,6 +198,7 @@ class ContentImporter:
             if row.is_whatsapp_template_message:
                 page.is_whatsapp_template = True
                 page.whatsapp_template_name = row.whatsapp_template_name
+                page.whatsapp_template_category = row.whatsapp_template_category
             # TODO: Media
             # Currently media is exported as a URL, which just has an ID. This doesn't
             # actually help us much, as IDs can differ between instances, so we need
@@ -241,8 +263,9 @@ class ContentImporter:
 # do a single write to the database from, and encapsulate all that complexity
 @dataclass(slots=True)
 class ShadowContentPage:
-    slug: str = ""
-    parent: str = ""
+    slug: str
+    parent: str
+    locale: Locale | None = None
     enable_web: bool = False
     title: str = ""
     subtitle: str = ""
@@ -252,6 +275,7 @@ class ShadowContentPage:
     whatsapp_title: str = ""
     whatsapp_body: list["ShadowWhatsappBlock"] = field(default_factory=list)
     whatsapp_template_name: str = ""
+    whatsapp_template_category: str = "UTILITY"
     enable_messenger: bool = False
     messenger_title: str = ""
     messenger_body: list["ShadowMessengerBlock"] = field(default_factory=list)
@@ -295,6 +319,7 @@ class ShadowContentPage:
         page.is_whatsapp_template = self.is_whatsapp_template
         page.whatsapp_title = self.whatsapp_title
         page.whatsapp_template_name = self.whatsapp_template_name
+        page.whatsapp_template_category = self.whatsapp_template_category
         page.whatsapp_body.clear()
         for message in self.formatted_whatsapp_body:
             page.whatsapp_body.append(("Whatsapp_Message", message))
@@ -430,6 +455,7 @@ class ContentRow:
     whatsapp_title: str = ""
     whatsapp_body: str = ""
     whatsapp_template_name: str = ""
+    whatsapp_template_category: str = ""
     example_values: list[str] = field(default_factory=list)
     variation_title: dict[str, str] = field(default_factory=dict)
     variation_body: str = ""

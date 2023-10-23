@@ -50,6 +50,7 @@ EXPORT_FIELDNAMES = [
     "whatsapp_title",
     "whatsapp_body",
     "whatsapp_template_name",
+    "whatsapp_template_category",
     "example_values",
     "variation_title",
     "variation_body",
@@ -74,7 +75,7 @@ logger = getLogger(__name__)
 
 
 @transaction.atomic
-def import_content(file, filetype, progress_queue, purge=True, locale="en"):
+def import_content(file, filetype, progress_queue, purge=True, locale=None):
     from .import_content_pages import ContentImporter
 
     importer = ContentImporter(file.read(), filetype, progress_queue, purge, locale)
@@ -239,6 +240,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             return page
 
         whatsapp_template_name = row.get("whatsapp_template_name", "")
+        whatsapp_template_category = row.get("whatsapp_template_category") or "UTILITY"
 
         if not page:
             return ContentPage(
@@ -250,6 +252,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
                     whatsapp_messages, "Whatsapp_Message", variation_messages
                 ),
                 whatsapp_template_name=whatsapp_template_name,
+                whatsapp_template_category=whatsapp_template_category,
                 is_whatsapp_template=bool(whatsapp_template_name),
                 locale=home_page.locale,
             )
@@ -260,6 +263,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
                 whatsapp_messages, "Whatsapp_Message", variation_messages
             )
             page.whatsapp_template_name = whatsapp_template_name
+            page.whatsapp_template_category = whatsapp_template_category
             page.is_whatsapp_template = bool(whatsapp_template_name)
             return page
 
@@ -309,6 +313,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             "whatsapp_title",
             "whatsapp_body",
             "whataspp_template_name",
+            "whatsapp_template_category",
             "example_values",
             "variation_title",
             "variation_body",
@@ -499,6 +504,7 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
         "whatsapp_title": 118,
         "whatsapp_body": 370,
         "whatsapp_template_name": 118,
+        "whatsapp_template_category": 118,
         "example_values": 118,
         "variation_title": 118,
         "variation_body": 370,
@@ -936,6 +942,7 @@ class ContentSheetRow:
     whatsapp_title: str = ""
     whatsapp_body: str = ""
     whatsapp_template_name: str = ""
+    whatsapp_template_category: str = ""
     messenger_title: str = ""
     messenger_body: str = ""
     viber_title: str = ""
@@ -999,6 +1006,9 @@ class ContentSheetRow:
             content_sheet_row.web_subtitle = page.subtitle
             content_sheet_row.web_body = str(page.body)
             content_sheet_row.whatsapp_template_name = page.whatsapp_template_name
+            content_sheet_row.whatsapp_template_category = (
+                page.whatsapp_template_category
+            )
             content_sheet_row.whatsapp_title = page.whatsapp_title
             content_sheet_row.messenger_title = page.messenger_title
             content_sheet_row.viber_title = page.viber_title
@@ -1066,6 +1076,7 @@ class ContentSheetRow:
             self.whatsapp_title,
             self.whatsapp_body,
             self.whatsapp_template_name,
+            self.whatsapp_template_category,
             self.example_values,
             self.variation_title,
             self.variation_body,

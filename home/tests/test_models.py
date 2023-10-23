@@ -4,8 +4,15 @@ from django.test import TestCase, override_settings
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
 
-from home.models import GoToPageButton, NextMessageButton, PageView, WhatsappBlock
+from home.models import (
+    GoToPageButton,
+    HomePage,
+    NextMessageButton,
+    PageView,
+    WhatsappBlock,
+)
 
+from .page_builder import PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
 
 
@@ -53,6 +60,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_with(
             f"WA_Title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
+            "UTILITY",
             [],
             None,
             [],
@@ -65,6 +73,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_with(
             f"WA_Title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
+            "UTILITY",
             ["button 1", "button 2"],
             None,
             [],
@@ -79,6 +88,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_with(
             f"WA_Title_{page.get_latest_revision().id}",
             "Test WhatsApp Message with two variables, {{1}} and {{2}}",
+            "UTILITY",
             [],
             None,
             [],
@@ -95,6 +105,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             f"WA_Title_{page.get_latest_revision().pk}",
             "Test WhatsApp Message 1",
+            "UTILITY",
             ["button 1", "button 2"],
             None,
             [],
@@ -109,6 +120,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             expected_title,
             "Test WhatsApp Message 2",
+            "UTILITY",
             ["button 1", "button 2"],
             None,
             [],
@@ -130,6 +142,7 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
+            "UTILITY",
             ["button 1", "button 2"],
             None,
             [],
@@ -164,10 +177,63 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
+            "UTILITY",
             ["button 1", "button 2"],
             None,
             [],
         )
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_submitted_with_no_whatsapp_previous_revision(
+        self, mock_create_whatsapp_template
+    ):
+        """
+        If the previous revision didn't have any whatsapp messages, it should still
+        successfully submit a whatsapp template
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[],
+        )
+        wa_block = WABody("WA Title", [WABlk("Test WhatsApp Message 1")])
+        wa_block.set_on(page)
+        page.is_whatsapp_template = True
+        page.save_revision()
+
+        expected_template_name = f"WA_Title_{page.get_latest_revision().pk}"
+        mock_create_whatsapp_template.assert_called_once_with(
+            expected_template_name,
+            "Test WhatsApp Message 1",
+            "UTILITY",
+            [],
+            None,
+            [],
+        )
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_not_submitted_with_no_message(
+        self, mock_create_whatsapp_template
+    ):
+        """
+        If the page doesn't have any whatsapp messages, then it shouldn't be submitted
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[],
+            whatsapp_template_name="WA_Title_1",
+        )
+
+        mock_create_whatsapp_template.assert_not_called()
 
 
 class WhatsappBlockTests(TestCase):

@@ -39,7 +39,12 @@ def filter_both(
 @filter_both
 def add_new_fields(entry: ExpDict) -> ExpDict:
     # FIXME: This should probably be in a separate test for importing old exports.
-    return {"whatsapp_template_name": "", **entry}
+    return {
+        "whatsapp_template_name": "",
+        **entry,
+        "whatsapp_template_category": entry.get("whatsapp_template_category")
+        or "UTILITY",
+    }
 
 
 def remove_translation_tag_from_tags(src: ExpDict, dst: ExpDict) -> ExpPair:
@@ -485,10 +490,8 @@ class ImportExportFixture:
         Export all content, then immediately reimport it.
         """
         self.import_content(self.export_content())
-        
 
-
-    def get_page_json(self) -> DbDicts:
+    def get_page_json(self, locale: str | None = None) -> DbDicts:
         """
         Serialize all ContentPage and ContentPageIndex instances and normalize
         things that vary across import/export.
@@ -499,6 +502,9 @@ class ImportExportFixture:
                 pages = ff(pages)
         for ff in PAGE_FILTER_FUNCS:
             pages = ff(pages)
+        if locale is not None:
+            loc = Locale.objects.get(language_code=locale)
+            pages = [p for p in pages if p["fields"]["locale"] == loc.id]
         return sorted(pages, key=lambda p: p["pk"])
 
     def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
@@ -522,7 +528,7 @@ class TestImportExportRoundtrip:
         container for related tests.
     """
 
-    def test_roundtrip_csv_simple(self, csv_impexp: ImportExportFixture) -> None:
+    def test_roundtrip_simple(self, csv_impexp: ImportExportFixture) -> None:
         """
         Importing a simple CSV file and then exporting it produces a duplicate
         of the original file.
@@ -543,7 +549,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_csv_less_simple(self, csv_impexp: ImportExportFixture) -> None:
+    def test_roundtrip_less_simple(self, csv_impexp: ImportExportFixture) -> None:
         """
         Importing a less simple CSV file and then exporting it produces a
         duplicate of the original file.
@@ -561,10 +567,10 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_csv_translations(self, csv_impexp: ImportExportFixture) -> None:
+    def test_roundtrip_translations_sep(self, csv_impexp: ImportExportFixture) -> None:
         """
-        Importing a CSV file containing translations and then exporting it
-        produces a duplicate of the original file.
+        Importing a CSV file split into separate parts per locale and then
+        exporting it produces a duplicate of the original file.
 
         (This uses exported_content_20230906-translations.csv and the two
         language-specific subsets thereof.)
@@ -585,6 +591,59 @@ class TestImportExportRoundtrip:
         csv_bytes = Path(
             "home/tests/exported_content_20230906-translations.csv"
         ).read_bytes()
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+    def test_roundtrip_translations_en(self, csv_impexp: ImportExportFixture) -> None:
+        """
+        Importing a CSV file with multiple languages and specifying a locale
+        and then exporting it produces a duplicate of the original file but
+        with only pages from the specifyied specified locale included.
+
+        (This uses exported_content_20230906-translations.csv and the en
+        language-specific subset thereof.)
+
+        FIXME:
+         * Slugs need to either be unique per site/deployment or the importer
+           needs to handle them only being unique per locale.
+        """
+
+        # Create a new homepage for Portuguese.
+        if csv_impexp.importer == "old":
+            pytest.skip("Old importer can't handle multiple languages at once.")
+
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        set_profile_field_options()
+        csv_impexp.import_file(
+            "exported_content_20230906-translations.csv", locale="en"
+        )
+        csv_bytes = Path("home/tests/translations-en.csv").read_bytes()
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+    def test_roundtrip_translations(self, csv_impexp: ImportExportFixture) -> None:
+        """
+        Importing a CSV file containing translations and then exporting it
+        produces a duplicate of the original file.
+
+        (This uses exported_content_20230906-translations.csv.)
+
+        FIXME:
+         * Slugs need to either be unique per site/deployment or the importer
+           needs to handle them only being unique per locale.
+        """
+        if csv_impexp.importer == "old":
+            pytest.skip("Old importer can't handle multiple languages at once.")
+        # Create a new homepage for Portuguese.
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        set_profile_field_options()
+        csv_bytes = csv_impexp.import_file("exported_content_20230906-translations.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
@@ -953,8 +1012,83 @@ class TestExportImportRoundtrip:
         impexp.import_content(content_en, locale="en")
         impexp.import_content(content_pt, locale="pt", purge=False)
         imported = impexp.get_page_json()
-        assert imported == orig
-    
+        assert imported == orig    
+
+    def test_translations_en(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages in multiple languages are that are imported with a locale
+        specified have pages in that locale preserved and all other locales are
+        removed.
+        """
+        if impexp.importer == "old":
+            pytest.skip("Old importer can't handle multiple languages at once.")
+
+        # Create a new homepage for Portuguese.
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        # English pages
+        home_en = HomePage.objects.get(locale__language_code="en")
+        _app_rem = PageBuilder.build_cpi(
+            parent=home_en, slug="appointment-reminders", title="Appointment reminders"
+        )
+        _sbm = PageBuilder.build_cpi(
+            parent=home_en, slug="stage-based-messages", title="Stage-based messages"
+        )
+        _him = PageBuilder.build_cpi(
+            parent=home_en, slug="health-info-messages", title="Health info messages"
+        )
+        _wtt = PageBuilder.build_cpi(
+            parent=home_en,
+            slug="whatsapp-template-testing",
+            title="whatsapp template testing",
+        )
+        imp_exp = PageBuilder.build_cpi(
+            parent=home_en, slug="import-export", title="Import Export"
+        )
+        non_templ_wablks = [
+            WABlk("this is a non template message"),
+            WABlk("this message has a doc"),
+            WABlk("this message comes with audio"),
+        ]
+        non_tmpl = PageBuilder.build_cp(
+            parent=imp_exp,
+            slug="non-template",
+            title="Non template messages",
+            bodies=[WABody("non template OCS", non_templ_wablks)],
+        )
+
+        # Portuguese pages
+        home_pt = HomePage.objects.get(locale__language_code="pt")
+        imp_exp_pt = PageBuilder.build_cpi(
+            parent=home_pt,
+            slug="import-export-pt",
+            title="Import Export (pt)",
+            translated_from=imp_exp,
+        )
+        non_templ_wablks_pt = [
+            WABlk("this is a non template message (pt)"),
+            WABlk("this message has a doc (pt)"),
+            WABlk("this message comes with audio (pt)"),
+        ]
+        non_tmpl_pt = PageBuilder.build_cp(
+            parent=imp_exp_pt,
+            slug="non-template-pt",
+            title="Non template messages",
+            bodies=[WABody("non template OCS", non_templ_wablks_pt)],
+            translated_from=non_tmpl,
+        )
+
+        assert imp_exp.translation_key == imp_exp_pt.translation_key
+        assert non_tmpl.translation_key == non_tmpl_pt.translation_key
+
+        orig_en = impexp.get_page_json(locale="en")
+        content = impexp.export_content()
+
+        impexp.import_content(content, locale="en")
+        imported = impexp.get_page_json()
+        assert imported == orig_en
+
     def test_example_values(self, impexp: ImportExportFixture) -> None:
         """
         ContentPages with example values in whatsapp messages are preserved

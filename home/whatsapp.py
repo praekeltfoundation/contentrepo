@@ -8,7 +8,7 @@ from wagtail.images import get_image_model
 
 
 def create_whatsapp_template(
-    name, body, quick_replies=(), image_id=None, example_values=None
+    name, body, category, quick_replies=(), image_id=None, example_values=None
 ):
     url = urljoin(
         settings.WHATSAPP_API_URL,
@@ -49,7 +49,7 @@ def create_whatsapp_template(
         )
 
     data = {
-        "category": "UTILITY",
+        "category": category,
         "name": name.lower(),
         "language": "en_US",
         "components": components,
