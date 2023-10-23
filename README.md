@@ -92,6 +92,26 @@ Authentication is required to access the API. Session, basic, and token authenti
 
 To create an authentication token, you can do so via the Django Admin (available at the `/django-admin` endpoint), or by `POST`ing the username and password of the user you want to generate a token for to the `/api/v2/token/` endpoint.
 
+## Running in Production
+There is a [docker image](https://github.com/praekeltfoundation/contentrepo/pkgs/container/contentrepo) that can be used to easily run this service. It uses the following environment variables for configuration:
+
+| Variable      | Description |
+| ----------    | ----------- |
+| SECRET_KEY    | The django secret key, set to a long, random sequence of characters |
+| DATABASE_URL  | Where to find the database. Set to `postgresql://host:port/db` for a postgresql database |
+| ALLOWED_HOSTS | Comma separated list of hostnames for this service, eg. `host1.example.org,host2.example.org` |
+| CSRF_TRUSTED_ORIGINS | A list of trusted origins for unsafe requests  |
+| REDIS_LOCATION | Where to find redis, format: redis://host:post/db |
+| SENTRY_DSN | Where to send exceptions to |
+| AWS_ACCESS_KEY_ID | Specifies an AWS access key associated with an IAM account |
+| AWS_SECRET_ACCESS_KEY | Specifies the secret key associated with the access key. This is essentially the "password" for the access key |
+| AWS_S3_REGION_NAME | Name of the AWS S3 region to use (eg. eu-west-1). |
+| AWS_STORAGE_BUCKET_NAME | The name of the S3 bucket that will host the files. |
+| WHATSAPP_CREATE_TEMPLATES | Should contentrepo submit templates to WhatsApp for creation. True/False |
+| WHATSAPP_API_URL | WhatsApp API URL |
+| WHATSAPP_ACCESS_TOKEN | WhatsApp API Token |
+| FB_BUSINESS_ID | Business ID for Meta business manager |
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
