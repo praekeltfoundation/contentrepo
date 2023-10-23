@@ -349,6 +349,7 @@ def remove_button_ids(page: DbDict) -> DbDict:
                 button.pop("id", None)
     return page
 
+
 @per_page
 def remove_example_value_ids(page: DbDict) -> DbDict:
     if "whatsapp_body" in page["fields"]:
@@ -374,7 +375,7 @@ PAGE_FILTER_FUNCS = [
     clean_web_paragraphs,
     null_to_emptystr,
     remove_button_ids,
-    remove_example_value_ids
+    remove_example_value_ids,
 ]
 
 OLD_PAGE_FILTER_FUNCS = [
@@ -547,6 +548,8 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("content2.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        print(f"SRC = {src}")
+        print(f"DST = {dst}")
         assert dst == src
 
     def test_roundtrip_less_simple(self, csv_impexp: ImportExportFixture) -> None:
@@ -1012,7 +1015,7 @@ class TestExportImportRoundtrip:
         impexp.import_content(content_en, locale="en")
         impexp.import_content(content_pt, locale="pt", purge=False)
         imported = impexp.get_page_json()
-        assert imported == orig    
+        assert imported == orig
 
     def test_translations_en(self, impexp: ImportExportFixture) -> None:
         """
@@ -1095,11 +1098,11 @@ class TestExportImportRoundtrip:
         across export/import.
         """
         if impexp.importer == "old":
-            pytest.skip("Old importer can't handle example values.")    
+            pytest.skip("Old importer can't handle example values.")
 
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        
+
         ha_menu = PageBuilder.build_cp(
             parent=main_menu,
             slug="ha-menu",
@@ -1112,12 +1115,17 @@ class TestExportImportRoundtrip:
             parent=ha_menu,
             slug="health-info",
             title="health info",
-            bodies=[WABody("health info", [WABlk("*Health information* WA", example_values=example_values)])],
+            bodies=[
+                WABody(
+                    "health info",
+                    [WABlk("*Health information* WA", example_values=example_values)],
+                )
+            ],
             whatsapp_template_name="template-health-info",
         )
 
         orig = impexp.get_page_json()
         impexp.export_reimport()
         imported = impexp.get_page_json()
-        #print(f"EXP = {content}")
+        # print(f"EXP = {content}")
         assert imported == orig

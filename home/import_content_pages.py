@@ -490,7 +490,9 @@ class ContentRow:
             quick_replies=deserialise_list(row.pop("quick_replies", "")),
             triggers=deserialise_list(row.pop("triggers", "")),
             related_pages=deserialise_list(row.pop("related_pages", "")),
-            example_values=json.loads(row.pop("example_values", "")) if row.get("example_values") else [],
+            example_values=json.loads(row.pop("example_values", ""))
+            if row.get("example_values")
+            else [],
             buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
             **row,
         )

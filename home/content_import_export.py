@@ -805,9 +805,11 @@ class Message:
             elif button.block_type == "go_to_page":
                 result.append(cls.serialise_go_to_page_button(button))
         return dumps(result)
-    
+
     @classmethod
-    def serialise_example_values(cls, example_values: blocks.StreamValue.StreamChild) -> str:
+    def serialise_example_values(
+        cls, example_values: blocks.StreamValue.StreamChild
+    ) -> str:
         return dumps(list(example_values))
 
     @classmethod
@@ -1281,11 +1283,15 @@ class ContentSheetRow:
             return buttons
         return ""
 
-    def _get_example_values(self, message_container: MessageContainer, index: int = 0) -> str:
+    def _get_example_values(
+        self, message_container: MessageContainer, index: int = 0
+    ) -> str:
         """Iterate over a dict of all whatsapp, messenger and viber messages to find example_values,
         if example_values are found in any of the platforms, the values will be saved to the sheet
         """
-        example_values = message_container.find_first_attachment(index, "example_values")
+        example_values = message_container.find_first_attachment(
+            index, "example_values"
+        )
         if example_values:
             return example_values
         return ""
