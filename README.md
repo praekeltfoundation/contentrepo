@@ -50,6 +50,31 @@ The current LTS release is: 1.0
     - They are built off of the `main` git branch
 
 ## Setting up locally
+
+### Redis
+
+For Linux and WSL2 (Windows Subsystem for Linux)
+ Creating a docker container with the ports exposed, called `cr_redis`
+`docker run -d -p 6379:6379 --name cr_redis redis`
+
+To then run the docker container,
+`docker run cr_redis`
+
+This can work for mac and (possibly Windows) by setting the environment variable `DATABASE_URL=postgres://postgres@0.0.0.0/contentrepo`
+
+### Postgres
+
+For Linux and WSL2 (Windows Subsystem for Linux)
+Creating a docker container that doesnt require a password and matches the setup of the database in settings
+`docker run --name cr_postgres -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_USER=postgres -e POSTGRES_DB=contentrepo -d postgres:latest`
+
+To then run the docker container,
+`docker run cr_postgres`
+
+This can work for mac and (possibly Windows) by setting the environment variable `DATABASE_URL=postgres://postgres@0.0.0.0/contentrepo`
+
+### Wagtail server
+
 Run the following in a virtual environment
 ```bash
 pip install -e .[dev]
