@@ -44,6 +44,8 @@ def add_new_fields(entry: ExpDict) -> ExpDict:
         **entry,
         "whatsapp_template_category": entry.get("whatsapp_template_category")
         or "UTILITY",
+        "example_values": entry.get("example_values")
+        or '[]',
     }
 
 
@@ -289,6 +291,7 @@ def add_body_fields(page: DbDict) -> DbDict:
                     "image": None,
                     "media": None,
                     "next_prompt": "",
+                    "example_values": [],
                     "variation_messages": [],
                 },
             )
@@ -548,8 +551,6 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("content2.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        print(f"SRC = {src}")
-        print(f"DST = {dst}")
         assert dst == src
 
     def test_roundtrip_less_simple(self, csv_impexp: ImportExportFixture) -> None:
@@ -1127,5 +1128,4 @@ class TestExportImportRoundtrip:
         orig = impexp.get_page_json()
         impexp.export_reimport()
         imported = impexp.get_page_json()
-        # print(f"EXP = {content}")
         assert imported == orig
