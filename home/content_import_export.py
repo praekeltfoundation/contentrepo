@@ -51,6 +51,7 @@ EXPORT_FIELDNAMES = [
     "whatsapp_body",
     "whatsapp_template_name",
     "whatsapp_template_category",
+    "example_values",
     "variation_title",
     "variation_body",
     "messenger_title",
@@ -313,6 +314,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             "whatsapp_body",
             "whataspp_template_name",
             "whatsapp_template_category",
+            "example_values",
             "variation_title",
             "variation_body",
             "next_prompt",
@@ -405,6 +407,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
                 break
             if next_row["whatsapp_body"] not in ["", None]:
                 whatsapp_messages.append(next_row["whatsapp_body"])
+
             if next_row["variation_body"] not in ["", None]:
                 variation_messages.append(
                     {
@@ -503,6 +506,7 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
         "whatsapp_body": 370,
         "whatsapp_template_name": 118,
         "whatsapp_template_category": 118,
+        "example_values": 118,
         "variation_title": 118,
         "variation_body": 370,
         "messenger_title": 118,
@@ -748,6 +752,7 @@ class Message:
     media_name: str = None
     document_name: str = None
     next_prompt: str = None
+    example_values: str = None
     buttons: str = None
 
     @classmethod
@@ -785,6 +790,11 @@ class Message:
             if "buttons" in platform_body_element.value
             else ""
         )
+        message.example_values = (
+            cls.serialise_example_values(platform_body_element.value["example_values"])
+            if "example_values" in platform_body_element.value
+            else ""
+        )
         return message
 
     @classmethod
@@ -796,6 +806,12 @@ class Message:
             elif button.block_type == "go_to_page":
                 result.append(cls.serialise_go_to_page_button(button))
         return dumps(result)
+
+    @classmethod
+    def serialise_example_values(
+        cls, example_values: blocks.StreamValue.StreamChild
+    ) -> str:
+        return dumps(list(example_values))
 
     @classmethod
     def serialise_next_message_button(
@@ -945,6 +961,7 @@ class ContentSheetRow:
     doc_link: str = ""
     media_link: str = ""
     related_pages: str = ""
+    example_values: str = ""
     variation_body: str = ""
     variation_title: str = ""
     tuple_of_extra_rows: tuple = ()
@@ -1063,6 +1080,7 @@ class ContentSheetRow:
             self.whatsapp_body,
             self.whatsapp_template_name,
             self.whatsapp_template_category,
+            self.example_values,
             self.variation_title,
             self.variation_body,
             self.messenger_title,
@@ -1134,6 +1152,7 @@ class ContentSheetRow:
             self.viber_body = message_container.viber[0].body
 
         self.next_prompt = self._get_next_prompt(message_container)
+        self.example_values = self._get_example_values(message_container)
         self.buttons = self._get_buttons(message_container)
         self.doc_link = self._get_doc_link(message_container)
         self.image_link = self._get_image_link(message_container)
@@ -1263,4 +1282,17 @@ class ContentSheetRow:
         buttons = message_container.find_first_attachment(index, "buttons")
         if buttons:
             return buttons
+        return ""
+
+    def _get_example_values(
+        self, message_container: MessageContainer, index: int = 0
+    ) -> str:
+        """Iterate over a dict of all whatsapp, messenger and viber messages to find example_values,
+        if example_values are found in any of the platforms, the values will be saved to the sheet
+        """
+        example_values = message_container.find_first_attachment(
+            index, "example_values"
+        )
+        if example_values:
+            return example_values
         return ""

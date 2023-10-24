@@ -79,6 +79,7 @@ class WABlk(ContentBlock):
     # TODO: More body things.
     next_prompt: str | None = None
     variation_messages: list[VarMsg] = field(default_factory=list)
+    example_values: list[str] = field(default_factory=list)
     buttons: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
