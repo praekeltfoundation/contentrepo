@@ -44,8 +44,7 @@ def add_new_fields(entry: ExpDict) -> ExpDict:
         **entry,
         "whatsapp_template_category": entry.get("whatsapp_template_category")
         or "UTILITY",
-        "example_values": entry.get("example_values")
-        or '[]',
+        "example_values": entry.get("example_values") or "[]",
     }
 
 
