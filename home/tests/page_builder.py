@@ -45,6 +45,7 @@ class ContentBlock:
     BLOCK_TYPE: ClassVar[type[StructBlock]]
 
     message: str
+    image: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -84,7 +85,7 @@ class WABlk(ContentBlock):
 
     def to_dict(self) -> dict[str, Any]:
         varmsgs = [vm.to_dict() for vm in self.variation_messages]
-        return asdict(self) | {"variation_messages": varmsgs}
+        return super().to_dict() | {"variation_messages": varmsgs}
 
 
 @dataclass
