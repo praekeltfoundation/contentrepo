@@ -401,7 +401,7 @@ class ShadowWhatsappBlock:
     @property
     def wagtail_format(
         self,
-    ) -> dict[str, str | list[dict[str, str | list[dict[str, str]]]]]:
+    ) -> dict[str, str | list[dict[str, str | list[dict[str, str]]]] | list[str]]:
         return {
             "message": self.message,
             "next_prompt": self.next_prompt,
