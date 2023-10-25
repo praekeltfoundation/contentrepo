@@ -75,7 +75,7 @@ class ExportRow:
     def to_tuple(self) -> tuple[str | int, ...]:
         return astuple(self)
 
-    def new_message_row(self, **fields: dict[str, str]) -> "ExportRow":
+    def new_message_row(self) -> "ExportRow":
         return ExportRow(message=self.message + 1, page_id=self.page_id, slug=self.slug)
 
     def new_variation_row(self, variation: VariationBlock) -> "ExportRow":
