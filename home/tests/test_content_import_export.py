@@ -1110,7 +1110,7 @@ class TestExportImportRoundtrip:
             bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
         )
 
-        example_values = ["E v 1", "E v 2"]
+        example_values = ["Example value 1", "Example value 2"]
         _health_info = PageBuilder.build_cp(
             parent=ha_menu,
             slug="health-info",
