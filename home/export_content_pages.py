@@ -46,6 +46,7 @@ class ExportRow:
     whatsapp_body: str = ""
     whatsapp_template_name: str = ""
     whatsapp_template_category: str = ""
+    example_values: str = ""
     variation_title: str = ""
     variation_body: str = ""
     messenger_title: str = ""
@@ -113,6 +114,8 @@ class ExportRow:
                 self.next_prompt = whatsapp.value["next_prompt"]
             if "buttons" in whatsapp.value:
                 self.buttons = self.serialise_buttons(whatsapp.value["buttons"])
+            if "example_values" in whatsapp.value:
+                self.example_values = ", ".join(whatsapp.value["example_values"])
 
     @staticmethod
     def serialise_buttons(buttons: blocks.StreamValue.StreamChild) -> str:
