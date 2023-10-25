@@ -227,7 +227,7 @@ class WhatsappBlock(blocks.StructBlock):
         errors = {}
         example_values = result["example_values"]
         for ev in example_values:
-            if ev.find(",") != -1:
+            if "," in ev:
                 errors["example_values"] = ValidationError(
                     "Example values cannot contain commas"
                 )
