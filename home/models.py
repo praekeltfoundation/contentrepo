@@ -228,8 +228,9 @@ class WhatsappBlock(blocks.StructBlock):
         example_values = result["example_values"]
         for ev in example_values:
             if ev.find(",") != -1:
-                errors["example_values"] = ValidationError("Example values cannot contain commas"
-                )              
+                errors["example_values"] = ValidationError(
+                    "Example values cannot contain commas"
+                )
         if num_vars_in_msg > 0:
             num_example_values = len(example_values)
             if num_vars_in_msg != num_example_values:

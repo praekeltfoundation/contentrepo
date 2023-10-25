@@ -483,6 +483,7 @@ class ContentRow:
             for key, value in row.items()
             if value and key in class_fields
         }
+
         return cls(
             page_id=int(row.pop("page_id")) if row.get("page_id") else None,
             variation_title=deserialise_dict(row.pop("variation_title", "")),
@@ -490,9 +491,7 @@ class ContentRow:
             quick_replies=deserialise_list(row.pop("quick_replies", "")),
             triggers=deserialise_list(row.pop("triggers", "")),
             related_pages=deserialise_list(row.pop("related_pages", "")),
-            example_values=json.loads(row.pop("example_values", ""))
-            if row.get("example_values")
-            else [],
+            example_values=deserialise_list(row.pop("example_values", "")),
             buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
             **row,
         )
