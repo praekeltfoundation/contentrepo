@@ -22,10 +22,10 @@ jobs:
       redis:
         image: redis:${{ matrix.redis-version }}
         ports:
-          - 6372:6372
+          - 6379:6379
     env:
       CONTENTREPO_DATABASE: postgres://postgres:postgres@localhost:5432/contentrepo
-      CACHE_URL: redis://localhost:6372/0
+      CACHE_URL: redis://localhost:6379/0
 
     steps:
     - uses: actions/checkout@v4
