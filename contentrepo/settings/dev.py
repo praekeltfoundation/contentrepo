@@ -16,10 +16,6 @@ WHATSAPP_ACCESS_TOKEN = "fake-access-token"  # noqa: S105 (This is a test config
 FB_BUSINESS_ID = "27121231234"
 
 
-# NOTE: We don't want the cache getting in the way during tests, but this also
-# means we're not testing the cache behaviour.
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
-    }
-}
+# We default to using local memory for dev and tests, so that Redis isn't a dependancy
+# We test against Redis in the CI
+CACHES = {"default": env.cache("CACHE_URL", default="locmemcache://")}

@@ -9,6 +9,7 @@ jobs:
       matrix:
         postgres_version: ['12', '13', '14']
         python-version: [3.10.6]
+        redis-version: ['7.2']
     services:
       postgres:
         image: postgres:${{ matrix.postgres_version }}
@@ -18,8 +19,13 @@ jobs:
           POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
+      redis:
+        image: redis:${{ matrix.redis-version }}
+        ports:
+          - 6379:6379
     env:
       CONTENTREPO_DATABASE: postgres://postgres:postgres@localhost:5432/contentrepo
+      CACHE_URL: redis://localhost:6379/0
 
     steps:
     - uses: actions/checkout@v4
