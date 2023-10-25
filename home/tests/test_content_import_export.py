@@ -573,6 +573,19 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
+    def test_roundtrip_multiple_messages(self, csv_impexp: ImportExportFixture) -> None:
+        """
+        Importing a CSV file containing multiple messages of each type for a
+        page and then exporting it produces a duplicate of the original file.
+
+        (This uses multiple_messages.csv.)
+        """
+        set_profile_field_options()
+        csv_bytes = csv_impexp.import_file("multiple_messages.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
     def test_roundtrip_translations_sep(self, csv_impexp: ImportExportFixture) -> None:
         """
         Importing a CSV file split into separate parts per locale and then
@@ -794,9 +807,9 @@ class TestExportImportRoundtrip:
             slug="health-info",
             title="health info",
             bodies=[
-                WABody("health info", [WABlk(m) for m in ["wa1", "wa2", "wa3"]]),
-                MBody("health info", [MBlk(m) for m in ["m1", "m2", "m3"]]),
-                VBody("health info", [VBlk(m) for m in ["v1", "v2", "v3"]]),
+                WABody("health info", [WABlk(f"wa{i}") for i in [1, 2, 3]]),
+                MBody("health info", [MBlk(f"m{i}") for i in [1, 2, 3, 4]]),
+                VBody("health info", [VBlk(f"v{i}") for i in [1, 2, 3, 4, 5]]),
             ],
         )
 
