@@ -83,14 +83,11 @@ def import_content(file, filetype, progress_queue, purge=True, locale=None) -> N
 
 
 def export_xlsx_content(queryset: PageQuerySet, response: HttpResponse) -> None:
-    # from .export_content_pages import ContentExporter, ExportWriter
+    from .export_content_pages import ContentExporter, ExportWriter
 
-    # exporter = ContentExporter(queryset)
-    # export_rows = exporter.perform_export()
-    # ExportWriter(export_rows).write_xlsx(response)
-
-    # FIXME: Use the new exporter instead.
-    old_export_xlsx_content(queryset, response)
+    exporter = ContentExporter(queryset)
+    export_rows = exporter.perform_export()
+    ExportWriter(export_rows).write_xlsx(response)
 
 
 def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:

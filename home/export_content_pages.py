@@ -1,9 +1,15 @@
+import copy
 import csv
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, astuple, dataclass, fields
 from itertools import zip_longest
 from json import dumps
+from math import ceil
 
 from django.http import HttpResponse  # type: ignore
+from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
+from openpyxl.utils import get_column_letter
+from openpyxl.workbook import Workbook
+from openpyxl.worksheet.worksheet import Worksheet
 from wagtail import blocks  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.query import PageQuerySet  # type: ignore
@@ -64,6 +70,9 @@ class ExportRow:
 
     def to_dict(self) -> dict[str, str | int]:
         return asdict(self)
+
+    def to_tuple(self) -> tuple[str | int, ...]:
+        return astuple(self)
 
     def new_message_row(self, **fields: dict[str, str]) -> "ExportRow":
         return ExportRow(message=self.message + 1, page_id=self.page_id, slug=self.slug)
@@ -206,7 +215,7 @@ class ContentExporter:
         FIXME:
          * The locale should be a language code rather than a language name to
            make importing less messy.
-         * We use use the parent slug (which is expected to be unique per
+         * We should use the parent slug (which is expected to be unique per
            locale (probably?)) instead of the parent title.
         """
         row = ExportRow(
@@ -248,4 +257,113 @@ class ExportWriter:
             writer.writerow(row.to_dict())
 
     def write_xlsx(self, response: HttpResponse) -> None:
-        raise NotImplementedError("TODO")
+        workbook = Workbook()
+        # We can't use workbook.active because the types don't match.
+        worksheet = workbook.worksheets[0]
+
+        worksheet.append(ExportRow.headings())
+        for row in self.rows:
+            worksheet.append(row.to_tuple())
+        _set_xlsx_styles(workbook, worksheet)
+        workbook.save(response)
+
+
+def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
+    """Sets the style for the workbook adding any formatting that will make the sheet more aesthetically pleasing"""
+    # Adjustment is because the size in openxlsx and google sheets are not equivalent
+    adjustment = 7
+    # Padding
+    sheet.insert_cols(1)
+
+    # Set columns based on best size
+
+    column_widths_in_pts = {
+        "structure": 110,
+        "message": 70,
+        "page_id": 110,
+        "slug": 110,
+        "parent": 110,
+        "web_title": 110,
+        "web_subtitle": 110,
+        "web_body": 370,
+        "whatsapp_title": 118,
+        "whatsapp_body": 370,
+        "whatsapp_template_name": 118,
+        "whatsapp_template_category": 118,
+        "variation_title": 118,
+        "variation_body": 370,
+        "messenger_title": 118,
+        "messenger_body": 370,
+        "viber_title": 118,
+        "viber_body": 370,
+        "translation_tag": 118,
+        "tags": 118,
+        "quick_replies": 118,
+        "triggers": 118,
+        "locale": 118,
+        "next_prompt": 118,
+        "buttons": 118,
+        "image_link": 118,
+        "doc_link": 118,
+        "media_link": 118,
+        "related": 118,
+    }
+
+    for index, column_width in enumerate(column_widths_in_pts.values(), 2):
+        sheet.column_dimensions[get_column_letter(index)].width = ceil(
+            column_width / adjustment
+        )
+
+    # Freeze heading row and side panel, 1 added because it freezes before the column
+    panel_column = get_column_letter(5)
+    sheet.freeze_panes = sheet[f"{panel_column}2"]
+
+    # Colours
+    blue = Color(rgb="0099CCFF")
+
+    # Boarders
+    left_border = Border(left=Side(border_style="thin", color="FF000000"))
+
+    # Fills
+    blue_fill = PatternFill(patternType="solid", fgColor=blue)
+
+    # Named Styles
+    header_style = NamedStyle(name="header_style")
+    menu_style = NamedStyle(name="menu_style")
+
+    # Set attributes to styles
+    header_style.font = Font(bold=True, size=10)
+    menu_style.fill = blue_fill
+    menu_style.font = Font(bold=True, size=10)
+
+    # Add named styles to wb
+    wb.add_named_style(header_style)
+    wb.add_named_style(menu_style)
+
+    # column widths
+
+    # Set menu style for any "Menu" row
+    for row in sheet.iter_rows():
+        if isinstance(row[1].value, str) and "Menu" in row[1].value:
+            for cell in row:
+                cell.style = menu_style
+
+    # Set header style for row 1 and 2
+    for row in sheet["1:2"]:
+        for cell in row:
+            cell.style = header_style
+
+    # Set dividing border for side panel
+    for cell in sheet[f"{panel_column}:{panel_column}"]:
+        cell.border = left_border
+
+    # set font on all cells initially to 10pt and row height
+    general_font = Font(size=10)
+    for index, row in enumerate(sheet.iter_rows()):
+        if index > 2:
+            sheet.row_dimensions[index].height = 60  # type: ignore # Bad annotation.
+        for cell in row:
+            cell.font = general_font
+            alignment = copy.copy(cell.alignment)
+            alignment.wrapText = True
+            cell.alignment = alignment
