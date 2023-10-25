@@ -177,15 +177,10 @@ WAGTAILADMIN_BASE_URL = os.environ.get("BASE_URL", "http://example.com")
 
 WAGTAILCONTENTIMPORT_DEFAULT_MAPPER = "home.mappers.ContentMapper"
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.environ.get("REDIS_LOCATION", "redis://127.0.0.1:6379/1"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-    }
-}
+if "REDIS_LOCATION" in os.environ:
+    os.environ["CACHE_URL"] = os.environ["REDIS_LOCATION"]
+
+CACHES = {"default": env.cache("CACHE_URL", default="redis://127.0.0.1:6379/1")}
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",

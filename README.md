@@ -53,6 +53,9 @@ The current LTS release is: 1.0
 
 ### Redis
 
+For development environments, Redis is optional, it will use an in-memory cache by
+default if the environment variable isn't specified.
+
 For Linux and WSL2 (Windows Subsystem for Linux)
  Creating a docker container with the ports exposed, called `cr_redis`
 `docker run -d -p 6379:6379 --name cr_redis redis`
@@ -60,7 +63,7 @@ For Linux and WSL2 (Windows Subsystem for Linux)
 To then run the docker container,
 `docker run cr_redis`
 
-This can work for mac and (possibly Windows) by setting the environment variable `DATABASE_URL=postgres://postgres@0.0.0.0/contentrepo`
+This can work for mac and (possibly Windows) by setting the environment variable `CACHE=redis://0.0.0.0:6379/0`
 
 ### Postgres
 
@@ -101,7 +104,7 @@ There is a [docker image](https://github.com/praekeltfoundation/contentrepo/pkgs
 | DATABASE_URL  | Where to find the database. Set to `postgresql://host:port/db` for a postgresql database |
 | ALLOWED_HOSTS | Comma separated list of hostnames for this service, eg. `host1.example.org,host2.example.org` |
 | CSRF_TRUSTED_ORIGINS | A list of trusted origins for unsafe requests  |
-| REDIS_LOCATION | Where to find redis, format: redis://host:post/db |
+| CACHE_URL | Where to find the cache backend, format: redis://host:post/db . See [the django-environ docs](https://django-environ.readthedocs.io/en/latest/types.html#environ-env-cache-url) for more cache backends. |
 | SENTRY_DSN | Where to send exceptions to |
 | AWS_ACCESS_KEY_ID | Specifies an AWS access key associated with an IAM account |
 | AWS_SECRET_ACCESS_KEY | Specifies the secret key associated with the access key. This is essentially the "password" for the access key |

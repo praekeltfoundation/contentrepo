@@ -1,5 +1,3 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -28,10 +26,6 @@ class ContentPagesViewSet(PagesAPIViewSet):
     )
     pagination_class = PageNumberPagination
 
-    @method_decorator(cache_page(60 * 60 * 2))
-    def get(self, request, *args, **kwargs):
-        super(ContentPagesViewSet, self).get(self, request, *args, **kwargs)
-
     def detail_view(self, request, pk):
         try:
             if "qa" in request.GET and request.GET["qa"] == "True":
@@ -47,7 +41,6 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
         return super().detail_view(request, pk)
 
-    @method_decorator(cache_page(60 * 60 * 2))
     def listing_view(self, request, *args, **kwargs):
         # If this request is flagged as QA then we should display the pages that have the filtering tags
         # or triggers in their draft versions
@@ -138,14 +131,6 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
     pagination_class = PageNumberPagination
     search_fields = ["name", "profile_fields"]
     filter_backends = (SearchFilter,)
-
-    @method_decorator(cache_page(60 * 60 * 2))
-    def get(self, request, *args, **kwargs):
-        super(OrderedContentSetViewSet, self).get(self, request, *args, **kwargs)
-
-    @method_decorator(cache_page(60 * 60 * 2))
-    def list(self, request, *args, **kwargs):
-        super(OrderedContentSetViewSet, self).list(self, request, *args, **kwargs)
 
 
 api_router = WagtailAPIRouter("wagtailapi")

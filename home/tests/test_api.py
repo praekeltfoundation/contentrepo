@@ -242,7 +242,7 @@ class PaginationTestCase(TestCase):
         self.assertEqual(content["body"]["text"]["value"]["message"], "WA Message 11")
 
     def test_number_of_queries(self):
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(8):
             self.client.get("/api/v2/pages/")
 
     def test_detail_view(self):
