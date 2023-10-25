@@ -63,7 +63,7 @@ For Linux and WSL2 (Windows Subsystem for Linux)
 To then run the docker container,
 `docker run cr_redis`
 
-This can work for mac and (possibly Windows) by setting the environment variable `CACHE=redis://0.0.0.0:6379/0`
+This can work for mac and (possibly Windows) by setting the environment variable `CACHE_URL=redis://0.0.0.0:6379/0`
 
 ### Postgres
 
