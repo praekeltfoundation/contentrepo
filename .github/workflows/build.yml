@@ -20,7 +20,7 @@ jobs:
         ports:
           - 5432:5432
       redis:
-        image: redis:${{ matrix.redis_version }}
+        image: redis:${{ matrix.redis-version }}
         ports:
           - 6372:6372
     env:
