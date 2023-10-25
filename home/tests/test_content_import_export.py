@@ -11,7 +11,10 @@ from typing import Any
 
 import pytest
 from django.core import serializers  # type: ignore
+from django.core.files.images import ImageFile  # type: ignore
 from openpyxl import load_workbook
+from pytest_django.fixtures import SettingsWrapper
+from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 
 from home.content_import_export import import_content, old_import_content
@@ -677,6 +680,18 @@ def impexp(request: Any, admin_client: Any) -> ImportExportFixture:
     return ImportExportFixture(admin_client, importer, format)
 
 
+@pytest.fixture()
+def tmp_media_path(tmp_path: Path, settings: SettingsWrapper) -> None:
+    settings.MEDIA_ROOT = tmp_path
+
+
+def mk_img(img_path: Path, title: str) -> Image:
+    img = Image(title=title, file=ImageFile(img_path.open("rb"), name=img_path.name))
+    img.save()
+    return img
+
+
+@pytest.mark.usefixtures("tmp_media_path")
 @pytest.mark.django_db
 class TestExportImportRoundtrip:
     """
@@ -759,7 +774,7 @@ class TestExportImportRoundtrip:
 
     def test_multiple_messages(self, impexp: ImportExportFixture) -> None:
         """
-        ContentPages with multiple message block are preserved across
+        ContentPages with multiple message blocks are preserved across
         export/import.
         """
         home_page = HomePage.objects.first()
@@ -782,6 +797,38 @@ class TestExportImportRoundtrip:
                 WABody("health info", [WABlk(m) for m in ["wa1", "wa2", "wa3"]]),
                 MBody("health info", [MBlk(m) for m in ["m1", "m2", "m3"]]),
                 VBody("health info", [VBlk(m) for m in ["v1", "v2", "v3"]]),
+            ],
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    @pytest.mark.xfail(reason="Image imports are currently broken.")
+    def test_images(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages with images in multiple message types are preserved across
+        export/import.
+        """
+        if impexp.importer == "old":
+            pytest.skip("Old importer can't handle images.")
+
+        img_path = Path("home/tests/test_static") / "test.jpeg"
+        img_wa = mk_img(img_path, "wa_image")
+        img_m = mk_img(img_path, "m_image")
+        img_v = mk_img(img_path, "m_image")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome WA", image=img_wa.id)]),
+                MBody("HA menu", [MBlk("Welcome M", image=img_m.id)]),
+                VBody("HA menu", [VBlk("Welcome V", image=img_v.id)]),
             ],
         )
 
