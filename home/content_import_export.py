@@ -811,7 +811,7 @@ class Message:
     def serialise_example_values(
         cls, example_values: blocks.StreamValue.StreamChild
     ) -> str:
-        return dumps(list(example_values))
+        return ", ".join(example_values)
 
     @classmethod
     def serialise_next_message_button(
