@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Added support for example values.  These values will be used when creating whatsapp templates that contain variables (also known as placeholders)
+- Added support for Whatsapp Template Category selector added
+
 ### Changed
 - `REDIS_LOCATION` as been changed to `CACHE_URL`, and now supports a wide range of cache backends. `REDIS_LOCATION` will still work, and is an alias for, and takes priority over `CACHE_URL`.
 - Remove cache on list endpoint. There's no way to invalidate this cache, and at this point in time we're not sure if it's necessary, but it was creating issues in that the list endpoint would be out of date, so it has been removed for now. If it's needed in the future, it will be added back, but in a way that allows us to invalidate it on changes, or with a very short TTL.
+- Refactoring of import & export code
+
 
 
 ## v1.1.0-dev.4
