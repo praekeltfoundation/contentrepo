@@ -14,9 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 ## v1.1.0-dev.5
+### Fixed
+- Don't submit whatsapp template with no message
+- Remove additional delete on purge import, to fix import rollback on error
+
 ### Added
 - Added support for example values.  These values will be used when creating whatsapp templates that contain variables (also known as placeholders)
 - Added support for Whatsapp Template Category selector
+- Configurable whatsapp template category
 
 ### Changed
 - `REDIS_LOCATION` as been changed to `CACHE_URL`, and now supports a wide range of cache backends. `REDIS_LOCATION` will still work, and is an alias for, and takes priority over `CACHE_URL`.
