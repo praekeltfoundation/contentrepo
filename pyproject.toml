@@ -67,7 +67,7 @@ disallow_untyped_defs = true
 disallow_any_generics = true
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "contentrepo.settings.dev"
+DJANGO_SETTINGS_MODULE = "contentrepo.settings.test"
 addopts = "--cov"
 filterwarnings = [
     # We can't do anything about these warnings until upstream updates.
