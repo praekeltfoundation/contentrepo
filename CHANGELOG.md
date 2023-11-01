@@ -8,9 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!--
 ## Unreleased
 
+### Fixed
+- Autofill for empty slug
+
 ### Added
 
 ### Changed
+- Moved slug uniqueness validation to the model validation/clean
+- Empty slugs will auto-generate a unique slug, but if a duplicate slug is specified the user will get a validation error instead of their chosen slug getting overwritten with a unique one.
+- Slug uniqueness is per-locale
+
 -->
 
 ## v1.1.0-dev.5

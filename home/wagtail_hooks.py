@@ -4,7 +4,6 @@ from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
-from wagtail.models import Page
 
 from .models import ContentPage, OrderedContentSet
 
@@ -192,41 +191,3 @@ class OrderedContentSetAdmin(ModelAdmin):
 # Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
 modeladmin_register(OrderedContentSetAdmin)
-
-
-@hooks.register("before_edit_page")
-def validate_slug_before_edit(request, page):
-    if request.POST.get("slug") == page.slug:
-        return
-
-    slug = create_unique_slug(request.POST.get("slug"))
-    if slug:
-        post = request.POST.copy()
-        post["slug"] = slug
-        request.POST = post
-
-
-@hooks.register("before_create_page")
-def validate_slug_before_create(request, parent_page, page_class):
-    slug = create_unique_slug(request.POST.get("slug"))
-    if slug:
-        post = request.POST.copy()
-        post["slug"] = slug
-        request.POST = post
-
-
-def create_unique_slug(slug):
-    """
-    If the slug already exists in the database, appends a number to the slug to ensure
-    that the slug is unique
-    """
-    if not slug:
-        return
-
-    suffix = 1
-    candidate_slug = slug
-    while Page.objects.filter(slug=candidate_slug).exists():
-        suffix += 1
-        candidate_slug = f"{slug}-{suffix}"
-
-    return candidate_slug

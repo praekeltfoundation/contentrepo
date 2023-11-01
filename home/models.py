@@ -7,6 +7,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
+from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
@@ -39,6 +40,53 @@ from wagtail.admin.panels import (  # isort:skip
     ObjectList,
     TabbedInterface,
 )
+
+
+class UniqueSlugMixin:
+    """
+    Ensures that slugs are unique per locale
+    """
+
+    def is_slug_available(self, slug):
+        pages = Page.objects.filter(
+            locale=self.locale_id or self.get_default_locale(), slug=slug
+        )
+        if self.pk is not None:
+            pages = pages.exclude(pk=self.pk)
+        return not pages.exists()
+
+    def get_unique_slug(self, slug):
+        suffix = 1
+        candidate_slug = slug
+        while not self.is_slug_available(candidate_slug):
+            suffix += 1
+            candidate_slug = f"{slug}-{suffix}"
+        return candidate_slug
+
+    def full_clean(self, *args, **kwargs):
+        # Autogenerate slug if not present
+        if not self.slug:
+            allow_unicode = getattr(settings, "WAGTAIL_ALLOW_UNICODE_SLUGS", True)
+            base_slug = slugify(self.title, allow_unicode=allow_unicode)
+
+            if base_slug:
+                self.slug = self.get_unique_slug(base_slug)
+
+        super().full_clean(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+
+        if not self.is_slug_available(self.slug):
+            page = Page.objects.get(locale=self.locale, slug=self.slug)
+            raise ValidationError(
+                {
+                    "slug": _(
+                        "The slug '%(page_slug)s' is already in use at '%(page_url)s'"
+                    )
+                    % {"page_slug": self.slug, "page_url": page.url}
+                }
+            )
 
 
 @register_setting
@@ -276,13 +324,13 @@ class MessengerBlock(blocks.StructBlock):
         form_classname = "whatsapp-message-block struct-block"
 
 
-class HomePage(Page):
+class HomePage(UniqueSlugMixin, Page):
     subpage_types = [
         "ContentPageIndex",
     ]
 
 
-class ContentPageIndex(Page):
+class ContentPageIndex(UniqueSlugMixin, Page):
     subpage_types = [
         "ContentPage",
     ]
@@ -338,7 +386,7 @@ class QuickReplyContent(ItemBase):
     )
 
 
-class ContentPage(Page, ContentImportMixin):
+class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     class WhatsAppTemplateCategory(models.TextChoices):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
@@ -699,6 +747,10 @@ class ContentPage(Page, ContentImportMixin):
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
         return revision
+
+
+# Allow slug to be blank in forms, we fill it in in full_clean
+Page._meta.get_field("slug").blank = True
 
 
 @receiver(pre_save, sender=ContentPage)
