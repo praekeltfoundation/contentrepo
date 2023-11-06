@@ -7,6 +7,7 @@ from django.test import Client, TestCase
 from wagtail import blocks
 
 from home.content_import_export import import_content
+from home.tests.page_builder import MBlk, MBody, PageBuilder, WABlk, WABody
 
 from .utils import create_page
 
@@ -19,15 +20,53 @@ from home.models import (  # isort:skip
 )
 
 
-class PaginationTestCase(TestCase):
+class PaginationTestCase:
+    @classmethod
+    def setUpData(cls):
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        content_page1 = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="main-menu-first-time-user",
+            title="main menu first time user",
+            bodies=[
+                WABody(
+                    "main menu first time user", [WABlk("*Welcome to HealthAlert* 🌍")]
+                ),
+                MBody(
+                    "main menu first time user", [MBlk("*Welcome to HealthAlert* 🌍")]
+                ),
+            ],
+            tags=["menu"],
+            quick_replies=["Self-help", "Settings", "Health Info"],
+            triggers=["Main menu"],
+        )
+        PageBuilder.build_cp(
+            parent=content_page1,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody("health info", [WABlk("*Health information* 🏥")]),
+                MBody("health info", [MBlk("*Health information* 🏥")]),
+            ],
+            tags=["health_info"],
+        )
+        PageBuilder.build_cp(
+            parent=content_page1,
+            slug="self-help",
+            title="self-help",
+            bodies=[
+                WABody("self-help", [WABlk("*Self-help programs* 🌬️")]),
+                MBody("self-help", [MBlk("*Self-help programs* 🌬️")]),
+            ],
+            tags=["self_help"],
+        )
+
     def setUp(self):
-        path = Path("home/tests/content2.csv")
-        with path.open(mode="rb") as f:
-            import_content(f, "CSV", queue.Queue())
-        self.content_page1 = ContentPage.objects.first()
         self.user_credentials = {"username": "test", "password": "test"}
         self.user = get_user_model().objects.create_user(**self.user_credentials)
         self.client.login(**self.user_credentials)
+        self.content_page1 = ContentPage.objects.first()
         self.content_page2 = ContentPage.objects.last()
 
     def test_login_required(self):
@@ -118,18 +157,7 @@ class PaginationTestCase(TestCase):
         # it should return specific page that is in draft
         response = self.client.get(url)
         content = json.loads(response.content)
-        message = "\n".join(
-            [
-                "*Self-help programs* 🌬️",
-                "",
-                "Reply with a number to take part in a *free* self-help program created by WHO.",
-                "",
-                "1. Quit tobacco 🚭",
-                "_Stop smoking with the help of a guided, 42-day program._",
-                "2. Manage your stress 🧘🏽‍♀️",
-                "_Learn how to cope with stress and improve your wellbeing._",
-            ]
-        )
+        message = "*Self-help programs* 🌬️"
         # the page is not live but whatsapp content is returned
         self.assertEqual(self.content_page2.live, False)
         self.assertEqual(
@@ -144,18 +172,7 @@ class PaginationTestCase(TestCase):
         # it should return specific page that is in draft
         response = self.client.get(url)
 
-        message = "\n".join(
-            [
-                "*Self-help programs* 🌬️",
-                "",
-                "Reply with a number to take part in a *free* self-help program created by WHO.",
-                "",
-                "1. Quit tobacco 🚭",
-                "_Stop smoking with the help of a guided, 42-day program._",
-                "2. Manage your stress 🧘🏽‍♀️",
-                "_Learn how to cope with stress and improve your wellbeing._",
-            ]
-        )
+        message = "*Self-help programs* 🌬️"
         content = json.loads(response.content)
 
         # the page is not live but messenger content is returned

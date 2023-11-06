@@ -1,6 +1,5 @@
 # Define constants for use throughout the application
 from django.conf import settings
-from sentence_transformers import SentenceTransformer
 
 GENDER_CHOICES = [
     ("male", "Male"),
@@ -26,4 +25,6 @@ RELATIONSHIP_STATUS_CHOICES = [
 # When changing this consider running update_content_embeddings management cmd
 model = None
 if settings.LOAD_TRANSFORMER_MODEL:
+    from sentence_transformers import SentenceTransformer
+
     model = SentenceTransformer("all-mpnet-base-v2")
