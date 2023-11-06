@@ -67,6 +67,8 @@ This can work for mac and (possibly Windows) by setting the environment variable
 
 ### Postgres
 
+Local tests run using in-memory sqlite, so postgres isn't required.
+
 For Linux and WSL2 (Windows Subsystem for Linux)
 Creating a docker container that doesnt require a password and matches the setup of the database in settings
 `docker run --name cr_postgres -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_USER=postgres -e POSTGRES_DB=contentrepo -d postgres:latest`
@@ -86,6 +88,10 @@ createdb contentrepo
 ./manage.py createsuperuser
 ./manage.py runserver
 ```
+
+### Automated tests
+
+Tests are run using [pytest](https://pytest.org)). For faster test runs, try adding `--no-cov` to disable coverage reporting and/or `-n auto` to run multiple tests in parallel.
 
 ## API
 The API documentation is available at the `/api/schema/swagger-ui/` endpoint.
