@@ -21,7 +21,17 @@ from home.content_import_export import import_content, old_import_content
 from home.models import ContentPage, ContentPageIndex, HomePage
 
 from .helpers import set_profile_field_options
-from .page_builder import MBlk, MBody, PageBuilder, VarMsg, VBlk, VBody, WABlk, WABody
+from .page_builder import (
+    MBlk,
+    MBody,
+    NextBtn,
+    PageBuilder,
+    VarMsg,
+    VBlk,
+    VBody,
+    WABlk,
+    WABody,
+)
 
 ExpDict = dict[str, Any]
 ExpPair = tuple[ExpDict, ExpDict]
@@ -877,12 +887,12 @@ class TestExportImportRoundtrip:
             WABlk(
                 "Message 1",
                 next_prompt="Next message",
-                buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
+                buttons=[NextBtn("Next message")],
                 variation_messages=m1vars,
             ),
             WABlk(
                 "Message 2, variable placeholders as well {{0}}",
-                buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
+                buttons=[NextBtn("Next message")],
                 variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
             ),
             WABlk("Message 3 with no variation", next_prompt="Next message"),

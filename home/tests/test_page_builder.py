@@ -11,7 +11,17 @@ from wagtail.rich_text import RichText  # type: ignore
 from home.models import ContentPage, ContentPageIndex, HomePage
 
 from .helpers import set_profile_field_options
-from .page_builder import MBlk, MBody, PageBuilder, VarMsg, VBlk, VBody, WABlk, WABody
+from .page_builder import (
+    MBlk,
+    MBody,
+    NextBtn,
+    PageBuilder,
+    VarMsg,
+    VBlk,
+    VBody,
+    WABlk,
+    WABody,
+)
 
 
 def unwagtail(val):  # type: ignore[no-untyped-def] # No type info
@@ -212,7 +222,7 @@ def test_build_variations() -> None:
         WABlk(
             "Message 1",
             next_prompt="Next message",
-            buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
+            buttons=[NextBtn("Next message")],
             variation_messages=[
                 VarMsg("Single male", gender="male", relationship="single"),
                 VarMsg("Comp male", gender="male", relationship="complicated"),
@@ -221,13 +231,13 @@ def test_build_variations() -> None:
         WABlk(
             "Message 2, variable placeholders as well {{0}}",
             next_prompt="Next message",
-            buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
+            buttons=[NextBtn("Next message")],
             variation_messages=[VarMsg("Teen", age="15-18")],
         ),
         WABlk(
             "Message 3 with no variation",
             next_prompt="end",
-            buttons=[{"type": "next_message", "value": {"title": "end"}}],
+            buttons=[NextBtn("end")],
         ),
     ]
     cp_imp_exp = PageBuilder.build_cp(

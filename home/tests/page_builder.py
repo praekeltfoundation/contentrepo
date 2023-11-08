@@ -12,6 +12,7 @@ from home.models import (
     ContentQuickReply,
     ContentTrigger,
     MessengerBlock,
+    NextMessageButton,
     ViberBlock,
     WhatsappBlock,
 )
@@ -37,6 +38,25 @@ class VarMsg:
 
     def to_dict(self) -> Any:
         return {"message": self.message, "variation_restrictions": self.variations()}
+
+
+@dataclass
+class Btn:
+    BLOCK_TYPE_STR: ClassVar[str]
+
+    title: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": self.BLOCK_TYPE_STR, "value": asdict(self)}
+
+
+@dataclass
+class NextBtn(Btn):
+    BLOCK_TYPE_STR = "next_message"
+    BLOCK_TYPE = NextMessageButton
+
+
+# TODO: GoToPageButton, which needs a page id to link to.
 
 
 @dataclass
@@ -81,11 +101,12 @@ class WABlk(ContentBlock):
     next_prompt: str | None = None
     variation_messages: list[VarMsg] = field(default_factory=list)
     example_values: list[str] = field(default_factory=list)
-    buttons: list[dict[str, Any]] = field(default_factory=list)
+    buttons: list[Btn] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         varmsgs = [vm.to_dict() for vm in self.variation_messages]
-        return super().to_dict() | {"variation_messages": varmsgs}
+        buttons = [b.to_dict() for b in self.buttons]
+        return super().to_dict() | {"variation_messages": varmsgs, "buttons": buttons}
 
 
 @dataclass
