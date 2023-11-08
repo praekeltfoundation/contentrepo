@@ -15,6 +15,7 @@ from .page_builder import (
     MBlk,
     MBody,
     NextBtn,
+    PageBtn,
     PageBuilder,
     VarMsg,
     VBlk,
@@ -211,8 +212,8 @@ def test_build_web_content() -> None:
 def test_build_variations() -> None:
     """
     PageBuilder.build_cp correctly builds a ContentPage with variation
-    messages. (This also tests multiple WhatsApp messages and non-empty
-    next_prompt.)
+    messages. (This also tests multiple WhatsApp messages, buttons, and
+    non-empty next_prompt.)
     """
     set_profile_field_options()
     home_page = HomePage.objects.first()
@@ -231,7 +232,7 @@ def test_build_variations() -> None:
         WABlk(
             "Message 2, variable placeholders as well {{0}}",
             next_prompt="Next message",
-            buttons=[NextBtn("Next message")],
+            buttons=[PageBtn("Import Export", page=imp_exp)],
             variation_messages=[VarMsg("Teen", age="15-18")],
         ),
         WABlk(
@@ -263,7 +264,9 @@ def test_build_variations() -> None:
         {
             "message": "Message 2, variable placeholders as well {{0}}",
             "next_prompt": "Next message",
-            "buttons": [("next_message", {"title": "Next message"})],
+            "buttons": [
+                ("go_to_page", {"title": "Import Export", "page": page_for(imp_exp)}),
+            ],
             "example_values": [],
             "variation_messages": [
                 {"message": "Teen", "variation_restrictions": [("age", "15-18")]}

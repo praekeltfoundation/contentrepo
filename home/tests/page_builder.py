@@ -12,7 +12,6 @@ from home.models import (
     ContentQuickReply,
     ContentTrigger,
     MessengerBlock,
-    NextMessageButton,
     ViberBlock,
     WhatsappBlock,
 )
@@ -46,17 +45,26 @@ class Btn:
 
     title: str
 
+    def value_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
     def to_dict(self) -> dict[str, Any]:
-        return {"type": self.BLOCK_TYPE_STR, "value": asdict(self)}
+        return {"type": self.BLOCK_TYPE_STR, "value": self.value_dict()}
 
 
 @dataclass
 class NextBtn(Btn):
     BLOCK_TYPE_STR = "next_message"
-    BLOCK_TYPE = NextMessageButton
 
 
-# TODO: GoToPageButton, which needs a page id to link to.
+@dataclass
+class PageBtn(Btn):
+    BLOCK_TYPE_STR = "go_to_page"
+
+    page: Page
+
+    def value_dict(self) -> dict[str, Any]:
+        return asdict(self) | {"page": self.page.id}
 
 
 @dataclass
