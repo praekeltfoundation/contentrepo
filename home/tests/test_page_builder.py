@@ -129,6 +129,7 @@ def test_build_simple_pages() -> None:
             },
         ),
     ]
+    assert ha_menu.whatsapp_template_category == "UTILITY"
     assert ha_menu.whatsapp_template_name == ""
     assert ha_menu.whatsapp_title == "HealthAlert menu"
 
@@ -191,6 +192,7 @@ def test_build_web_content() -> None:
     assert unwagtail(ha_menu.viber_body) == []
     assert ha_menu.viber_title is None
     assert unwagtail(ha_menu.whatsapp_body) == []
+    assert ha_menu.whatsapp_template_category == "UTILITY"
     assert ha_menu.whatsapp_template_name == ""
     assert ha_menu.whatsapp_title is None
 
@@ -303,6 +305,7 @@ def test_build_variations() -> None:
         )
         for msg in wa_msgs
     ]
+    assert cp_imp_exp.whatsapp_template_category == "UTILITY"
     assert cp_imp_exp.whatsapp_template_name == ""
     assert cp_imp_exp.whatsapp_title == "WA import export data"
 
@@ -442,6 +445,7 @@ def test_whatsapp_template() -> None:
         slug="health-info",
         title="health info",
         bodies=[WABody("health info", [WABlk("*Health information* WA")])],
+        whatsapp_template_category="MARKETING",
         whatsapp_template_name="template-health-info",
     )
 
@@ -452,6 +456,7 @@ def test_whatsapp_template() -> None:
     assert isinstance(health_info, ContentPage)
     assert health_info.depth == 5
     assert health_info.is_whatsapp_template is True
+    assert health_info.whatsapp_template_category == "MARKETING"
     assert health_info.whatsapp_template_name == "template-health-info"
 
 
