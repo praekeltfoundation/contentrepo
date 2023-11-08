@@ -20,9 +20,9 @@ from home.models import (  # isort:skip
 )
 
 
-class PaginationTestCase:
+class PaginationTestCase(TestCase):
     @classmethod
-    def setUpData(cls):
+    def setUpTestData(self):
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         content_page1 = PageBuilder.build_cp(
