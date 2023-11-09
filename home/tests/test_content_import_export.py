@@ -176,6 +176,7 @@ def _normalise_button_pks(body: DbDict, min_pk: int) -> DbDict:
         value = value | {"buttons": buttons}
     return body | {"value": value}
 
+
 def _normalise_pks(page: DbDict, min_pk: int) -> DbDict:
     fields = page["fields"]
     if "related_pages" in fields:
