@@ -116,7 +116,7 @@ class ContentImporter:
             for message_index, buttons in messages.items():
                 for button in buttons:
                     title = button["title"]
-                    related_page = ContentPage.objects.get(slug=button["slug"])
+                    related_page = Page.objects.get(slug=button["slug"])
                     page.whatsapp_body[message_index].value["buttons"].append(
                         ("go_to_page", {"page": related_page, "title": title})
                     )

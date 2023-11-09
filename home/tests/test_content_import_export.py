@@ -25,6 +25,7 @@ from .page_builder import (
     MBlk,
     MBody,
     NextBtn,
+    PageBtn,
     PageBuilder,
     VarMsg,
     VBlk,
@@ -163,6 +164,18 @@ def decode_json_fields(page: DbDict) -> DbDict:
     return page | {"fields": fields}
 
 
+def _normalise_button_pks(body: DbDict, min_pk: int) -> DbDict:
+    value = body["value"]
+    if "buttons" in value:
+        buttons = []
+        for button in value["buttons"]:
+            if button["type"] == "go_to_page":
+                v = button["value"]
+                button = button | {"value": v | {"page": v["page"] - min_pk}}
+            buttons.append(button)
+        value = value | {"buttons": buttons}
+    return body | {"value": value}
+
 def _normalise_pks(page: DbDict, min_pk: int) -> DbDict:
     fields = page["fields"]
     if "related_pages" in fields:
@@ -170,6 +183,9 @@ def _normalise_pks(page: DbDict, min_pk: int) -> DbDict:
             rp | {"value": rp["value"] - min_pk} for rp in fields["related_pages"]
         ]
         fields = fields | {"related_pages": related_pages}
+    if "whatsapp_body" in fields:
+        body = [_normalise_button_pks(b, min_pk) for b in fields["whatsapp_body"]]
+        fields = fields | {"whatsapp_body": body}
     return page | {"fields": fields, "pk": page["pk"] - min_pk}
 
 
@@ -862,8 +878,8 @@ class TestExportImportRoundtrip:
 
     def test_variations(self, impexp: ImportExportFixture) -> None:
         """
-        ContentPages with variation messages (and next prompts) are preserved
-        across export/import.
+        ContentPages with variation messages (and buttons and next prompts) are
+        preserved across export/import.
 
         NOTE: The old importer can't handle multiple restrictions on a
             variation, so it gets a slightly simpler dataset.
@@ -892,17 +908,20 @@ class TestExportImportRoundtrip:
             ),
             WABlk(
                 "Message 2, variable placeholders as well {{0}}",
-                buttons=[NextBtn("Next message")],
+                buttons=[PageBtn("Import Export", page=imp_exp)],
                 variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
             ),
             WABlk("Message 3 with no variation", next_prompt="Next message"),
         ]
-        _cp_imp_exp = PageBuilder.build_cp(
+        cp_imp_exp = PageBuilder.build_cp(
             parent=imp_exp,
             slug="cp-import-export",
             title="CP-Import/export",
             bodies=[WABody("WA import export data", cp_imp_exp_wablks)],
         )
+        # Save and publish cp_imp_exp again so the revision numbers match up after import.
+        rev = cp_imp_exp.save_revision()
+        rev.publish()
 
         orig = impexp.get_page_json()
         impexp.export_reimport()
