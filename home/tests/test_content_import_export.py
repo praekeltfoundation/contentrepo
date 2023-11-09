@@ -932,6 +932,9 @@ class TestExportImportRoundtrip:
         """
         ContentPages with tags and related pages are preserved across
         export/import.
+
+        NOTE: The old importer can't handle non-ContentPage related pages, so
+            it doesn't get one of those.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
@@ -960,7 +963,10 @@ class TestExportImportRoundtrip:
             tags=["tag4"],
         )
         PageBuilder.link_related(health_info, [self_help])
-        PageBuilder.link_related(self_help, [health_info])
+        if impexp.importer == "old":
+            PageBuilder.link_related(self_help, [health_info])
+        else:
+            PageBuilder.link_related(self_help, [health_info, main_menu])
 
         orig = impexp.get_page_json()
         impexp.export_reimport()

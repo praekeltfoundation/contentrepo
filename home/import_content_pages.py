@@ -360,7 +360,7 @@ class ShadowContentPage:
         page = ContentPage.objects.get(slug=self.slug)
         related_pages = []
         for related_page_slug in self.related_pages:
-            related_page = ContentPage.objects.get(slug=related_page_slug)
+            related_page = Page.objects.get(slug=related_page_slug)
             related_pages.append(("related_page", related_page))
         page.related_pages = related_pages
         page.save_revision().publish()
