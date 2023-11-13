@@ -6,17 +6,16 @@ import pytest
 from wagtail import blocks
 
 from home.content_import_export import import_content
-from home.tests.page_builder import MBlk, MBody, PageBuilder, WABlk, WABody
-
-from .utils import create_page
-
-from home.models import (  # isort:skip
+from home.models import (
     ContentPage,
     HomePage,
     OrderedContentSet,
     PageView,
     VariationBlock,
 )
+
+from .page_builder import MBlk, MBody, PageBuilder, WABlk, WABody
+from .utils import create_page
 
 
 @pytest.fixture()
