@@ -3,8 +3,6 @@ import queue
 from pathlib import Path
 
 import pytest
-from django.contrib.auth import get_user_model
-from django.test import TestCase
 from wagtail import blocks
 
 from home.content_import_export import import_content
@@ -451,133 +449,144 @@ class TestWhatsAppMessages:
         assert body["whatsapp_template_category"] == "MARKETING"
 
 
-class OrderedContentSetTestCase(TestCase):
-    def setUp(self):
-        path = Path("home/tests/content2.csv")
-        with path.open(mode="rb") as f:
-            import_content(f, "CSV", queue.Queue())
-        self.content_page1 = ContentPage.objects.first()
-        self.ordered_content_set = OrderedContentSet(name="Test set")
-        self.ordered_content_set.pages.append(
-            ("pages", {"contentpage": self.content_page1})
-        )
-        self.ordered_content_set.profile_fields.append(("gender", "female"))
-        self.ordered_content_set.save()
+@pytest.fixture()
+def ordered_content_set_test_data(request):
+    # Pretend we're still a setUp() method on a TestCase.
+    self = request.instance
 
-        self.ordered_content_set_timed = OrderedContentSet(name="Test set")
-        self.ordered_content_set_timed.pages.append(
-            (
-                "pages",
-                {
-                    "contentpage": self.content_page1,
-                    "time": 5,
-                    "unit": "Days",
-                    "before_or_after": "Before",
-                    "contact_field": "EDD",
-                },
-            )
-        )
-        self.user_credentials = {"username": "test", "password": "test"}
-        self.user = get_user_model().objects.create_user(**self.user_credentials)
-        self.client.login(**self.user_credentials)
+    path = Path("home/tests/content2.csv")
+    with path.open(mode="rb") as f:
+        import_content(f, "CSV", queue.Queue())
+    self.page1 = ContentPage.objects.first()
+    self.ordered_content_set = OrderedContentSet(name="Test set")
+    self.ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+    self.ordered_content_set.profile_fields.append(("gender", "female"))
+    self.ordered_content_set.save()
 
-        self.ordered_content_set_timed.profile_fields.append(("gender", "female"))
-        self.ordered_content_set_timed.save()
-
-    def test_orderedcontent_endpoint(self):
-        # it should return a list of ordered sets and show the profile fields
-        response = self.client.get("/api/v2/orderedcontent/")
-        content = json.loads(response.content)
-        self.assertEqual(content["count"], 2)
-        self.assertEqual(content["results"][0]["name"], self.ordered_content_set.name)
-        self.assertEqual(
-            content["results"][0]["profile_fields"][0],
-            {"profile_field": "gender", "value": "female"},
-        )
-
-    def test_orderedcontent_detail_endpoint(self):
-        # it should return the list of pages that are part of the ordered content set
-        response = self.client.get(
-            f"/api/v2/orderedcontent/{self.ordered_content_set.id}/"
-        )
-        content = json.loads(response.content)
-        self.assertEqual(content["name"], self.ordered_content_set.name)
-        self.assertEqual(
-            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
-        )
-        self.assertEqual(
-            content["pages"][0],
+    self.ordered_content_set_timed = OrderedContentSet(name="Test set")
+    self.ordered_content_set_timed.pages.append(
+        (
+            "pages",
             {
-                "id": self.content_page1.id,
-                "title": self.content_page1.title,
-                "time": None,
-                "unit": None,
-                "before_or_after": None,
-                "contact_field": None,
-            },
-        )
-
-    def test_orderedcontent_detail_endpoint_timed(self):
-        # it should return the list of pages that are part of the ordered content set
-        response = self.client.get(
-            f"/api/v2/orderedcontent/{self.ordered_content_set_timed.id}/"
-        )
-        content = json.loads(response.content)
-        self.assertEqual(content["name"], self.ordered_content_set_timed.name)
-        self.assertEqual(
-            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
-        )
-        self.assertEqual(
-            content["pages"][0],
-            {
-                "id": self.content_page1.id,
-                "title": self.content_page1.title,
+                "contentpage": self.page1,
                 "time": 5,
                 "unit": "Days",
                 "before_or_after": "Before",
                 "contact_field": "EDD",
             },
         )
+    )
 
-    def test_orderedcontent_detail_endpoint_rel_pages_flag(self):
+    self.ordered_content_set_timed.profile_fields.append(("gender", "female"))
+    self.ordered_content_set_timed.save()
+
+
+@pytest.mark.usefixtures("ordered_content_set_test_data")
+@pytest.mark.django_db
+class TestOrderedContentSet:
+    def test_orderedcontent_endpoint(self, uclient):
+        """
+        The orderedcontent endpoint returns a list of ordered sets, including
+        name and profile fields.
+        """
+        # it should return a list of ordered sets and show the profile fields
+        response = uclient.get("/api/v2/orderedcontent/")
+        content = json.loads(response.content)
+        assert content["count"] == 2
+        assert content["results"][0]["name"] == self.ordered_content_set.name
+        assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+
+    def test_orderedcontent_detail_endpoint(self, uclient):
+        """
+        The orderedcontent detail page lists the pages that are part of the
+        ordered set.
+        """
+        # it should return the list of pages that are part of the ordered content set
+        response = uclient.get(f"/api/v2/orderedcontent/{self.ordered_content_set.id}/")
+        content = json.loads(response.content)
+        assert content["name"] == self.ordered_content_set.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["pages"][0] == {
+            "id": self.page1.id,
+            "title": self.page1.title,
+            "time": None,
+            "unit": None,
+            "before_or_after": None,
+            "contact_field": None,
+        }
+
+    def test_orderedcontent_detail_endpoint_timed(self, uclient):
+        """
+        The orderedcontent detail page lists the pages that are part of the
+        ordered set, including information about timing.
+        """
+        # it should return the list of pages that are part of the ordered content set
+        response = uclient.get(
+            f"/api/v2/orderedcontent/{self.ordered_content_set_timed.id}/"
+        )
+        content = json.loads(response.content)
+        assert content["name"] == self.ordered_content_set_timed.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["pages"][0] == {
+            "id": self.page1.id,
+            "title": self.page1.title,
+            "time": 5,
+            "unit": "Days",
+            "before_or_after": "Before",
+            "contact_field": "EDD",
+        }
+
+    def test_orderedcontent_detail_endpoint_rel_pages_flag(self, uclient):
+        """
+        The orderedcontent detail page lists the pages that are part of the
+        ordered set, including related pages.
+        """
         rel_page = create_page("Related Page")
-        self.content_page1.related_pages = [
-            {"type": "related_page", "value": rel_page.id},
-        ]
-        self.content_page1.save_revision().publish()
+        self.page1.related_pages = [{"type": "related_page", "value": rel_page.id}]
+        self.page1.save_revision().publish()
 
         # it should return the list of pages that are part of the ordered content set
-        response = self.client.get(
+        response = uclient.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_related=true"
         )
         content = json.loads(response.content)
-        self.assertEqual(content["name"], self.ordered_content_set.name)
-        self.assertEqual(
-            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
-        )
-        self.assertEqual(
-            content["pages"][0],
-            {
-                "id": self.content_page1.id,
-                "title": self.content_page1.title,
-                "time": None,
-                "unit": None,
-                "before_or_after": None,
-                "contact_field": None,
-                "related_pages": [rel_page.id],
-            },
-        )
+        assert content["name"] == self.ordered_content_set.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["pages"][0] == {
+            "id": self.page1.id,
+            "title": self.page1.title,
+            "time": None,
+            "unit": None,
+            "before_or_after": None,
+            "contact_field": None,
+            "related_pages": [rel_page.id],
+        }
 
-    def test_orderedcontent_detail_endpoint_tags_flag(self):
+    def test_orderedcontent_detail_endpoint_tags_flag(self, uclient):
+        """
+        The orderedcontent detail page lists the pages that are part of the
+        ordered set, including tags.
+        """
         # it should return the list of pages that are part of the ordered content set
-        response = self.client.get(
+        response = uclient.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_tags=true"
         )
         content = json.loads(response.content)
-        self.assertEqual(content["name"], self.ordered_content_set.name)
-        self.assertEqual(
-            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
-        )
-        self.assertEqual(
-            content["pages"][0]["tags"], [t.name for t in self.content_page1.tags.all()]
-        )
+        assert content["name"] == self.ordered_content_set.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["pages"][0]["tags"] == [t.name for t in self.page1.tags.all()]
