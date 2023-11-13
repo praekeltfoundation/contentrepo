@@ -382,13 +382,17 @@ class TestPagination:
         assert content.get("page") == ["Page matching query does not exist."]
 
 
-class WhatsAppMessagesTestCase(TestCase):
-    def setUp(self):
-        self.user_credentials = {"username": "test", "password": "test"}
-        self.user = get_user_model().objects.create_user(**self.user_credentials)
-        self.client.login(**self.user_credentials)
+@pytest.mark.django_db
+class TestWhatsAppMessages:
+    """
+    FIXME:
+     * Should some of the WhatsApp tests from TestPagination live here instead?
+    """
 
-    def test_whatsapp_detail_view_with_button(self):
+    def test_whatsapp_detail_view_with_button(self, uclient):
+        """
+        Next page buttons in WhatsApp messages are present in the message body.
+        """
         page = ContentPage(
             title="test",
             slug="text",
@@ -409,15 +413,17 @@ class WhatsAppMessagesTestCase(TestCase):
         homepage.add_child(instance=page)
         page.save_revision().publish()
 
-        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
         content = response.json()
         [button] = content["body"]["text"]["value"]["buttons"]
         button.pop("id")
-        self.assertEqual(
-            button, {"type": "next_message", "value": {"title": "Tell me more"}}
-        )
+        assert button == {"type": "next_message", "value": {"title": "Tell me more"}}
 
-    def test_whatsapp_template(self):
+    def test_whatsapp_template(self, uclient):
+        """
+        FIXME:
+         * Is this actually a template message?
+        """
         page = ContentPage(
             title="test",
             slug="text",
@@ -439,10 +445,10 @@ class WhatsAppMessagesTestCase(TestCase):
         homepage.add_child(instance=page)
         page.save_revision().publish()
 
-        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
         content = response.json()
         body = content["body"]
-        self.assertEqual(body["whatsapp_template_category"], "MARKETING")
+        assert body["whatsapp_template_category"] == "MARKETING"
 
 
 class OrderedContentSetTestCase(TestCase):
