@@ -326,14 +326,18 @@ class TestContentPageAPI:
 
     def test_detail_view_no_content_page(self, uclient):
         """
+        We get a validation error if we request a page that doesn't exist.
+
         FIXME:
-         * It's unclear what the intended result is.
-         * Should the response code be a success?
+         * Is 400 (ValidationError) really an appropriate response code for
+           this? 404 seems like a better fit for failing to find a page we're
+           looking up by id.
         """
         # it should return the validation error for content page that doesn't exist
         response = uclient.get("/api/v2/pages/1/")
-        content = response.json()
+        assert response.status_code == 400
 
+        content = response.json()
         assert content == {"page": ["Page matching query does not exist."]}
         assert content.get("page") == ["Page matching query does not exist."]
 
