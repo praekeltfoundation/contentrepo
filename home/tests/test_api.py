@@ -268,10 +268,14 @@ class TestContentPageAPI:
 
     def test_number_of_queries(self, uclient, django_assert_num_queries):
         """
+        Make sure we aren't making an enormous number of queries.
+
         FIXME:
-         * Is the number of queries significant? What does it depend on?
-         * Should this be part of some other test?
+         * Should we document what these queries actually are?
         """
+        # Run this once without counting, because there are two queries at the
+        # end that only happen if this is the first test that runs.
+        uclient.get("/api/v2/pages/")
         with django_assert_num_queries(8):
             uclient.get("/api/v2/pages/")
 
