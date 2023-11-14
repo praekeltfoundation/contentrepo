@@ -66,7 +66,7 @@ def pagination_test_data():
 
 @pytest.mark.usefixtures("pagination_test_data")
 @pytest.mark.django_db
-class TestPagination:
+class TestContentPageAPI:
     """
     FIXME:
      * Most of these tests don't seem to have anything to do with pagination.
@@ -320,51 +320,6 @@ class TestPagination:
         view = PageView.objects.last()
         assert view.message == 1
 
-    def test_detail_view_with_variations(self, uclient):
-        """
-        FIXME:
-         * It's unclear what this is actually testing.
-         * This should probably be in a class without the content setup.
-        """
-        ContentPage.objects.all().delete()
-        assert PageView.objects.count() == 0
-
-        # variations should be in the whatsapp content
-        page = create_page(tags=["tag1", "tag2"], add_variation=True)
-
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
-        content = response.json()
-
-        var_content = content["body"]["text"]["value"]["variation_messages"]
-        assert len(var_content) == 1
-        assert var_content[0]["profile_field"] == "gender"
-        assert var_content[0]["value"] == "female"
-        assert var_content[0]["message"] == "Test Title - female variation"
-
-        assert PageView.objects.count() == 1
-        view = PageView.objects.last()
-        assert view.message == 1
-
-    def test_whatsapp_body(self, uclient):
-        """
-        Should have the WhatsApp specific fields included in the body; if it's a
-        template, what's the template name, the text body of the message.
-
-        FIXME:
-         * This should probably be in a class without the content setup.
-        """
-        ContentPage.objects.all().delete()
-        page = create_page(
-            is_whatsapp_template=True, whatsapp_template_name="test_template"
-        )
-
-        # it should return the correct details
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp")
-        content = response.json()
-        assert content["body"]["is_whatsapp_template"]
-        assert content["body"]["whatsapp_template_name"] == "test_template"
-        assert content["body"]["text"]["value"]["message"] == "Test WhatsApp Message 1"
-
     def test_detail_view_no_content_page(self, uclient):
         """
         FIXME:
@@ -447,6 +402,42 @@ class TestWhatsAppMessages:
         body = content["body"]
         assert body["whatsapp_template_category"] == "MARKETING"
 
+    def test_whatsapp_body(self, uclient):
+        """
+        Should have the WhatsApp specific fields included in the body; if it's a
+        template, what's the template name, the text body of the message.
+        """
+        page = create_page(
+            is_whatsapp_template=True, whatsapp_template_name="test_template"
+        )
+
+        # it should return the correct details
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp")
+        content = response.json()
+        assert content["body"]["is_whatsapp_template"]
+        assert content["body"]["whatsapp_template_name"] == "test_template"
+        assert content["body"]["text"]["value"]["message"] == "Test WhatsApp Message 1"
+
+    def test_whatsapp_detail_view_with_variations(self, uclient):
+        """
+        Variation blocks in WhatsApp messages are present in the message body.
+        """
+        # variations should be in the whatsapp content
+        page = create_page(tags=["tag1", "tag2"], add_variation=True)
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
+        content = response.json()
+
+        var_content = content["body"]["text"]["value"]["variation_messages"]
+        assert len(var_content) == 1
+        assert var_content[0]["profile_field"] == "gender"
+        assert var_content[0]["value"] == "female"
+        assert var_content[0]["message"] == "Test Title - female variation"
+
+        assert PageView.objects.count() == 1
+        view = PageView.objects.last()
+        assert view.message == 1
+
 
 @pytest.fixture()
 def ordered_content_set_test_data(request):
@@ -482,7 +473,7 @@ def ordered_content_set_test_data(request):
 
 @pytest.mark.usefixtures("ordered_content_set_test_data")
 @pytest.mark.django_db
-class TestOrderedContentSet:
+class TestOrderedContentSetAPI:
     def test_orderedcontent_endpoint(self, uclient):
         """
         The orderedcontent endpoint returns a list of ordered sets, including
