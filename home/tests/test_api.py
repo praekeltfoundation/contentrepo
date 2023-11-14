@@ -67,11 +67,6 @@ def pagination_test_data():
 @pytest.mark.usefixtures("pagination_test_data")
 @pytest.mark.django_db
 class TestContentPageAPI:
-    """
-    FIXME:
-     * Most of these tests don't seem to have anything to do with pagination.
-    """
-
     def test_login_required(self, client):
         """
         Users that aren't logged in shouldn't be allowed to access the API
