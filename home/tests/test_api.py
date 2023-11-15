@@ -26,47 +26,52 @@ def uclient(client, django_user_model):
     return client
 
 
-@pytest.fixture()
-def pagination_test_data():
-    home_page = HomePage.objects.first()
-    main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-    content_page1 = PageBuilder.build_cp(
-        parent=main_menu,
-        slug="main-menu-first-time-user",
-        title="main menu first time user",
-        bodies=[
-            WABody("main menu first time user", [WABlk("*Welcome to HealthAlert* 🌍")]),
-            MBody("main menu first time user", [MBlk("*Welcome to HealthAlert* 🌍")]),
-        ],
-        tags=["menu"],
-        quick_replies=["Self-help", "Settings", "Health Info"],
-        triggers=["Main menu"],
-    )
-    PageBuilder.build_cp(
-        parent=content_page1,
-        slug="health-info",
-        title="health info",
-        bodies=[
-            WABody("health info", [WABlk("*Health information* 🏥")]),
-            MBody("health info", [MBlk("*Health information* 🏥")]),
-        ],
-        tags=["health_info"],
-    )
-    PageBuilder.build_cp(
-        parent=content_page1,
-        slug="self-help",
-        title="self-help",
-        bodies=[
-            WABody("self-help", [WABlk("*Self-help programs* 🌬️")]),
-            MBody("self-help", [MBlk("*Self-help programs* 🌬️")]),
-        ],
-        tags=["self_help"],
-    )
-
-
-@pytest.mark.usefixtures("pagination_test_data")
 @pytest.mark.django_db
 class TestContentPageAPI:
+    @pytest.fixture(autouse=True)
+    def create_test_data(self):
+        """
+        Create the content that all the tests in this class will use.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        content_page1 = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="main-menu-first-time-user",
+            title="main menu first time user",
+            bodies=[
+                WABody(
+                    "main menu first time user", [WABlk("*Welcome to HealthAlert* 🌍")]
+                ),
+                MBody(
+                    "main menu first time user", [MBlk("*Welcome to HealthAlert* 🌍")]
+                ),
+            ],
+            tags=["menu"],
+            quick_replies=["Self-help", "Settings", "Health Info"],
+            triggers=["Main menu"],
+        )
+        PageBuilder.build_cp(
+            parent=content_page1,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody("health info", [WABlk("*Health information* 🏥")]),
+                MBody("health info", [MBlk("*Health information* 🏥")]),
+            ],
+            tags=["health_info"],
+        )
+        PageBuilder.build_cp(
+            parent=content_page1,
+            slug="self-help",
+            title="self-help",
+            bodies=[
+                WABody("self-help", [WABlk("*Self-help programs* 🌬️")]),
+                MBody("self-help", [MBlk("*Self-help programs* 🌬️")]),
+            ],
+            tags=["self_help"],
+        )
+
     def test_login_required(self, client):
         """
         Users that aren't logged in shouldn't be allowed to access the API
@@ -500,41 +505,39 @@ class TestWhatsAppMessages:
         assert view.message == 1
 
 
-@pytest.fixture()
-def ordered_content_set_test_data(request):
-    # Pretend we're still a setUp() method on a TestCase.
-    self = request.instance
-
-    path = Path("home/tests/content2.csv")
-    with path.open(mode="rb") as f:
-        import_content(f, "CSV", queue.Queue())
-    self.page1 = ContentPage.objects.first()
-    self.ordered_content_set = OrderedContentSet(name="Test set")
-    self.ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
-    self.ordered_content_set.profile_fields.append(("gender", "female"))
-    self.ordered_content_set.save()
-
-    self.ordered_content_set_timed = OrderedContentSet(name="Test set")
-    self.ordered_content_set_timed.pages.append(
-        (
-            "pages",
-            {
-                "contentpage": self.page1,
-                "time": 5,
-                "unit": "Days",
-                "before_or_after": "Before",
-                "contact_field": "EDD",
-            },
-        )
-    )
-
-    self.ordered_content_set_timed.profile_fields.append(("gender", "female"))
-    self.ordered_content_set_timed.save()
-
-
-@pytest.mark.usefixtures("ordered_content_set_test_data")
 @pytest.mark.django_db
 class TestOrderedContentSetAPI:
+    @pytest.fixture(autouse=True)
+    def create_test_data(self):
+        """
+        Create the content that all the tests in this class will use.
+        """
+        path = Path("home/tests/content2.csv")
+        with path.open(mode="rb") as f:
+            import_content(f, "CSV", queue.Queue())
+        self.page1 = ContentPage.objects.first()
+        self.ordered_content_set = OrderedContentSet(name="Test set")
+        self.ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        self.ordered_content_set.profile_fields.append(("gender", "female"))
+        self.ordered_content_set.save()
+
+        self.ordered_content_set_timed = OrderedContentSet(name="Test set")
+        self.ordered_content_set_timed.pages.append(
+            (
+                "pages",
+                {
+                    "contentpage": self.page1,
+                    "time": 5,
+                    "unit": "Days",
+                    "before_or_after": "Before",
+                    "contact_field": "EDD",
+                },
+            )
+        )
+
+        self.ordered_content_set_timed.profile_fields.append(("gender", "female"))
+        self.ordered_content_set_timed.save()
+
     def test_orderedcontent_endpoint(self, uclient):
         """
         The orderedcontent endpoint returns a list of ordered sets, including
