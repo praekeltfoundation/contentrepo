@@ -274,50 +274,108 @@ class TestContentPageAPI:
         with django_assert_num_queries(8):
             uclient.get("/api/v2/pages/")
 
-    def test_detail_view(self, uclient):
+    def test_detail_view_content(self, uclient):
         """
-        FIXME:
-         * It's unclear what this is actually testing.
-         * Should it be multiple tests instead of just one?
-         * This should probably be in a class without the content setup.
+        Fetching the detail view of a page returns the page content.
         """
-        ContentPage.objects.all().delete()
+        page2 = ContentPage.objects.last()
+        response = uclient.get(f"/api/v2/pages/{page2.id}/")
+        content = response.json()
+
+        # There's a lot of metadata, so only check selected fields.
+        meta = content.pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == page2.slug
+        assert meta["parent"]["id"] == page2.get_parent().id
+        assert meta["locale"] == "en"
+
+        assert content == {
+            "id": page2.id,
+            "title": "self-help",
+            "subtitle": None,
+            "body": {"text": []},
+            "whatsapp_template_example_values": [],
+            "tags": ["self_help"],
+            "triggers": [],
+            "quick_replies": [],
+            "related_pages": [],
+            "has_children": False,
+        }
+
+    def test_detail_view_increments_count(self, uclient):
+        """
+        Fetching the detail view of a page increments the view count.
+        """
+        page2 = ContentPage.objects.last()
         assert PageView.objects.count() == 0
 
-        page = create_page(tags=["tag1", "tag2"])
-
-        # it should return the correct details
-        response = uclient.get(f"/api/v2/pages/{page.id}/")
-        content = response.json()
-
-        assert content["id"] == page.id
-        assert content["title"] == page.title
-        assert content["tags"], ["tag1" == "tag2"]
-        assert not content["has_children"]
-
+        uclient.get(f"/api/v2/pages/{page2.id}/")
         assert PageView.objects.count() == 1
-
-        # if there are children pages
-        create_page("child page", page.title)
-
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
-        content = response.json()
-
-        assert content["has_children"]
-
-        assert PageView.objects.count() == 2
         view = PageView.objects.last()
         assert view.message is None
 
-        # if we select the whatsapp content
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
-        content = response.json()
-
-        assert content["title"] == page.whatsapp_title
-
+        uclient.get(f"/api/v2/pages/{page2.id}/")
+        uclient.get(f"/api/v2/pages/{page2.id}/")
         assert PageView.objects.count() == 3
         view = PageView.objects.last()
-        assert view.message == 1
+        assert view.message is None
+
+    def test_detail_view_with_children(self, uclient):
+        """
+        Fetching the detail view of a page with children indicates that the
+        page has children.
+        """
+        page1 = ContentPage.objects.first()
+        response = uclient.get(f"/api/v2/pages/{page1.id}/")
+        content = response.json()
+
+        # There's a lot of metadata, so only check selected fields.
+        meta = content.pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == page1.slug
+        assert meta["parent"]["id"] == page1.get_parent().id
+        assert meta["locale"] == "en"
+
+        assert content == {
+            "id": page1.id,
+            "title": "main menu first time user",
+            "subtitle": None,
+            "body": {"text": []},
+            "whatsapp_template_example_values": [],
+            "tags": ["menu"],
+            "triggers": ["Main menu"],
+            "quick_replies": ["Health Info", "Self-help", "Settings"],
+            "related_pages": [],
+            "has_children": True,
+        }
+
+    def test_detail_view_whatsapp_message(self, uclient):
+        """
+        Fetching a detail page and selecting the WhatsApp content returns the
+        first WhatsApp message in the body.
+        """
+        page1 = ContentPage.objects.first()
+        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=true")
+        content = response.json()
+
+        # There's a lot of metadata, so only check selected fields.
+        meta = content.pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == page1.slug
+        assert meta["parent"]["id"] == page1.get_parent().id
+        assert meta["locale"] == "en"
+
+        assert content["id"] == page1.id
+        assert content["title"] == "main menu first time user"
+
+        # There's a lot of body, so only check selected fields.
+        body = content.pop("body")
+        assert body["message"] == 1
+        assert body["next_message"] is None
+        assert body["previous_message"] is None
+        assert body["total_messages"] == 1
+        assert body["text"]["type"] == "Whatsapp_Message"
+        assert body["text"]["value"]["message"] == "*Welcome to HealthAlert* 🌍"
 
     def test_detail_view_no_content_page(self, uclient):
         """
