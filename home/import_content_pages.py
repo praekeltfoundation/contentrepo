@@ -116,7 +116,7 @@ class ContentImporter:
             for message_index, buttons in messages.items():
                 for button in buttons:
                     title = button["title"]
-                    related_page = ContentPage.objects.get(slug=button["slug"])
+                    related_page = Page.objects.get(slug=button["slug"])
                     page.whatsapp_body[message_index].value["buttons"].append(
                         ("go_to_page", {"page": related_page, "title": title})
                     )
@@ -360,7 +360,7 @@ class ShadowContentPage:
         page = ContentPage.objects.get(slug=self.slug)
         related_pages = []
         for related_page_slug in self.related_pages:
-            related_page = ContentPage.objects.get(slug=related_page_slug)
+            related_page = Page.objects.get(slug=related_page_slug)
             related_pages.append(("related_page", related_page))
         page.related_pages = related_pages
         page.save_revision().publish()

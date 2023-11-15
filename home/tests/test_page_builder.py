@@ -11,7 +11,18 @@ from wagtail.rich_text import RichText  # type: ignore
 from home.models import ContentPage, ContentPageIndex, HomePage
 
 from .helpers import set_profile_field_options
-from .page_builder import MBlk, MBody, PageBuilder, VarMsg, VBlk, VBody, WABlk, WABody
+from .page_builder import (
+    MBlk,
+    MBody,
+    NextBtn,
+    PageBtn,
+    PageBuilder,
+    VarMsg,
+    VBlk,
+    VBody,
+    WABlk,
+    WABody,
+)
 
 
 def unwagtail(val):  # type: ignore[no-untyped-def] # No type info
@@ -129,6 +140,7 @@ def test_build_simple_pages() -> None:
             },
         ),
     ]
+    assert ha_menu.whatsapp_template_category == "UTILITY"
     assert ha_menu.whatsapp_template_name == ""
     assert ha_menu.whatsapp_title == "HealthAlert menu"
 
@@ -191,6 +203,7 @@ def test_build_web_content() -> None:
     assert unwagtail(ha_menu.viber_body) == []
     assert ha_menu.viber_title is None
     assert unwagtail(ha_menu.whatsapp_body) == []
+    assert ha_menu.whatsapp_template_category == "UTILITY"
     assert ha_menu.whatsapp_template_name == ""
     assert ha_menu.whatsapp_title is None
 
@@ -199,8 +212,8 @@ def test_build_web_content() -> None:
 def test_build_variations() -> None:
     """
     PageBuilder.build_cp correctly builds a ContentPage with variation
-    messages. (This also tests multiple WhatsApp messages and non-empty
-    next_prompt.)
+    messages. (This also tests multiple WhatsApp messages, buttons, and
+    non-empty next_prompt.)
     """
     set_profile_field_options()
     home_page = HomePage.objects.first()
@@ -210,7 +223,7 @@ def test_build_variations() -> None:
         WABlk(
             "Message 1",
             next_prompt="Next message",
-            buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
+            buttons=[NextBtn("Next message")],
             variation_messages=[
                 VarMsg("Single male", gender="male", relationship="single"),
                 VarMsg("Comp male", gender="male", relationship="complicated"),
@@ -219,13 +232,13 @@ def test_build_variations() -> None:
         WABlk(
             "Message 2, variable placeholders as well {{0}}",
             next_prompt="Next message",
-            buttons=[{"type": "next_message", "value": {"title": "Next message"}}],
+            buttons=[PageBtn("Import Export", page=imp_exp)],
             variation_messages=[VarMsg("Teen", age="15-18")],
         ),
         WABlk(
             "Message 3 with no variation",
             next_prompt="end",
-            buttons=[{"type": "next_message", "value": {"title": "end"}}],
+            buttons=[NextBtn("end")],
         ),
     ]
     cp_imp_exp = PageBuilder.build_cp(
@@ -251,7 +264,9 @@ def test_build_variations() -> None:
         {
             "message": "Message 2, variable placeholders as well {{0}}",
             "next_prompt": "Next message",
-            "buttons": [("next_message", {"title": "Next message"})],
+            "buttons": [
+                ("go_to_page", {"title": "Import Export", "page": page_for(imp_exp)}),
+            ],
             "example_values": [],
             "variation_messages": [
                 {"message": "Teen", "variation_restrictions": [("age", "15-18")]}
@@ -303,6 +318,7 @@ def test_build_variations() -> None:
         )
         for msg in wa_msgs
     ]
+    assert cp_imp_exp.whatsapp_template_category == "UTILITY"
     assert cp_imp_exp.whatsapp_template_name == ""
     assert cp_imp_exp.whatsapp_title == "WA import export data"
 
@@ -442,6 +458,7 @@ def test_whatsapp_template() -> None:
         slug="health-info",
         title="health info",
         bodies=[WABody("health info", [WABlk("*Health information* WA")])],
+        whatsapp_template_category="MARKETING",
         whatsapp_template_name="template-health-info",
     )
 
@@ -452,6 +469,7 @@ def test_whatsapp_template() -> None:
     assert isinstance(health_info, ContentPage)
     assert health_info.depth == 5
     assert health_info.is_whatsapp_template is True
+    assert health_info.whatsapp_template_category == "MARKETING"
     assert health_info.whatsapp_template_name == "template-health-info"
 
 

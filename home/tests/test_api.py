@@ -2,16 +2,11 @@ import json
 import queue
 from pathlib import Path
 
-from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+import pytest
 from wagtail import blocks
 
 from home.content_import_export import import_content
-from home.tests.page_builder import MBlk, MBody, PageBuilder, WABlk, WABody
-
-from .utils import create_page
-
-from home.models import (  # isort:skip
+from home.models import (
     ContentPage,
     HomePage,
     OrderedContentSet,
@@ -19,10 +14,25 @@ from home.models import (  # isort:skip
     VariationBlock,
 )
 
+from .page_builder import MBlk, MBody, PageBuilder, WABlk, WABody
+from .utils import create_page
 
-class PaginationTestCase(TestCase):
-    @classmethod
-    def setUpTestData(self):
+
+@pytest.fixture()
+def uclient(client, django_user_model):
+    creds = {"username": "test", "password": "test"}
+    django_user_model.objects.create_user(**creds)
+    client.login(**creds)
+    return client
+
+
+@pytest.mark.django_db
+class TestContentPageAPI:
+    @pytest.fixture(autouse=True)
+    def create_test_data(self):
+        """
+        Create the content that all the tests in this class will use.
+        """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         content_page1 = PageBuilder.build_cp(
@@ -62,174 +72,174 @@ class PaginationTestCase(TestCase):
             tags=["self_help"],
         )
 
-    def setUp(self):
-        self.user_credentials = {"username": "test", "password": "test"}
-        self.user = get_user_model().objects.create_user(**self.user_credentials)
-        self.client.login(**self.user_credentials)
-        self.content_page1 = ContentPage.objects.first()
-        self.content_page2 = ContentPage.objects.last()
-
-    def test_login_required(self):
+    def test_login_required(self, client):
         """
         Users that aren't logged in shouldn't be allowed to access the API
         """
-        client = Client()
         response = client.get("/api/v2/pages/?tag=menu")
-        self.assertEqual(response.status_code, 401)
+        assert response.status_code == 401
 
-    def test_tag_filtering(self):
+    def test_tag_filtering(self, uclient):
+        """
+        If a tag filter is provided, only pages with matching tags are returned.
+        """
         # it should return 1 page for correct tag
-        response = self.client.get("/api/v2/pages/?tag=menu")
+        response = uclient.get("/api/v2/pages/?tag=menu")
         content = json.loads(response.content)
-        self.assertEqual(content["count"], 1)
+        assert content["count"] == 1
         # it should return 1 page for Uppercase tag
-        response = self.client.get("/api/v2/pages/?tag=Menu")
+        response = uclient.get("/api/v2/pages/?tag=Menu")
         content = json.loads(response.content)
-        self.assertEqual(content["count"], 1)
+        assert content["count"] == 1
         # it should not return any pages for bogus tag
-        response = self.client.get("/api/v2/pages/?tag=bogus")
+        response = uclient.get("/api/v2/pages/?tag=bogus")
         content = json.loads(response.content)
-        self.assertEqual(content["count"], 0)
+        assert content["count"] == 0
         # it should return all pages for no tag
-        response = self.client.get("/api/v2/pages/")
+        response = uclient.get("/api/v2/pages/")
         content = json.loads(response.content)
         # exclude home pages and index pages
-        self.assertEqual(content["count"], 3)
+        assert content["count"] == 3
         # it should not return pages with tags in the draft
         create_page(tags=["Menu"]).unpublish()
-        response = self.client.get("/api/v2/pages/?tag=Menu")
+        response = uclient.get("/api/v2/pages/?tag=Menu")
         content = json.loads(response.content)
-        self.assertEqual(content["count"], 1)
+        assert content["count"] == 1
         # If QA flag is sent then it should return pages with tags in the draft
-        response = self.client.get("/api/v2/pages/?tag=Menu&qa=True")
+        response = uclient.get("/api/v2/pages/?tag=Menu&qa=True")
         content = json.loads(response.content)
-        self.assertEqual(content["count"], 2)
+        assert content["count"] == 2
 
-    def test_platform_filtering(self):
+    def test_platform_filtering(self, uclient):
+        """
+        If a platform filter is provided, only pages with content for that
+        platform are returned.
+        """
+        page1 = ContentPage.objects.first()
+        page2 = ContentPage.objects.last()
         # web page
-        self.content_page1.enable_messenger = False
-        self.content_page1.enable_whatsapp = False
-        self.content_page1.enable_viber = False
+        page1.enable_messenger = False
+        page1.enable_whatsapp = False
+        page1.enable_viber = False
         # This page has web_title, but not web_body. It's unclear what the
         # importer should do in that case, so enable web explicitly.
-        self.content_page1.enable_web = True
-        self.content_page1.save_revision().publish()
+        page1.enable_web = True
+        page1.save_revision().publish()
         # whatsapp page
-        self.content_page2.enable_messenger = False
-        self.content_page2.enable_web = False
-        self.content_page2.enable_viber = False
-        self.content_page2.save_revision().publish()
+        page2.enable_messenger = False
+        page2.enable_web = False
+        page2.enable_viber = False
+        page2.save_revision().publish()
         # messenger page
-        [page3] = ContentPage.objects.exclude(
-            pk__in=[self.content_page1, self.content_page2]
-        )[:1]
+        [page3] = ContentPage.objects.exclude(pk__in=[page1, page2])[:1]
         page3.enable_web = False
         page3.enable_whatsapp = False
         page3.enable_viber = False
         page3.save_revision().publish()
 
         # it should return only web pages if filtered
-        response = self.client.get("/api/v2/pages/?web=true")
+        response = uclient.get("/api/v2/pages/?web=true")
         content = json.loads(response.content)
-        self.assertEqual(content["count"], 1)
+        assert content["count"] == 1
         # it should return only whatsapp pages if filtered
-        response = self.client.get("/api/v2/pages/?whatsapp=true")
+        response = uclient.get("/api/v2/pages/?whatsapp=true")
         content = json.loads(response.content)
-        self.assertEqual(content["count"], 1)
+        assert content["count"] == 1
         # it should return only messenger pages if filtered
-        response = self.client.get("/api/v2/pages/?messenger=true")
+        response = uclient.get("/api/v2/pages/?messenger=true")
         content = json.loads(response.content)
-        self.assertEqual(content["count"], 1)
+        assert content["count"] == 1
         # it should return only viber pages if filtered
-        response = self.client.get("/api/v2/pages/?viber=true")
+        response = uclient.get("/api/v2/pages/?viber=true")
         content = json.loads(response.content)
-        self.assertEqual(content["count"], 0)
+        assert content["count"] == 0
         # it should return all pages for no filter
-        response = self.client.get("/api/v2/pages/")
+        response = uclient.get("/api/v2/pages/")
         content = json.loads(response.content)
         # exclude home pages and index pages
-        self.assertEqual(content["count"], 3)
+        assert content["count"] == 3
 
-    def test_whatsapp_draft(self):
-        self.content_page2.unpublish()
-        page_id = self.content_page2.id
+    def test_whatsapp_draft(self, uclient):
+        """
+        Unpublished whatsapp pages are returned if the qa param is set.
+        """
+        page2 = ContentPage.objects.last()
+        page2.unpublish()
+        page_id = page2.id
         url = f"/api/v2/pages/{page_id}/?whatsapp=True&qa=True"
         # it should return specific page that is in draft
-        response = self.client.get(url)
+        response = uclient.get(url)
         content = json.loads(response.content)
         message = "*Self-help programs* 🌬️"
         # the page is not live but whatsapp content is returned
-        self.assertEqual(self.content_page2.live, False)
-        self.assertEqual(
-            content["body"]["text"]["value"]["message"].replace("\r", ""),
-            message,
-        )
+        assert not page2.live
+        assert content["body"]["text"]["value"]["message"].replace("\r", "") == message
 
-    def test_messenger_draft(self):
-        self.content_page2.unpublish()
-        page_id = self.content_page2.id
+    def test_messenger_draft(self, uclient):
+        """
+        Unpublished messenger pages are returned if the qa param is set.
+        """
+        page2 = ContentPage.objects.last()
+        page2.unpublish()
+        page_id = page2.id
         url = f"/api/v2/pages/{page_id}/?messenger=True&qa=True"
         # it should return specific page that is in draft
-        response = self.client.get(url)
+        response = uclient.get(url)
 
         message = "*Self-help programs* 🌬️"
         content = json.loads(response.content)
 
         # the page is not live but messenger content is returned
-        self.assertEqual(self.content_page2.live, False)
-        self.assertEqual(content["body"]["text"]["message"].replace("\r", ""), message)
+        assert not page2.live
+        assert content["body"]["text"]["message"].replace("\r", "") == message
 
-    def test_pagination(self):
+    def test_pagination(self, uclient):
+        """
+        FIXME:
+         * It's unclear what this is actually testing.
+         * Should it be multiple tests instead of just one?
+        """
+        page1 = ContentPage.objects.first()
+
         # it should not return the web body if enable_whatsapp=false
-        self.content_page1.enable_whatsapp = False
-        self.content_page1.save_revision().publish()
-        response = self.client.get(
-            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True"
-        )
+        page1.enable_whatsapp = False
+        page1.save_revision().publish()
+        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=True")
 
         content = response.content
-        self.assertEqual(content, b"")
+        assert content == b""
 
         # it should only return the whatsapp body if enable_whatsapp=True
-        self.content_page1.enable_whatsapp = True
-        self.content_page1.save_revision().publish()
+        page1.enable_whatsapp = True
+        page1.save_revision().publish()
 
         # it should only return the first paragraph if no specific message
         # is requested
-        response = self.client.get(
-            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True"
-        )
+        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=True")
         content = json.loads(response.content)
-        self.assertEqual(content["body"]["message"], 1)
-        self.assertEqual(content["body"]["previous_message"], None)
-        self.assertEqual(content["body"]["total_messages"], 1)
-        self.assertEqual(
-            content["body"]["revision"], self.content_page1.get_latest_revision().id
-        )
-        self.assertTrue(
-            "*Welcome to HealthAlert*" in content["body"]["text"]["value"]["message"]
-        )
+        assert content["body"]["message"] == 1
+        assert content["body"]["previous_message"] is None
+        assert content["body"]["total_messages"] == 1
+        assert content["body"]["revision"] == page1.get_latest_revision().id
+        assert "*Welcome to HealthAlert*" in content["body"]["text"]["value"]["message"]
 
         # it should return an appropriate error if requested message index
         # is out of range
-        response = self.client.get(
-            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=3"
-        )
+        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=True&message=3")
         content = json.loads(response.content)
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(content, ["The requested message does not exist"])
+        assert response.status_code == 400
+        assert content == ["The requested message does not exist"]
 
         # it should return an appropriate error if requested message is not
         # a positive integer value
-        response = self.client.get(
-            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=notint"
+        response = uclient.get(
+            f"/api/v2/pages/{page1.id}/?whatsapp=True&message=notint"
         )
         content = json.loads(response.content)
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            content,
-            ["Please insert a positive integer " "for message in the query string"],
-        )
+        assert response.status_code == 400
+        assert content == [
+            "Please insert a positive integer for message in the query string"
+        ]
 
         body = []
         for i in range(15):
@@ -244,118 +254,163 @@ class PaginationTestCase(TestCase):
             )
             body.append(("Whatsapp_Message", block_value))
 
-        self.content_page1.whatsapp_body = body
-        self.content_page1.save_revision().publish()
+        page1.whatsapp_body = body
+        page1.save_revision().publish()
 
         # it should only return the 11th paragraph if 11th message
         # is requested
-        response = self.client.get(
-            f"/api/v2/pages/{self.content_page1.id}/?whatsapp=True&message=11"
-        )
+        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=True&message=11")
         content = json.loads(response.content)
-        self.assertEqual(content["body"]["message"], 11)
-        self.assertEqual(content["body"]["next_message"], 12)
-        self.assertEqual(content["body"]["previous_message"], 10)
-        self.assertEqual(content["body"]["text"]["value"]["message"], "WA Message 11")
+        assert content["body"]["message"] == 11
+        assert content["body"]["next_message"] == 12
+        assert content["body"]["previous_message"] == 10
+        assert content["body"]["text"]["value"]["message"] == "WA Message 11"
 
-    def test_number_of_queries(self):
-        with self.assertNumQueries(8):
-            self.client.get("/api/v2/pages/")
-
-    def test_detail_view(self):
-        ContentPage.objects.all().delete()
-        self.assertEqual(PageView.objects.count(), 0)
-
-        page = create_page(tags=["tag1", "tag2"])
-
-        # it should return the correct details
-        response = self.client.get(f"/api/v2/pages/{page.id}/")
-        content = response.json()
-
-        self.assertEqual(content["id"], page.id)
-        self.assertEqual(content["title"], page.title)
-        self.assertEqual(content["tags"], ["tag1", "tag2"])
-        self.assertFalse(content["has_children"])
-
-        self.assertEqual(PageView.objects.count(), 1)
-
-        # if there are children pages
-        create_page("child page", page.title)
-
-        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
-        content = response.json()
-
-        self.assertTrue(content["has_children"])
-
-        self.assertEqual(PageView.objects.count(), 2)
-        view = PageView.objects.last()
-        self.assertEqual(view.message, None)
-
-        # if we select the whatsapp content
-        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
-        content = response.json()
-
-        self.assertEqual(content["title"], page.whatsapp_title)
-
-        self.assertEqual(PageView.objects.count(), 3)
-        view = PageView.objects.last()
-        self.assertEqual(view.message, 1)
-
-    def test_detail_view_with_variations(self):
-        ContentPage.objects.all().delete()
-        self.assertEqual(PageView.objects.count(), 0)
-
-        # variations should be in the whatsapp content
-        page = create_page(tags=["tag1", "tag2"], add_variation=True)
-
-        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
-        content = response.json()
-
-        var_content = content["body"]["text"]["value"]["variation_messages"]
-        self.assertEqual(1, len(var_content))
-        self.assertEqual(var_content[0]["profile_field"], "gender")
-        self.assertEqual(var_content[0]["value"], "female")
-        self.assertEqual(var_content[0]["message"], "Test Title - female variation")
-
-        self.assertEqual(PageView.objects.count(), 1)
-        view = PageView.objects.last()
-        self.assertEqual(view.message, 1)
-
-    def test_whatsapp_body(self):
+    def test_number_of_queries(self, uclient, django_assert_num_queries):
         """
-        Should have the WhatsApp specific fields included in the body; if it's a
-        template, what's the template name, the text body of the message.
+        Make sure we aren't making an enormous number of queries.
+
+        FIXME:
+         * Should we document what these queries actually are?
         """
-        ContentPage.objects.all().delete()
-        page = create_page(
-            is_whatsapp_template=True, whatsapp_template_name="test_template"
-        )
+        # Run this once without counting, because there are two queries at the
+        # end that only happen if this is the first test that runs.
+        uclient.get("/api/v2/pages/")
+        with django_assert_num_queries(8):
+            uclient.get("/api/v2/pages/")
 
-        # it should return the correct details
-        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp")
+    def test_detail_view_content(self, uclient):
+        """
+        Fetching the detail view of a page returns the page content.
+        """
+        page2 = ContentPage.objects.last()
+        response = uclient.get(f"/api/v2/pages/{page2.id}/")
         content = response.json()
-        self.assertTrue(content["body"]["is_whatsapp_template"])
-        self.assertEqual(content["body"]["whatsapp_template_name"], "test_template")
-        self.assertEqual(
-            content["body"]["text"]["value"]["message"], "Test WhatsApp Message 1"
-        )
 
-    def test_detail_view_no_content_page(self):
+        # There's a lot of metadata, so only check selected fields.
+        meta = content.pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == page2.slug
+        assert meta["parent"]["id"] == page2.get_parent().id
+        assert meta["locale"] == "en"
+
+        assert content == {
+            "id": page2.id,
+            "title": "self-help",
+            "subtitle": None,
+            "body": {"text": []},
+            "whatsapp_template_example_values": [],
+            "tags": ["self_help"],
+            "triggers": [],
+            "quick_replies": [],
+            "related_pages": [],
+            "has_children": False,
+        }
+
+    def test_detail_view_increments_count(self, uclient):
+        """
+        Fetching the detail view of a page increments the view count.
+        """
+        page2 = ContentPage.objects.last()
+        assert PageView.objects.count() == 0
+
+        uclient.get(f"/api/v2/pages/{page2.id}/")
+        assert PageView.objects.count() == 1
+        view = PageView.objects.last()
+        assert view.message is None
+
+        uclient.get(f"/api/v2/pages/{page2.id}/")
+        uclient.get(f"/api/v2/pages/{page2.id}/")
+        assert PageView.objects.count() == 3
+        view = PageView.objects.last()
+        assert view.message is None
+
+    def test_detail_view_with_children(self, uclient):
+        """
+        Fetching the detail view of a page with children indicates that the
+        page has children.
+        """
+        page1 = ContentPage.objects.first()
+        response = uclient.get(f"/api/v2/pages/{page1.id}/")
+        content = response.json()
+
+        # There's a lot of metadata, so only check selected fields.
+        meta = content.pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == page1.slug
+        assert meta["parent"]["id"] == page1.get_parent().id
+        assert meta["locale"] == "en"
+
+        assert content == {
+            "id": page1.id,
+            "title": "main menu first time user",
+            "subtitle": None,
+            "body": {"text": []},
+            "whatsapp_template_example_values": [],
+            "tags": ["menu"],
+            "triggers": ["Main menu"],
+            "quick_replies": ["Health Info", "Self-help", "Settings"],
+            "related_pages": [],
+            "has_children": True,
+        }
+
+    def test_detail_view_whatsapp_message(self, uclient):
+        """
+        Fetching a detail page and selecting the WhatsApp content returns the
+        first WhatsApp message in the body.
+        """
+        page1 = ContentPage.objects.first()
+        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=true")
+        content = response.json()
+
+        # There's a lot of metadata, so only check selected fields.
+        meta = content.pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == page1.slug
+        assert meta["parent"]["id"] == page1.get_parent().id
+        assert meta["locale"] == "en"
+
+        assert content["id"] == page1.id
+        assert content["title"] == "main menu first time user"
+
+        # There's a lot of body, so only check selected fields.
+        body = content.pop("body")
+        assert body["message"] == 1
+        assert body["next_message"] is None
+        assert body["previous_message"] is None
+        assert body["total_messages"] == 1
+        assert body["text"]["type"] == "Whatsapp_Message"
+        assert body["text"]["value"]["message"] == "*Welcome to HealthAlert* 🌍"
+
+    def test_detail_view_no_content_page(self, uclient):
+        """
+        We get a validation error if we request a page that doesn't exist.
+
+        FIXME:
+         * Is 400 (ValidationError) really an appropriate response code for
+           this? 404 seems like a better fit for failing to find a page we're
+           looking up by id.
+        """
         # it should return the validation error for content page that doesn't exist
-        response = self.client.get("/api/v2/pages/1/")
+        response = uclient.get("/api/v2/pages/1/")
+        assert response.status_code == 400
+
         content = response.json()
+        assert content == {"page": ["Page matching query does not exist."]}
+        assert content.get("page") == ["Page matching query does not exist."]
 
-        self.assertEqual(content, {"page": ["Page matching query does not exist."]})
-        self.assertEqual(content.get("page"), ["Page matching query does not exist."])
 
+@pytest.mark.django_db
+class TestWhatsAppMessages:
+    """
+    FIXME:
+     * Should some of the WhatsApp tests from TestPagination live here instead?
+    """
 
-class WhatsAppMessagesTestCase(TestCase):
-    def setUp(self):
-        self.user_credentials = {"username": "test", "password": "test"}
-        self.user = get_user_model().objects.create_user(**self.user_credentials)
-        self.client.login(**self.user_credentials)
-
-    def test_whatsapp_detail_view_with_button(self):
+    def test_whatsapp_detail_view_with_button(self, uclient):
+        """
+        Next page buttons in WhatsApp messages are present in the message body.
+        """
         page = ContentPage(
             title="test",
             slug="text",
@@ -376,15 +431,17 @@ class WhatsAppMessagesTestCase(TestCase):
         homepage.add_child(instance=page)
         page.save_revision().publish()
 
-        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
         content = response.json()
         [button] = content["body"]["text"]["value"]["buttons"]
         button.pop("id")
-        self.assertEqual(
-            button, {"type": "next_message", "value": {"title": "Tell me more"}}
-        )
+        assert button == {"type": "next_message", "value": {"title": "Tell me more"}}
 
-    def test_whatsapp_template(self):
+    def test_whatsapp_template(self, uclient):
+        """
+        FIXME:
+         * Is this actually a template message?
+        """
         page = ContentPage(
             title="test",
             slug="text",
@@ -406,22 +463,61 @@ class WhatsAppMessagesTestCase(TestCase):
         homepage.add_child(instance=page)
         page.save_revision().publish()
 
-        response = self.client.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
         content = response.json()
         body = content["body"]
-        self.assertEqual(body["whatsapp_template_category"], "MARKETING")
+        assert body["whatsapp_template_category"] == "MARKETING"
+
+    def test_whatsapp_body(self, uclient):
+        """
+        Should have the WhatsApp specific fields included in the body; if it's a
+        template, what's the template name, the text body of the message.
+        """
+        page = create_page(
+            is_whatsapp_template=True, whatsapp_template_name="test_template"
+        )
+
+        # it should return the correct details
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp")
+        content = response.json()
+        assert content["body"]["is_whatsapp_template"]
+        assert content["body"]["whatsapp_template_name"] == "test_template"
+        assert content["body"]["text"]["value"]["message"] == "Test WhatsApp Message 1"
+
+    def test_whatsapp_detail_view_with_variations(self, uclient):
+        """
+        Variation blocks in WhatsApp messages are present in the message body.
+        """
+        # variations should be in the whatsapp content
+        page = create_page(tags=["tag1", "tag2"], add_variation=True)
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
+        content = response.json()
+
+        var_content = content["body"]["text"]["value"]["variation_messages"]
+        assert len(var_content) == 1
+        assert var_content[0]["profile_field"] == "gender"
+        assert var_content[0]["value"] == "female"
+        assert var_content[0]["message"] == "Test Title - female variation"
+
+        assert PageView.objects.count() == 1
+        view = PageView.objects.last()
+        assert view.message == 1
 
 
-class OrderedContentSetTestCase(TestCase):
-    def setUp(self):
+@pytest.mark.django_db
+class TestOrderedContentSetAPI:
+    @pytest.fixture(autouse=True)
+    def create_test_data(self):
+        """
+        Create the content that all the tests in this class will use.
+        """
         path = Path("home/tests/content2.csv")
         with path.open(mode="rb") as f:
             import_content(f, "CSV", queue.Queue())
-        self.content_page1 = ContentPage.objects.first()
+        self.page1 = ContentPage.objects.first()
         self.ordered_content_set = OrderedContentSet(name="Test set")
-        self.ordered_content_set.pages.append(
-            ("pages", {"contentpage": self.content_page1})
-        )
+        self.ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         self.ordered_content_set.profile_fields.append(("gender", "female"))
         self.ordered_content_set.save()
 
@@ -430,7 +526,7 @@ class OrderedContentSetTestCase(TestCase):
             (
                 "pages",
                 {
-                    "contentpage": self.content_page1,
+                    "contentpage": self.page1,
                     "time": 5,
                     "unit": "Days",
                     "before_or_after": "Before",
@@ -438,107 +534,113 @@ class OrderedContentSetTestCase(TestCase):
                 },
             )
         )
-        self.user_credentials = {"username": "test", "password": "test"}
-        self.user = get_user_model().objects.create_user(**self.user_credentials)
-        self.client.login(**self.user_credentials)
 
         self.ordered_content_set_timed.profile_fields.append(("gender", "female"))
         self.ordered_content_set_timed.save()
 
-    def test_orderedcontent_endpoint(self):
+    def test_orderedcontent_endpoint(self, uclient):
+        """
+        The orderedcontent endpoint returns a list of ordered sets, including
+        name and profile fields.
+        """
         # it should return a list of ordered sets and show the profile fields
-        response = self.client.get("/api/v2/orderedcontent/")
+        response = uclient.get("/api/v2/orderedcontent/")
         content = json.loads(response.content)
-        self.assertEqual(content["count"], 2)
-        self.assertEqual(content["results"][0]["name"], self.ordered_content_set.name)
-        self.assertEqual(
-            content["results"][0]["profile_fields"][0],
-            {"profile_field": "gender", "value": "female"},
-        )
+        assert content["count"] == 2
+        assert content["results"][0]["name"] == self.ordered_content_set.name
+        assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
 
-    def test_orderedcontent_detail_endpoint(self):
+    def test_orderedcontent_detail_endpoint(self, uclient):
+        """
+        The orderedcontent detail page lists the pages that are part of the
+        ordered set.
+        """
         # it should return the list of pages that are part of the ordered content set
-        response = self.client.get(
-            f"/api/v2/orderedcontent/{self.ordered_content_set.id}/"
-        )
+        response = uclient.get(f"/api/v2/orderedcontent/{self.ordered_content_set.id}/")
         content = json.loads(response.content)
-        self.assertEqual(content["name"], self.ordered_content_set.name)
-        self.assertEqual(
-            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
-        )
-        self.assertEqual(
-            content["pages"][0],
-            {
-                "id": self.content_page1.id,
-                "title": self.content_page1.title,
-                "time": None,
-                "unit": None,
-                "before_or_after": None,
-                "contact_field": None,
-            },
-        )
+        assert content["name"] == self.ordered_content_set.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["pages"][0] == {
+            "id": self.page1.id,
+            "title": self.page1.title,
+            "time": None,
+            "unit": None,
+            "before_or_after": None,
+            "contact_field": None,
+        }
 
-    def test_orderedcontent_detail_endpoint_timed(self):
+    def test_orderedcontent_detail_endpoint_timed(self, uclient):
+        """
+        The orderedcontent detail page lists the pages that are part of the
+        ordered set, including information about timing.
+        """
         # it should return the list of pages that are part of the ordered content set
-        response = self.client.get(
+        response = uclient.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set_timed.id}/"
         )
         content = json.loads(response.content)
-        self.assertEqual(content["name"], self.ordered_content_set_timed.name)
-        self.assertEqual(
-            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
-        )
-        self.assertEqual(
-            content["pages"][0],
-            {
-                "id": self.content_page1.id,
-                "title": self.content_page1.title,
-                "time": 5,
-                "unit": "Days",
-                "before_or_after": "Before",
-                "contact_field": "EDD",
-            },
-        )
+        assert content["name"] == self.ordered_content_set_timed.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["pages"][0] == {
+            "id": self.page1.id,
+            "title": self.page1.title,
+            "time": 5,
+            "unit": "Days",
+            "before_or_after": "Before",
+            "contact_field": "EDD",
+        }
 
-    def test_orderedcontent_detail_endpoint_rel_pages_flag(self):
+    def test_orderedcontent_detail_endpoint_rel_pages_flag(self, uclient):
+        """
+        The orderedcontent detail page lists the pages that are part of the
+        ordered set, including related pages.
+        """
         rel_page = create_page("Related Page")
-        self.content_page1.related_pages = [
-            {"type": "related_page", "value": rel_page.id},
-        ]
-        self.content_page1.save_revision().publish()
+        self.page1.related_pages = [{"type": "related_page", "value": rel_page.id}]
+        self.page1.save_revision().publish()
 
         # it should return the list of pages that are part of the ordered content set
-        response = self.client.get(
+        response = uclient.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_related=true"
         )
         content = json.loads(response.content)
-        self.assertEqual(content["name"], self.ordered_content_set.name)
-        self.assertEqual(
-            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
-        )
-        self.assertEqual(
-            content["pages"][0],
-            {
-                "id": self.content_page1.id,
-                "title": self.content_page1.title,
-                "time": None,
-                "unit": None,
-                "before_or_after": None,
-                "contact_field": None,
-                "related_pages": [rel_page.id],
-            },
-        )
+        assert content["name"] == self.ordered_content_set.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["pages"][0] == {
+            "id": self.page1.id,
+            "title": self.page1.title,
+            "time": None,
+            "unit": None,
+            "before_or_after": None,
+            "contact_field": None,
+            "related_pages": [rel_page.id],
+        }
 
-    def test_orderedcontent_detail_endpoint_tags_flag(self):
+    def test_orderedcontent_detail_endpoint_tags_flag(self, uclient):
+        """
+        The orderedcontent detail page lists the pages that are part of the
+        ordered set, including tags.
+        """
         # it should return the list of pages that are part of the ordered content set
-        response = self.client.get(
+        response = uclient.get(
             f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?show_tags=true"
         )
         content = json.loads(response.content)
-        self.assertEqual(content["name"], self.ordered_content_set.name)
-        self.assertEqual(
-            content["profile_fields"][0], {"profile_field": "gender", "value": "female"}
-        )
-        self.assertEqual(
-            content["pages"][0]["tags"], [t.name for t in self.content_page1.tags.all()]
-        )
+        assert content["name"] == self.ordered_content_set.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["pages"][0]["tags"] == [t.name for t in self.page1.tags.all()]
