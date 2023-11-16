@@ -7,6 +7,7 @@ from django.core.files.images import ImageFile  # type: ignore
 from pytest_django.fixtures import SettingsWrapper
 from responses.matchers import multipart_matcher
 from wagtail.images.models import Image  # type: ignore
+from wagtail.models import Locale  # type: ignore
 
 from home.whatsapp import create_whatsapp_template
 
@@ -67,9 +68,7 @@ class TestWhatsApp:
             "Test-Template",
             "Hi {{1}}. You are testing as a {{2}}",
             "UTILITY",
-            [],
-            None,
-            ["Fritz", "beta tester"],
+            example_values=["Fritz", "beta tester"],
         )
 
         request = responses.calls[0].request
@@ -104,7 +103,7 @@ class TestWhatsApp:
             "Test-Template",
             "Test Body",
             "UTILITY",
-            ["Test button1", "test button2"],
+            quick_replies=["Test button1", "test button2"],
         )
 
         request = responses.calls[0].request
@@ -161,7 +160,7 @@ class TestWhatsApp:
         responses.add(responses.POST, template_url, json={})
 
         create_whatsapp_template(
-            "Test-Template", "Test Body", "UTILITY", [], saved_image.id
+            "Test-Template", "Test Body", "UTILITY", image_id=saved_image.id
         )
 
         mock_get_session_data = {
@@ -190,3 +189,45 @@ class TestWhatsApp:
 
         assert ct_req.headers["Authorization"] == "Bearer fake-access-token"
         assert json.loads(ct_req.body) == mock_create_template_data
+
+    @responses.activate
+    def test_create_whatsapp_template_with_language(self) -> None:
+        """
+        When we create a WhatsApp template, the language is converted to the
+        appropriate WhatsApp language code.
+        """
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        # The default English locale gives us a language of "en_US".
+        # FIXME: Should this be "en" instead?
+        en = Locale.objects.get(language_code="en")
+        create_whatsapp_template("Test-Template", "Test Body", "UTILITY", locale=en)
+        assert json.loads(responses.calls[-1].request.body) == {
+            "category": "UTILITY",
+            "name": "test-template",
+            "language": "en_US",
+            "components": [{"type": "BODY", "text": "Test Body"}],
+        }
+
+        # WhatsApp doesn't support Portuguese without a country code, so we
+        # pick "pt_PT" rather than "pt_BR".
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        create_whatsapp_template("Test-pt", "Corpo de Teste", "UTILITY", locale=pt)
+        assert json.loads(responses.calls[-1].request.body) == {
+            "category": "UTILITY",
+            "name": "test-pt",
+            "language": "pt_PT",
+            "components": [{"type": "BODY", "text": "Corpo de Teste"}],
+        }
+
+        # If we specifically want Brazillian Portuguese, we can use a locale
+        # specifically for that.
+        ptbr, _created = Locale.objects.get_or_create(language_code="pt_BR")
+        create_whatsapp_template("Test-pt-BR", "Corpo de Teste", "UTILITY", locale=ptbr)
+        assert json.loads(responses.calls[-1].request.body) == {
+            "category": "UTILITY",
+            "name": "test-pt-br",
+            "language": "pt_BR",
+            "components": [{"type": "BODY", "text": "Corpo de Teste"}],
+        }
