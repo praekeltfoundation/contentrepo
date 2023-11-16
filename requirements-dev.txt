@@ -7,3 +7,4 @@ pytest-cov
 pytest-xdist
 mypy
 types-openpyxl
+types-requests

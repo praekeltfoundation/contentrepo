@@ -3,9 +3,10 @@ from pathlib import Path
 
 import pytest
 import responses
-from django.core.files.images import ImageFile
+from django.core.files.images import ImageFile  # type: ignore
+from pytest_django.fixtures import SettingsWrapper
 from responses.matchers import multipart_matcher
-from wagtail.images.models import Image
+from wagtail.images.models import Image  # type: ignore
 
 from home.whatsapp import create_whatsapp_template
 
@@ -13,7 +14,7 @@ from home.whatsapp import create_whatsapp_template
 @pytest.mark.django_db
 class TestWhatsApp:
     @responses.activate
-    def test_create_whatsapp_template(self):
+    def test_create_whatsapp_template(self) -> None:
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -31,7 +32,7 @@ class TestWhatsApp:
         assert request.body == json.dumps(data, indent=4)
 
     @responses.activate
-    def test_create_whatsapp_template_with_example_values(self):
+    def test_create_whatsapp_template_with_example_values(self) -> None:
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -68,7 +69,7 @@ class TestWhatsApp:
         assert request.body == json.dumps(data, indent=4)
 
     @responses.activate
-    def test_create_whatsapp_template_with_buttons(self):
+    def test_create_whatsapp_template_with_buttons(self) -> None:
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -100,7 +101,9 @@ class TestWhatsApp:
         assert request.body == json.dumps(data, indent=4)
 
     @responses.activate
-    def test_create_whatsapp_template_with_image(self, tmp_path, settings):
+    def test_create_whatsapp_template_with_image(
+        self, tmp_path: Path, settings: SettingsWrapper
+    ) -> None:
         settings.MEDIA_ROOT = tmp_path
         img_name = "test.jpeg"
         img_path = Path("home/tests/test_static") / img_name

@@ -1,15 +1,22 @@
 import json
 import mimetypes
+from collections.abc import Iterable
+from typing import Any
 from urllib.parse import urljoin
 
 import requests
-from django.conf import settings
-from wagtail.images import get_image_model
+from django.conf import settings  # type: ignore
+from wagtail.images import get_image_model  # type: ignore
 
 
 def create_whatsapp_template(
-    name, body, category, quick_replies=(), image_id=None, example_values=None
-):
+    name: str,
+    body: str,
+    category: str,
+    quick_replies: Iterable[str] = (),
+    image_id: int | None = None,
+    example_values: Iterable[str] | None = None,
+) -> None:
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
@@ -19,8 +26,9 @@ def create_whatsapp_template(
         "Content-Type": "application/json",
     }
 
+    components: list[dict[str, Any]] = []
     if example_values:
-        components = [
+        components.append(
             {
                 "type": "BODY",
                 "text": body,
@@ -28,9 +36,9 @@ def create_whatsapp_template(
                     "body_text": [example_values],
                 },
             }
-        ]
+        )
     else:
-        components = [{"type": "BODY", "text": body}]
+        components.append({"type": "BODY", "text": body})
 
     if quick_replies:
         buttons = []
@@ -62,7 +70,7 @@ def create_whatsapp_template(
     response.raise_for_status()
 
 
-def get_upload_session_id(image_id):
+def get_upload_session_id(image_id: int) -> dict[str, Any]:
     url = urljoin(
         settings.WHATSAPP_API_URL,
         "graph/v14.0/app/uploads",
@@ -97,7 +105,7 @@ def get_upload_session_id(image_id):
     return upload_details
 
 
-def upload_image(image_id):
+def upload_image(image_id: int) -> str:
     upload_details = get_upload_session_id(image_id)
     url = urljoin(
         settings.WHATSAPP_API_URL,
