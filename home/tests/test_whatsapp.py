@@ -15,6 +15,10 @@ from home.whatsapp import create_whatsapp_template
 class TestWhatsApp:
     @responses.activate
     def test_create_whatsapp_template(self) -> None:
+        """
+        Creating a WhatsApp template results in a single HTTP call to the
+        WhatsApp API containing the template data.
+        """
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -33,6 +37,10 @@ class TestWhatsApp:
 
     @responses.activate
     def test_create_whatsapp_template_with_example_values(self) -> None:
+        """
+        When we create a WhatsApp template with example values, the examples
+        are included in the HTTP request's template body component.
+        """
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -70,6 +78,10 @@ class TestWhatsApp:
 
     @responses.activate
     def test_create_whatsapp_template_with_buttons(self) -> None:
+        """
+        When we create a WhatsApp template with quick-reply buttons, the
+        template data includes a buttons component that contains the buttons.
+        """
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -104,6 +116,15 @@ class TestWhatsApp:
     def test_create_whatsapp_template_with_image(
         self, tmp_path: Path, settings: SettingsWrapper
     ) -> None:
+        """
+        When we create a WhatsApp template with an image, the image must be
+        uploaded separately:
+         * A POST containing image metadata that returns a sesson id.
+         * A POST containing the session id and the image data that returns an
+           image handle.
+         * A POST containing the template data, with the image handle in a
+           header/image component.
+        """
         settings.MEDIA_ROOT = tmp_path
         img_name = "test.jpeg"
         img_path = Path("home/tests/test_static") / img_name
