@@ -33,7 +33,7 @@ class TestWhatsApp:
         request = responses.calls[0].request
 
         assert request.headers["Authorization"] == "Bearer fake-access-token"
-        assert request.body == json.dumps(data, indent=4)
+        assert json.loads(request.body) == data
 
     @responses.activate
     def test_create_whatsapp_template_with_example_values(self) -> None:
@@ -74,7 +74,7 @@ class TestWhatsApp:
 
         request = responses.calls[0].request
         assert request.headers["Authorization"] == "Bearer fake-access-token"
-        assert request.body == json.dumps(data, indent=4)
+        assert json.loads(request.body) == data
 
     @responses.activate
     def test_create_whatsapp_template_with_buttons(self) -> None:
@@ -110,7 +110,7 @@ class TestWhatsApp:
         request = responses.calls[0].request
 
         assert request.headers["Authorization"] == "Bearer fake-access-token"
-        assert request.body == json.dumps(data, indent=4)
+        assert json.loads(request.body) == data
 
     @responses.activate
     def test_create_whatsapp_template_with_image(
@@ -170,12 +170,10 @@ class TestWhatsApp:
             "access_token": "fake-access-token",
             "number": "27121231234",
         }
-        get_session_id_request = responses.calls[0].request
-        assert get_session_id_request.body == json.dumps(
-            mock_get_session_data, indent=4
-        )
+        gsid_req = responses.calls[0].request
+        assert json.loads(gsid_req.body) == mock_get_session_data
 
-        create_template_request = responses.calls[2].request
+        ct_req = responses.calls[2].request
         mock_create_template_data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -190,10 +188,5 @@ class TestWhatsApp:
             ],
         }
 
-        assert (
-            create_template_request.headers["Authorization"]
-            == "Bearer fake-access-token"
-        )
-        assert create_template_request.body == json.dumps(
-            mock_create_template_data, indent=4
-        )
+        assert ct_req.headers["Authorization"] == "Bearer fake-access-token"
+        assert json.loads(ct_req.body) == mock_create_template_data
