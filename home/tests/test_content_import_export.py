@@ -573,8 +573,7 @@ class TestImportExportRoundtrip:
 
         FIXME:
          * This should probably be in a separate test for importing old exports.
-         * Do we actually need translation_tag to be added to tags?
-         * Do we need page.id to be imported? At the moment nothing in the
+         * Do we need page.id to be exported? At the moment nothing in the
            import reads that.
          * Do we expect imported content to have leading spaces removed?
          * Should we set enable_web and friends based on body, title, or an
@@ -646,10 +645,6 @@ class TestImportExportRoundtrip:
         with only pages from the specifyied specified locale included.
 
         (This uses translations.csv and the en language-specific subset thereof.)
-
-        FIXME:
-         * Slugs need to either be unique per site/deployment or the importer
-           needs to handle them only being unique per locale.
         """
 
         # Create a new homepage for Portuguese.
@@ -673,10 +668,6 @@ class TestImportExportRoundtrip:
         with only pages from the specifyied specified locale included.
 
         (This uses translations.csv and the pt language-specific subset thereof.)
-
-        FIXME:
-         * Slugs need to either be unique per site/deployment or the importer
-           needs to handle them only being unique per locale.
         """
 
         # Create a new homepage for Portuguese.
@@ -699,10 +690,6 @@ class TestImportExportRoundtrip:
         produces a duplicate of the original file.
 
         (This uses translations.csv.)
-
-        FIXME:
-         * Slugs need to either be unique per site/deployment or the importer
-           needs to handle them only being unique per locale.
         """
         if csv_impexp.importer == "old":
             pytest.skip("Old importer can't handle multiple languages at once.")
@@ -1086,10 +1073,88 @@ class TestExportImportRoundtrip:
 
     def test_translations(self, impexp: ImportExportFixture) -> None:
         """
-        ContentPages in multiple languages are preserved across export/import.
+        ContentPages in multiple languages (with unique-per-locale slugs and
+        titles) are preserved across export/import.
+        """
+        if impexp.importer == "old":
+            pytest.skip("Old importer can't handle non-unique slugs.")
 
-        FIXME:
-         * We shouldn't need to import different languages separately.
+        # Create a new homepage for Portuguese.
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        # NOTE: For the results to match without a bunch of work reordering
+        # pages and juggling ids, we need all CPIs to be created before all
+        # CPs.
+
+        # English CPIs
+        home_en = HomePage.objects.get(locale__language_code="en")
+        _app_rem = PageBuilder.build_cpi(
+            parent=home_en, slug="appointment-reminders", title="Appointment reminders"
+        )
+        _sbm = PageBuilder.build_cpi(
+            parent=home_en, slug="stage-based-messages", title="Stage-based messages"
+        )
+        _him = PageBuilder.build_cpi(
+            parent=home_en, slug="health-info-messages", title="Health info messages"
+        )
+        _wtt = PageBuilder.build_cpi(
+            parent=home_en,
+            slug="whatsapp-template-testing",
+            title="whatsapp template testing",
+        )
+        imp_exp = PageBuilder.build_cpi(
+            parent=home_en, slug="import-export", title="Import Export"
+        )
+
+        # Portuguese CPIs
+        home_pt = HomePage.objects.get(locale__language_code="pt")
+        imp_exp_pt = PageBuilder.build_cpi(
+            parent=home_pt,
+            slug="import-export",
+            title="Import Export (pt)",
+            translated_from=imp_exp,
+        )
+
+        # English CPs
+        non_templ_wablks = [
+            WABlk("this is a non template message"),
+            WABlk("this message has a doc"),
+            WABlk("this message comes with audio"),
+        ]
+        non_tmpl = PageBuilder.build_cp(
+            parent=imp_exp,
+            slug="non-template",
+            title="Non template messages",
+            bodies=[WABody("non template OCS", non_templ_wablks)],
+        )
+
+        # Portuguese CPs
+        non_templ_wablks_pt = [
+            WABlk("this is a non template message (pt)"),
+            WABlk("this message has a doc (pt)"),
+            WABlk("this message comes with audio (pt)"),
+        ]
+        non_tmpl_pt = PageBuilder.build_cp(
+            parent=imp_exp_pt,
+            slug="non-template",
+            title="Non template messages",
+            bodies=[WABody("non template OCS", non_templ_wablks_pt)],
+            translated_from=non_tmpl,
+        )
+
+        assert imp_exp.translation_key == imp_exp_pt.translation_key
+        assert non_tmpl.translation_key == non_tmpl_pt.translation_key
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    def test_translations_sep(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages in multiple languages (with globally-unique slugs and titles) are
+        preserved across export/import with each language imported separately.
         """
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
@@ -1142,6 +1207,83 @@ class TestExportImportRoundtrip:
         non_tmpl_pt = PageBuilder.build_cp(
             parent=imp_exp_pt,
             slug="non-template-pt",
+            title="Non template messages",
+            bodies=[WABody("non template OCS", non_templ_wablks_pt)],
+            translated_from=non_tmpl,
+        )
+
+        assert imp_exp.translation_key == imp_exp_pt.translation_key
+        assert non_tmpl.translation_key == non_tmpl_pt.translation_key
+
+        orig = impexp.get_page_json()
+        content_en = impexp.export_content(locale="en")
+        content_pt = impexp.export_content(locale="pt")
+
+        impexp.import_content(content_en, locale="en")
+        impexp.import_content(content_pt, locale="pt", purge=False)
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    def test_translations_split(self, impexp: ImportExportFixture) -> None:
+        """
+        ContentPages in multiple languages (with unique-per-locale slugs and
+        titles) are preserved across export/import with each language imported
+        separately.
+        """
+        if impexp.importer == "old":
+            pytest.skip("Old importer can't handle non-unique slugs.")
+
+        # Create a new homepage for Portuguese.
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        # English pages
+        home_en = HomePage.objects.get(locale__language_code="en")
+        _app_rem = PageBuilder.build_cpi(
+            parent=home_en, slug="appointment-reminders", title="Appointment reminders"
+        )
+        _sbm = PageBuilder.build_cpi(
+            parent=home_en, slug="stage-based-messages", title="Stage-based messages"
+        )
+        _him = PageBuilder.build_cpi(
+            parent=home_en, slug="health-info-messages", title="Health info messages"
+        )
+        _wtt = PageBuilder.build_cpi(
+            parent=home_en,
+            slug="whatsapp-template-testing",
+            title="whatsapp template testing",
+        )
+        imp_exp = PageBuilder.build_cpi(
+            parent=home_en, slug="import-export", title="Import Export"
+        )
+        non_templ_wablks = [
+            WABlk("this is a non template message"),
+            WABlk("this message has a doc"),
+            WABlk("this message comes with audio"),
+        ]
+        non_tmpl = PageBuilder.build_cp(
+            parent=imp_exp,
+            slug="non-template",
+            title="Non template messages",
+            bodies=[WABody("non template OCS", non_templ_wablks)],
+        )
+
+        # Portuguese pages
+        home_pt = HomePage.objects.get(locale__language_code="pt")
+        imp_exp_pt = PageBuilder.build_cpi(
+            parent=home_pt,
+            slug="import-export",
+            title="Import Export (pt)",
+            translated_from=imp_exp,
+        )
+        non_templ_wablks_pt = [
+            WABlk("this is a non template message (pt)"),
+            WABlk("this message has a doc (pt)"),
+            WABlk("this message comes with audio (pt)"),
+        ]
+        non_tmpl_pt = PageBuilder.build_cp(
+            parent=imp_exp_pt,
+            slug="non-template",
             title="Non template messages",
             bodies=[WABody("non template OCS", non_templ_wablks_pt)],
             translated_from=non_tmpl,
