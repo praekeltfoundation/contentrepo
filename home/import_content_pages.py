@@ -28,17 +28,7 @@ from home.models import (
     WhatsappBlock,
 )
 
-
-def language_code_from_display_name(display_name: str) -> str:
-    codes = []
-    for lang_code, lang_dn in get_content_languages().items():
-        if lang_dn == display_name:
-            codes.append(lang_code)
-    if not codes:
-        raise ValueError(f"Language not found: {display_name}")
-    if len(codes) > 1:
-        raise ValueError(f"Multiple codes for language: {display_name} -> {codes}")
-    return codes[0]
+PageId = tuple[str, Locale]
 
 
 class ContentImporter:
@@ -57,10 +47,24 @@ class ContentImporter:
         self.progress_queue = progress_queue
         self.purge = purge in ["True", "yes", True]
         self.locale = locale
-        self.shadow_pages: dict[str, ShadowContentPage] = {}
+        self.locale_map: dict[str, Locale] = {}
+        self.shadow_pages: dict[PageId, ShadowContentPage] = {}
         self.go_to_page_buttons: dict[
-            str, dict[int, list[dict[str, Any]]]
+            PageId, dict[int, list[dict[str, Any]]]
         ] = defaultdict(lambda: defaultdict(list))
+
+    def locale_from_display_name(self, langname: str) -> Locale:
+        if langname not in self.locale_map:
+            codes = []
+            for lang_code, lang_dn in get_content_languages().items():
+                if lang_dn == langname:
+                    codes.append(lang_code)
+            if not codes:
+                raise ValueError(f"Language not found: {langname}")
+            if len(codes) > 1:
+                raise ValueError(f"Multiple codes for language: {langname} -> {codes}")
+            self.locale_map[langname] = Locale.objects.get(language_code=codes[0])
+        return self.locale_map[langname]
 
     def perform_import(self) -> None:
         rows = self.parse_file()
@@ -76,18 +80,23 @@ class ContentImporter:
         self.add_go_to_page_buttons()
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
+        # Non-page rows don't have a locale, so we need to remember the last
+        # row that does have a locale.
+        prev_locale: Locale | None = None
         for row in rows:
             if row.is_page_index:
                 if self.locale and row.locale != self.locale.get_display_name():
                     # This page index isn't for the locale we're importing, so skip it.
                     continue
                 self.create_content_page_index_from_row(row)
+                prev_locale = self.locale_from_display_name(row.locale)
             elif row.is_content_page:
                 self.create_shadow_content_page_from_row(row)
+                prev_locale = self.locale_from_display_name(row.locale)
             elif row.is_variation_message:
-                self.add_variation_to_shadow_content_page_from_row(row)
+                self.add_variation_to_shadow_content_page_from_row(row, prev_locale)
             else:
-                self.add_message_to_shadow_content_page_from_row(row)
+                self.add_message_to_shadow_content_page_from_row(row, prev_locale)
 
     def save_pages(self) -> None:
         for i, page in enumerate(self.shadow_pages.values()):
@@ -111,12 +120,12 @@ class ContentImporter:
             )
 
     def add_go_to_page_buttons(self) -> None:
-        for slug, messages in self.go_to_page_buttons.items():
-            page = ContentPage.objects.get(slug=slug)
+        for (slug, locale), messages in self.go_to_page_buttons.items():
+            page = ContentPage.objects.get(slug=slug, locale=locale)
             for message_index, buttons in messages.items():
                 for button in buttons:
                     title = button["title"]
-                    related_page = Page.objects.get(slug=button["slug"])
+                    related_page = Page.objects.get(slug=button["slug"], locale=locale)
                     page.whatsapp_body[message_index].value["buttons"].append(
                         ("go_to_page", {"page": related_page, "title": title})
                     )
@@ -160,26 +169,26 @@ class ContentImporter:
         return HomePage.objects.get(locale=locale)
 
     def create_content_page_index_from_row(self, row: "ContentRow") -> None:
+        locale = self.locale_from_display_name(row.locale)
         try:
-            index = ContentPageIndex.objects.get(slug=row.slug)
+            index = ContentPageIndex.objects.get(slug=row.slug, locale=locale)
         except ContentPageIndex.DoesNotExist:
-            index = ContentPageIndex(slug=row.slug)
+            index = ContentPageIndex(slug=row.slug, locale=locale)
         index.title = row.web_title
         if row.translation_tag:
             index.translation_key = row.translation_tag
-        language_code = language_code_from_display_name(row.locale)
-        locale = Locale.objects.get(language_code=language_code)
+        locale = self.locale_from_display_name(row.locale)
         with contextlib.suppress(NodeAlreadySaved):
             self.home_page(locale).add_child(instance=index)
 
         index.save_revision().publish()
 
     def create_shadow_content_page_from_row(self, row: "ContentRow") -> None:
-        language_code = language_code_from_display_name(row.locale)
+        locale = self.locale_from_display_name(row.locale)
         page = ShadowContentPage(
             slug=row.slug,
             title=row.web_title,
-            locale=Locale.objects.get(language_code=language_code),
+            locale=locale,
             subtitle=row.web_subtitle,
             body=row.web_body,
             enable_web=bool(row.web_body),
@@ -189,9 +198,9 @@ class ContentImporter:
             parent=row.parent,
             related_pages=row.related_pages,
         )
-        self.shadow_pages[row.slug] = page
+        self.shadow_pages[(row.slug, locale)] = page
 
-        self.add_message_to_shadow_content_page_from_row(row)
+        self.add_message_to_shadow_content_page_from_row(row, locale)
 
         if row.is_whatsapp_message:
             page.whatsapp_title = row.whatsapp_title
@@ -213,8 +222,10 @@ class ContentImporter:
         if row.translation_tag:
             page.translation_key = row.translation_tag
 
-    def add_variation_to_shadow_content_page_from_row(self, row: "ContentRow") -> None:
-        page = self.shadow_pages[row.slug]
+    def add_variation_to_shadow_content_page_from_row(
+        self, row: "ContentRow", locale: Locale
+    ) -> None:
+        page = self.shadow_pages[(row.slug, locale)]
         whatsapp_block = page.whatsapp_body[-1]
         whatsapp_block.variation_messages.append(
             ShadowVariationBlock(
@@ -222,8 +233,10 @@ class ContentImporter:
             )
         )
 
-    def add_message_to_shadow_content_page_from_row(self, row: "ContentRow") -> None:
-        page = self.shadow_pages[row.slug]
+    def add_message_to_shadow_content_page_from_row(
+        self, row: "ContentRow", locale: Locale
+    ) -> None:
+        page = self.shadow_pages[(row.slug, locale)]
         if row.is_whatsapp_message:
             page.enable_whatsapp = True
             buttons = []
@@ -237,9 +250,8 @@ class ContentImporter:
                         }
                     )
                 elif button["type"] == "go_to_page":
-                    self.go_to_page_buttons[row.slug][len(page.whatsapp_body)].append(
-                        button
-                    )
+                    page_gtps = self.go_to_page_buttons[(row.slug, locale)]
+                    page_gtps[len(page.whatsapp_body)].append(button)
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
                     message=row.whatsapp_body,
@@ -265,7 +277,7 @@ class ContentImporter:
 class ShadowContentPage:
     slug: str
     parent: str
-    locale: Locale | None = None
+    locale: Locale
     enable_web: bool = False
     title: str = ""
     subtitle: str = ""
@@ -290,9 +302,9 @@ class ShadowContentPage:
 
     def save(self, parent: Page) -> None:
         try:
-            page = ContentPage.objects.get(slug=self.slug)
+            page = ContentPage.objects.get(slug=self.slug, locale=self.locale)
         except ContentPage.DoesNotExist:
-            page = ContentPage(slug=self.slug)
+            page = ContentPage(slug=self.slug, locale=self.locale)
 
         self.add_web_to_page(page)
         self.add_whatsapp_to_page(page)
@@ -357,10 +369,10 @@ class ShadowContentPage:
             page.triggers.add(trigger)
 
     def link_related_pages(self) -> None:
-        page = ContentPage.objects.get(slug=self.slug)
+        page = ContentPage.objects.get(slug=self.slug, locale=self.locale)
         related_pages = []
         for related_page_slug in self.related_pages:
-            related_page = Page.objects.get(slug=related_page_slug)
+            related_page = Page.objects.get(slug=related_page_slug, locale=self.locale)
             related_pages.append(("related_page", related_page))
         page.related_pages = related_pages
         page.save_revision().publish()
