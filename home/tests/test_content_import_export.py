@@ -508,13 +508,16 @@ class ImportExportFixture:
         """
         self._import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
 
+    def read_bytes(self, path_str: str, path_base: str = "home/tests") -> bytes:
+        return (Path(path_base) / path_str).read_bytes()
+
     def import_file(
         self, path_str: str, path_base: str = "home/tests", **kw: Any
     ) -> bytes:
         """
         Import given content file in the configured format with the configured importer.
         """
-        content = (Path(path_base) / path_str).read_bytes()
+        content = self.read_bytes(path_str, path_base)
         self.import_content(content, **kw)
         return content
 
@@ -618,13 +621,10 @@ class TestImportExportRoundtrip:
         Importing a CSV file split into separate parts per locale and then
         exporting it produces a duplicate of the original file.
 
-        (This uses exported_content_20230906-translations.csv and the two
-        language-specific subsets thereof.)
+        (This uses translations-sp.csv and the two language-specific subsets thereof.)
 
         FIXME:
-         * We shouldn't need to import different languages separately.
-         * Slugs need to either be unique per site/deployment or the importer
-           needs to handle them only being unique per locale.
+         * Remove this test when the old importer goes away completely.
         """
 
         # Create a new homepage for Portuguese.
@@ -632,23 +632,20 @@ class TestImportExportRoundtrip:
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        csv_impexp.import_file("translations-en.csv")
-        csv_impexp.import_file("translations-pt.csv", locale="pt", purge=False)
-        csv_bytes = Path(
-            "home/tests/exported_content_20230906-translations.csv"
-        ).read_bytes()
+        csv_impexp.import_file("translations-sep-en.csv")
+        csv_impexp.import_file("translations-sep-pt.csv", locale="pt", purge=False)
+        csv_bytes = csv_impexp.read_bytes("translations-sep.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_translations_en(self, csv_impexp: ImportExportFixture) -> None:
+    def test_roundtrip_default_locale(self, csv_impexp: ImportExportFixture) -> None:
         """
         Importing a CSV file with multiple languages and specifying a locale
         and then exporting it produces a duplicate of the original file but
         with only pages from the specifyied specified locale included.
 
-        (This uses exported_content_20230906-translations.csv and the en
-        language-specific subset thereof.)
+        (This uses translations.csv and the en language-specific subset thereof.)
 
         FIXME:
          * Slugs need to either be unique per site/deployment or the importer
@@ -663,20 +660,45 @@ class TestImportExportRoundtrip:
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        csv_impexp.import_file(
-            "exported_content_20230906-translations.csv", locale="en"
-        )
-        csv_bytes = Path("home/tests/translations-en.csv").read_bytes()
+        csv_impexp.import_file("translations.csv", locale="en")
+        csv_bytes = csv_impexp.read_bytes("translations-en.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_translations(self, csv_impexp: ImportExportFixture) -> None:
+    def test_roundtrip_translated_locale(self, csv_impexp: ImportExportFixture) -> None:
+        """
+        Importing a CSV file with multiple languages and specifying a locale
+        and then exporting it produces a duplicate of the original file but
+        with only pages from the specifyied specified locale included.
+
+        (This uses translations.csv and the pt language-specific subset thereof.)
+
+        FIXME:
+         * Slugs need to either be unique per site/deployment or the importer
+           needs to handle them only being unique per locale.
+        """
+
+        # Create a new homepage for Portuguese.
+        if csv_impexp.importer == "old":
+            pytest.skip("Old importer can't handle multiple languages at once.")
+
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        set_profile_field_options()
+        csv_impexp.import_file("translations.csv", locale="pt")
+        csv_bytes = csv_impexp.read_bytes("translations-pt.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+    def test_roundtrip_all_locales(self, csv_impexp: ImportExportFixture) -> None:
         """
         Importing a CSV file containing translations and then exporting it
         produces a duplicate of the original file.
 
-        (This uses exported_content_20230906-translations.csv.)
+        (This uses translations.csv.)
 
         FIXME:
          * Slugs need to either be unique per site/deployment or the importer
@@ -689,7 +711,31 @@ class TestImportExportRoundtrip:
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        csv_bytes = csv_impexp.import_file("exported_content_20230906-translations.csv")
+        csv_bytes = csv_impexp.import_file("translations.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+    def test_roundtrip_all_locales_split(self, csv_impexp: ImportExportFixture) -> None:
+        """
+        Importing a CSV file split into separate parts per locale and then
+        exporting it produces a duplicate of the original file.
+
+        (This uses translations.csv and the two language-specific subsets thereof.)
+        """
+        if csv_impexp.importer == "old":
+            pytest.skip(
+                "Old importer can't handle translated pages with the same slug."
+            )
+        # Create a new homepage for Portuguese.
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        set_profile_field_options()
+        csv_bytes = csv_impexp.read_bytes("translations.csv")
+        csv_impexp.import_file("translations.csv", locale="en")
+        csv_impexp.import_file("translations.csv", purge=False, locale="pt")
+
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
