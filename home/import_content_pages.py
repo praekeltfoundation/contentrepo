@@ -53,7 +53,7 @@ class ContentImporter:
             PageId, dict[int, list[dict[str, Any]]]
         ] = defaultdict(lambda: defaultdict(list))
 
-    def locale_from_display_name(self, langname: str) -> str:
+    def locale_from_display_name(self, langname: str) -> Locale:
         if langname not in self.locale_map:
             codes = []
             for lang_code, lang_dn in get_content_languages().items():
