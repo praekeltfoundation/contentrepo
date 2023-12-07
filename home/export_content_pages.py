@@ -242,7 +242,10 @@ class ContentExporter:
 
     @staticmethod
     def _related_pages(page: Page) -> list[str]:
-        return [rp.value.slug for rp in page.related_pages]
+        # Ideally, all related page links would be removed when the page they
+        # link to is deleted. We don't currently do that, so for now we just
+        # make sure that we skip such links during export.
+        return [rp.value.slug for rp in page.related_pages if rp.value is not None]
 
     @staticmethod
     def _comma_sep_qs(unformatted_query: PageQuerySet) -> str:
@@ -369,4 +372,4 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
             cell.font = general_font
             alignment = copy.copy(cell.alignment)
             alignment.wrapText = True
-            cell.alignment = alignment
+            cell.alignment = alignment  # type: ignore # Broken typeshed update, maybe?
