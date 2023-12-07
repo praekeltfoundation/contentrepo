@@ -273,6 +273,10 @@ class PageBuilder(Generic[TPage]):
         page: ContentPage, related_pages: Iterable[Page], publish: bool = True
     ) -> ContentPage:
         for related_page in related_pages:
+            # If we don't fetch all existing related pages before adding new
+            # ones, we get an inexplicable TypeError deep in the bowels of
+            # wagtail/blocks/stream_block.py. Good going, wagtail.
+            list(page.related_pages)
             page.related_pages.append(("related_page", related_page))
         rev = page.save_revision()
         if publish:

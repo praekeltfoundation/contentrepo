@@ -711,9 +711,7 @@ class TestImportExportRoundtrip:
         (This uses translations.csv and the two language-specific subsets thereof.)
         """
         if csv_impexp.importer == "old":
-            pytest.skip(
-                "Old importer can't handle translated pages with the same slug."
-            )
+            pytest.skip("Old importer can't handle non-unique slugs.")
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
@@ -1412,3 +1410,52 @@ class TestExportImportRoundtrip:
         impexp.export_reimport()
         imported = impexp.get_page_json()
         assert imported == orig
+
+    def test_export_missing_related_page(self, impexp: ImportExportFixture) -> None:
+        """
+        If a page has a related page that no longer exists, the missing related
+        page is skipped during export.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert*")])],
+        )
+        health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[WABody("health info", [WABlk("*Health information*")])],
+        )
+        self_help = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="self-help",
+            title="self-help",
+            bodies=[WABody("self-help", [WABlk("*Self-help programs*")])],
+        )
+        health_info = PageBuilder.link_related(health_info, [self_help])
+        # This is what we expect to see after export/import, so we fetch the
+        # JSON to compare with before adding the missing related page.
+        orig_without_self_help = impexp.get_page_json()
+
+        move_along = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="move-along",
+            title="move-along",
+            bodies=[WABody("move along", [WABlk("*Nothing to see here*")])],
+        )
+        PageBuilder.link_related(health_info, [move_along])
+        move_along.delete()
+
+        # Ideally, all related page links would be removed when the page they
+        # link to is deleted. We don't currently do that, so for now we just
+        # make sure that we skip such links during export.
+        sh_page = Page.objects.get(pk=self_help.id)
+        assert [rp.value for rp in health_info.related_pages] == [sh_page, None]
+
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig_without_self_help
