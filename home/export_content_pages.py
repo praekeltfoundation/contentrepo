@@ -372,4 +372,4 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
             cell.font = general_font
             alignment = copy.copy(cell.alignment)
             alignment.wrapText = True
-            cell.alignment = alignment
+            cell.alignment = alignment  # type: ignore # Broken typeshed update, maybe?
