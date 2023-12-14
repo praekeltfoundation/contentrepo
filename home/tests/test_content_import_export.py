@@ -564,7 +564,7 @@ class TestImportExportRoundtrip:
         container for related tests.
     """
 
-    def test_roundtrip_simple(self, csv_impexp: ImportExport) -> None:
+    def test_simple(self, csv_impexp: ImportExport) -> None:
         """
         Importing a simple CSV file and then exporting it produces a duplicate
         of the original file.
@@ -584,7 +584,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_less_simple(self, csv_impexp: ImportExport) -> None:
+    def test_less_simple(self, csv_impexp: ImportExport) -> None:
         """
         Importing a less simple CSV file and then exporting it produces a
         duplicate of the original file.
@@ -602,7 +602,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_multiple_messages(self, csv_impexp: ImportExport) -> None:
+    def test_multiple_messages(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file containing multiple messages of each type for a
         page and then exporting it produces a duplicate of the original file.
@@ -615,7 +615,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_translations_sep(self, csv_impexp: ImportExport) -> None:
+    def test_translations_sep(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file split into separate parts per locale and then
         exporting it produces a duplicate of the original file.
@@ -638,7 +638,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_default_locale(self, csv_impexp: ImportExport) -> None:
+    def test_default_locale(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with multiple languages and specifying a locale
         and then exporting it produces a duplicate of the original file but
@@ -661,7 +661,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_translated_locale(self, csv_impexp: ImportExport) -> None:
+    def test_translated_locale(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with multiple languages and specifying a locale
         and then exporting it produces a duplicate of the original file but
@@ -684,7 +684,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_all_locales(self, csv_impexp: ImportExport) -> None:
+    def test_all_locales(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file containing translations and then exporting it
         produces a duplicate of the original file.
@@ -703,7 +703,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_all_locales_split(self, csv_impexp: ImportExport) -> None:
+    def test_all_locales_split(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file split into separate parts per locale and then
         exporting it produces a duplicate of the original file.
@@ -724,6 +724,17 @@ class TestImportExportRoundtrip:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
+
+
+@pytest.mark.django_db
+class TestImportExport:
+    """
+    Text various import and export scenarios that aren't specifically round
+    trips.
+
+    NOTE: This is not a Django (or even unittest) TestCase. It's just a
+        container for related tests.
+    """
 
     def test_import_error(self, csv_impexp: ImportExport) -> None:
         """
