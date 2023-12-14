@@ -15,6 +15,7 @@ from treebeard.exceptions import NodeAlreadySaved  # type: ignore
 from wagtail.blocks import StructValue  # type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
+from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
 from home.models import (
@@ -168,6 +169,10 @@ class ContentImporter:
     def home_page(self, locale: Locale) -> HomePage:
         return HomePage.objects.get(locale=locale)
 
+    def default_locale(self) -> Locale:
+        site = Site.objects.get(is_default_site=True)
+        return site.root_page.locale
+
     def create_content_page_index_from_row(self, row: "ContentRow") -> None:
         locale = self.locale_from_display_name(row.locale)
         try:
@@ -175,7 +180,9 @@ class ContentImporter:
         except ContentPageIndex.DoesNotExist:
             index = ContentPageIndex(slug=row.slug, locale=locale)
         index.title = row.web_title
-        if row.translation_tag:
+        # Translation keys are required for pages with a non-default locale,
+        # but optional for the default locale.
+        if row.translation_tag or locale != self.default_locale():
             index.translation_key = row.translation_tag
         locale = self.locale_from_display_name(row.locale)
         with contextlib.suppress(NodeAlreadySaved):
@@ -219,7 +226,9 @@ class ContentImporter:
         if row.is_viber_message:
             page.viber_title = row.viber_title
 
-        if row.translation_tag:
+        # Translation keys are required for pages with a non-default locale,
+        # but optional for the default locale.
+        if row.translation_tag or locale != self.default_locale():
             page.translation_key = row.translation_tag
 
     def add_variation_to_shadow_content_page_from_row(
@@ -294,7 +303,7 @@ class ShadowContentPage:
     enable_viber: bool = False
     viber_title: str = ""
     viber_body: list["ShadowViberBlock"] = field(default_factory=list)
-    translation_key: str = ""
+    translation_key: str | None = None
     tags: list[str] = field(default_factory=list)
     quick_replies: list[str] = field(default_factory=list)
     triggers: list[str] = field(default_factory=list)
@@ -324,7 +333,8 @@ class ShadowContentPage:
         page.title = self.title
         page.subtitle = self.subtitle
         page.body = self.formatted_body
-        page.translation_key = self.translation_key
+        if self.translation_key is not None:
+            page.translation_key = self.translation_key
 
     def add_whatsapp_to_page(self, page: ContentPage) -> None:
         page.enable_whatsapp = self.enable_whatsapp
