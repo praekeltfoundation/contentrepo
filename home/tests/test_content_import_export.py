@@ -422,7 +422,7 @@ OLD_PAGE_FILTER_FUNCS = [
 
 
 @dataclass
-class ImportExportFixture:
+class ImportExport:
     admin_client: Any
     importer: str
     format: str
@@ -550,8 +550,8 @@ class ImportExportFixture:
 
 
 @pytest.fixture(params=["old", "new"])
-def csv_impexp(request: Any, admin_client: Any) -> ImportExportFixture:
-    return ImportExportFixture(admin_client, request.param, "csv")
+def csv_impexp(request: Any, admin_client: Any) -> ImportExport:
+    return ImportExport(admin_client, request.param, "csv")
 
 
 @pytest.mark.django_db
@@ -564,7 +564,7 @@ class TestImportExportRoundtrip:
         container for related tests.
     """
 
-    def test_roundtrip_simple(self, csv_impexp: ImportExportFixture) -> None:
+    def test_simple(self, csv_impexp: ImportExport) -> None:
         """
         Importing a simple CSV file and then exporting it produces a duplicate
         of the original file.
@@ -584,7 +584,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_less_simple(self, csv_impexp: ImportExportFixture) -> None:
+    def test_less_simple(self, csv_impexp: ImportExport) -> None:
         """
         Importing a less simple CSV file and then exporting it produces a
         duplicate of the original file.
@@ -602,7 +602,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_multiple_messages(self, csv_impexp: ImportExportFixture) -> None:
+    def test_multiple_messages(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file containing multiple messages of each type for a
         page and then exporting it produces a duplicate of the original file.
@@ -615,7 +615,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_translations_sep(self, csv_impexp: ImportExportFixture) -> None:
+    def test_translations_sep(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file split into separate parts per locale and then
         exporting it produces a duplicate of the original file.
@@ -638,7 +638,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_default_locale(self, csv_impexp: ImportExportFixture) -> None:
+    def test_default_locale(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with multiple languages and specifying a locale
         and then exporting it produces a duplicate of the original file but
@@ -661,7 +661,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_translated_locale(self, csv_impexp: ImportExportFixture) -> None:
+    def test_translated_locale(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with multiple languages and specifying a locale
         and then exporting it produces a duplicate of the original file but
@@ -684,7 +684,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_all_locales(self, csv_impexp: ImportExportFixture) -> None:
+    def test_all_locales(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file containing translations and then exporting it
         produces a duplicate of the original file.
@@ -703,7 +703,7 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_roundtrip_all_locales_split(self, csv_impexp: ImportExportFixture) -> None:
+    def test_all_locales_split(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file split into separate parts per locale and then
         exporting it produces a duplicate of the original file.
@@ -725,7 +725,18 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_import_error(self, csv_impexp: ImportExportFixture) -> None:
+
+@pytest.mark.django_db
+class TestImportExport:
+    """
+    Text various import and export scenarios that aren't specifically round
+    trips.
+
+    NOTE: This is not a Django (or even unittest) TestCase. It's just a
+        container for related tests.
+    """
+
+    def test_import_error(self, csv_impexp: ImportExport) -> None:
         """
         Importing an invalid CSV file leaves the db as-is.
 
@@ -746,9 +757,9 @@ class TestImportExportRoundtrip:
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
-def impexp(request: Any, admin_client: Any) -> ImportExportFixture:
+def impexp(request: Any, admin_client: Any) -> ImportExport:
     importer, format = request.param.split("-")
-    return ImportExportFixture(admin_client, importer, format)
+    return ImportExport(admin_client, importer, format)
 
 
 @pytest.fixture()
@@ -773,7 +784,7 @@ class TestExportImportRoundtrip:
         container for related tests.
     """
 
-    def test_simple(self, impexp: ImportExportFixture) -> None:
+    def test_simple(self, impexp: ImportExport) -> None:
         """
         Exporting and then importing leaves the db in the same state it was
         before, except for page_ids, timestamps, and body item ids.
@@ -821,7 +832,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_web_content(self, impexp: ImportExportFixture) -> None:
+    def test_web_content(self, impexp: ImportExport) -> None:
         """
         ContentPages with web content are preserved across export/import.
 
@@ -843,7 +854,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_multiple_messages(self, impexp: ImportExportFixture) -> None:
+    def test_multiple_messages(self, impexp: ImportExport) -> None:
         """
         ContentPages with multiple message blocks are preserved across
         export/import.
@@ -877,7 +888,7 @@ class TestExportImportRoundtrip:
         assert imported == orig
 
     @pytest.mark.xfail(reason="Image imports are currently broken.")
-    def test_images(self, impexp: ImportExportFixture) -> None:
+    def test_images(self, impexp: ImportExport) -> None:
         """
         ContentPages with images in multiple message types are preserved across
         export/import.
@@ -908,7 +919,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_variations(self, impexp: ImportExportFixture) -> None:
+    def test_variations(self, impexp: ImportExport) -> None:
         """
         ContentPages with variation messages (and buttons and next prompts) are
         preserved across export/import.
@@ -960,7 +971,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_tags_and_related(self, impexp: ImportExportFixture) -> None:
+    def test_tags_and_related(self, impexp: ImportExport) -> None:
         """
         ContentPages with tags and related pages are preserved across
         export/import.
@@ -1005,7 +1016,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_triggers_and_quick_replies(self, impexp: ImportExportFixture) -> None:
+    def test_triggers_and_quick_replies(self, impexp: ImportExport) -> None:
         """
         ContentPages with triggers and quick replies are preserved across
         export/import.
@@ -1043,7 +1054,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_whatsapp_template(self, impexp: ImportExportFixture) -> None:
+    def test_whatsapp_template(self, impexp: ImportExport) -> None:
         """
         ContentPages that are whatsapp templates are preserved across
         export/import.
@@ -1069,7 +1080,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_translations(self, impexp: ImportExportFixture) -> None:
+    def test_translations(self, impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages (with unique-per-locale slugs and
         titles) are preserved across export/import.
@@ -1149,7 +1160,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_translations_sep(self, impexp: ImportExportFixture) -> None:
+    def test_translations_sep(self, impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages (with globally-unique slugs and titles) are
         preserved across export/import with each language imported separately.
@@ -1222,7 +1233,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_translations_split(self, impexp: ImportExportFixture) -> None:
+    def test_translations_split(self, impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages (with unique-per-locale slugs and
         titles) are preserved across export/import with each language imported
@@ -1299,7 +1310,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_translations_en(self, impexp: ImportExportFixture) -> None:
+    def test_translations_en(self, impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages are that are imported with a locale
         specified have pages in that locale preserved and all other locales are
@@ -1374,7 +1385,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig_en
 
-    def test_example_values(self, impexp: ImportExportFixture) -> None:
+    def test_example_values(self, impexp: ImportExport) -> None:
         """
         ContentPages with example values in whatsapp messages are preserved
         across export/import.
@@ -1411,7 +1422,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_export_missing_related_page(self, impexp: ImportExportFixture) -> None:
+    def test_export_missing_related_page(self, impexp: ImportExport) -> None:
         """
         If a page has a related page that no longer exists, the missing related
         page is skipped during export.
