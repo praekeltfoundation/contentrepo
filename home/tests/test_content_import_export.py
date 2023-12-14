@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 from django.core import serializers  # type: ignore
+from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
@@ -753,6 +754,43 @@ class TestImportExport:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
+
+    def test_no_translation_key_default(self, newcsv_impexp: ImportExport) -> None:
+        """
+        Importing pages without translation keys in the default locale causes
+        wagtail to generate new translation keys.
+
+        (This uses no-translation-key-default.csv.)
+        """
+        csv_bytes = newcsv_impexp.import_file("no-translation-key-default.csv")
+
+        content = newcsv_impexp.export_content()
+        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
+        # Check that the export has translation keys for all rows and clear
+        # them to match the imported data
+        for row in dst:
+            assert len(row["translation_tag"]) == 36  # uuid with dashes
+            row["translation_tag"] = ""
+        assert dst == src
+
+    def test_no_translation_key_nondefault(self, newcsv_impexp: ImportExport) -> None:
+        """
+        Importing pages without translation keys in the non-default locale
+        causes a validation error.
+
+        (This uses no-translation-key-cpi.csv and no-translation-key-cp.csv.)
+        """
+        # Create a new homepage for Portuguese.
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        # A ContentPageIndex without a translation key fails
+        with pytest.raises(ValidationError):
+            newcsv_impexp.import_file("no-translation-key-cpi.csv")
+
+        # A ContentPage without a translation key fails
+        with pytest.raises(ValidationError):
+            newcsv_impexp.import_file("no-translation-key-cp.csv")
 
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
