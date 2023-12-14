@@ -554,6 +554,11 @@ def csv_impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, request.param, "csv")
 
 
+@pytest.fixture()
+def newcsv_impexp(request: Any, admin_client: Any) -> ImportExport:
+    return ImportExport(admin_client, "new", "csv")
+
+
 @pytest.mark.django_db
 class TestImportExportRoundtrip:
     """
@@ -625,7 +630,6 @@ class TestImportExportRoundtrip:
         FIXME:
          * Remove this test when the old importer goes away completely.
         """
-
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
@@ -638,91 +642,87 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_default_locale(self, csv_impexp: ImportExport) -> None:
+    def test_default_locale(self, newcsv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with multiple languages and specifying a locale
         and then exporting it produces a duplicate of the original file but
         with only pages from the specifyied specified locale included.
+
+        NOTE: Old importer can't handle multiple languages at once.
 
         (This uses translations.csv and the en language-specific subset thereof.)
         """
-
         # Create a new homepage for Portuguese.
-        if csv_impexp.importer == "old":
-            pytest.skip("Old importer can't handle multiple languages at once.")
-
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        csv_impexp.import_file("translations.csv", locale="en")
-        csv_bytes = csv_impexp.read_bytes("translations-en.csv")
-        content = csv_impexp.export_content()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        newcsv_impexp.import_file("translations.csv", locale="en")
+        csv_bytes = newcsv_impexp.read_bytes("translations-en.csv")
+        content = newcsv_impexp.export_content()
+        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_translated_locale(self, csv_impexp: ImportExport) -> None:
+    def test_translated_locale(self, newcsv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with multiple languages and specifying a locale
         and then exporting it produces a duplicate of the original file but
         with only pages from the specifyied specified locale included.
 
+        NOTE: Old importer can't handle multiple languages at once.
+
         (This uses translations.csv and the pt language-specific subset thereof.)
         """
-
         # Create a new homepage for Portuguese.
-        if csv_impexp.importer == "old":
-            pytest.skip("Old importer can't handle multiple languages at once.")
-
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        csv_impexp.import_file("translations.csv", locale="pt")
-        csv_bytes = csv_impexp.read_bytes("translations-pt.csv")
-        content = csv_impexp.export_content()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        newcsv_impexp.import_file("translations.csv", locale="pt")
+        csv_bytes = newcsv_impexp.read_bytes("translations-pt.csv")
+        content = newcsv_impexp.export_content()
+        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_all_locales(self, csv_impexp: ImportExport) -> None:
+    def test_all_locales(self, newcsv_impexp: ImportExport) -> None:
         """
         Importing a CSV file containing translations and then exporting it
         produces a duplicate of the original file.
 
+        NOTE: Old importer can't handle multiple languages at once.
+
         (This uses translations.csv.)
         """
-        if csv_impexp.importer == "old":
-            pytest.skip("Old importer can't handle multiple languages at once.")
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        csv_bytes = csv_impexp.import_file("translations.csv")
-        content = csv_impexp.export_content()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        csv_bytes = newcsv_impexp.import_file("translations.csv")
+        content = newcsv_impexp.export_content()
+        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_all_locales_split(self, csv_impexp: ImportExport) -> None:
+    def test_all_locales_split(self, newcsv_impexp: ImportExport) -> None:
         """
         Importing a CSV file split into separate parts per locale and then
         exporting it produces a duplicate of the original file.
 
+        NOTE: Old importer can't handle non-unique slugs.
+
         (This uses translations.csv and the two language-specific subsets thereof.)
         """
-        if csv_impexp.importer == "old":
-            pytest.skip("Old importer can't handle non-unique slugs.")
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        csv_bytes = csv_impexp.read_bytes("translations.csv")
-        csv_impexp.import_file("translations.csv", locale="en")
-        csv_impexp.import_file("translations.csv", purge=False, locale="pt")
+        csv_bytes = newcsv_impexp.read_bytes("translations.csv")
+        newcsv_impexp.import_file("translations.csv", locale="en")
+        newcsv_impexp.import_file("translations.csv", purge=False, locale="pt")
 
-        content = csv_impexp.export_content()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        content = newcsv_impexp.export_content()
+        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
 
@@ -760,6 +760,11 @@ class TestImportExport:
 def impexp(request: Any, admin_client: Any) -> ImportExport:
     importer, format = request.param.split("-")
     return ImportExport(admin_client, importer, format)
+
+
+@pytest.fixture(params=["csv", "xlsx"])
+def new_impexp(request: Any, admin_client: Any) -> ImportExport:
+    return ImportExport(admin_client, "new", request.param)
 
 
 @pytest.fixture()
@@ -888,14 +893,13 @@ class TestExportImportRoundtrip:
         assert imported == orig
 
     @pytest.mark.xfail(reason="Image imports are currently broken.")
-    def test_images(self, impexp: ImportExport) -> None:
+    def test_images(self, new_impexp: ImportExport) -> None:
         """
         ContentPages with images in multiple message types are preserved across
         export/import.
-        """
-        if impexp.importer == "old":
-            pytest.skip("Old importer can't handle images.")
 
+        NOTE: Old importer can't handle images.
+        """
         img_path = Path("home/tests/test_static") / "test.jpeg"
         img_wa = mk_img(img_path, "wa_image")
         img_m = mk_img(img_path, "m_image")
@@ -914,9 +918,9 @@ class TestExportImportRoundtrip:
             ],
         )
 
-        orig = impexp.get_page_json()
-        impexp.export_reimport()
-        imported = impexp.get_page_json()
+        orig = new_impexp.get_page_json()
+        new_impexp.export_reimport()
+        imported = new_impexp.get_page_json()
         assert imported == orig
 
     def test_variations(self, impexp: ImportExport) -> None:
@@ -1080,14 +1084,13 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_translations(self, impexp: ImportExport) -> None:
+    def test_translations(self, new_impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages (with unique-per-locale slugs and
         titles) are preserved across export/import.
-        """
-        if impexp.importer == "old":
-            pytest.skip("Old importer can't handle non-unique slugs.")
 
+        NOTE: Old importer can't handle non-unique slugs.
+        """
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
@@ -1155,9 +1158,9 @@ class TestExportImportRoundtrip:
         assert imp_exp.translation_key == imp_exp_pt.translation_key
         assert non_tmpl.translation_key == non_tmpl_pt.translation_key
 
-        orig = impexp.get_page_json()
-        impexp.export_reimport()
-        imported = impexp.get_page_json()
+        orig = new_impexp.get_page_json()
+        new_impexp.export_reimport()
+        imported = new_impexp.get_page_json()
         assert imported == orig
 
     def test_translations_sep(self, impexp: ImportExport) -> None:
@@ -1233,15 +1236,14 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_translations_split(self, impexp: ImportExport) -> None:
+    def test_translations_split(self, new_impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages (with unique-per-locale slugs and
         titles) are preserved across export/import with each language imported
         separately.
-        """
-        if impexp.importer == "old":
-            pytest.skip("Old importer can't handle non-unique slugs.")
 
+        NOTE: Old importer can't handle non-unique slugs.
+        """
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
@@ -1301,24 +1303,23 @@ class TestExportImportRoundtrip:
         assert imp_exp.translation_key == imp_exp_pt.translation_key
         assert non_tmpl.translation_key == non_tmpl_pt.translation_key
 
-        orig = impexp.get_page_json()
-        content_en = impexp.export_content(locale="en")
-        content_pt = impexp.export_content(locale="pt")
+        orig = new_impexp.get_page_json()
+        content_en = new_impexp.export_content(locale="en")
+        content_pt = new_impexp.export_content(locale="pt")
 
-        impexp.import_content(content_en, locale="en")
-        impexp.import_content(content_pt, locale="pt", purge=False)
-        imported = impexp.get_page_json()
+        new_impexp.import_content(content_en, locale="en")
+        new_impexp.import_content(content_pt, locale="pt", purge=False)
+        imported = new_impexp.get_page_json()
         assert imported == orig
 
-    def test_translations_en(self, impexp: ImportExport) -> None:
+    def test_translations_en(self, new_impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages are that are imported with a locale
         specified have pages in that locale preserved and all other locales are
         removed.
-        """
-        if impexp.importer == "old":
-            pytest.skip("Old importer can't handle multiple languages at once.")
 
+        NOTE: Old importer can't handle multiple languages at once.
+        """
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
@@ -1378,21 +1379,20 @@ class TestExportImportRoundtrip:
         assert imp_exp.translation_key == imp_exp_pt.translation_key
         assert non_tmpl.translation_key == non_tmpl_pt.translation_key
 
-        orig_en = impexp.get_page_json(locale="en")
-        content = impexp.export_content()
+        orig_en = new_impexp.get_page_json(locale="en")
+        content = new_impexp.export_content()
 
-        impexp.import_content(content, locale="en")
-        imported = impexp.get_page_json()
+        new_impexp.import_content(content, locale="en")
+        imported = new_impexp.get_page_json()
         assert imported == orig_en
 
-    def test_example_values(self, impexp: ImportExport) -> None:
+    def test_example_values(self, new_impexp: ImportExport) -> None:
         """
         ContentPages with example values in whatsapp messages are preserved
         across export/import.
-        """
-        if impexp.importer == "old":
-            pytest.skip("Old importer can't handle example values.")
 
+        NOTE: Old importer can't handle example values.
+        """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
 
@@ -1417,9 +1417,9 @@ class TestExportImportRoundtrip:
             whatsapp_template_name="template-health-info",
         )
 
-        orig = impexp.get_page_json()
-        impexp.export_reimport()
-        imported = impexp.get_page_json()
+        orig = new_impexp.get_page_json()
+        new_impexp.export_reimport()
+        imported = new_impexp.get_page_json()
         assert imported == orig
 
     def test_export_missing_related_page(self, impexp: ImportExport) -> None:
