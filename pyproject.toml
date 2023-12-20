@@ -60,6 +60,7 @@ exclude = [  # Regexes.
     '^home/tests/test_(management|management_related_tag|models)\.py',
     '^home/tests/test_(unique_slug_hook|views|wagtail_hooks)\.py',
     '^home/tests/test_(whatsapp|whatsapp_template_name_migration)\.py',
+    '^home/tests/test_(forms)\.py',
 ]
 files = "."
 follow_imports = "skip"
