@@ -31,6 +31,15 @@ from home.models import (
 
 PageId = tuple[str, Locale]
 
+class ImportException(Exception):
+    """
+    Base exception for all import related issues.
+    """
+    def __init__(self, message: str, row_num: int | None=None):
+        self.row_num = row_num
+        self.message = message
+        super().__init__()
+
 
 class ContentImporter:
     def __init__(
@@ -61,9 +70,9 @@ class ContentImporter:
                 if lang_dn == langname:
                     codes.append(lang_code)
             if not codes:
-                raise ValueError(f"Language not found: {langname}")
+                raise ImportException(f"Language not found: {langname}")
             if len(codes) > 1:
-                raise ValueError(f"Multiple codes for language: {langname} -> {codes}")
+                raise ImportException(f"Multiple codes for language: {langname} -> {codes}")
             self.locale_map[langname] = Locale.objects.get(language_code=codes[0])
         return self.locale_map[langname]
 
@@ -84,20 +93,24 @@ class ContentImporter:
         # Non-page rows don't have a locale, so we need to remember the last
         # row that does have a locale.
         prev_locale: Locale | None = None
-        for row in rows:
-            if row.is_page_index:
-                if self.locale and row.locale != self.locale.get_display_name():
-                    # This page index isn't for the locale we're importing, so skip it.
-                    continue
-                self.create_content_page_index_from_row(row)
-                prev_locale = self.locale_from_display_name(row.locale)
-            elif row.is_content_page:
-                self.create_shadow_content_page_from_row(row)
-                prev_locale = self.locale_from_display_name(row.locale)
-            elif row.is_variation_message:
-                self.add_variation_to_shadow_content_page_from_row(row, prev_locale)
-            else:
-                self.add_message_to_shadow_content_page_from_row(row, prev_locale)
+        for i, row in enumerate(rows):
+            try:
+                if row.is_page_index:
+                    if self.locale and row.locale != self.locale.get_display_name():
+                        # This page index isn't for the locale we're importing, so skip it.
+                        continue
+                    self.create_content_page_index_from_row(row)
+                    prev_locale = self.locale_from_display_name(row.locale)
+                elif row.is_content_page:
+                    self.create_shadow_content_page_from_row(row)
+                    prev_locale = self.locale_from_display_name(row.locale)
+                elif row.is_variation_message:
+                    self.add_variation_to_shadow_content_page_from_row(row, prev_locale)
+                else:
+                    self.add_message_to_shadow_content_page_from_row(row, prev_locale)
+            except ImportException as e:
+                e.row_num = i + 2  # Rows numbers start at one and have a header row
+                raise e
 
     def save_pages(self) -> None:
         for i, page in enumerate(self.shadow_pages.values()):
