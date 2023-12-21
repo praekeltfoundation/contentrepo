@@ -13,12 +13,14 @@ import pytest
 from django.core import serializers  # type: ignore
 from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
+from django.test import override_settings  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 
 from home.content_import_export import import_content, old_import_content
+from home.import_content_pages import ImportException
 from home.models import ContentPage, ContentPageIndex, HomePage
 
 from .helpers import set_profile_field_options
@@ -791,6 +793,35 @@ class TestImportExport:
         # A ContentPage without a translation key fails
         with pytest.raises(ValidationError):
             newcsv_impexp.import_file("no-translation-key-cp.csv")
+
+    def test_invalid_locale_name(self, newcsv_impexp: ImportExport) -> None:
+        """
+        Importing pages with invalid locale names should raise an error that results
+        in an error message that gets sent back to the user
+        """
+        with pytest.raises(ImportException) as e:
+            newcsv_impexp.import_file("invalid-locale-name.csv")
+
+        assert e.value.row_num == 2
+        assert e.value.message == "Language not found: NotEnglish"
+
+    @override_settings(LANGUAGES=[("en1", "NotEnglish"), ("en2", "NotEnglish")])
+    @override_settings(
+        WAGTAIL_CONTENT_LANGUAGES=[("en1", "NotEnglish"), ("en2", "NotEnglish")]
+    )
+    def test_multiple_locales_for_name(self, newcsv_impexp: ImportExport) -> None:
+        """
+        Importing pages with locale names that represent multiple locales should raise
+        an error that results in an error message that gets sent back to the user
+        """
+        with pytest.raises(ImportException) as e:
+            newcsv_impexp.import_file("invalid-locale-name.csv")
+
+        assert e.value.row_num == 2
+        assert (
+            e.value.message
+            == "Multiple codes for language: NotEnglish -> ['en1', 'en2']"
+        )
 
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
