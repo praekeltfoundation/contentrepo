@@ -31,11 +31,13 @@ from home.models import (
 
 PageId = tuple[str, Locale]
 
+
 class ImportException(Exception):
     """
     Base exception for all import related issues.
     """
-    def __init__(self, message: str, row_num: int | None=None):
+
+    def __init__(self, message: str, row_num: int | None = None):
         self.row_num = row_num
         self.message = message
         super().__init__()
@@ -72,7 +74,9 @@ class ContentImporter:
             if not codes:
                 raise ImportException(f"Language not found: {langname}")
             if len(codes) > 1:
-                raise ImportException(f"Multiple codes for language: {langname} -> {codes}")
+                raise ImportException(
+                    f"Multiple codes for language: {langname} -> {codes}"
+                )
             self.locale_map[langname] = Locale.objects.get(language_code=codes[0])
         return self.locale_map[langname]
 
