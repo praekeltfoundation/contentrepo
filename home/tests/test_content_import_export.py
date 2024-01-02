@@ -824,6 +824,40 @@ class TestImportExport:
             == "Multiple codes for language: NotEnglish -> ['en1', 'en2']"
         )
 
+    def test_missing_parent(self, newcsv_impexp: ImportExport) -> None:
+        """
+        If the import file specifies a parent title, but there are no pages with that
+        title, then an error message should get sent back to the user.
+        """
+        with pytest.raises(ImportException) as e:
+            newcsv_impexp.import_file("missing-parent.csv")
+
+        assert e.value.row_num == 2
+        assert (
+            e.value.message
+            == "Cannot find parent page with title missing-parent and locale English"
+        )
+
+    def test_multiple_parents(self, newcsv_impexp: ImportExport) -> None:
+        """
+        Because we use the title to find a parent page, and it's possible to have
+        multiple pages with the same title, it's possible to have the situation where
+        we don't know which parent this import points to. In that case we should show
+        the user an error message, with information that will allow them to fix it.
+        """
+        home_page = HomePage.objects.first()
+        PageBuilder.build_cpi(home_page, "missing-parent1", "missing-parent")
+        PageBuilder.build_cpi(home_page, "missing-parent2", "missing-parent")
+
+        with pytest.raises(ImportException) as e:
+            newcsv_impexp.import_file("missing-parent.csv", purge=False)
+        assert e.value.row_num == 2
+        assert (
+            e.value.message
+            == "Multiple pages with title missing-parent and locale English for parent "
+            "page: ['missing-parent1', 'missing-parent2']"
+        )
+
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])

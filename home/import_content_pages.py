@@ -97,7 +97,7 @@ class ContentImporter:
         # Non-page rows don't have a locale, so we need to remember the last
         # row that does have a locale.
         prev_locale: Locale | None = None
-        for i, row in enumerate(rows):
+        for i, row in enumerate(rows, start=2):
             try:
                 if row.is_page_index:
                     if self.locale and row.locale != self.locale.get_display_name():
@@ -106,14 +106,14 @@ class ContentImporter:
                     self.create_content_page_index_from_row(row)
                     prev_locale = self.locale_from_display_name(row.locale)
                 elif row.is_content_page:
-                    self.create_shadow_content_page_from_row(row)
+                    self.create_shadow_content_page_from_row(row, i)
                     prev_locale = self.locale_from_display_name(row.locale)
                 elif row.is_variation_message:
                     self.add_variation_to_shadow_content_page_from_row(row, prev_locale)
                 else:
                     self.add_message_to_shadow_content_page_from_row(row, prev_locale)
             except ImportException as e:
-                e.row_num = i + 2  # Rows numbers start at one and have a header row
+                e.row_num = i
                 raise e
 
     def save_pages(self) -> None:
@@ -123,7 +123,23 @@ class ContentImporter:
                 continue
             if page.parent:
                 # TODO: We should need to use something unique for `parent`
-                parent = Page.objects.get(title=page.parent, locale=page.locale)
+                try:
+                    parent = Page.objects.get(title=page.parent, locale=page.locale)
+                except Page.DoesNotExist:
+                    raise ImportException(
+                        f"Cannot find parent page with title {page.parent} and locale "
+                        f"{page.locale}",
+                        page.row_num,
+                    )
+                except Page.MultipleObjectsReturned:
+                    parents = Page.objects.filter(
+                        title=page.parent, locale=page.locale
+                    ).values_list("slug", flat=True)
+                    raise ImportException(
+                        f"Multiple pages with title {page.parent} and locale "
+                        f"{page.locale} for parent page: {list(parents)}",
+                        page.row_num,
+                    )
             else:
                 parent = self.home_page(page.locale)
             page.save(parent)
@@ -143,7 +159,16 @@ class ContentImporter:
             for message_index, buttons in messages.items():
                 for button in buttons:
                     title = button["title"]
-                    related_page = Page.objects.get(slug=button["slug"], locale=locale)
+                    try:
+                        related_page = Page.objects.get(
+                            slug=button["slug"], locale=locale
+                        )
+                    except Page.DoesNotExist:
+                        raise ImportException(
+                            f"No pages found with slug {button['slug']} and locale "
+                            f"{locale} for go_to_page button {button['title']} on page "
+                            f"{slug}"
+                        )
                     page.whatsapp_body[message_index].value["buttons"].append(
                         ("go_to_page", {"page": related_page, "title": title})
                     )
@@ -207,9 +232,12 @@ class ContentImporter:
 
         index.save_revision().publish()
 
-    def create_shadow_content_page_from_row(self, row: "ContentRow") -> None:
+    def create_shadow_content_page_from_row(
+        self, row: "ContentRow", row_num: int
+    ) -> None:
         locale = self.locale_from_display_name(row.locale)
         page = ShadowContentPage(
+            row_num=row_num,
             slug=row.slug,
             title=row.web_title,
             locale=locale,
@@ -304,6 +332,7 @@ class ShadowContentPage:
     slug: str
     parent: str
     locale: Locale
+    row_num: int
     enable_web: bool = False
     title: str = ""
     subtitle: str = ""
