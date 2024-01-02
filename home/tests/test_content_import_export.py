@@ -13,7 +13,6 @@ import pytest
 from django.core import serializers  # type: ignore
 from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
-from django.test import override_settings  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
 from wagtail.images.models import Image  # type: ignore
@@ -805,15 +804,17 @@ class TestImportExport:
         assert e.value.row_num == 2
         assert e.value.message == "Language not found: NotEnglish"
 
-    @override_settings(LANGUAGES=[("en1", "NotEnglish"), ("en2", "NotEnglish")])
-    @override_settings(
-        WAGTAIL_CONTENT_LANGUAGES=[("en1", "NotEnglish"), ("en2", "NotEnglish")]
-    )
-    def test_multiple_locales_for_name(self, newcsv_impexp: ImportExport) -> None:
+    def test_multiple_locales_for_name(
+        self, newcsv_impexp: ImportExport, settings: SettingsWrapper
+    ) -> None:
         """
         Importing pages with locale names that represent multiple locales should raise
         an error that results in an error message that gets sent back to the user
         """
+        settings.WAGTAIL_CONTENT_LANGUAGES = settings.LANGUAGES = [
+            ("en1", "NotEnglish"),
+            ("en2", "NotEnglish"),
+        ]
         with pytest.raises(ImportException) as e:
             newcsv_impexp.import_file("invalid-locale-name.csv")
 
