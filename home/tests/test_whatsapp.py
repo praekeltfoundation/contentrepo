@@ -23,7 +23,7 @@ class TestWhatsApp:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
-        create_whatsapp_template("Test-Template", "Test Body", "UTILITY")
+        create_whatsapp_template("test-template", "Test Body", "UTILITY")
 
         request = responses.calls[0].request
 
@@ -55,7 +55,7 @@ class TestWhatsApp:
         responses.add(responses.POST, url, json={})
 
         create_whatsapp_template(
-            "Test-Template",
+            "test-template",
             "Hi {{1}}. You are testing as a {{2}}",
             "UTILITY",
             [],
@@ -88,7 +88,7 @@ class TestWhatsApp:
         responses.add(responses.POST, url, json={})
 
         create_whatsapp_template(
-            "Test-Template",
+            "test-template",
             "Test Body",
             "UTILITY",
             ["Test button1", "test button2"],
@@ -137,7 +137,7 @@ class TestWhatsApp:
         responses.add(responses.POST, template_url, json={})
 
         create_whatsapp_template(
-            "Test-Template", "Test Body", "UTILITY", [], saved_image.id
+            "test-template", "Test Body", "UTILITY", [], saved_image.id
         )
 
         mock_get_session_data = {
