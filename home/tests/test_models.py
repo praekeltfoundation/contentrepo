@@ -58,7 +58,7 @@ class ContentPageTests(TestCase):
     def test_template_create_on_save(self, mock_create_whatsapp_template):
         page = create_page(is_whatsapp_template=True)
         mock_create_whatsapp_template.assert_called_with(
-            f"WA_Title_{page.get_latest_revision().id}",
+            f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
             "UTILITY",
             [],
@@ -71,7 +71,7 @@ class ContentPageTests(TestCase):
     def test_template_create_with_buttons_on_save(self, mock_create_whatsapp_template):
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
         mock_create_whatsapp_template.assert_called_with(
-            f"WA_Title_{page.get_latest_revision().id}",
+            f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
             "UTILITY",
             ["button 1", "button 2"],
@@ -86,7 +86,7 @@ class ContentPageTests(TestCase):
     ):
         page = create_page(is_whatsapp_template=True, add_example_values=True)
         mock_create_whatsapp_template.assert_called_with(
-            f"WA_Title_{page.get_latest_revision().id}",
+            f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message with two variables, {{1}} and {{2}}",
             "UTILITY",
             [],
@@ -103,7 +103,7 @@ class ContentPageTests(TestCase):
         """
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
         mock_create_whatsapp_template.assert_called_once_with(
-            f"WA_Title_{page.get_latest_revision().pk}",
+            f"wa_title_{page.get_latest_revision().pk}",
             "Test WhatsApp Message 1",
             "UTILITY",
             ["button 1", "button 2"],
@@ -116,7 +116,7 @@ class ContentPageTests(TestCase):
         revision = page.save_revision()
         revision.publish()
 
-        expected_title = f"WA_Title_{page.get_latest_revision().pk}"
+        expected_title = f"wa_title_{page.get_latest_revision().pk}"
         mock_create_whatsapp_template.assert_called_once_with(
             expected_title,
             "Test WhatsApp Message 2",
@@ -138,7 +138,7 @@ class ContentPageTests(TestCase):
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
         page.get_latest_revision().publish()
         page.refresh_from_db()
-        expected_template_name = f"WA_Title_{page.get_latest_revision().pk}"
+        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
@@ -172,7 +172,7 @@ class ContentPageTests(TestCase):
         page.save_revision().publish()
 
         page.refresh_from_db()
-        expected_template_name = f"WA_Title_{page.get_latest_revision().pk}"
+        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
         self.assertEqual(page.whatsapp_template_name, expected_template_name)
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
@@ -205,7 +205,7 @@ class ContentPageTests(TestCase):
         page.is_whatsapp_template = True
         page.save_revision()
 
-        expected_template_name = f"WA_Title_{page.get_latest_revision().pk}"
+        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",

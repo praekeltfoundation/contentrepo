@@ -50,7 +50,7 @@ def create_whatsapp_template(
 
     data = {
         "category": category,
-        "name": name.lower(),
+        "name": name,
         "language": "en_US",
         "components": components,
     }

@@ -605,6 +605,8 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
     @property
     def whatsapp_template_prefix(self):
+        if self.whatsapp_title:
+            self.whatsapp_title = self.whatsapp_title.lower()
         return self.whatsapp_title.replace(" ", "_")
 
     @property
