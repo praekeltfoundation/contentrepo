@@ -835,7 +835,8 @@ class TestImportExport:
         assert e.value.row_num == 2
         assert (
             e.value.message
-            == "Cannot find parent page with title missing-parent and locale English"
+            == "Cannot find parent page with title 'missing-parent' and locale "
+            "'English'"
         )
 
     def test_multiple_parents(self, newcsv_impexp: ImportExport) -> None:
@@ -854,8 +855,8 @@ class TestImportExport:
         assert e.value.row_num == 2
         assert (
             e.value.message
-            == "Multiple pages with title missing-parent and locale English for parent "
-            "page: ['missing-parent1', 'missing-parent2']"
+            == "Multiple pages with title 'missing-parent' and locale 'English' for "
+            "parent page: ['missing-parent1', 'missing-parent2']"
         )
 
     def test_go_to_page_button_missing_page(self, newcsv_impexp: ImportExport) -> None:
@@ -869,8 +870,8 @@ class TestImportExport:
         assert e.value.row_num == 2
         assert (
             e.value.message
-            == "No pages found with slug missing and locale English for go_to_page "
-            "button Missing on page ma_import-export"
+            == "No pages found with slug 'missing' and locale 'English' for go_to_page "
+            "button 'Missing' on page 'ma_import-export'"
         )
 
     def test_missing_related_pages(self, newcsv_impexp: ImportExport) -> None:
@@ -884,7 +885,8 @@ class TestImportExport:
         assert e.value.row_num == 2
         assert (
             e.value.message
-            == "Cannot find related page with slug missing related and locale English"
+            == "Cannot find related page with slug 'missing related' and locale "
+            "'English'"
         )
 
 

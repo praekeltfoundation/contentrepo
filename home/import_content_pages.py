@@ -127,8 +127,8 @@ class ContentImporter:
                     parent = Page.objects.get(title=page.parent, locale=page.locale)
                 except Page.DoesNotExist:
                     raise ImportException(
-                        f"Cannot find parent page with title {page.parent} and locale "
-                        f"{page.locale}",
+                        f"Cannot find parent page with title '{page.parent}' and "
+                        f"locale '{page.locale}'",
                         page.row_num,
                     )
                 except Page.MultipleObjectsReturned:
@@ -136,8 +136,8 @@ class ContentImporter:
                         title=page.parent, locale=page.locale
                     ).values_list("slug", flat=True)
                     raise ImportException(
-                        f"Multiple pages with title {page.parent} and locale "
-                        f"{page.locale} for parent page: {list(parents)}",
+                        f"Multiple pages with title '{page.parent}' and locale "
+                        f"'{page.locale}' for parent page: {list(parents)}",
                         page.row_num,
                     )
             else:
@@ -166,9 +166,9 @@ class ContentImporter:
                     except Page.DoesNotExist:
                         row = self.shadow_pages[(slug, locale)]
                         raise ImportException(
-                            f"No pages found with slug {button['slug']} and locale "
-                            f"{locale} for go_to_page button {button['title']} on page "
-                            f"{slug}",
+                            f"No pages found with slug '{button['slug']}' and locale "
+                            f"'{locale}' for go_to_page button '{button['title']}' on "
+                            f"page '{slug}'",
                             row.row_num,
                         )
                     page.whatsapp_body[message_index].value["buttons"].append(
@@ -436,8 +436,8 @@ class ShadowContentPage:
                 )
             except Page.DoesNotExist:
                 raise ImportException(
-                    f"Cannot find related page with slug {related_page_slug} and "
-                    f"locale {self.locale}",
+                    f"Cannot find related page with slug '{related_page_slug}' and "
+                    f"locale '{self.locale}'",
                     self.row_num,
                 )
             related_pages.append(("related_page", related_page))
