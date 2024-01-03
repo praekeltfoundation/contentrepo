@@ -28,6 +28,7 @@ from wagtail.contrib.modeladmin.views import IndexView
 
 from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
+from .import_content_pages import ImportException
 from .mixins import SpreadsheetExportMixin
 from .models import ContentPage, ContentPageRating, OrderedContentSet, PageView
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
@@ -145,6 +146,13 @@ class ContentUploadThread(UploadThread):
         try:
             import_content(
                 self.file, self.file_type, self.progress_queue, self.purge, self.locale
+            )
+        except ImportException as e:
+            self.result_queue.put(
+                (
+                    messages.ERROR,
+                    f"Content import failed on row {e.row_num}: {e.message}",
+                )
             )
         except Exception:
             self.result_queue.put((messages.ERROR, "Content import failed"))

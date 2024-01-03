@@ -32,6 +32,17 @@ from home.models import (
 PageId = tuple[str, Locale]
 
 
+class ImportException(Exception):
+    """
+    Base exception for all import related issues.
+    """
+
+    def __init__(self, message: str, row_num: int | None = None):
+        self.row_num = row_num
+        self.message = message
+        super().__init__()
+
+
 class ContentImporter:
     def __init__(
         self,
@@ -61,9 +72,11 @@ class ContentImporter:
                 if lang_dn == langname:
                     codes.append(lang_code)
             if not codes:
-                raise ValueError(f"Language not found: {langname}")
+                raise ImportException(f"Language not found: {langname}")
             if len(codes) > 1:
-                raise ValueError(f"Multiple codes for language: {langname} -> {codes}")
+                raise ImportException(
+                    f"Multiple codes for language: {langname} -> {codes}"
+                )
             self.locale_map[langname] = Locale.objects.get(language_code=codes[0])
         return self.locale_map[langname]
 
@@ -84,20 +97,24 @@ class ContentImporter:
         # Non-page rows don't have a locale, so we need to remember the last
         # row that does have a locale.
         prev_locale: Locale | None = None
-        for row in rows:
-            if row.is_page_index:
-                if self.locale and row.locale != self.locale.get_display_name():
-                    # This page index isn't for the locale we're importing, so skip it.
-                    continue
-                self.create_content_page_index_from_row(row)
-                prev_locale = self.locale_from_display_name(row.locale)
-            elif row.is_content_page:
-                self.create_shadow_content_page_from_row(row)
-                prev_locale = self.locale_from_display_name(row.locale)
-            elif row.is_variation_message:
-                self.add_variation_to_shadow_content_page_from_row(row, prev_locale)
-            else:
-                self.add_message_to_shadow_content_page_from_row(row, prev_locale)
+        for i, row in enumerate(rows, start=2):
+            try:
+                if row.is_page_index:
+                    if self.locale and row.locale != self.locale.get_display_name():
+                        # This page index isn't for the locale we're importing, so skip it.
+                        continue
+                    self.create_content_page_index_from_row(row)
+                    prev_locale = self.locale_from_display_name(row.locale)
+                elif row.is_content_page:
+                    self.create_shadow_content_page_from_row(row, i)
+                    prev_locale = self.locale_from_display_name(row.locale)
+                elif row.is_variation_message:
+                    self.add_variation_to_shadow_content_page_from_row(row, prev_locale)
+                else:
+                    self.add_message_to_shadow_content_page_from_row(row, prev_locale)
+            except ImportException as e:
+                e.row_num = i
+                raise e
 
     def save_pages(self) -> None:
         for i, page in enumerate(self.shadow_pages.values()):
@@ -106,7 +123,23 @@ class ContentImporter:
                 continue
             if page.parent:
                 # TODO: We should need to use something unique for `parent`
-                parent = Page.objects.get(title=page.parent, locale=page.locale)
+                try:
+                    parent = Page.objects.get(title=page.parent, locale=page.locale)
+                except Page.DoesNotExist:
+                    raise ImportException(
+                        f"Cannot find parent page with title '{page.parent}' and "
+                        f"locale '{page.locale}'",
+                        page.row_num,
+                    )
+                except Page.MultipleObjectsReturned:
+                    parents = Page.objects.filter(
+                        title=page.parent, locale=page.locale
+                    ).values_list("slug", flat=True)
+                    raise ImportException(
+                        f"Multiple pages with title '{page.parent}' and locale "
+                        f"'{page.locale}' for parent page: {list(parents)}",
+                        page.row_num,
+                    )
             else:
                 parent = self.home_page(page.locale)
             page.save(parent)
@@ -126,7 +159,18 @@ class ContentImporter:
             for message_index, buttons in messages.items():
                 for button in buttons:
                     title = button["title"]
-                    related_page = Page.objects.get(slug=button["slug"], locale=locale)
+                    try:
+                        related_page = Page.objects.get(
+                            slug=button["slug"], locale=locale
+                        )
+                    except Page.DoesNotExist:
+                        row = self.shadow_pages[(slug, locale)]
+                        raise ImportException(
+                            f"No pages found with slug '{button['slug']}' and locale "
+                            f"'{locale}' for go_to_page button '{button['title']}' on "
+                            f"page '{slug}'",
+                            row.row_num,
+                        )
                     page.whatsapp_body[message_index].value["buttons"].append(
                         ("go_to_page", {"page": related_page, "title": title})
                     )
@@ -190,9 +234,12 @@ class ContentImporter:
 
         index.save_revision().publish()
 
-    def create_shadow_content_page_from_row(self, row: "ContentRow") -> None:
+    def create_shadow_content_page_from_row(
+        self, row: "ContentRow", row_num: int
+    ) -> None:
         locale = self.locale_from_display_name(row.locale)
         page = ShadowContentPage(
+            row_num=row_num,
             slug=row.slug,
             title=row.web_title,
             locale=locale,
@@ -287,6 +334,7 @@ class ShadowContentPage:
     slug: str
     parent: str
     locale: Locale
+    row_num: int
     enable_web: bool = False
     title: str = ""
     subtitle: str = ""
@@ -382,7 +430,16 @@ class ShadowContentPage:
         page = ContentPage.objects.get(slug=self.slug, locale=self.locale)
         related_pages = []
         for related_page_slug in self.related_pages:
-            related_page = Page.objects.get(slug=related_page_slug, locale=self.locale)
+            try:
+                related_page = Page.objects.get(
+                    slug=related_page_slug, locale=self.locale
+                )
+            except Page.DoesNotExist:
+                raise ImportException(
+                    f"Cannot find related page with slug '{related_page_slug}' and "
+                    f"locale '{self.locale}'",
+                    self.row_num,
+                )
             related_pages.append(("related_page", related_page))
         page.related_pages = related_pages
         page.save_revision().publish()
