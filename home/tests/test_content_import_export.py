@@ -873,6 +873,20 @@ class TestImportExport:
             "button Missing on page ma_import-export"
         )
 
+    def test_missing_related_pages(self, newcsv_impexp: ImportExport) -> None:
+        """
+        Related pages are listed as comma separated slugs in imported files. If there
+        is a slug listed that we cannot find the page for, then we should show the
+        user an error with information about the missing page.
+        """
+        with pytest.raises(ImportException) as e:
+            newcsv_impexp.import_file("missing-related-page.csv")
+        assert e.value.row_num == 2
+        assert (
+            e.value.message
+            == "Cannot find related page with slug missing related and locale English"
+        )
+
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])

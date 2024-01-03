@@ -297,7 +297,6 @@ class ContentImporter:
             page.enable_whatsapp = True
             buttons = []
             for button in row.buttons:
-                print(button)
                 if button["type"] == "next_message":
                     buttons.append(
                         {
@@ -431,7 +430,16 @@ class ShadowContentPage:
         page = ContentPage.objects.get(slug=self.slug, locale=self.locale)
         related_pages = []
         for related_page_slug in self.related_pages:
-            related_page = Page.objects.get(slug=related_page_slug, locale=self.locale)
+            try:
+                related_page = Page.objects.get(
+                    slug=related_page_slug, locale=self.locale
+                )
+            except Page.DoesNotExist:
+                raise ImportException(
+                    f"Cannot find related page with slug {related_page_slug} and "
+                    f"locale {self.locale}",
+                    self.row_num,
+                )
             related_pages.append(("related_page", related_page))
         page.related_pages = related_pages
         page.save_revision().publish()
