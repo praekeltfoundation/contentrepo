@@ -164,10 +164,12 @@ class ContentImporter:
                             slug=button["slug"], locale=locale
                         )
                     except Page.DoesNotExist:
+                        row = self.shadow_pages[(slug, locale)]
                         raise ImportException(
                             f"No pages found with slug {button['slug']} and locale "
                             f"{locale} for go_to_page button {button['title']} on page "
-                            f"{slug}"
+                            f"{slug}",
+                            row.row_num,
                         )
                     page.whatsapp_body[message_index].value["buttons"].append(
                         ("go_to_page", {"page": related_page, "title": title})
@@ -295,6 +297,7 @@ class ContentImporter:
             page.enable_whatsapp = True
             buttons = []
             for button in row.buttons:
+                print(button)
                 if button["type"] == "next_message":
                     buttons.append(
                         {

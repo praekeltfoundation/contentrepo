@@ -858,6 +858,21 @@ class TestImportExport:
             "page: ['missing-parent1', 'missing-parent2']"
         )
 
+    def test_go_to_page_button_missing_page(self, newcsv_impexp: ImportExport) -> None:
+        """
+        Go to page buttons in the import file link to other pages using the slug. But
+        if no page with that slug exists, then we should give the user an error message
+        that tells them where and how to fix it.
+        """
+        with pytest.raises(ImportException) as e:
+            newcsv_impexp.import_file("missing-gotopage.csv")
+        assert e.value.row_num == 2
+        assert (
+            e.value.message
+            == "No pages found with slug missing and locale English for go_to_page "
+            "button Missing on page ma_import-export"
+        )
+
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
