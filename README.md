@@ -82,7 +82,9 @@ This can work for mac and (possibly Windows) by setting the environment variable
 
 Run the following in a virtual environment
 ```bash
-pip install -e .[dev]
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 createdb contentrepo
 ./manage.py migrate
 ./manage.py createsuperuser
@@ -91,7 +93,7 @@ createdb contentrepo
 
 ### Automated tests
 
-Tests are run using [pytest](https://pytest.org)). For faster test runs, try adding `--no-cov` to disable coverage reporting and/or `-n auto` to run multiple tests in parallel.
+Tests are run using [pytest](https://pytest.org). For faster test runs, try adding `--no-cov` to disable coverage reporting and/or `-n auto` to run multiple tests in parallel.
 
 ## API
 The API documentation is available at the `/api/schema/swagger-ui/` endpoint.
