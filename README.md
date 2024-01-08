@@ -82,7 +82,9 @@ This can work for mac and (possibly Windows) by setting the environment variable
 
 Run the following in a virtual environment
 ```bash
-pip install -e .[dev]
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 createdb contentrepo
 ./manage.py migrate
 ./manage.py createsuperuser
