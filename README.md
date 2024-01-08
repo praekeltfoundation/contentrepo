@@ -93,7 +93,7 @@ createdb contentrepo
 
 ### Automated tests
 
-Tests are run using [pytest](https://pytest.org)). For faster test runs, try adding `--no-cov` to disable coverage reporting and/or `-n auto` to run multiple tests in parallel.
+Tests are run using [pytest](https://pytest.org). For faster test runs, try adding `--no-cov` to disable coverage reporting and/or `-n auto` to run multiple tests in parallel.
 
 ## API
 The API documentation is available at the `/api/schema/swagger-ui/` endpoint.
