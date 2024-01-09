@@ -26,6 +26,7 @@ from home.models import (
     HomePage,
     MessengerBlock,
     ViberBlock,
+    SMSBlock,
     WhatsappBlock,
 )
 
@@ -266,6 +267,9 @@ class ContentImporter:
             # Currently media is exported as a URL, which just has an ID. This doesn't
             # actually help us much, as IDs can differ between instances, so we need
             # a better way of exporting and importing media here
+     
+        if row.is_sms_message:
+            page.sms_title = row.sms_title
 
         if row.is_messenger_message:
             page.messenger_title = row.messenger_title
@@ -316,6 +320,9 @@ class ContentImporter:
                     buttons=buttons,
                 )
             )
+        if row.is_sms_message:
+            page.enable_sms = True
+            page.sms_body.append(ShadowSMSBlock(message=row.sms_body))    
 
         if row.is_messenger_message:
             page.enable_messenger = True
@@ -345,6 +352,9 @@ class ShadowContentPage:
     whatsapp_body: list["ShadowWhatsappBlock"] = field(default_factory=list)
     whatsapp_template_name: str = ""
     whatsapp_template_category: str = "UTILITY"
+    enable_sms: bool = False
+    sms_title: str = ""
+    sms_body: list["ShadowSMSBlock"] = field(default_factory=list)
     enable_messenger: bool = False
     messenger_title: str = ""
     messenger_body: list["ShadowMessengerBlock"] = field(default_factory=list)
@@ -393,6 +403,13 @@ class ShadowContentPage:
         page.whatsapp_body.clear()
         for message in self.formatted_whatsapp_body:
             page.whatsapp_body.append(("Whatsapp_Message", message))
+
+    def add_sms_to_page(self, page: ContentPage) -> None:
+        page.enable_sms = self.enable_sms
+        page.sms_title = self.sms_title
+        page.sms_body.clear()
+        for message in self.formatted_sms_body:
+            page.sms_body.append(("SMS_Message", message))
 
     def add_messenger_to_page(self, page: ContentPage) -> None:
         page.enable_messenger = self.enable_messenger
@@ -459,6 +476,12 @@ class ShadowContentPage:
         return [WhatsappBlock().to_python(m.wagtail_format) for m in self.whatsapp_body]
 
     @property
+    def formatted_sms_body(self) -> list[StructValue]:
+        return [
+            SMSBlock().to_python(m.wagtail_format) for m in self.sms_body
+        ]    
+
+    @property
     def formatted_messenger_body(self) -> list[StructValue]:
         return [
             MessengerBlock().to_python(m.wagtail_format) for m in self.messenger_body
@@ -504,6 +527,13 @@ class ShadowVariationBlock:
             ],
         }
 
+@dataclass(slots=True)
+class ShadowSMSBlock:
+    message: str = ""
+
+    @property
+    def wagtail_format(self) -> dict[str, str]:
+        return {"message": self.message}
 
 @dataclass(slots=True)
 class ShadowMessengerBlock:
@@ -538,6 +568,8 @@ class ContentRow:
     example_values: list[str] = field(default_factory=list)
     variation_title: dict[str, str] = field(default_factory=dict)
     variation_body: str = ""
+    sms_title: str = ""
+    sms_body: str = ""    
     messenger_title: str = ""
     messenger_body: str = ""
     viber_title: str = ""
@@ -582,6 +614,7 @@ class ContentRow:
                 self.parent,
                 self.web_body,
                 self.whatsapp_body,
+                self.sms_body,
                 self.messenger_body,
                 self.viber_body,
             ]
@@ -598,6 +631,10 @@ class ContentRow:
     @property
     def is_whatsapp_template_message(self) -> bool:
         return bool(self.whatsapp_template_name)
+    
+    @property
+    def is_sms_message(self) -> bool:
+        return bool(self.sms_body)
 
     @property
     def is_messenger_message(self) -> bool:
