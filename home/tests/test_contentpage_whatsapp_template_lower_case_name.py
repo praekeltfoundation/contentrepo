@@ -1,9 +1,11 @@
 import importlib
+
+from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from wagtail.models import Revision
+
 from home.models import ContentPage
 from home.tests.utils import create_page
-from django.contrib.contenttypes.models import ContentType
 
 
 update_template_names = importlib.import_module(
