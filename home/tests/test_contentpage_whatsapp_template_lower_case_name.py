@@ -7,7 +7,6 @@ from wagtail.models import Revision
 from home.models import ContentPage
 from home.tests.utils import create_page
 
-
 update_template_names = importlib.import_module(
     "home.migrations.0041_contentpage_whatsapp_template_lower_case_name"
 ).update_template_names
