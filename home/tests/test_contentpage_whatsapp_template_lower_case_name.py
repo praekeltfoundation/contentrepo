@@ -1,8 +1,8 @@
 import importlib
 
-from django.contrib.contenttypes.models import ContentType
-from django.test import TestCase
-from wagtail.models import Revision
+from django.contrib.contenttypes.models import ContentType  # type: ignore
+from django.test import TestCase  # type: ignore
+from wagtail.models import Revision  # type: ignore
 
 from home.models import ContentPage
 from home.tests.utils import create_page
@@ -13,7 +13,7 @@ update_template_names = importlib.import_module(
 
 
 class TemplateNameMigration(TestCase):
-    def test_template_name_lower_case_migration(self):
+    def test_template_name_lower_case_migration(self) -> None:
         page = create_page(
             is_whatsapp_template=True, whatsapp_template_name="WA_Title_1"
         )
@@ -30,7 +30,7 @@ class TemplateNameMigration(TestCase):
         revision_page = revision.as_object()
         self.assertEqual(revision_page.whatsapp_template_name, "wa_title_1")
 
-    def test_contentpage_is_not_a_template(self):
+    def test_contentpage_is_not_a_template(self) -> None:
         page = create_page()
         revision_not_template = page.latest_revision
 
