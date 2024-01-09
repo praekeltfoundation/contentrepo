@@ -34,19 +34,13 @@ def run_migration(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("wagtailcore", "0083_workflowcontenttype"),
+        ("home", "0040_alter_contentpage_whatsapp_template_category"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="page",
-            name="slug",
-            field=models.SlugField(
-                allow_unicode=True,
-                blank=True,
-                help_text="The name of the page as it will appear in URLs e.g http://domain.com/blog/[my-slug]/",
-                max_length=255,
-                verbose_name="slug",
-            ),
+            model_name="contentpage",
+            name="whatsapp_template_name",
+            field=models.CharField(max_length=512, blank=True, default=""),
         ),
     ]
