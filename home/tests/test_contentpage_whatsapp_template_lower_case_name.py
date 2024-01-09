@@ -13,7 +13,9 @@ update_template_names = importlib.import_module(
 
 class TemplateNameMigration(TestCase):
     def test_template_name_lower_case_migration(self):
-        page = create_page(is_whatsapp_template=True, whatsapp_template_name="WA_Title_1")
+        page = create_page(
+            is_whatsapp_template=True, whatsapp_template_name="WA_Title_1"
+        )
 
         page.is_whatsapp_template = True
         revision = page.save_revision()
@@ -25,9 +27,7 @@ class TemplateNameMigration(TestCase):
         self.assertEqual(page.whatsapp_template_name, "wa_title_1")
         revision.refresh_from_db()
         revision_page = revision.as_object()
-        self.assertEqual(
-            revision_page.whatsapp_template_name, "wa_title_1"
-        )
+        self.assertEqual(revision_page.whatsapp_template_name, "wa_title_1")
 
     def test_contentpage_is_not_a_template(self):
         page = create_page()
@@ -44,4 +44,3 @@ class TemplateNameMigration(TestCase):
         revision_not_template.refresh_from_db()
         revision_not_template_page = revision_not_template.as_object()
         self.assertEqual(revision_not_template_page.whatsapp_template_name, "")
-
