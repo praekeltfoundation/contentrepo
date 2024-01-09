@@ -356,6 +356,8 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             "variation_body",
             "next_prompt",
             "buttons",
+            "sms_title",
+            "sms_body",
             "viber_title",
             "viber_body",
             "messenger_title",
@@ -437,6 +439,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
         row = clean_row(row)
         variation_messages = []
         whatsapp_messages = [row["whatsapp_body"]]
+        sms_messages = [row["sms_body"]]
         messenger_messages = [row["messenger_body"]]
         viber_messages = [row["viber_body"]]
         for next_row in lines[index + 1 :]:
@@ -454,6 +457,8 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
                     }
                 )
 
+            if next_row["sms_body"] not in ["", None]:
+                sms_messages.append(next_row["sms_body"])
             if next_row["messenger_body"] not in ["", None]:
                 messenger_messages.append(next_row["messenger_body"])
             if next_row["viber_body"] not in ["", None]:
@@ -467,6 +472,9 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             whatsapp_messages=whatsapp_messages,
             page=contentpage,
             variation_messages=variation_messages,
+        )
+        contentpage = add_sms(
+            row=row, sms_messages=sms_messages, page=contentpage
         )
         contentpage = add_messenger(
             row=row, messenger_messages=messenger_messages, page=contentpage

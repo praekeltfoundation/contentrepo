@@ -375,6 +375,7 @@ class ShadowContentPage:
 
         self.add_web_to_page(page)
         self.add_whatsapp_to_page(page)
+        self.add_sms_to_page(page)
         self.add_messenger_to_page(page)
         self.add_viber_to_page(page)
         self.add_tags_to_page(page)
