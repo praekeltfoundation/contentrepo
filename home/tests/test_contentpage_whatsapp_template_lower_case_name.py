@@ -29,7 +29,7 @@ class TemplateNameMigration(unittest.TestCase):
             revision_page.whatsapp_template_name, "wa_title_1"
         )
 
-    def test_is_not_a_template(self):
+    def test_contentpage_is_not_a_template(self):
         page = create_page()
         revision_not_template = page.latest_revision
 
