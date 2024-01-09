@@ -8,20 +8,20 @@ def update_template_names(ContentPage, ContentType, Revision):
      Update historic data template names to lower case
     """
     for page in ContentPage.objects.filter(is_whatsapp_template=True):
-        if not page.whatsapp_title:
+        if not page.whatsapp_template_name:
             continue
-        template_prefix = page.whatsapp_title.lower().replace(" ", "_")
-        page.whatsapp_template_name = f"{template_prefix}_{page.latest_revision.id}"
+
+        page.whatsapp_template_name = page.whatsapp_template_name.lower()
         page.save(update_fields=["whatsapp_template_name"])
 
     content_type = ContentType.objects.get_for_model(ContentPage)
     for revision in Revision.objects.filter(content_type__pk=content_type.pk):
-        if not revision.content.get("whatsapp_title"):
+        if not revision.content.get("whatsapp_template_name"):
             continue
         if not revision.content.get("is_whatsapp_template"):
             continue
-        template_prefix = revision.content["whatsapp_title"].lower().replace(" ", "_")
-        revision.content["whatsapp_template_name"] = f"{template_prefix}_{revision.pk}"
+
+        revision.content["whatsapp_template_name"] = revision.content["whatsapp_template_name"].lower()
         revision.save(update_fields=["content"])
 
 
