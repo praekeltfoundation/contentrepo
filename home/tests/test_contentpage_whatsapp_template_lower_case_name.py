@@ -1,17 +1,17 @@
-import unittest
-from home.models import ContentPage
-from home.tests.utils import create_page
 import importlib
-from django.contrib.contenttypes.models import ContentType
+from django.test import TestCase
 from wagtail.models import Revision
 from home.models import ContentPage
+from home.tests.utils import create_page
+from django.contrib.contenttypes.models import ContentType
+
 
 update_template_names = importlib.import_module(
     "home.migrations.0041_contentpage_whatsapp_template_lower_case_name"
 ).update_template_names
 
 
-class TemplateNameMigration(unittest.TestCase):
+class TemplateNameMigration(TestCase):
     def test_template_name_lower_case_migration(self):
         page = create_page(is_whatsapp_template=True, whatsapp_template_name="WA_Title_1")
 
@@ -45,6 +45,3 @@ class TemplateNameMigration(unittest.TestCase):
         revision_not_template_page = revision_not_template.as_object()
         self.assertEqual(revision_not_template_page.whatsapp_template_name, "")
 
-
-if __name__ == '__main__':
-    unittest.main()
