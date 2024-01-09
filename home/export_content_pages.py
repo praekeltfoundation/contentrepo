@@ -21,6 +21,7 @@ from home.models import (
     MessengerBlock,
     VariationBlock,
     ViberBlock,
+    SMSBlock,
     WhatsappBlock,
 )
 
@@ -29,7 +30,7 @@ CP_CTYPE = ContentPage._meta.verbose_name
 CPI_CTYPE = ContentPageIndex._meta.verbose_name
 
 
-MsgBlocks = tuple[WhatsappBlock | None, MessengerBlock | None, ViberBlock | None]
+MsgBlocks = tuple[WhatsappBlock | None, SMSBlock | None, MessengerBlock | None, ViberBlock | None]
 
 
 @dataclass
@@ -49,6 +50,8 @@ class ExportRow:
     example_values: str = ""
     variation_title: str = ""
     variation_body: str = ""
+    sms_title: str = ""
+    sms_body: str = ""
     messenger_title: str = ""
     messenger_body: str = ""
     viber_title: str = ""
@@ -91,7 +94,7 @@ class ExportRow:
         )
 
     def add_message_fields(self, msg_blocks: MsgBlocks) -> None:
-        whatsapp, messenger, viber = msg_blocks
+        whatsapp, sms, messenger, viber = msg_blocks
         # We do these in reverse order to pick the same image as the old
         # exporter if there's more than one.
         if viber:
@@ -102,6 +105,8 @@ class ExportRow:
             self.messenger_body = messenger.value["message"].strip()
             if "image" in messenger.value:
                 self.image_link = messenger.value["image"]
+        if sms:
+            self.sms_body = sms.value["message"].strip()              
         if whatsapp:
             self.whatsapp_body = whatsapp.value["message"].strip()
             if "image" in whatsapp.value:
@@ -184,6 +189,7 @@ class ContentExporter:
             whatsapp_title=page.whatsapp_title,
             whatsapp_template_name=page.whatsapp_template_name,
             whatsapp_template_category=page.whatsapp_template_category,
+            sms_title=page.sms_title,
             messenger_title=page.messenger_title,
             viber_title=page.viber_title,
             translation_tag=str(page.translation_key),
@@ -195,7 +201,7 @@ class ContentExporter:
         )
         self.rows.append(row)
         message_bodies = list(
-            zip_longest(page.whatsapp_body, page.messenger_body, page.viber_body)
+            zip_longest(page.whatsapp_body, page.sms_body, page.messenger_body, page.viber_body)
         )
         for msg_blocks in message_bodies:
             self._export_row_message(row, msg_blocks)
@@ -298,6 +304,8 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "whatsapp_template_category": 118,
         "variation_title": 118,
         "variation_body": 370,
+        "sms_title": 118,
+        "sms_body": 370,
         "messenger_title": 118,
         "messenger_body": 370,
         "viber_title": 118,

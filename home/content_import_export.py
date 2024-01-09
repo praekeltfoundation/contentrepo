@@ -54,6 +54,8 @@ EXPORT_FIELDNAMES = [
     "example_values",
     "variation_title",
     "variation_body",
+    "sms_title",
+    "sms_body",
     "messenger_title",
     "messenger_body",
     "viber_title",
@@ -281,6 +283,25 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             page.whatsapp_template_name = whatsapp_template_name
             page.whatsapp_template_category = whatsapp_template_category
             page.is_whatsapp_template = bool(whatsapp_template_name)
+            return page
+
+    def add_sms(row, sms_messages, page=None):
+        if not row.get("sms_title"):
+            return page
+
+        if not page:
+            return ContentPage(
+                title=row["sms_title"],
+                slug=row["slug"],
+                enable_sms=True,
+                sms_title=row["sms_title"],
+                sms_body=get_body(sms_messages, "sms_block"),
+                locale=home_page.locale,
+            )
+        else:
+            page.enable_sms = True
+            page.sms_title = row["sms_title"]
+            page.sms_body = get_body(sms_messages, "sms_block")
             return page
 
     def add_messenger(row, messenger_messages, page=None):
@@ -525,6 +546,8 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
         "example_values": 118,
         "variation_title": 118,
         "variation_body": 370,
+        "sms_title": 118,
+        "sms_body": 370,
         "messenger_title": 118,
         "messenger_body": 370,
         "viber_title": 118,
@@ -877,14 +900,16 @@ class VariationMessageList:
 @dataclass
 class MessageContainer:
     whatsapp: Tuple[Message]
+    sms: Tuple[Message]
     messenger: Tuple[Message]
     viber: Tuple[Message]
     variation_messages: Tuple[VariationMessage]
 
     @classmethod
-    def from_platform_body(cls, whatsapp_body, messenger_body, viber_body):
+    def from_platform_body(cls, whatsapp_body, sms_body, messenger_body, viber_body):
         whatsapp = []
         whatsapp_variation_messages = []
+        sms=[]
         messenger = []
         viber = []
         for whatsapp_msg in whatsapp_body:
@@ -892,6 +917,8 @@ class MessageContainer:
             whatsapp_variation_messages.append(
                 VariationMessageList.from_platform_body_element(whatsapp_msg)
             )
+        for sms_msg in sms_body:
+            sms.append(Message.from_platform_body_element(sms_msg))
 
         for messenger_msg in messenger_body:
             messenger.append(Message.from_platform_body_element(messenger_msg))
@@ -962,6 +989,8 @@ class ContentSheetRow:
     whatsapp_body: str = ""
     whatsapp_template_name: str = ""
     whatsapp_template_category: str = ""
+    sms_title: str = ""
+    sms_body: str = ""
     messenger_title: str = ""
     messenger_body: str = ""
     viber_title: str = ""
@@ -1008,6 +1037,7 @@ class ContentSheetRow:
         content_sheet_row = cls()
         message_container = MessageContainer.from_platform_body(
             page.whatsapp_body,
+            page.sms_body,
             page.messenger_body,
             page.viber_body,
         )
@@ -1029,6 +1059,7 @@ class ContentSheetRow:
                 page.whatsapp_template_category
             )
             content_sheet_row.whatsapp_title = page.whatsapp_title
+            content_sheet_row.sms_title = page.sms_title
             content_sheet_row.messenger_title = page.messenger_title
             content_sheet_row.viber_title = page.viber_title
             content_sheet_row.translation_tag = str(page.translation_key)
@@ -1099,6 +1130,8 @@ class ContentSheetRow:
             self.example_values,
             self.variation_title,
             self.variation_body,
+            self.sms_title,
+            self.sms_body,
             self.messenger_title,
             self.messenger_body,
             self.viber_title,
@@ -1141,6 +1174,7 @@ class ContentSheetRow:
         most_messages = max(
             [
                 len(message_container.whatsapp),
+                len(message_container.sms),
                 len(message_container.messenger),
                 len(message_container.viber),
                 len(page.body),
@@ -1156,6 +1190,10 @@ class ContentSheetRow:
                 variation_messages.extend(
                     self._make_variation_rows(page, message_container, 0)
                 )
+        if len(message_container.sms) == 1 or (
+            side_panel_message_number == 0 and len(message_container.sms) > 1
+        ):
+            self.sms_body = message_container.sms[0].body
 
         if len(message_container.messenger) == 1 or (
             side_panel_message_number == 0 and len(message_container.messenger) > 1
@@ -1198,6 +1236,10 @@ class ContentSheetRow:
                     new_content_sheet_row.messenger_body = message_container.messenger[
                         message_index
                     ].body
+                if message_index < len(message_container.sms):
+                    new_content_sheet_row.sms_body = message_container.sms[
+                        message_index
+                    ].body    
                 if message_index < len(message_container.viber):
                     new_content_sheet_row.viber_body = message_container.viber[
                         message_index
