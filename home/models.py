@@ -299,6 +299,15 @@ class WhatsappBlock(blocks.StructBlock):
             raise StructBlockValidationError(errors)
         return result
 
+class SMSBlock(blocks.StructBlock):
+    message = blocks.TextBlock(
+        help_text="each message cannot exceed 160 characters.",
+        validators=(MaxLengthValidator(160),),
+    )
+
+    class Meta:
+        icon = "user"
+        form_classname = "whatsapp-message-block struct-block"
 
 class ViberBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
@@ -414,6 +423,10 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         default=False,
         help_text="When enabled, the API will include the whatsapp content",
     )
+    enable_sms = models.BooleanField(
+        default=False,
+        help_text="When enabled, the API will include the sms content",
+    )
     enable_messenger = models.BooleanField(
         default=False,
         help_text="When enabled, the API will include the messenger content",
@@ -483,6 +496,31 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                 FieldPanel("whatsapp_body"),
             ],
             heading="Whatsapp",
+        ),
+    ]
+
+    sms_title = models.CharField(max_length=200, blank=True, null=True)
+    sms_body = StreamField(
+        [
+            (
+                "SMS_Message",
+                SMSBlock(
+                    help_text="Each message will be sent with the text"
+                ),
+            ),
+        ],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
+     # sms panels
+    sms_panels = [
+        MultiFieldPanel(
+            [
+                FieldPanel("sms_title"),
+                FieldPanel("sms_body"),
+            ],
+            heading="SMS",
         ),
     ]
 
@@ -556,6 +594,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             [
                 FieldPanel("enable_web"),
                 FieldPanel("enable_whatsapp"),
+                FieldPanel("enable_sms"),
                 FieldPanel("enable_messenger"),
                 FieldPanel("enable_viber"),
             ],
@@ -566,6 +605,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         [
             ObjectList(web_panels, heading="Web"),
             ObjectList(whatsapp_panels, heading="Whatsapp"),
+            ObjectList(sms_panels, heading="SMS"),
             ObjectList(messenger_panels, heading="Messenger"),
             ObjectList(viber_panels, heading="Viber"),
             ObjectList(promote_panels, heading="Promotional"),

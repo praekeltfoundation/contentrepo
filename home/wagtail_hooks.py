@@ -92,6 +92,7 @@ class ContentPageAdmin(ModelAdmin):
         "web_body",
         "subtitle",
         "wa_body",
+        "sms_body",
         "mess_body",
         "vib_body",
         "replies",
@@ -105,6 +106,7 @@ class ContentPageAdmin(ModelAdmin):
         "title",
         "body",
         "whatsapp_body",
+        "sms_body",
         "messenger_body",
         "viber_body",
         "slug",
@@ -128,6 +130,12 @@ class ContentPageAdmin(ModelAdmin):
 
     def wa_body(self, obj):
         body = "\n".join(m.value["message"] for m in obj.whatsapp_body)
+        return truncatechars(str(body), self.body_truncate_size)
+
+    wa_body.short_description = "Whatsapp Body"
+
+    def sms_body(self, obj):
+        body = "\n".join(m.value["message"] for m in obj.sms_body)
         return truncatechars(str(body), self.body_truncate_size)
 
     wa_body.short_description = "Whatsapp Body"

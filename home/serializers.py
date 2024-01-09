@@ -20,6 +20,9 @@ class TitleField(serializers.Field):
         if "whatsapp" in request.GET and page.enable_whatsapp is True:
             if page.whatsapp_title:
                 return page.whatsapp_title
+        if "sms" in request.GET and page.enable_sms is True:
+            if page.sms_title:
+                return page.sms_title        
         elif "messenger" in request.GET and page.enable_messenger is True:
             if page.messenger_title:
                 return page.messenger_title
@@ -57,6 +60,8 @@ def has_next_message(message_index, content_page, platform):
     messages_length = None
     if platform == "whatsapp":
         messages_length = len(content_page.whatsapp_body._raw_data) - 1
+    elif platform == "sms":
+        messages_length = len(content_page.sms_body._raw_data) - 1
     elif platform == "viber":
         messages_length = len(content_page.viber_body._raw_data) - 1
     elif platform == "messenger":
@@ -71,6 +76,8 @@ def has_previous_message(message_index, content_page, platform):
     messages_length = None
     if platform == "whatsapp":
         messages_length = len(content_page.whatsapp_body._raw_data) - 1
+    elif platform == "sms":
+        messages_length = len(content_page.sms_body._raw_data) - 1    
     elif platform == "viber":
         messages_length = len(content_page.viber_body._raw_data) - 1
     elif platform == "messenger":
@@ -160,6 +167,29 @@ class BodyField(serializers.Field):
                     )
                 except IndexError:
                     raise ValidationError("The requested message does not exist")
+        elif "sms" in request.GET and (
+            page.enable_sms is True
+            or ("qa" in request.GET and request.GET["qa"] == "True")
+        ):
+            if page.sms_body != []:
+                try:
+                    return OrderedDict(
+                        [
+                            ("message", message + 1),
+                            (
+                                "next_message",
+                                has_next_message(message, page, "sms"),
+                            ),
+                            (
+                                "previous_message",
+                                has_previous_message(message, page, "sms"),
+                            ),
+                            ("total_messages", len(page.sms_body._raw_data)),
+                            ("text", page.sms_body._raw_data[message]["value"]),
+                        ]
+                    )
+                except IndexError:
+                    raise ValidationError("The requested message does not exist")        
         elif "messenger" in request.GET and (
             page.enable_messenger is True
             or ("qa" in request.GET and request.GET["qa"] == "True")
@@ -227,6 +257,9 @@ class RelatedPagesField(serializers.Field):
             if "whatsapp" in request.GET and related_page.enable_whatsapp is True:
                 if related_page.whatsapp_title:
                     title = related_page.whatsapp_title
+            elif "sms" in request.GET and related_page.enable_sms is True:
+                if related_page.sms_title:
+                    title = related_page.sms_title        
             elif "messenger" in request.GET and related_page.enable_messenger is True:
                 if related_page.messenger_title:
                     title = related_page.messenger_title
@@ -295,6 +328,9 @@ class PagesField(serializers.Field):
             if "whatsapp" in request.GET and page.enable_whatsapp is True:
                 if page.whatsapp_title:
                     title = page.whatsapp_title
+            elif "sms" in request.GET and page.enable_sms is True:
+                if page.sms_title:
+                    title = page.sms_title        
             elif "messenger" in request.GET and page.enable_messenger is True:
                 if page.messenger_title:
                     title = page.messenger_title
@@ -331,6 +367,9 @@ class OrderedPagesField(serializers.Field):
             if "whatsapp" in request.GET and page.enable_whatsapp is True:
                 if page.whatsapp_title:
                     title = page.whatsapp_title
+            elif "sms" in request.GET and page.enable_sms is True:
+                if page.sms_title:
+                    title = page.sms_title        
             elif "messenger" in request.GET and page.enable_messenger is True:
                 if page.messenger_title:
                     title = page.messenger_title

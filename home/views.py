@@ -64,6 +64,7 @@ class PageViewFilterSet(WagtailFilterSet):
     platform_choices = [
         ("web", "Web"),
         ("whatsapp", "Whatsapp"),
+        ("sms", "SMS"),
         ("messenger", "Messenger"),
         ("viber", "Viber"),
     ]

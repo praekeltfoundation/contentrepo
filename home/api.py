@@ -79,6 +79,8 @@ class ContentPagesViewSet(PagesAPIViewSet):
             queryset = queryset.filter(enable_web=True)
         elif "whatsapp" in self.request.query_params:
             queryset = queryset.filter(enable_whatsapp=True)
+        elif "sms" in self.request.query_params:
+            queryset = queryset.filter(enable_sms=True)    
         elif "messenger" in self.request.query_params:
             queryset = queryset.filter(enable_messenger=True)
         elif "viber" in self.request.query_params:
@@ -103,6 +105,8 @@ class ContentPagesViewSet(PagesAPIViewSet):
             platform = "web"
             if "whatsapp" in self.request.query_params:
                 platform = "whatsapp"
+            if "sms" in self.request.query_params:
+                platform = "sms"
             elif "messenger" in self.request.query_params:
                 platform = "messenger"
             elif "viber" in self.request.query_params:
