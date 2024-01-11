@@ -128,5 +128,8 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Please make sure to update tests as appropriate.
 
+## Content Embeddings
+if you want to generate content content embeddings, please make sure you define LOAD_TRANSFORMER_MODEL in your environment and set it to True
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)

@@ -110,6 +110,32 @@ class TestContentPageAPI:
         content = json.loads(response.content)
         assert content["count"] == 2
 
+    def test_search_aaq_filtering(self, uclient):
+        """
+        If an s filter is provided, only pages with matching search tearm are returned.
+        """
+        page1 = ContentPage.objects.first()
+        page1.enable_whatsapp = True
+        page1.save_revision().publish()
+        # it should return 1 page for correct search term
+        response = uclient.get("/api/v2/pages/?s=help&whatsapp=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return 0 pages for meaningless search term
+        response = uclient.get("/api/v2/pages/?s=#(&whatsapp=true")
+        content = json.loads(response.content)
+        assert content["count"] == 0
+        # it should return 0 pages for correct search term if no platform is provided
+        response = uclient.get("/api/v2/pages/?s=help")
+        content = json.loads(response.content)
+        print("content is ",content)
+        assert content["count"] == 0
+        # it should not return search term matching pages if they are unpublished
+        page1.unpublish()
+        response = uclient.get("/api/v2/pages/?s=#(&whatsapp=true")
+        content = json.loads(response.content)
+        assert content["count"] == 0
+
     def test_platform_filtering(self, uclient):
         """
         If a platform filter is provided, only pages with content for that
