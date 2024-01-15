@@ -122,7 +122,7 @@ class TestContentPageAPI:
         content = json.loads(response.content)
         assert content["count"] == 1
         # it should return 0 pages for meaningless search term
-        response = uclient.get("/api/v2/pages/?s=#(&whatsapp=true")
+        response = uclient.get("/api/v2/pages/?s=%23&whatsapp=true")
         content = json.loads(response.content)
         assert content["count"] == 0
         # it should return 0 pages for correct search term if no platform is provided
