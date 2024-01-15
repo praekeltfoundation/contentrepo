@@ -132,7 +132,7 @@ class TestContentPageAPI:
         assert content["count"] == 0
         # it should not return search term matching pages if they are unpublished
         page1.unpublish()
-        response = uclient.get("/api/v2/pages/?s=#(&whatsapp=true")
+        response = uclient.get("/api/v2/pages/?s=help(&whatsapp=true")
         content = json.loads(response.content)
         assert content["count"] == 0
 
