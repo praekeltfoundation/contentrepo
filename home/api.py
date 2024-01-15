@@ -22,7 +22,18 @@ from .models import (  # isort:skip
 class ContentPagesViewSet(PagesAPIViewSet):
     base_serializer_class = ContentPageSerializer
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
-        ["tag", "trigger", "page", "qa", "whatsapp", "viber", "messenger", "web", "s"]
+        [
+            "tag",
+            "trigger",
+            "page",
+            "qa",
+            "whatsapp",
+            "viber",
+            "messenger",
+            "web",
+            "s",
+            "sms",
+        ]
     )
     pagination_class = PageNumberPagination
 
@@ -80,7 +91,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
         elif "whatsapp" in self.request.query_params:
             queryset = queryset.filter(enable_whatsapp=True)
         elif "sms" in self.request.query_params:
-            queryset = queryset.filter(enable_sms=True)    
+            queryset = queryset.filter(enable_sms=True)
         elif "messenger" in self.request.query_params:
             queryset = queryset.filter(enable_messenger=True)
         elif "viber" in self.request.query_params:

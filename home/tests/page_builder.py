@@ -13,6 +13,7 @@ from home.models import (
     ContentTrigger,
     MessengerBlock,
     ViberBlock,
+    SMSBlock,
     WhatsappBlock,
 )
 
@@ -118,6 +119,14 @@ class WABlk(ContentBlock):
 
 
 @dataclass
+class SBlk(ContentBlock):
+    BLOCK_TYPE_STR = "SMS_Message"
+    BLOCK_TYPE = SMSBlock
+
+    # TODO: More body things.
+
+
+@dataclass
 class MBlk(ContentBlock):
     BLOCK_TYPE_STR = "messenger_block"
     BLOCK_TYPE = MessengerBlock
@@ -135,6 +144,10 @@ class VBlk(ContentBlock):
 
 class WABody(ContentBody[WABlk]):
     ATTR_STR = "whatsapp"
+
+
+class SBody(ContentBody[SBlk]):
+    ATTR_STR = "sms"
 
 
 class MBody(ContentBody[MBlk]):

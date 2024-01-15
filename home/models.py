@@ -299,6 +299,7 @@ class WhatsappBlock(blocks.StructBlock):
             raise StructBlockValidationError(errors)
         return result
 
+
 class SMSBlock(blocks.StructBlock):
     message = blocks.TextBlock(
         help_text="each message cannot exceed 160 characters.",
@@ -308,6 +309,7 @@ class SMSBlock(blocks.StructBlock):
     class Meta:
         icon = "user"
         form_classname = "whatsapp-message-block struct-block"
+
 
 class ViberBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
@@ -504,16 +506,14 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         [
             (
                 "SMS_Message",
-                SMSBlock(
-                    help_text="Each message will be sent with the text"
-                ),
+                SMSBlock(help_text="Each message will be sent with the text"),
             ),
         ],
         blank=True,
         null=True,
         use_json_field=True,
     )
-     # sms panels
+    # sms panels
     sms_panels = [
         MultiFieldPanel(
             [
@@ -683,6 +683,8 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         if not platform and query_params:
             if "whatsapp" in query_params:
                 platform = "whatsapp"
+            elif "sms" in query_params:
+                platform = "sms"
             elif "messenger" in query_params:
                 platform = "messenger"
             elif "viber" in query_params:
@@ -813,6 +815,12 @@ def update_embedding(sender, instance, *args, **kwargs):
             content.append(block.value["message"])
         body = preprocess_content_for_embedding("/n/n".join(content))
         embedding["whatsapp"] = {"values": [float(i) for i in model.encode(body)]}
+    if instance.enable_sms:
+        content = []
+        for block in instance.sms_body:
+            content.append(block.value["message"])
+        body = preprocess_content_for_embedding("/n/n".join(content))
+        embedding["sms"] = {"values": [float(i) for i in model.encode(body)]}
     if instance.enable_messenger:
         content = []
         for block in instance.messenger_body:
@@ -954,6 +962,7 @@ class PageView(models.Model):
     platform = models.CharField(
         choices=[
             ("WHATSAPP", "whatsapp"),
+            ("SMS", "sms"),
             ("VIBER", "viber"),
             ("MESSENGER", "messenger"),
             ("WEB", "web"),

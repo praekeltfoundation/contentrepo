@@ -22,7 +22,7 @@ class TitleField(serializers.Field):
                 return page.whatsapp_title
         if "sms" in request.GET and page.enable_sms is True:
             if page.sms_title:
-                return page.sms_title        
+                return page.sms_title
         elif "messenger" in request.GET and page.enable_messenger is True:
             if page.messenger_title:
                 return page.messenger_title
@@ -77,7 +77,7 @@ def has_previous_message(message_index, content_page, platform):
     if platform == "whatsapp":
         messages_length = len(content_page.whatsapp_body._raw_data) - 1
     elif platform == "sms":
-        messages_length = len(content_page.sms_body._raw_data) - 1    
+        messages_length = len(content_page.sms_body._raw_data) - 1
     elif platform == "viber":
         messages_length = len(content_page.viber_body._raw_data) - 1
     elif platform == "messenger":
@@ -189,7 +189,7 @@ class BodyField(serializers.Field):
                         ]
                     )
                 except IndexError:
-                    raise ValidationError("The requested message does not exist")        
+                    raise ValidationError("The requested message does not exist")
         elif "messenger" in request.GET and (
             page.enable_messenger is True
             or ("qa" in request.GET and request.GET["qa"] == "True")
@@ -259,7 +259,7 @@ class RelatedPagesField(serializers.Field):
                     title = related_page.whatsapp_title
             elif "sms" in request.GET and related_page.enable_sms is True:
                 if related_page.sms_title:
-                    title = related_page.sms_title        
+                    title = related_page.sms_title
             elif "messenger" in request.GET and related_page.enable_messenger is True:
                 if related_page.messenger_title:
                     title = related_page.messenger_title
@@ -330,7 +330,7 @@ class PagesField(serializers.Field):
                     title = page.whatsapp_title
             elif "sms" in request.GET and page.enable_sms is True:
                 if page.sms_title:
-                    title = page.sms_title        
+                    title = page.sms_title
             elif "messenger" in request.GET and page.enable_messenger is True:
                 if page.messenger_title:
                     title = page.messenger_title
@@ -369,7 +369,7 @@ class OrderedPagesField(serializers.Field):
                     title = page.whatsapp_title
             elif "sms" in request.GET and page.enable_sms is True:
                 if page.sms_title:
-                    title = page.sms_title        
+                    title = page.sms_title
             elif "messenger" in request.GET and page.enable_messenger is True:
                 if page.messenger_title:
                     title = page.messenger_title

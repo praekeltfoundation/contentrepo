@@ -30,7 +30,9 @@ CP_CTYPE = ContentPage._meta.verbose_name
 CPI_CTYPE = ContentPageIndex._meta.verbose_name
 
 
-MsgBlocks = tuple[WhatsappBlock | None, SMSBlock | None, MessengerBlock | None, ViberBlock | None]
+MsgBlocks = tuple[
+    WhatsappBlock | None, SMSBlock | None, MessengerBlock | None, ViberBlock | None
+]
 
 
 @dataclass
@@ -106,7 +108,7 @@ class ExportRow:
             if "image" in messenger.value:
                 self.image_link = messenger.value["image"]
         if sms:
-            self.sms_body = sms.value["message"].strip()              
+            self.sms_body = sms.value["message"].strip()
         if whatsapp:
             self.whatsapp_body = whatsapp.value["message"].strip()
             if "image" in whatsapp.value:
@@ -201,7 +203,9 @@ class ContentExporter:
         )
         self.rows.append(row)
         message_bodies = list(
-            zip_longest(page.whatsapp_body, page.sms_body, page.messenger_body, page.viber_body)
+            zip_longest(
+                page.whatsapp_body, page.sms_body, page.messenger_body, page.viber_body
+            )
         )
         for msg_blocks in message_bodies:
             self._export_row_message(row, msg_blocks)
