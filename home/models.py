@@ -235,15 +235,15 @@ class GoToPageButton(blocks.StructBlock):
 
 class WhatsappBlock(blocks.StructBlock):
     MEDIA_CAPTION_MAX_LENGTH = 1024
-
     image = ImageChooserBlock(required=False)
     document = DocumentChooserBlock(icon="document", required=False)
     media = MediaBlock(icon="media", required=False)
     message = blocks.TextBlock(
         help_text="each text message cannot exceed 4096 characters, messages with "
         "media cannot exceed 1024 characters.",
-        validators=(MaxLengthValidator(4096),),
-    )
+        validators=(MaxLengthValidator(4096),
+                    ),)
+
     example_values = blocks.ListBlock(
         blocks.CharBlock(
             label="Example Value",
@@ -270,6 +270,7 @@ class WhatsappBlock(blocks.StructBlock):
         form_classname = "whatsapp-message-block struct-block"
 
     def clean(self, value):
+
         result = super().clean(value)
         num_vars_in_msg = len(re.findall(r"{{\d+}}", result["message"]))
         errors = {}
@@ -295,7 +296,24 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
                 f"{len(result['message'])} characters long"
             )
+
+        #find variables
+        vars_in_msg = re.findall(r'{{(.*?)}}', result["message"])
+        non_digit_variables = [var for var in vars_in_msg if not var.isdigit()]
+        if non_digit_variables != []:
+            errors["message"] = ValidationError(
+                    "Please enter numeric variables only."
+                )
+        #check variable order
+        digit_variables = [var for var in vars_in_msg if var.isdigit()]
+        if digit_variables != []:
+            if all(x<y for x, y in zip(digit_variables, digit_variables[1:], strict=False)) is not True or digit_variables[0]=="0":
+                errors["message"] = ValidationError(
+                        "Variables must be sequential, starting with {{1}}."
+                    )
+
         if errors:
+            print(errors)
             raise StructBlockValidationError(errors)
         return result
 
