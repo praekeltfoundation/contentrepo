@@ -11,9 +11,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost"])
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-WHATSAPP_API_URL = "http://whatsapp"
-WHATSAPP_ACCESS_TOKEN = "fake-access-token"  # noqa: S105 (This is a test config.)
-FB_BUSINESS_ID = "27121231234"
+
 
 
 # We default to using local memory for dev and tests, so that Redis isn't a dependancy
