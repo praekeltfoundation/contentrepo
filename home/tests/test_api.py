@@ -14,7 +14,7 @@ from home.models import (
     VariationBlock,
 )
 
-from .page_builder import MBlk, MBody, PageBuilder, WABlk, WABody
+from .page_builder import MBlk, MBody, SBlk, SBody, PageBuilder, WABlk, WABody
 from .utils import create_page
 
 
@@ -46,6 +46,7 @@ class TestContentPageAPI:
                 MBody(
                     "main menu first time user", [MBlk("*Welcome to HealthAlert* 🌍")]
                 ),
+                SBody("main menu first time user", [SBlk("*Welcome to HealthAlert*")]),
             ],
             tags=["menu"],
             quick_replies=["Self-help", "Settings", "Health Info"],
@@ -58,6 +59,7 @@ class TestContentPageAPI:
             bodies=[
                 WABody("health info", [WABlk("*Health information* 🏥")]),
                 MBody("health info", [MBlk("*Health information* 🏥")]),
+                SBody("health info", [SBlk("*Health information* 🏥")]),
             ],
             tags=["health_info"],
         )
@@ -68,6 +70,7 @@ class TestContentPageAPI:
             bodies=[
                 WABody("self-help", [WABlk("*Self-help programs* 🌬️")]),
                 MBody("self-help", [MBlk("*Self-help programs* 🌬️")]),
+                SBody("self-help", [SBlk("*Self-help programs* 🌬️")]),
             ],
             tags=["self_help"],
         )
@@ -110,54 +113,7 @@ class TestContentPageAPI:
         content = json.loads(response.content)
         assert content["count"] == 2
 
-    def test_platform_filtering(self, uclient):
-        """
-        If a platform filter is provided, only pages with content for that
-        platform are returned.
-        """
-        page1 = ContentPage.objects.first()
-        page2 = ContentPage.objects.last()
-        # web page
-        page1.enable_messenger = False
-        page1.enable_whatsapp = False
-        page1.enable_viber = False
-        # This page has web_title, but not web_body. It's unclear what the
-        # importer should do in that case, so enable web explicitly.
-        page1.enable_web = True
-        page1.save_revision().publish()
-        # whatsapp page
-        page2.enable_messenger = False
-        page2.enable_web = False
-        page2.enable_viber = False
-        page2.save_revision().publish()
-        # messenger page
-        [page3] = ContentPage.objects.exclude(pk__in=[page1, page2])[:1]
-        page3.enable_web = False
-        page3.enable_whatsapp = False
-        page3.enable_viber = False
-        page3.save_revision().publish()
 
-        # it should return only web pages if filtered
-        response = uclient.get("/api/v2/pages/?web=true")
-        content = json.loads(response.content)
-        assert content["count"] == 1
-        # it should return only whatsapp pages if filtered
-        response = uclient.get("/api/v2/pages/?whatsapp=true")
-        content = json.loads(response.content)
-        assert content["count"] == 1
-        # it should return only messenger pages if filtered
-        response = uclient.get("/api/v2/pages/?messenger=true")
-        content = json.loads(response.content)
-        assert content["count"] == 1
-        # it should return only viber pages if filtered
-        response = uclient.get("/api/v2/pages/?viber=true")
-        content = json.loads(response.content)
-        assert content["count"] == 0
-        # it should return all pages for no filter
-        response = uclient.get("/api/v2/pages/")
-        content = json.loads(response.content)
-        # exclude home pages and index pages
-        assert content["count"] == 3
 
     def test_whatsapp_draft(self, uclient):
         """
@@ -644,3 +600,74 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
         assert content["pages"][0]["tags"] == [t.name for t in self.page1.tags.all()]
+
+@pytest.mark.django_db
+class TestContentPageAPI2:
+    """
+    Tests contentpage API without test data fixtures
+    """
+    def test_platform_filtering(self, uclient):
+        """
+        If a platform filter is provided, only pages with content for that
+        platform are returned.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        page1 = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="main-menu-first-time-user",
+            title="main menu first time user",
+            bodies=[],
+            web_body=["Colour"],
+        )
+        page2 = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody("health info", [WABlk("*Health information* 🏥")]),
+            ],
+            
+        )
+        page3 = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="self-help",
+            title="self-help",
+            bodies=[
+                MBody("self-help", [MBlk("*Self-help programs* 🌬️")]),
+            ],
+        )
+        page4 = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="self-help-sms",
+            title="self-help-sms",
+            bodies=[
+                SBody("self-help-sms", [SBlk("*Self-help programs*SMS")]),
+            ],
+        )
+
+        # it should return only web pages if filtered
+        response = uclient.get("/api/v2/pages/?web=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return only whatsapp pages if filtered
+        response = uclient.get("/api/v2/pages/?whatsapp=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return only sms pages if filtered
+        response = uclient.get("/api/v2/pages/?sms=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return only messenger pages if filtered
+        response = uclient.get("/api/v2/pages/?messenger=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return only viber pages if filtered
+        response = uclient.get("/api/v2/pages/?viber=true")
+        content = json.loads(response.content)
+        assert content["count"] == 0
+        # it should return all pages for no filter
+        response = uclient.get("/api/v2/pages/")
+        content = json.loads(response.content)
+        # exclude home pages and index pages
+        assert content["count"] == 4

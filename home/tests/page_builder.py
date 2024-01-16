@@ -13,6 +13,7 @@ from home.models import (
     ContentTrigger,
     MessengerBlock,
     ViberBlock,
+    SMSBlock,
     WhatsappBlock,
     SMSBlock,
 )
@@ -116,6 +117,14 @@ class WABlk(ContentBlock):
         varmsgs = [vm.to_dict() for vm in self.variation_messages]
         buttons = [b.to_dict() for b in self.buttons]
         return super().to_dict() | {"variation_messages": varmsgs, "buttons": buttons}
+
+
+@dataclass
+class SBlk(ContentBlock):
+    BLOCK_TYPE_STR = "SMS_Message"
+    BLOCK_TYPE = SMSBlock
+
+    # TODO: More body things.
 
 
 @dataclass
