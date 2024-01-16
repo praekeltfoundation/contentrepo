@@ -27,6 +27,7 @@ from home.models import (
     MessengerBlock,
     ViberBlock,
     SMSBlock,
+    USSDBlock,
     WhatsappBlock,
 )
 
@@ -271,6 +272,9 @@ class ContentImporter:
         if row.is_sms_message:
             page.sms_title = row.sms_title
 
+        if row.is_ussd_message:
+            page.ussd_title = row.ussd_title
+
         if row.is_messenger_message:
             page.messenger_title = row.messenger_title
 
@@ -324,6 +328,10 @@ class ContentImporter:
             page.enable_sms = True
             page.sms_body.append(ShadowSMSBlock(message=row.sms_body))
 
+        if row.is_ussd_message:
+            page.enable_ussd = True
+            page.ussd_body.append(ShadowSMSBlock(message=row.ussd_body))
+
         if row.is_messenger_message:
             page.enable_messenger = True
             page.messenger_body.append(ShadowMessengerBlock(message=row.messenger_body))
@@ -355,6 +363,9 @@ class ShadowContentPage:
     enable_sms: bool = False
     sms_title: str = ""
     sms_body: list["ShadowSMSBlock"] = field(default_factory=list)
+    enable_ussd: bool = False
+    ussd_title: str = ""
+    ussd_body: list["ShadowUSSDBlock"] = field(default_factory=list)
     enable_messenger: bool = False
     messenger_title: str = ""
     messenger_body: list["ShadowMessengerBlock"] = field(default_factory=list)
@@ -376,6 +387,7 @@ class ShadowContentPage:
         self.add_web_to_page(page)
         self.add_whatsapp_to_page(page)
         self.add_sms_to_page(page)
+        self.add_ussd_to_page(page)
         self.add_messenger_to_page(page)
         self.add_viber_to_page(page)
         self.add_tags_to_page(page)
@@ -411,6 +423,13 @@ class ShadowContentPage:
         page.sms_body.clear()
         for message in self.formatted_sms_body:
             page.sms_body.append(("SMS_Message", message))
+
+    def add_ussd_to_page(self, page: ContentPage) -> None:
+        page.enable_ussd = self.enable_ussd
+        page.ussd_title = self.ussd_title
+        page.ussd_body.clear()
+        for message in self.formatted_ussd_body:
+            page.ussd_body.append(("USSD_Message", message))
 
     def add_messenger_to_page(self, page: ContentPage) -> None:
         page.enable_messenger = self.enable_messenger
@@ -481,6 +500,10 @@ class ShadowContentPage:
         return [SMSBlock().to_python(m.wagtail_format) for m in self.sms_body]
 
     @property
+    def formatted_ussd_body(self) -> list[StructValue]:
+        return [USSDBlock().to_python(m.wagtail_format) for m in self.ussd_body]
+
+    @property
     def formatted_messenger_body(self) -> list[StructValue]:
         return [
             MessengerBlock().to_python(m.wagtail_format) for m in self.messenger_body
@@ -537,6 +560,15 @@ class ShadowSMSBlock:
 
 
 @dataclass(slots=True)
+class ShadowUSSDBlock:
+    message: str = ""
+
+    @property
+    def wagtail_format(self) -> dict[str, str]:
+        return {"message": self.message}
+
+
+@dataclass(slots=True)
 class ShadowMessengerBlock:
     message: str = ""
 
@@ -571,6 +603,8 @@ class ContentRow:
     variation_body: str = ""
     sms_title: str = ""
     sms_body: str = ""
+    ussd_title: str = ""
+    ussd_body: str = ""
     messenger_title: str = ""
     messenger_body: str = ""
     viber_title: str = ""
@@ -616,6 +650,7 @@ class ContentRow:
                 self.web_body,
                 self.whatsapp_body,
                 self.sms_body,
+                self.ussd_body,
                 self.messenger_body,
                 self.viber_body,
             ]
@@ -636,6 +671,10 @@ class ContentRow:
     @property
     def is_sms_message(self) -> bool:
         return bool(self.sms_body)
+
+    @property
+    def is_ussd_message(self) -> bool:
+        return bool(self.ussd_body)
 
     @property
     def is_messenger_message(self) -> bool:

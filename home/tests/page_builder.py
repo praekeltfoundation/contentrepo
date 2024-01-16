@@ -16,6 +16,7 @@ from home.models import (
     SMSBlock,
     WhatsappBlock,
     SMSBlock,
+    USSDBlock,
 )
 
 TPage = TypeVar("TPage", bound=Page)
@@ -136,9 +137,9 @@ class MBlk(ContentBlock):
 
 
 @dataclass
-class SBlk(ContentBlock):
-    BLOCK_TYPE_STR = "SMS_Message"
-    BLOCK_TYPE = SMSBlock
+class UBlk(ContentBlock):
+    BLOCK_TYPE_STR = "USSD_Message"
+    BLOCK_TYPE = USSDBlock
 
     # TODO: More body things.
 
@@ -157,6 +158,10 @@ class WABody(ContentBody[WABlk]):
 
 class SBody(ContentBody[SBlk]):
     ATTR_STR = "sms"
+
+
+class UBody(ContentBody[UBlk]):
+    ATTR_STR = "ussd"
 
 
 class MBody(ContentBody[MBlk]):

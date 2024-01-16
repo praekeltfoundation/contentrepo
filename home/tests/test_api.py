@@ -113,8 +113,6 @@ class TestContentPageAPI:
         content = json.loads(response.content)
         assert content["count"] == 2
 
-
-
     def test_whatsapp_draft(self, uclient):
         """
         Unpublished whatsapp pages are returned if the qa param is set.
@@ -601,11 +599,13 @@ class TestOrderedContentSetAPI:
         }
         assert content["pages"][0]["tags"] == [t.name for t in self.page1.tags.all()]
 
+
 @pytest.mark.django_db
 class TestContentPageAPI2:
     """
     Tests contentpage API without test data fixtures
     """
+
     def test_platform_filtering(self, uclient):
         """
         If a platform filter is provided, only pages with content for that
@@ -627,7 +627,6 @@ class TestContentPageAPI2:
             bodies=[
                 WABody("health info", [WABlk("*Health information* 🏥")]),
             ],
-            
         )
         page3 = PageBuilder.build_cp(
             parent=main_menu,

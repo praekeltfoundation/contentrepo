@@ -34,6 +34,8 @@ from .page_builder import (
     VBody,
     SBlk,
     SBody,
+    UBlk,
+    UBody,
     WABlk,
     WABody,
 )
@@ -64,6 +66,7 @@ def add_new_fields(entry: ExpDict) -> ExpDict:
         or "UTILITY",
         "example_values": entry.get("example_values") or "[]",
         "sms_body": entry.get("sms_body") or "",
+        "ussd_body": entry.get("ussd_body") or "",
     }
 
 
@@ -337,6 +340,9 @@ def add_body_fields(page: DbDict) -> DbDict:
     if "sms_body" in page["fields"]:
         for body in page["fields"]["sms_body"]:
             _add_fields(body, {"image": None})
+    if "ussd_body" in page["fields"]:
+        for body in page["fields"]["ussd_body"]:
+            _add_fields(body, {"image": None})
     if "messenger_body" in page["fields"]:
         for body in page["fields"]["messenger_body"]:
             _add_fields(body, {"image": None})
@@ -394,6 +400,14 @@ def remove_sms_fields(page: DbDict) -> DbDict:
 
 
 @per_page
+def remove_ussd_fields(page: DbDict) -> DbDict:
+    if "ussd_body" in page["fields"]:
+        for body in page["fields"]["ussd_body"]:
+            body["value"].pop("ussd_body", None)
+    return page
+
+
+@per_page
 def remove_button_ids(page: DbDict) -> DbDict:
     if "whatsapp_body" in page["fields"]:
         for body in page["fields"]["whatsapp_body"]:
@@ -440,6 +454,7 @@ OLD_PAGE_FILTER_FUNCS = [
     remove_example_values,
     enable_web,
     remove_sms_fields,
+    remove_ussd_fields,
 ]
 
 

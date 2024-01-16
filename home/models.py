@@ -311,6 +311,17 @@ class SMSBlock(blocks.StructBlock):
         form_classname = "whatsapp-message-block struct-block"
 
 
+class USSDBlock(blocks.StructBlock):
+    message = blocks.TextBlock(
+        help_text="each message cannot exceed 160 characters.",
+        validators=(MaxLengthValidator(160),),
+    )
+
+    class Meta:
+        icon = "user"
+        form_classname = "whatsapp-message-block struct-block"
+
+
 class ViberBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
     message = blocks.TextBlock(
@@ -427,7 +438,11 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     )
     enable_sms = models.BooleanField(
         default=False,
-        help_text="When enabled, the API will include the sms content",
+        help_text="When enabled, the API will include the SMS content",
+    )
+    enable_ussd = models.BooleanField(
+        default=False,
+        help_text="When enabled, the API will include the USSD content",
     )
     enable_messenger = models.BooleanField(
         default=False,
@@ -524,6 +539,29 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         ),
     ]
 
+    ussd_title = models.CharField(max_length=200, blank=True)
+    ussd_body = StreamField(
+        [
+            (
+                "USSD_Message",
+                USSDBlock(help_text="Each message will be sent with the text"),
+            ),
+        ],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
+    # USSD panels
+    ussd_panels = [
+        MultiFieldPanel(
+            [
+                FieldPanel("ussd_title"),
+                FieldPanel("ussd_body"),
+            ],
+            heading="USSD",
+        ),
+    ]
+
     # messenger page setup
     messenger_title = models.CharField(max_length=200, blank=True, null=True)
     messenger_body = StreamField(
@@ -595,6 +633,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                 FieldPanel("enable_web"),
                 FieldPanel("enable_whatsapp"),
                 FieldPanel("enable_sms"),
+                FieldPanel("enable_ussd"),
                 FieldPanel("enable_messenger"),
                 FieldPanel("enable_viber"),
             ],
@@ -606,6 +645,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             ObjectList(web_panels, heading="Web"),
             ObjectList(whatsapp_panels, heading="Whatsapp"),
             ObjectList(sms_panels, heading="SMS"),
+            ObjectList(ussd_panels, heading="USSD"),
             ObjectList(messenger_panels, heading="Messenger"),
             ObjectList(viber_panels, heading="Viber"),
             ObjectList(promote_panels, heading="Promotional"),
@@ -685,6 +725,8 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                 platform = "whatsapp"
             elif "sms" in query_params:
                 platform = "sms"
+            elif "ussd" in query_params:
+                platform = "ussd"
             elif "messenger" in query_params:
                 platform = "messenger"
             elif "viber" in query_params:
@@ -821,6 +863,12 @@ def update_embedding(sender, instance, *args, **kwargs):
             content.append(block.value["message"])
         body = preprocess_content_for_embedding("/n/n".join(content))
         embedding["sms"] = {"values": [float(i) for i in model.encode(body)]}
+    if instance.enable_ussd:
+        content = []
+        for block in instance.ussd_body:
+            content.append(block.value["message"])
+        body = preprocess_content_for_embedding("/n/n".join(content))
+        embedding["ussd"] = {"values": [float(i) for i in model.encode(body)]}
     if instance.enable_messenger:
         content = []
         for block in instance.messenger_body:
@@ -963,6 +1011,7 @@ class PageView(models.Model):
         choices=[
             ("WHATSAPP", "whatsapp"),
             ("SMS", "sms"),
+            ("USSD", "ussd"),
             ("VIBER", "viber"),
             ("MESSENGER", "messenger"),
             ("WEB", "web"),

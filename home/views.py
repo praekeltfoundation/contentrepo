@@ -65,6 +65,7 @@ class PageViewFilterSet(WagtailFilterSet):
         ("web", "Web"),
         ("whatsapp", "Whatsapp"),
         ("sms", "SMS"),
+        ("ussd", "USSD"),
         ("messenger", "Messenger"),
         ("viber", "Viber"),
     ]

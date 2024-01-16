@@ -33,6 +33,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
             "web",
             "s",
             "sms",
+            "ussd",
         ]
     )
     pagination_class = PageNumberPagination
@@ -92,6 +93,8 @@ class ContentPagesViewSet(PagesAPIViewSet):
             queryset = queryset.filter(enable_whatsapp=True)
         elif "sms" in self.request.query_params:
             queryset = queryset.filter(enable_sms=True)
+        elif "ussd" in self.request.query_params:
+            queryset = queryset.filter(enable_ussd=True)
         elif "messenger" in self.request.query_params:
             queryset = queryset.filter(enable_messenger=True)
         elif "viber" in self.request.query_params:
@@ -118,6 +121,8 @@ class ContentPagesViewSet(PagesAPIViewSet):
                 platform = "whatsapp"
             if "sms" in self.request.query_params:
                 platform = "sms"
+            if "ussd" in self.request.query_params:
+                platform = "ussd"
             elif "messenger" in self.request.query_params:
                 platform = "messenger"
             elif "viber" in self.request.query_params:

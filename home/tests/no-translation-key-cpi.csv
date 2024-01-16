@@ -1,5 +1,5 @@
-structure,message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,whatsapp_template_name,whatsapp_template_category,example_values,sms_title,sms_body,variation_title,variation_body,messenger_title,messenger_body,viber_title,viber_body,translation_tag,tags,quick_replies,triggers,locale,next_prompt,buttons,image_link,doc_link,media_link,related_pages
-Menu 1,0,659,ma_import-export,,MA_import export,,,,,,,,,,,,,,,,38a22433-e474-4f5a-b06b-7367d1a7f664,,,,English,,,,,,
-Sub 1.1,1,660,locale-import,MA_import export,Locale import,,,import per locale,this is the english message..edit,,UTILITY,,,,,,,,,,9aab62ab-caf7-4606-b9bf-ac3148309319,,,,English,,[],,,,
-Menu 1,0,1297,ma_import-export,,MA_import export,,,,,,,,,,,,,,,,,,,,Portuguese,,,,,,
-Sub 1.1,1,1298,locale-import,MA_import export,Locale import,,,import per locale,this is the Portuguese message....edit,,UTILITY,,,,,,,,,,9aab62ab-caf7-4606-b9bf-ac3148309319,,,,Portuguese,,[],,,,
+structure,message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,whatsapp_template_name,whatsapp_template_category,example_values,sms_title,sms_body,ussd_title,ussd_body,variation_title,variation_body,messenger_title,messenger_body,viber_title,viber_body,translation_tag,tags,quick_replies,triggers,locale,next_prompt,buttons,image_link,doc_link,media_link,related_pages
+Menu 1,0,659,ma_import-export,,MA_import export,,,,,,,,,,,,,,,,,,38a22433-e474-4f5a-b06b-7367d1a7f664,,,,English,,,,,,
+Sub 1.1,1,660,locale-import,MA_import export,Locale import,,,import per locale,this is the english message..edit,,UTILITY,,,,,,,,,,,,9aab62ab-caf7-4606-b9bf-ac3148309319,,,,English,,[],,,,
+Menu 1,0,1297,ma_import-export,,MA_import export,,,,,,,,,,,,,,,,,,,,,,Portuguese,,,,,,
+Sub 1.1,1,1298,locale-import,MA_import export,Locale import,,,import per locale,this is the Portuguese message....edit,,UTILITY,,,,,,,,,,,,9aab62ab-caf7-4606-b9bf-ac3148309319,,,,Portuguese,,[],,,,

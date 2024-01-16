@@ -54,6 +54,8 @@ class ExportRow:
     variation_body: str = ""
     sms_title: str = ""
     sms_body: str = ""
+    ussd_title: str = ""
+    ussd_body: str = ""
     messenger_title: str = ""
     messenger_body: str = ""
     viber_title: str = ""
@@ -96,7 +98,7 @@ class ExportRow:
         )
 
     def add_message_fields(self, msg_blocks: MsgBlocks) -> None:
-        whatsapp, sms, messenger, viber = msg_blocks
+        whatsapp, sms, ussd, messenger, viber = msg_blocks
         # We do these in reverse order to pick the same image as the old
         # exporter if there's more than one.
         if viber:
@@ -109,6 +111,8 @@ class ExportRow:
                 self.image_link = messenger.value["image"]
         if sms:
             self.sms_body = sms.value["message"].strip()
+        if ussd:
+            self.ussd_body = ussd.value["message"].strip()
         if whatsapp:
             self.whatsapp_body = whatsapp.value["message"].strip()
             if "image" in whatsapp.value:
@@ -192,6 +196,7 @@ class ContentExporter:
             whatsapp_template_name=page.whatsapp_template_name,
             whatsapp_template_category=page.whatsapp_template_category,
             sms_title=page.sms_title,
+            ussd_title=page.ussd_title,
             messenger_title=page.messenger_title,
             viber_title=page.viber_title,
             translation_tag=str(page.translation_key),
@@ -204,7 +209,11 @@ class ContentExporter:
         self.rows.append(row)
         message_bodies = list(
             zip_longest(
-                page.whatsapp_body, page.sms_body, page.messenger_body, page.viber_body
+                page.whatsapp_body,
+                page.sms_body,
+                page.ussd_body,
+                page.messenger_body,
+                page.viber_body,
             )
         )
         for msg_blocks in message_bodies:
@@ -310,6 +319,8 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "variation_body": 370,
         "sms_title": 118,
         "sms_body": 370,
+        "ussd_title": 118,
+        "ussd_body": 370,
         "messenger_title": 118,
         "messenger_body": 370,
         "viber_title": 118,
