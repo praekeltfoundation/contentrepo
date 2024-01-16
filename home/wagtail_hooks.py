@@ -138,7 +138,7 @@ class ContentPageAdmin(ModelAdmin):
         body = "\n".join(m.value["message"] for m in obj.sms_body)
         return truncatechars(str(body), self.body_truncate_size)
 
-    wa_body.short_description = "Whatsapp Body"
+    sms_body.short_description = "SMS Body"
 
     def mess_body(self, obj):
         body = "\n".join(m.value["message"] for m in obj.messenger_body)

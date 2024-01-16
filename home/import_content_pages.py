@@ -267,7 +267,7 @@ class ContentImporter:
             # Currently media is exported as a URL, which just has an ID. This doesn't
             # actually help us much, as IDs can differ between instances, so we need
             # a better way of exporting and importing media here
-     
+
         if row.is_sms_message:
             page.sms_title = row.sms_title
 
@@ -322,7 +322,7 @@ class ContentImporter:
             )
         if row.is_sms_message:
             page.enable_sms = True
-            page.sms_body.append(ShadowSMSBlock(message=row.sms_body))    
+            page.sms_body.append(ShadowSMSBlock(message=row.sms_body))
 
         if row.is_messenger_message:
             page.enable_messenger = True
@@ -478,9 +478,7 @@ class ShadowContentPage:
 
     @property
     def formatted_sms_body(self) -> list[StructValue]:
-        return [
-            SMSBlock().to_python(m.wagtail_format) for m in self.sms_body
-        ]    
+        return [SMSBlock().to_python(m.wagtail_format) for m in self.sms_body]
 
     @property
     def formatted_messenger_body(self) -> list[StructValue]:
@@ -528,6 +526,7 @@ class ShadowVariationBlock:
             ],
         }
 
+
 @dataclass(slots=True)
 class ShadowSMSBlock:
     message: str = ""
@@ -535,6 +534,7 @@ class ShadowSMSBlock:
     @property
     def wagtail_format(self) -> dict[str, str]:
         return {"message": self.message}
+
 
 @dataclass(slots=True)
 class ShadowMessengerBlock:
@@ -570,7 +570,7 @@ class ContentRow:
     variation_title: dict[str, str] = field(default_factory=dict)
     variation_body: str = ""
     sms_title: str = ""
-    sms_body: str = ""    
+    sms_body: str = ""
     messenger_title: str = ""
     messenger_body: str = ""
     viber_title: str = ""
@@ -632,7 +632,7 @@ class ContentRow:
     @property
     def is_whatsapp_template_message(self) -> bool:
         return bool(self.whatsapp_template_name)
-    
+
     @property
     def is_sms_message(self) -> bool:
         return bool(self.sms_body)

@@ -14,6 +14,7 @@ from home.models import (
     MessengerBlock,
     ViberBlock,
     WhatsappBlock,
+    SMSBlock,
 )
 
 TPage = TypeVar("TPage", bound=Page)
@@ -126,6 +127,14 @@ class MBlk(ContentBlock):
 
 
 @dataclass
+class SBlk(ContentBlock):
+    BLOCK_TYPE_STR = "SMS_Message"
+    BLOCK_TYPE = SMSBlock
+
+    # TODO: More body things.
+
+
+@dataclass
 class VBlk(ContentBlock):
     BLOCK_TYPE_STR = "viber_message"
     BLOCK_TYPE = ViberBlock
@@ -135,6 +144,10 @@ class VBlk(ContentBlock):
 
 class WABody(ContentBody[WABlk]):
     ATTR_STR = "whatsapp"
+
+
+class SBody(ContentBody[SBlk]):
+    ATTR_STR = "sms"
 
 
 class MBody(ContentBody[MBlk]):

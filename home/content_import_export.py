@@ -295,13 +295,13 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
                 slug=row["slug"],
                 enable_sms=True,
                 sms_title=row["sms_title"],
-                sms_body=get_body(sms_messages, "sms_block"),
+                sms_body=get_body(sms_messages, "SMS_Message"),
                 locale=home_page.locale,
             )
         else:
             page.enable_sms = True
             page.sms_title = row["sms_title"]
-            page.sms_body = get_body(sms_messages, "sms_block")
+            page.sms_body = get_body(sms_messages, "SMS_Message")
             return page
 
     def add_messenger(row, messenger_messages, page=None):
@@ -426,6 +426,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             and row["web_body"] in ["", None]
             and row["whatsapp_body"] in ["", None]
             and row["messenger_body"] in ["", None]
+            and row["sms_body"] in ["", None]
         ):
             cpi = ContentPageIndex.objects.filter(slug=slug).first()
             if cpi:
@@ -473,9 +474,7 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             page=contentpage,
             variation_messages=variation_messages,
         )
-        contentpage = add_sms(
-            row=row, sms_messages=sms_messages, page=contentpage
-        )
+        contentpage = add_sms(row=row, sms_messages=sms_messages, page=contentpage)
         contentpage = add_messenger(
             row=row, messenger_messages=messenger_messages, page=contentpage
         )
@@ -917,7 +916,7 @@ class MessageContainer:
     def from_platform_body(cls, whatsapp_body, sms_body, messenger_body, viber_body):
         whatsapp = []
         whatsapp_variation_messages = []
-        sms=[]
+        sms = []
         messenger = []
         viber = []
         for whatsapp_msg in whatsapp_body:
@@ -1247,7 +1246,7 @@ class ContentSheetRow:
                 if message_index < len(message_container.sms):
                     new_content_sheet_row.sms_body = message_container.sms[
                         message_index
-                    ].body    
+                    ].body
                 if message_index < len(message_container.viber):
                     new_content_sheet_row.viber_body = message_container.viber[
                         message_index

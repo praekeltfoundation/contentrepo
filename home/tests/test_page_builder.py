@@ -18,6 +18,8 @@ from .page_builder import (
     PageBtn,
     PageBuilder,
     VarMsg,
+    SBlk,
+    SBody,
     VBlk,
     VBody,
     WABlk,
