@@ -273,17 +273,23 @@ class WhatsappBlockTests(TestCase):
 
     def test_clean_text_valid_variables(self):
         """Text messages should only contain sequential valid variables, eg. {{1}}"""
-        WhatsappBlock().clean(self.create_message_value(message="{{1}}", example_values = ["testing"]))
-
+        WhatsappBlock().clean(
+            self.create_message_value(message="{{1}}", example_values=["testing"])
+        )
 
         with self.assertRaises(StructBlockValidationError) as e:
-            WhatsappBlock().clean(self.create_message_value(message="{{foo}}", example_values = ["testing"]))
+            WhatsappBlock().clean(
+                self.create_message_value(message="{{foo}}", example_values=["testing"])
+            )
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
 
         with self.assertRaises(StructBlockValidationError) as e:
-            WhatsappBlock().clean(self.create_message_value(message="{{2}} {{1}}", example_values = ["testing", "tesing2"]))
+            WhatsappBlock().clean(
+                self.create_message_value(
+                    message="{{2}} {{1}}", example_values=["testing", "tesing2"]
+                )
+            )
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
-
 
     def test_clean_media_char_limit(self):
         """Media messages should be limited to 1024 characters"""
