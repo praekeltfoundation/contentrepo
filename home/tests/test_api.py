@@ -14,7 +14,7 @@ from home.models import (
     VariationBlock,
 )
 
-from .page_builder import MBlk, MBody, SBlk, SBody, PageBuilder, WABlk, WABody
+from .page_builder import MBlk, MBody, PageBuilder, SBlk, SBody, WABlk, WABody
 from .utils import create_page
 
 
@@ -613,14 +613,14 @@ class TestContentPageAPI2:
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        page1 = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="main-menu-first-time-user",
             title="main menu first time user",
             bodies=[],
             web_body=["Colour"],
         )
-        page2 = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="health-info",
             title="health info",
@@ -628,7 +628,7 @@ class TestContentPageAPI2:
                 WABody("health info", [WABlk("*Health information* 🏥")]),
             ],
         )
-        page3 = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="self-help",
             title="self-help",
@@ -636,7 +636,7 @@ class TestContentPageAPI2:
                 MBody("self-help", [MBlk("*Self-help programs* 🌬️")]),
             ],
         )
-        page4 = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="self-help-sms",
             title="self-help-sms",

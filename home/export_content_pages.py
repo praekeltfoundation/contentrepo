@@ -19,10 +19,10 @@ from home.models import (
     ContentPageIndex,
     HomePage,
     MessengerBlock,
-    VariationBlock,
-    ViberBlock,
     SMSBlock,
     USSDBlock,
+    VariationBlock,
+    ViberBlock,
     WhatsappBlock,
 )
 

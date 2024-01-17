@@ -25,9 +25,9 @@ from home.models import (
     ContentTrigger,
     HomePage,
     MessengerBlock,
-    ViberBlock,
     SMSBlock,
     USSDBlock,
+    ViberBlock,
     WhatsappBlock,
 )
 

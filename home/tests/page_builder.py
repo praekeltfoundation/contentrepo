@@ -12,11 +12,10 @@ from home.models import (
     ContentQuickReply,
     ContentTrigger,
     MessengerBlock,
-    ViberBlock,
-    SMSBlock,
-    WhatsappBlock,
     SMSBlock,
     USSDBlock,
+    ViberBlock,
+    WhatsappBlock,
 )
 
 TPage = TypeVar("TPage", bound=Page)

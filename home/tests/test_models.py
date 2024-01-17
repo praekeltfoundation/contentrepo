@@ -9,8 +9,8 @@ from home.models import (
     HomePage,
     NextMessageButton,
     PageView,
-    WhatsappBlock,
     USSDBlock,
+    WhatsappBlock,
 )
 
 from .page_builder import PageBuilder, WABlk, WABody
