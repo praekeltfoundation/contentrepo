@@ -22,6 +22,7 @@ from home.models import (
     VariationBlock,
     ViberBlock,
     SMSBlock,
+    USSDBlock,
     WhatsappBlock,
 )
 
@@ -31,7 +32,11 @@ CPI_CTYPE = ContentPageIndex._meta.verbose_name
 
 
 MsgBlocks = tuple[
-    WhatsappBlock | None, SMSBlock | None, MessengerBlock | None, ViberBlock | None
+    WhatsappBlock | None,
+    SMSBlock | None,
+    USSDBlock | None,
+    MessengerBlock | None,
+    ViberBlock | None,
 ]
 
 

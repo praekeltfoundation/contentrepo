@@ -330,7 +330,7 @@ class ContentImporter:
 
         if row.is_ussd_message:
             page.enable_ussd = True
-            page.ussd_body.append(ShadowSMSBlock(message=row.ussd_body))
+            page.ussd_body.append(ShadowUSSDBlock(message=row.ussd_body))
 
         if row.is_messenger_message:
             page.enable_messenger = True

@@ -321,6 +321,14 @@ class USSDBlock(blocks.StructBlock):
         icon = "user"
         form_classname = "whatsapp-message-block struct-block"
 
+    def clean(self, value):
+        result = super().clean(value)
+        errors = {}
+
+        if errors:
+            raise StructBlockValidationError(errors)
+        return result
+
 
 class ViberBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
