@@ -622,9 +622,6 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("content2.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        print("|**|")
-        print(src)
-        print("|**|")
         assert dst == src
 
     def test_less_simple(self, csv_impexp: ImportExport) -> None:
@@ -1029,11 +1026,8 @@ class TestExportImportRoundtrip:
         )
 
         orig = impexp.get_page_json()
-        print(orig)
         impexp.export_reimport()
         imported = impexp.get_page_json()
-        print("|||")
-        print(imported)
         assert imported == orig
 
     def test_multiple_messages(self, impexp: ImportExport) -> None:
