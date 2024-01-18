@@ -296,28 +296,9 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{len(result['message'])} characters long"
             )
 
-        # find variables
-        vars_in_msg = re.findall(r"{{(.*?)}}", result["message"])
-        non_digit_variables = [var for var in vars_in_msg if not var.isdigit()]
-        if non_digit_variables != []:
-            errors["message"] = ValidationError("Please enter numeric variables only.")
-        # check variable order
-        digit_variables = [var for var in vars_in_msg if var.isdigit()]
-        if digit_variables != []:
-            if (
-                all(
-                    x < y
-                    for x, y in zip(digit_variables, digit_variables[1:], strict=False)
-                )
-                is not True
-                or digit_variables[0] == "0"
-            ):
-                errors["message"] = ValidationError(
-                    "Variables must be sequential, starting with {{1}}."
-                )
+
 
         if errors:
-            print(errors)
             raise StructBlockValidationError(errors)
         return result
 
@@ -769,6 +750,41 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
         return revision
+
+
+
+    def clean(self):
+
+        result = super().clean()
+        errors = {}
+
+        #the WA title is needed for all templates to generate a name for the template
+        if self.is_whatsapp_template and not self.whatsapp_title:
+            errors["whatsapp_title"] = ValidationError('All WhatsApp templates need a title.')
+
+
+        if self.is_whatsapp_template:
+            #find variables
+            WA_message = self.whatsapp_body.raw_data[0]["value"]["message"]
+            vars_in_msg = re.findall(r"{{(.*?)}}", WA_message)
+            non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
+
+            if non_digit_variables:
+                errors["whatsapp_body"] = ValidationError(f"Please provide numeric variables only. You provided {non_digit_variables}.")
+
+            # check variable order
+            actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
+            expected_variables = [str(i + 1) for i in range(len(actual_digit_variables))]
+            if actual_digit_variables != expected_variables:
+                errors["whatsapp_body"] = ValidationError(
+                        f"Variables must be sequential, starting with \"{{1}}\". Your first variable was \"{actual_digit_variables[0]}\"")
+
+
+
+        if errors:
+            raise ValidationError(errors)
+        return result
+
 
 
 # Allow slug to be blank in forms, we fill it in in full_clean
