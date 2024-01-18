@@ -31,6 +31,8 @@ from .page_builder import (
     PageBuilder,
     SBlk,
     SBody,
+    UBlk,
+    UBody,
     VarMsg,
     VBlk,
     VBody,
@@ -1643,3 +1645,25 @@ class TestExportImportRoundtrip:
         impexp.export_reimport()
         imported = impexp.get_page_json()
         assert imported == orig_without_self_help
+
+    def test_ussd_values(self, new_impexp: ImportExport) -> None:
+        """
+        ContentPages with USSD messages are preserved
+        across export/import.
+
+        NOTE: Old importer can't handle USSD values.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[UBody("HealthAlert menu", [UBlk("*Welcome to HealthAlert* USSD")])],
+        )
+
+        orig = new_impexp.get_page_json()
+        new_impexp.export_reimport()
+        imported = new_impexp.get_page_json()
+        assert imported == orig

@@ -14,7 +14,17 @@ from home.models import (
     VariationBlock,
 )
 
-from .page_builder import MBlk, MBody, PageBuilder, SBlk, SBody, WABlk, WABody
+from .page_builder import (
+    MBlk,
+    MBody,
+    PageBuilder,
+    SBlk,
+    SBody,
+    UBlk,
+    UBody,
+    WABlk,
+    WABody,
+)
 from .utils import create_page
 
 
@@ -47,6 +57,7 @@ class TestContentPageAPI:
                     "main menu first time user", [MBlk("*Welcome to HealthAlert* 🌍")]
                 ),
                 SBody("main menu first time user", [SBlk("*Welcome to HealthAlert*")]),
+                UBody("main menu first time user", [UBlk("*Welcome to HealthAlert*")]),
             ],
             tags=["menu"],
             quick_replies=["Self-help", "Settings", "Health Info"],
@@ -59,7 +70,8 @@ class TestContentPageAPI:
             bodies=[
                 WABody("health info", [WABlk("*Health information* 🏥")]),
                 MBody("health info", [MBlk("*Health information* 🏥")]),
-                SBody("health info", [SBlk("*Health information* 🏥")]),
+                SBody("health info", [SBlk("*Health information* ")]),
+                UBody("health info", [UBlk("*Health information* ")]),
             ],
             tags=["health_info"],
         )
@@ -70,7 +82,8 @@ class TestContentPageAPI:
             bodies=[
                 WABody("self-help", [WABlk("*Self-help programs* 🌬️")]),
                 MBody("self-help", [MBlk("*Self-help programs* 🌬️")]),
-                SBody("self-help", [SBlk("*Self-help programs* 🌬️")]),
+                SBody("self-help", [SBlk("*Self-help programs*")]),
+                UBody("self-help", [UBlk("*Self-help programs*")]),
             ],
             tags=["self_help"],
         )
@@ -644,6 +657,14 @@ class TestContentPageAPI2:
                 SBody("self-help-sms", [SBlk("*Self-help programs*SMS")]),
             ],
         )
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="self-help-ussd",
+            title="self-help-ussd",
+            bodies=[
+                UBody("self-help-ussd", [UBlk("*Self-help programs* USSD")]),
+            ],
+        )
 
         # it should return only web pages if filtered
         response = uclient.get("/api/v2/pages/?web=true")
@@ -655,6 +676,10 @@ class TestContentPageAPI2:
         assert content["count"] == 1
         # it should return only sms pages if filtered
         response = uclient.get("/api/v2/pages/?sms=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return only ussd pages if filtered
+        response = uclient.get("/api/v2/pages/?ussd=true")
         content = json.loads(response.content)
         assert content["count"] == 1
         # it should return only messenger pages if filtered
@@ -669,4 +694,32 @@ class TestContentPageAPI2:
         response = uclient.get("/api/v2/pages/")
         content = json.loads(response.content)
         # exclude home pages and index pages
-        assert content["count"] == 4
+        assert content["count"] == 5
+
+    def test_ussd_content(self, uclient):
+        """
+        If a ussd query param is provided, only pages with content for that
+        platform are returned.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="main-menu-first-time-user",
+            title="main menu first time user",
+            bodies=[],
+            web_body=["Colour"],
+        )
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                UBody("health info", [UBlk("*Health information* U")]),
+            ],
+        )
+
+        # it should return only USSD pages if filtered
+        response = uclient.get("/api/v2/pages/?ussd=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
