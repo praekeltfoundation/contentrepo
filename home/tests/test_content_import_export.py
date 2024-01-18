@@ -1667,3 +1667,25 @@ class TestExportImportRoundtrip:
         new_impexp.export_reimport()
         imported = new_impexp.get_page_json()
         assert imported == orig
+
+    def test_sms_values(self, new_impexp: ImportExport) -> None:
+        """
+        ContentPages with SMS messages are preserved
+        across export/import.
+
+        NOTE: Old importer can't handle SMS values.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[SBody("HealthAlert menu", [SBlk("*Welcome to HealthAlert* SMS")])],
+        )
+
+        orig = new_impexp.get_page_json()
+        new_impexp.export_reimport()
+        imported = new_impexp.get_page_json()
+        assert imported == orig

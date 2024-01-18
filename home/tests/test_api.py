@@ -723,3 +723,31 @@ class TestContentPageAPI2:
         response = uclient.get("/api/v2/pages/?ussd=true")
         content = json.loads(response.content)
         assert content["count"] == 1
+
+    def test_sms_content(self, uclient):
+        """
+        If a sms query param is provided, only pages with content for that
+        platform are returned.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="main-menu-first-time-user",
+            title="main menu first time user",
+            bodies=[],
+            web_body=["Colour"],
+        )
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                SBody("health info", [SBlk("*Health information* S")]),
+            ],
+        )
+
+        # it should return only USSD pages if filtered
+        response = uclient.get("/api/v2/pages/?sms=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
