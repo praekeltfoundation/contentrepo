@@ -9,6 +9,7 @@ from home.models import (
     HomePage,
     NextMessageButton,
     PageView,
+    USSDBlock,
     WhatsappBlock,
 )
 
@@ -313,3 +314,21 @@ class WhatsappBlockTests(TestCase):
         with self.assertRaises(StructBlockValidationError) as e:
             GoToPageButton().clean({"title": "a" * 21})
         self.assertEqual(list(e.exception.block_errors.keys()), ["title"])
+
+
+class USSDBlockTests(TestCase):
+    def create_message_value(
+        self,
+        message="",
+    ):
+        return {
+            "message": message,
+        }
+
+    def test_clean_text_char_limit(self):
+        """Text messages should be limited to 160 characters"""
+        USSDBlock().clean(self.create_message_value(message="a" * 160))
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            USSDBlock().clean(self.create_message_value(message="a" * 161))
+        self.assertEqual(list(e.exception.block_errors.keys()), ["message"])

@@ -29,6 +29,10 @@ from .page_builder import (
     NextBtn,
     PageBtn,
     PageBuilder,
+    SBlk,
+    SBody,
+    UBlk,
+    UBody,
     VarMsg,
     VBlk,
     VBody,
@@ -61,6 +65,8 @@ def add_new_fields(entry: ExpDict) -> ExpDict:
         "whatsapp_template_category": entry.get("whatsapp_template_category")
         or "UTILITY",
         "example_values": entry.get("example_values") or "[]",
+        "sms_body": entry.get("sms_body") or "",
+        "ussd_body": entry.get("ussd_body") or "",
     }
 
 
@@ -297,7 +303,12 @@ def null_to_emptystr(page: DbDict) -> DbDict:
     # FIXME: Confirm that there's no meaningful difference here, potentially
     #        make these fields non-nullable.
     fields = {**page["fields"]}
-    for k in ["subtitle", "whatsapp_title", "messenger_title", "viber_title"]:
+    for k in [
+        "subtitle",
+        "whatsapp_title",
+        "messenger_title",
+        "viber_title",
+    ]:
         if k in fields and fields[k] is None:
             fields[k] = ""
     if "whatsapp_body" in fields:
@@ -326,6 +337,12 @@ def add_body_fields(page: DbDict) -> DbDict:
                     "variation_messages": [],
                 },
             )
+    if "sms_body" in page["fields"]:
+        for body in page["fields"]["sms_body"]:
+            _add_fields(body, {"image": None})
+    if "ussd_body" in page["fields"]:
+        for body in page["fields"]["ussd_body"]:
+            _add_fields(body, {"image": None})
     if "messenger_body" in page["fields"]:
         for body in page["fields"]["messenger_body"]:
             _add_fields(body, {"image": None})
@@ -375,6 +392,22 @@ def remove_example_values(page: DbDict) -> DbDict:
 
 
 @per_page
+def remove_sms_fields(page: DbDict) -> DbDict:
+    if "sms_body" in page["fields"]:
+        for body in page["fields"]["sms_body"]:
+            body["value"].pop("sms_body", None)
+    return page
+
+
+@per_page
+def remove_ussd_fields(page: DbDict) -> DbDict:
+    if "ussd_body" in page["fields"]:
+        for body in page["fields"]["ussd_body"]:
+            body["value"].pop("ussd_body", None)
+    return page
+
+
+@per_page
 def remove_button_ids(page: DbDict) -> DbDict:
     if "whatsapp_body" in page["fields"]:
         for body in page["fields"]["whatsapp_body"]:
@@ -420,6 +453,8 @@ OLD_PAGE_FILTER_FUNCS = [
     remove_buttons,
     remove_example_values,
     enable_web,
+    remove_sms_fields,
+    remove_ussd_fields,
 ]
 
 
@@ -944,6 +979,7 @@ class TestExportImportRoundtrip:
             title="HealthAlert menu",
             bodies=[
                 WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")]),
+                SBody("HealthAlert menu", [SBlk("Welcome to HealthAlert S")]),
                 MBody("HealthAlert menu", [MBlk("Welcome to HealthAlert M")]),
             ],
         )
@@ -953,6 +989,7 @@ class TestExportImportRoundtrip:
             title="health info",
             bodies=[
                 WABody("health info", [WABlk("*Health information* WA")]),
+                SBody("health info", [SBlk("*Health information* S")]),
                 MBody("health info", [MBlk("*Health information* M")]),
             ],
         )
@@ -962,6 +999,7 @@ class TestExportImportRoundtrip:
             title="self-help",
             bodies=[
                 WABody("self-help", [WABlk("*Self-help programs* WA")]),
+                SBody("self-help", [SBlk("*Self-help programs* S")]),
                 MBody("self-help", [MBlk("*Self-help programs* M")]),
                 VBody("self-help", [VBlk("*Self-help programs* V")]),
             ],
@@ -1007,6 +1045,7 @@ class TestExportImportRoundtrip:
             title="HealthAlert menu",
             bodies=[
                 WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")]),
+                SBody("HealthAlert menu", [SBlk("Welcome to HealthAlert S")]),
                 MBody("HealthAlert menu", [MBlk("Welcome to HealthAlert M")]),
                 VBody("HealthAlert menu", [VBlk("Welcome to HealthAlert V")]),
             ],
@@ -1017,8 +1056,9 @@ class TestExportImportRoundtrip:
             title="health info",
             bodies=[
                 WABody("health info", [WABlk(f"wa{i}") for i in [1, 2, 3]]),
-                MBody("health info", [MBlk(f"m{i}") for i in [1, 2, 3, 4]]),
-                VBody("health info", [VBlk(f"v{i}") for i in [1, 2, 3, 4, 5]]),
+                SBody("health info", [SBlk(f"s{i}") for i in [1, 2, 3, 4]]),
+                MBody("health info", [MBlk(f"m{i}") for i in [1, 2, 3, 4, 5]]),
+                VBody("health info", [VBlk(f"v{i}") for i in [1, 2, 3, 4, 5, 6]]),
             ],
         )
 
@@ -1038,7 +1078,7 @@ class TestExportImportRoundtrip:
         img_path = Path("home/tests/test_static") / "test.jpeg"
         img_wa = mk_img(img_path, "wa_image")
         img_m = mk_img(img_path, "m_image")
-        img_v = mk_img(img_path, "m_image")
+        img_v = mk_img(img_path, "v_image")
 
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
@@ -1605,3 +1645,25 @@ class TestExportImportRoundtrip:
         impexp.export_reimport()
         imported = impexp.get_page_json()
         assert imported == orig_without_self_help
+
+    def test_ussd_values(self, new_impexp: ImportExport) -> None:
+        """
+        ContentPages with USSD messages are preserved
+        across export/import.
+
+        NOTE: Old importer can't handle USSD values.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[UBody("HealthAlert menu", [UBlk("*Welcome to HealthAlert* USSD")])],
+        )
+
+        orig = new_impexp.get_page_json()
+        new_impexp.export_reimport()
+        imported = new_impexp.get_page_json()
+        assert imported == orig

@@ -54,6 +54,10 @@ EXPORT_FIELDNAMES = [
     "example_values",
     "variation_title",
     "variation_body",
+    "sms_title",
+    "sms_body",
+    "ussd_title",
+    "ussd_body",
     "messenger_title",
     "messenger_body",
     "viber_title",
@@ -283,6 +287,44 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             page.is_whatsapp_template = bool(whatsapp_template_name)
             return page
 
+    def add_sms(row, sms_messages, page=None):
+        if not row.get("sms_title"):
+            return page
+
+        if not page:
+            return ContentPage(
+                title=row["sms_title"],
+                slug=row["slug"],
+                enable_sms=True,
+                sms_title=row["sms_title"],
+                sms_body=get_body(sms_messages, "SMS_Message"),
+                locale=home_page.locale,
+            )
+        else:
+            page.enable_sms = True
+            page.sms_title = row["sms_title"]
+            page.sms_body = get_body(sms_messages, "SMS_Message")
+            return page
+
+    def add_ussd(row, ussd_messages, page=None):
+        if not row.get("ussd_title"):
+            return page
+
+        if not page:
+            return ContentPage(
+                title=row["ussd_title"],
+                slug=row["slug"],
+                enable_ussd=True,
+                ussd_title=row["ussd_title"],
+                ussd_body=get_body(ussd_messages, "USSD_Message"),
+                locale=home_page.locale,
+            )
+        else:
+            page.enable_ussd = True
+            page.ussd_title = row["ussd_title"]
+            page.ussd_body = get_body(ussd_messages, "USSD_Message")
+            return page
+
     def add_messenger(row, messenger_messages, page=None):
         if not row.get("messenger_title"):
             return page
@@ -335,6 +377,10 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             "variation_body",
             "next_prompt",
             "buttons",
+            "sms_title",
+            "sms_body",
+            "ussd_title",
+            "ussd_body",
             "viber_title",
             "viber_body",
             "messenger_title",
@@ -403,6 +449,8 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             and row["web_body"] in ["", None]
             and row["whatsapp_body"] in ["", None]
             and row["messenger_body"] in ["", None]
+            and row["sms_body"] in ["", None]
+            and row["ussd_body"] in ["", None]
         ):
             cpi = ContentPageIndex.objects.filter(slug=slug).first()
             if cpi:
@@ -416,6 +464,8 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
         row = clean_row(row)
         variation_messages = []
         whatsapp_messages = [row["whatsapp_body"]]
+        sms_messages = [row["sms_body"]]
+        ussd_messages = [row["ussd_body"]]
         messenger_messages = [row["messenger_body"]]
         viber_messages = [row["viber_body"]]
         for next_row in lines[index + 1 :]:
@@ -433,6 +483,10 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
                     }
                 )
 
+            if next_row["sms_body"] not in ["", None]:
+                sms_messages.append(next_row["sms_body"])
+            if next_row["ussd_body"] not in ["", None]:
+                ussd_messages.append(next_row["ussd_body"])
             if next_row["messenger_body"] not in ["", None]:
                 messenger_messages.append(next_row["messenger_body"])
             if next_row["viber_body"] not in ["", None]:
@@ -447,6 +501,8 @@ def old_import_content(file, filetype, progress_queue, purge=True, locale="en"):
             page=contentpage,
             variation_messages=variation_messages,
         )
+        contentpage = add_sms(row=row, sms_messages=sms_messages, page=contentpage)
+        contentpage = add_ussd(row=row, ussd_messages=ussd_messages, page=contentpage)
         contentpage = add_messenger(
             row=row, messenger_messages=messenger_messages, page=contentpage
         )
@@ -525,6 +581,10 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
         "example_values": 118,
         "variation_title": 118,
         "variation_body": 370,
+        "sms_title": 118,
+        "sms_body": 370,
+        "ussd_title": 118,
+        "ussd_body": 370,
         "messenger_title": 118,
         "messenger_body": 370,
         "viber_title": 118,
@@ -877,14 +937,20 @@ class VariationMessageList:
 @dataclass
 class MessageContainer:
     whatsapp: Tuple[Message]
+    sms: Tuple[Message]
+    ussd: Tuple[Message]
     messenger: Tuple[Message]
     viber: Tuple[Message]
     variation_messages: Tuple[VariationMessage]
 
     @classmethod
-    def from_platform_body(cls, whatsapp_body, messenger_body, viber_body):
+    def from_platform_body(
+        cls, whatsapp_body, sms_body, ussd_body, messenger_body, viber_body
+    ):
         whatsapp = []
         whatsapp_variation_messages = []
+        sms = []
+        ussd = []
         messenger = []
         viber = []
         for whatsapp_msg in whatsapp_body:
@@ -892,6 +958,11 @@ class MessageContainer:
             whatsapp_variation_messages.append(
                 VariationMessageList.from_platform_body_element(whatsapp_msg)
             )
+        for sms_msg in sms_body:
+            sms.append(Message.from_platform_body_element(sms_msg))
+
+        for ussd_msg in ussd_body:
+            ussd.append(Message.from_platform_body_element(ussd_msg))
 
         for messenger_msg in messenger_body:
             messenger.append(Message.from_platform_body_element(messenger_msg))
@@ -962,6 +1033,10 @@ class ContentSheetRow:
     whatsapp_body: str = ""
     whatsapp_template_name: str = ""
     whatsapp_template_category: str = ""
+    sms_title: str = ""
+    sms_body: str = ""
+    ussd_title: str = ""
+    ussd_body: str = ""
     messenger_title: str = ""
     messenger_body: str = ""
     viber_title: str = ""
@@ -1008,6 +1083,8 @@ class ContentSheetRow:
         content_sheet_row = cls()
         message_container = MessageContainer.from_platform_body(
             page.whatsapp_body,
+            page.sms_body,
+            page.ussd_body,
             page.messenger_body,
             page.viber_body,
         )
@@ -1029,6 +1106,8 @@ class ContentSheetRow:
                 page.whatsapp_template_category
             )
             content_sheet_row.whatsapp_title = page.whatsapp_title
+            content_sheet_row.sms_title = page.sms_title
+            content_sheet_row.ussd_title = page.ussd_title
             content_sheet_row.messenger_title = page.messenger_title
             content_sheet_row.viber_title = page.viber_title
             content_sheet_row.translation_tag = str(page.translation_key)
@@ -1099,6 +1178,10 @@ class ContentSheetRow:
             self.example_values,
             self.variation_title,
             self.variation_body,
+            self.sms_title,
+            self.sms_body,
+            self.ussd_title,
+            self.ussd_body,
             self.messenger_title,
             self.messenger_body,
             self.viber_title,
@@ -1141,6 +1224,8 @@ class ContentSheetRow:
         most_messages = max(
             [
                 len(message_container.whatsapp),
+                len(message_container.sms),
+                len(message_container.ussd),
                 len(message_container.messenger),
                 len(message_container.viber),
                 len(page.body),
@@ -1156,6 +1241,15 @@ class ContentSheetRow:
                 variation_messages.extend(
                     self._make_variation_rows(page, message_container, 0)
                 )
+        if len(message_container.sms) == 1 or (
+            side_panel_message_number == 0 and len(message_container.sms) > 1
+        ):
+            self.sms_body = message_container.sms[0].body
+
+        if len(message_container.ussd) == 1 or (
+            side_panel_message_number == 0 and len(message_container.ussd) > 1
+        ):
+            self.ussd_body = message_container.ussd[0].body
 
         if len(message_container.messenger) == 1 or (
             side_panel_message_number == 0 and len(message_container.messenger) > 1
@@ -1196,6 +1290,14 @@ class ContentSheetRow:
 
                 if message_index < len(message_container.messenger):
                     new_content_sheet_row.messenger_body = message_container.messenger[
+                        message_index
+                    ].body
+                if message_index < len(message_container.sms):
+                    new_content_sheet_row.sms_body = message_container.sms[
+                        message_index
+                    ].body
+                if message_index < len(message_container.ussd):
+                    new_content_sheet_row.ussd_body = message_container.ussd[
                         message_index
                     ].body
                 if message_index < len(message_container.viber):

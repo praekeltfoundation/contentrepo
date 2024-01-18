@@ -12,6 +12,8 @@ from home.models import (
     ContentQuickReply,
     ContentTrigger,
     MessengerBlock,
+    SMSBlock,
+    USSDBlock,
     ViberBlock,
     WhatsappBlock,
 )
@@ -118,9 +120,25 @@ class WABlk(ContentBlock):
 
 
 @dataclass
+class SBlk(ContentBlock):
+    BLOCK_TYPE_STR = "SMS_Message"
+    BLOCK_TYPE = SMSBlock
+
+    # TODO: More body things.
+
+
+@dataclass
 class MBlk(ContentBlock):
     BLOCK_TYPE_STR = "messenger_block"
     BLOCK_TYPE = MessengerBlock
+
+    # TODO: More body things.
+
+
+@dataclass
+class UBlk(ContentBlock):
+    BLOCK_TYPE_STR = "USSD_Message"
+    BLOCK_TYPE = USSDBlock
 
     # TODO: More body things.
 
@@ -135,6 +153,14 @@ class VBlk(ContentBlock):
 
 class WABody(ContentBody[WABlk]):
     ATTR_STR = "whatsapp"
+
+
+class SBody(ContentBody[SBlk]):
+    ATTR_STR = "sms"
+
+
+class UBody(ContentBody[UBlk]):
+    ATTR_STR = "ussd"
 
 
 class MBody(ContentBody[MBlk]):
