@@ -4,7 +4,7 @@ This content repository allows easy content management via a headless CMS, using
 
 ## Features
 
-- **Multi-channel support:** Currently supports Web, WhatsApp, Messenger, and Viber.
+- **Multi-channel support:** Currently supports Web, WhatsApp,Messenger,Viber, SMS and USSD.
 - **Ordered content sets:** You can take individual pieces of content and group them in a set, in a specific order. They can also be restricted to users with specific profile field values.
 - **Stage based messaging:** Ordered content sets can be expanded to include a relative time (eg. 23 days before x), to create a timing-based push-message journey.
 - **Import and export:** Content and ordered content sets can be exported and imported in CSV and Excel formats
