@@ -18,7 +18,7 @@ from pytest_django.fixtures import SettingsWrapper
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 
-from home.content_import_export import import_content, old_import_content
+from home.content_import_export import import_content
 from home.import_content_pages import ImportException
 from home.models import ContentPage, ContentPageIndex, HomePage
 
@@ -91,13 +91,6 @@ def ignore_certain_fields(entry: ExpDict) -> ExpDict:
     }
     return {k: v for k, v in entry.items() if k not in ignored_fields}
 
-
-@filter_both
-def ignore_old_fields(entry: ExpDict) -> ExpDict:
-    ignored_fields = {"next_prompt", "translation_tag", "buttons"}
-    return {k: v for k, v in entry.items() if k not in ignored_fields}
-
-
 @filter_both
 def strip_leading_whitespace(entry: ExpDict) -> ExpDict:
     # FIXME: Do we expect imported content to have leading spaces removed?
@@ -111,20 +104,11 @@ EXPORT_FILTER_FUNCS = [
     strip_leading_whitespace,
 ]
 
-OLD_EXPORT_FILTER_FUNCS = [
-    remove_translation_tag_from_tags,
-    ignore_old_fields,
-]
-
-
 def filter_exports(srcs: ExpDicts, dsts: ExpDicts, importer: str) -> ExpDictsPair:
     fsrcs, fdsts = [], []
     for src, dst in zip(srcs, dsts, strict=True):
         for ff in EXPORT_FILTER_FUNCS:
             src, dst = ff(src, dst)
-        if importer == "old":
-            for ff in OLD_EXPORT_FILTER_FUNCS:
-                src, dst = ff(src, dst)
         fsrcs.append(src)
         fdsts.append(dst)
     return fsrcs, fdsts
@@ -445,18 +429,6 @@ PAGE_FILTER_FUNCS = [
     remove_example_value_ids,
 ]
 
-OLD_PAGE_FILTER_FUNCS = [
-    remove_translation_key,
-    remove_revisions,
-    add_body_fields,
-    remove_next_prompt,
-    remove_buttons,
-    remove_example_values,
-    enable_web,
-    remove_sms_fields,
-    remove_ussd_fields,
-]
-
 
 @dataclass
 class ImportExport:
@@ -466,9 +438,9 @@ class ImportExport:
 
     @property
     def _import_content(self) -> Callable[..., None]:
+        #TODO: Should this still be a method, as there is only one being returned?
         return {
             "new": import_content,
-            "old": old_import_content,
         }[self.importer]
 
     @property
@@ -570,9 +542,6 @@ class ImportExport:
         things that vary across import/export.
         """
         pages = decode_json_fields(get_page_json())
-        if self.importer == "old":
-            for ff in OLD_PAGE_FILTER_FUNCS:
-                pages = ff(pages)
         for ff in PAGE_FILTER_FUNCS:
             pages = ff(pages)
         if locale is not None:
@@ -586,7 +555,7 @@ class ImportExport:
         return filter_exports(src, dst, self.importer)
 
 
-@pytest.fixture(params=["old", "new"])
+@pytest.fixture(params=["new"])
 def csv_impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, request.param, "csv")
 
@@ -926,7 +895,7 @@ class TestImportExport:
 
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
-@pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
+@pytest.fixture(params=["new-csv", "new-xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
     importer, format = request.param.split("-")
     return ImportExport(admin_client, importer, format)
@@ -1115,11 +1084,6 @@ class TestExportImportRoundtrip:
             VarMsg("Single male", gender="male", relationship="single"),
             VarMsg("Complicated male", gender="male", relationship="complicated"),
         ]
-        if impexp.importer == "old":
-            m1vars = [
-                VarMsg("Single", relationship="single"),
-                VarMsg("Complicated", relationship="complicated"),
-            ]
 
         cp_imp_exp_wablks = [
             WABlk(
@@ -1185,10 +1149,7 @@ class TestExportImportRoundtrip:
             tags=["tag4"],
         )
         PageBuilder.link_related(health_info, [self_help])
-        if impexp.importer == "old":
-            PageBuilder.link_related(self_help, [health_info])
-        else:
-            PageBuilder.link_related(self_help, [health_info, main_menu])
+        PageBuilder.link_related(self_help, [health_info, main_menu])
 
         orig = impexp.get_page_json()
         impexp.export_reimport()
