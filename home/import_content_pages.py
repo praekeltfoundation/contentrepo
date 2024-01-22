@@ -9,6 +9,7 @@ from queue import Queue
 from typing import Any
 from uuid import uuid4
 
+from django.core.exceptions import ValidationError  # type: ignore
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
@@ -231,8 +232,12 @@ class ContentImporter:
         if row.translation_tag or locale != self.default_locale():
             index.translation_key = row.translation_tag
         locale = self.locale_from_display_name(row.locale)
-        with contextlib.suppress(NodeAlreadySaved):
-            self.home_page(locale).add_child(instance=index)
+        try:
+            with contextlib.suppress(NodeAlreadySaved):
+                self.home_page(locale).add_child(instance=index)
+        except ValidationError as err:
+            # FIXME: Find a better way to represent this.
+            raise ImportException(f"Validation error: {err}")
 
         index.save_revision().publish()
 
@@ -394,8 +399,12 @@ class ShadowContentPage:
         self.add_quick_replies_to_page(page)
         self.add_triggers_to_page(page)
 
-        with contextlib.suppress(NodeAlreadySaved):
-            parent.add_child(instance=page)
+        try:
+            with contextlib.suppress(NodeAlreadySaved):
+                parent.add_child(instance=page)
+        except ValidationError as err:
+            # FIXME: Find a better way to represent this.
+            raise ImportException(f"Validation error: {err}", self.row_num)
 
         page.save_revision().publish()
 
