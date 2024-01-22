@@ -14,7 +14,7 @@ from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
 from wagtail.api import APIField
-from wagtail.blocks import StructBlockValidationError
+from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
@@ -295,8 +295,6 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
                 f"{len(result['message'])} characters long"
             )
-
-
 
         if errors:
             raise StructBlockValidationError(errors)
@@ -751,40 +749,60 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             revision.save(update_fields=["content"])
         return revision
 
-
-
     def clean(self):
-
         result = super().clean()
         errors = {}
 
-        #the WA title is needed for all templates to generate a name for the template
+        # The WA title is needed for all templates to generate a name for the template
         if self.is_whatsapp_template and not self.whatsapp_title:
-            errors["whatsapp_title"] = ValidationError('All WhatsApp templates need a title.')
-
-
-        if self.is_whatsapp_template:
-            #find variables
-            WA_message = self.whatsapp_body.raw_data[0]["value"]["message"]
-            vars_in_msg = re.findall(r"{{(.*?)}}", WA_message)
+            errors.setdefault("whatsapp_title", []).append(
+                ValidationError("All WhatsApp templates need a title.")
+            )
+        # The variable check is only for templates
+        if self.is_whatsapp_template and len(self.whatsapp_body.raw_data) > 0:
+            whatsapp_message = self.whatsapp_body.raw_data[0]["value"]["message"]
+            vars_in_msg = re.findall(r"{{(.*?)}}", whatsapp_message)
             non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
 
             if non_digit_variables:
-                errors["whatsapp_body"] = ValidationError(f"Please provide numeric variables only. You provided {non_digit_variables}.")
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f"Please provide numeric variables only. You provided {non_digit_variables}."
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
 
-            # check variable order
+            # Check variable order
             actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
-            expected_variables = [str(i + 1) for i in range(len(actual_digit_variables))]
+            expected_variables = [
+                str(j + 1) for j in range(len(actual_digit_variables))
+            ]
             if actual_digit_variables != expected_variables:
-                errors["whatsapp_body"] = ValidationError(
-                        f"Variables must be sequential, starting with \"{{1}}\". Your first variable was \"{actual_digit_variables[0]}\"")
-
-
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables[0]}"'
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
 
         if errors:
             raise ValidationError(errors)
-        return result
 
+        return result
 
 
 # Allow slug to be blank in forms, we fill it in in full_clean
