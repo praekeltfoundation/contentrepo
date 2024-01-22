@@ -924,6 +924,21 @@ class TestImportExport:
             "'English'"
         )
 
+    def test_invalid_wa_template_category(self, newcsv_impexp: ImportExport) -> None:
+        """
+        Importing a WhatsApp template with an invalid category should raise an
+        error that results in an error message that gets sent back to the user
+        """
+        with pytest.raises(ImportException) as e:
+            newcsv_impexp.import_file("bad-whatsapp-template-category.csv")
+
+        assert e.value.row_num == 3
+        # FIXME: Find a better way to represent this.
+        assert (
+            e.value.message
+            == "Validation error: {'whatsapp_template_category': [\"Value 'Marketing' is not a valid choice.\"]}"
+        )
+
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
