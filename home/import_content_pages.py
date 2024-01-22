@@ -232,8 +232,12 @@ class ContentImporter:
         if row.translation_tag or locale != self.default_locale():
             index.translation_key = row.translation_tag
         locale = self.locale_from_display_name(row.locale)
-        with contextlib.suppress(NodeAlreadySaved):
-            self.home_page(locale).add_child(instance=index)
+        try:
+            with contextlib.suppress(NodeAlreadySaved):
+                self.home_page(locale).add_child(instance=index)
+        except ValidationError as err:
+            # FIXME: Find a better way to represent this.
+            raise ImportException(f"Validation error: {err}")
 
         index.save_revision().publish()
 
