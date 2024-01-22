@@ -91,6 +91,7 @@ def ignore_certain_fields(entry: ExpDict) -> ExpDict:
     }
     return {k: v for k, v in entry.items() if k not in ignored_fields}
 
+
 @filter_both
 def strip_leading_whitespace(entry: ExpDict) -> ExpDict:
     # FIXME: Do we expect imported content to have leading spaces removed?
@@ -103,6 +104,7 @@ EXPORT_FILTER_FUNCS = [
     ignore_certain_fields,
     strip_leading_whitespace,
 ]
+
 
 def filter_exports(srcs: ExpDicts, dsts: ExpDicts, importer: str) -> ExpDictsPair:
     fsrcs, fdsts = [], []
@@ -269,6 +271,7 @@ def normalise_related_page_ids(page: DbDict) -> DbDict:
     }
     return page | {"fields": fields}
 
+
 @per_page
 def null_to_emptystr(page: DbDict) -> DbDict:
     # FIXME: Confirm that there's no meaningful difference here, potentially
@@ -425,7 +428,7 @@ class ImportExport:
 
     @property
     def _import_content(self) -> Callable[..., None]:
-        #TODO: Should this still be a method, as there is only one being returned?
+        # TODO: Should this still be a method, as there is only one being returned?
         return {
             "new": import_content,
         }[self.importer]

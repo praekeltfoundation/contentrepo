@@ -91,6 +91,7 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
     export_rows = exporter.perform_export()
     ExportWriter(export_rows).write_csv(response)
 
+
 def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
     """Sets the style for the workbook adding any formatting that will make the sheet more aesthetically pleasing"""
     # Adjustment is because the size in openxlsx and google sheets are not equivalent
@@ -275,6 +276,7 @@ def get_content_sheet(queryset: PageQuerySet) -> List[list]:
                             structure_string,
                         )
     return content_sheet
+
 
 def import_ordered_sets(file, filetype, progress_queue, purge=False):
     def create_ordered_set_from_row(row):
