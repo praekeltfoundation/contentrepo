@@ -269,19 +269,6 @@ def normalise_related_page_ids(page: DbDict) -> DbDict:
     }
     return page | {"fields": fields}
 
-
-def remove_translation_key(pages: DbDicts) -> DbDicts:
-    # For old importer.
-    return _remove_fields(pages, {"translation_key"})
-
-
-def remove_revisions(pages: DbDicts) -> DbDicts:
-    # For old importer. Sometimes (maybe for the ContentPages imported after
-    # the first language?) we get higher revision numbers. Let's just strip
-    # them all and be done with it.
-    return _remove_fields(pages, {"latest_revision", "live_revision"})
-
-
 @per_page
 def null_to_emptystr(page: DbDict) -> DbDict:
     # FIXME: Confirm that there's no meaningful difference here, potentially
@@ -626,35 +613,11 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_translations_sep(self, csv_impexp: ImportExport) -> None:
-        """
-        Importing a CSV file split into separate parts per locale and then
-        exporting it produces a duplicate of the original file.
-
-        (This uses translations-sp.csv and the two language-specific subsets thereof.)
-
-        FIXME:
-         * Remove this test when the old importer goes away completely.
-        """
-        # Create a new homepage for Portuguese.
-        pt, _created = Locale.objects.get_or_create(language_code="pt")
-        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
-
-        set_profile_field_options()
-        csv_impexp.import_file("translations-sep-en.csv")
-        csv_impexp.import_file("translations-sep-pt.csv", locale="pt", purge=False)
-        csv_bytes = csv_impexp.read_bytes("translations-sep.csv")
-        content = csv_impexp.export_content()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        assert dst == src
-
     def test_default_locale(self, newcsv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with multiple languages and specifying a locale
         and then exporting it produces a duplicate of the original file but
         with only pages from the specifyied specified locale included.
-
-        NOTE: Old importer can't handle multiple languages at once.
 
         (This uses translations.csv and the en language-specific subset thereof.)
         """

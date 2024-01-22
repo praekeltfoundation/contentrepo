@@ -276,27 +276,6 @@ def get_content_sheet(queryset: PageQuerySet) -> List[list]:
                         )
     return content_sheet
 
-
-def old_export_xlsx_content(queryset: PageQuerySet, response: HttpResponse) -> None:
-    """Export contentpages within the queryset to an xlsx"""
-    workbook = Workbook()
-    worksheet = workbook.active
-
-    content_sheet = get_content_sheet(queryset)
-    for row in content_sheet:
-        worksheet.append(row)
-    workbook, worksheet = style_sheet(workbook, worksheet)
-    workbook.save(response)
-
-
-def old_export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
-    """Export contentpages within the queryset to a csv"""
-    content_sheet = get_content_sheet(queryset)
-    writer = csv.writer(response)
-    for row in content_sheet:
-        writer.writerow(row)
-
-
 def import_ordered_sets(file, filetype, progress_queue, purge=False):
     def create_ordered_set_from_row(row):
         set_name = row["Name"]
