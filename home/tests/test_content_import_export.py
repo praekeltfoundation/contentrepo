@@ -11,7 +11,6 @@ from typing import Any
 
 import pytest
 from django.core import serializers  # type: ignore
-from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
@@ -737,12 +736,22 @@ class TestImportExport:
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         # A ContentPageIndex without a translation key fails
-        with pytest.raises(ValidationError):
+        with pytest.raises(ImportException) as e:
             csv_impexp.import_file("no-translation-key-cpi.csv")
 
+        assert e.value.row_num == 4
+        # FIXME: Find a better way to represent this.
+        assert "translation_key" in e.value.message
+        assert "“” is not a valid UUID." in e.value.message
+
         # A ContentPage without a translation key fails
-        with pytest.raises(ValidationError):
+        with pytest.raises(ImportException) as e:
             csv_impexp.import_file("no-translation-key-cp.csv")
+
+        assert e.value.row_num == 5
+        # FIXME: Find a better way to represent this.
+        assert "translation_key" in e.value.message
+        assert "“” is not a valid UUID." in e.value.message
 
     def test_invalid_locale_name(self, csv_impexp: ImportExport) -> None:
         """
@@ -1055,9 +1064,6 @@ class TestExportImportRoundtrip:
         """
         ContentPages with tags and related pages are preserved across
         export/import.
-
-        NOTE: The old importer can't handle non-ContentPage related pages, so
-            it doesn't get one of those.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
@@ -1312,8 +1318,6 @@ class TestExportImportRoundtrip:
         ContentPages in multiple languages (with unique-per-locale slugs and
         titles) are preserved across export/import with each language imported
         separately.
-
-        NOTE: Old importer can't handle non-unique slugs.
         """
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
@@ -1459,8 +1463,6 @@ class TestExportImportRoundtrip:
         """
         ContentPages with example values in whatsapp messages are preserved
         across export/import.
-
-        NOTE: Old importer can't handle example values.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
