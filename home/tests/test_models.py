@@ -229,15 +229,61 @@ class ContentPageTests(TestCase):
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
         PageBuilder.build_cp(
             parent=main_menu,
             slug="ha-menu",
             title="HealthAlert menu",
-            bodies=[],
+            bodies=[WABody("WA Title", [])],
             whatsapp_template_name="WA_Title_1",
         )
 
         mock_create_whatsapp_template.assert_not_called()
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_submitted_with_no_title(self, mock_create_whatsapp_template):
+        """
+        If the page is a WA template and how no title, then it shouldn't be submitted
+        """
+
+        with self.assertRaises(ValidationError):
+            home_page = HomePage.objects.first()
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+            PageBuilder.build_cp(
+                parent=main_menu,
+                slug="template-no-title",
+                title="HealthAlert menu",
+                bodies=[WABody("", [])],
+                whatsapp_template_name="WA_Title_1",
+            )
+
+        mock_create_whatsapp_template.assert_not_called()
+
+    def test_clean_text_valid_variables(self):
+        """
+        The message should accept variables if and only if they are numeric and ordered
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        with self.assertRaises(ValidationError):
+            PageBuilder.build_cp(
+                parent=main_menu,
+                slug="ha-menu",
+                title="HealthAlert menu",
+                bodies=[
+                    WABody(
+                        "WA Title",
+                        [
+                            WABlk(
+                                "{{2}}{{1}} {{foo}}",
+                            )
+                        ],
+                    )
+                ],
+                whatsapp_template_name="WA_Title_1",
+            )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
