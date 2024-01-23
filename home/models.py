@@ -791,7 +791,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                             0: StreamBlockValidationError(
                                 {
                                     "message": ValidationError(
-                                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables[0]}"'
+                                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
                                     )
                                 }
                             )

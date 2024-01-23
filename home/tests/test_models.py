@@ -18,30 +18,6 @@ from .utils import create_page, create_page_rating
 
 
 class ContentPageTests(TestCase):
-    def create_message_value(
-        self,
-        image=None,
-        document=None,
-        media=None,
-        message="",
-        variation_messages=None,
-        example_values=None,
-        next_prompt="",
-        buttons=None,
-        is_whatsapp_template=False,
-    ):
-        return {
-            "image": image,
-            "document": document,
-            "media": media,
-            "message": message,
-            "example_values": example_values,
-            "variation_messages": variation_messages,
-            "next_prompt": next_prompt,
-            "buttons": buttons or [],
-            "is_whatsapp_template": is_whatsapp_template,
-        }
-
     def test_page_and_revision_rating(self):
         page = create_page()
 
@@ -250,12 +226,33 @@ class ContentPageTests(TestCase):
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("WA Title", [])],
+            whatsapp_template_name="WA_Title_1",
+        )
+
+        mock_create_whatsapp_template.assert_not_called()
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_submitted_with_no_title(self, mock_create_whatsapp_template):
+        """
+        If the page is a WA template and how no title, then it shouldn't be submitted
+        """
+
         with self.assertRaises(ValidationError):
+            home_page = HomePage.objects.first()
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
             PageBuilder.build_cp(
                 parent=main_menu,
-                slug="ha-menu",
+                slug="template-no-title",
                 title="HealthAlert menu",
-                bodies=[],
+                bodies=[WABody("", [])],
                 whatsapp_template_name="WA_Title_1",
             )
 
