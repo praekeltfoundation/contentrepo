@@ -11,7 +11,6 @@ from typing import Any
 
 import pytest
 from django.core import serializers  # type: ignore
-from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
@@ -821,12 +820,22 @@ class TestImportExport:
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         # A ContentPageIndex without a translation key fails
-        with pytest.raises(ValidationError):
+        with pytest.raises(ImportException) as e:
             newcsv_impexp.import_file("no-translation-key-cpi.csv")
 
+        assert e.value.row_num == 4
+        # FIXME: Find a better way to represent this.
+        assert "translation_key" in e.value.message
+        assert "“” is not a valid UUID." in e.value.message
+
         # A ContentPage without a translation key fails
-        with pytest.raises(ValidationError):
+        with pytest.raises(ImportException) as e:
             newcsv_impexp.import_file("no-translation-key-cp.csv")
+
+        assert e.value.row_num == 5
+        # FIXME: Find a better way to represent this.
+        assert "translation_key" in e.value.message
+        assert "“” is not a valid UUID." in e.value.message
 
     def test_invalid_locale_name(self, newcsv_impexp: ImportExport) -> None:
         """
@@ -922,6 +931,21 @@ class TestImportExport:
             e.value.message
             == "Cannot find related page with slug 'missing related' and locale "
             "'English'"
+        )
+
+    def test_invalid_wa_template_category(self, newcsv_impexp: ImportExport) -> None:
+        """
+        Importing a WhatsApp template with an invalid category should raise an
+        error that results in an error message that gets sent back to the user
+        """
+        with pytest.raises(ImportException) as e:
+            newcsv_impexp.import_file("bad-whatsapp-template-category.csv")
+
+        assert e.value.row_num == 3
+        # FIXME: Find a better way to represent this.
+        assert (
+            e.value.message
+            == "Validation error: {'whatsapp_template_category': [\"Value 'Marketing' is not a valid choice.\"]}"
         )
 
 
