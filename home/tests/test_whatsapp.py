@@ -173,4 +173,3 @@ class TestWhatsApp:
         assert create_template_request.body == json.dumps(
             mock_create_template_data, indent=4
         )
-
