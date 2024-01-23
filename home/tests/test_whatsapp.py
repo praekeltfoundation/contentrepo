@@ -173,3 +173,22 @@ class TestWhatsApp:
         assert create_template_request.body == json.dumps(
             mock_create_template_data, indent=4
         )
+
+    @responses.activate
+    def test_create_whatsapp_template_return_error(self):
+        data = {
+            "category": "UTILITY",
+            "name": "test-template",
+            "language": "en_US",
+            "components": [{"type": "BODY", "text": "Test Body"}],
+        }
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={}, status=404)
+
+        with self.assertRaises(Exception):
+            create_whatsapp_template("test-template", "Test Body", "UTILITY")
+
+        request = responses.calls[0].request
+
+        # assert request.headers["Authorization"] == "Bearer fake-access-token"
+        # assert request.body == json.dumps(data, indent=4)

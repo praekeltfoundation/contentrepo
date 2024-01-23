@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 import requests
 from django.conf import settings
 from wagtail.images import get_image_model
+from django.core.exceptions import ValidationError
 
 
 def create_whatsapp_template(
@@ -59,6 +60,8 @@ def create_whatsapp_template(
         headers=headers,
         data=json.dumps(data, indent=4),
     )
+
+    # Check if an error has occurred
     response.raise_for_status()
 
 

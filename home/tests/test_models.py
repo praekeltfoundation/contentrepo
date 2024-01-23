@@ -16,6 +16,9 @@ from home.models import (
 
 from .page_builder import PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
+import responses
+from home.whatsapp import create_whatsapp_template
+from django.core.exceptions import ValidationError
 
 
 class ContentPageTests(TestCase):
@@ -236,6 +239,20 @@ class ContentPageTests(TestCase):
         )
 
         mock_create_whatsapp_template.assert_not_called()
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    def test_create_whatsapp_template_submit_return_error(self):
+        page = create_page(is_whatsapp_template=True)
+
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={}, status=500)
+
+        create_whatsapp_template("test-template", "Test Body", "UTILITY")
+
+        with self.assertRaises(ValidationError) as e:
+            page.save_revision()
+
+        self.assertRaises(ValidationError)
 
 
 class WhatsappBlockTests(TestCase):

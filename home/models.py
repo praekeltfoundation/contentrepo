@@ -40,6 +40,9 @@ from wagtail.admin.panels import (  # isort:skip
     ObjectList,
     TabbedInterface,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UniqueSlugMixin:
@@ -834,7 +837,16 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             previous_revision,
             clean,
         )
-        template_name = self.submit_whatsapp_template(previous_revision)
+
+        try:
+            template_name = self.submit_whatsapp_template(previous_revision)
+        except Exception as e:
+            print(">>>>>", e)
+            # Log the error to sentry
+            logger.exception(f"Failed to submit template name:  {self.whatsapp_template_name}, "
+                             f"Error: {e}")
+            raise ValidationError(f"Failed to submit template with template name {self.whatsapp_template_name}")
+
         if template_name:
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
