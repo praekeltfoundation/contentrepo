@@ -14,7 +14,7 @@ from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
 from wagtail.api import APIField
-from wagtail.blocks import StructBlockValidationError
+from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
@@ -235,7 +235,6 @@ class GoToPageButton(blocks.StructBlock):
 
 class WhatsappBlock(blocks.StructBlock):
     MEDIA_CAPTION_MAX_LENGTH = 1024
-
     image = ImageChooserBlock(required=False)
     document = DocumentChooserBlock(icon="document", required=False)
     media = MediaBlock(icon="media", required=False)
@@ -244,6 +243,7 @@ class WhatsappBlock(blocks.StructBlock):
         "media cannot exceed 1024 characters.",
         validators=(MaxLengthValidator(4096),),
     )
+
     example_values = blocks.ListBlock(
         blocks.CharBlock(
             label="Example Value",
@@ -295,6 +295,7 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
                 f"{len(result['message'])} characters long"
             )
+
         if errors:
             raise StructBlockValidationError(errors)
         return result
@@ -839,6 +840,61 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
         return revision
+
+    def clean(self):
+        result = super().clean()
+        errors = {}
+
+        # The WA title is needed for all templates to generate a name for the template
+        if self.is_whatsapp_template and not self.whatsapp_title:
+            errors.setdefault("whatsapp_title", []).append(
+                ValidationError("All WhatsApp templates need a title.")
+            )
+        # The variable check is only for templates
+        if self.is_whatsapp_template and len(self.whatsapp_body.raw_data) > 0:
+            whatsapp_message = self.whatsapp_body.raw_data[0]["value"]["message"]
+            vars_in_msg = re.findall(r"{{(.*?)}}", whatsapp_message)
+            non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
+
+            if non_digit_variables:
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f"Please provide numeric variables only. You provided {non_digit_variables}."
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+            # Check variable order
+            actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
+            expected_variables = [
+                str(j + 1) for j in range(len(actual_digit_variables))
+            ]
+            if actual_digit_variables != expected_variables:
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+        if errors:
+            raise ValidationError(errors)
+
+        return result
 
 
 # Allow slug to be blank in forms, we fill it in in full_clean
