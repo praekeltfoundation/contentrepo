@@ -846,7 +846,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                 f"Failed to submit template name:  {self.whatsapp_template_name}, "
                 f"Error: {e}"
             )
-            raise ValidationError(f"Failed to submit template")
+            raise ValidationError("Failed to submit template")
 
         if template_name:
             revision.content["whatsapp_template_name"] = template_name

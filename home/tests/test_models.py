@@ -1,6 +1,8 @@
 from unittest import mock
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
+from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
 
@@ -16,10 +18,6 @@ from home.models import (
 
 from .page_builder import PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
-import responses
-from home.whatsapp import create_whatsapp_template
-from django.core.exceptions import ValidationError
-from requests import HTTPError
 
 
 class ContentPageTests(TestCase):
@@ -276,7 +274,7 @@ class ContentPageTests(TestCase):
             create_page(is_whatsapp_template=True)
 
         self.assertRaises(ValidationError)
-        self.assertEqual(e.exception.message, f"Failed to submit template")
+        self.assertEqual(e.exception.message, "Failed to submit template")
 
 
 class WhatsappBlockTests(TestCase):
