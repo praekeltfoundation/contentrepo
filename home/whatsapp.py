@@ -59,6 +59,8 @@ def create_whatsapp_template(
         headers=headers,
         data=json.dumps(data, indent=4),
     )
+
+    # Check if an error has occurred
     response.raise_for_status()
 
 
