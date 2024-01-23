@@ -841,11 +841,12 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         try:
             template_name = self.submit_whatsapp_template(previous_revision)
         except Exception as e:
-            print(">>>>>", e)
-            # Log the error to sentry
-            logger.exception(f"Failed to submit template name:  {self.whatsapp_template_name}, "
-                             f"Error: {e}")
-            raise ValidationError(f"Failed to submit template with template name {self.whatsapp_template_name}")
+            # Log the error to sentry and send error message to the user
+            logger.exception(
+                f"Failed to submit template name:  {self.whatsapp_template_name}, "
+                f"Error: {e}"
+            )
+            raise ValidationError(f"Failed to submit template")
 
         if template_name:
             revision.content["whatsapp_template_name"] = template_name

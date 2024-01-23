@@ -19,6 +19,7 @@ from .utils import create_page, create_page_rating
 import responses
 from home.whatsapp import create_whatsapp_template
 from django.core.exceptions import ValidationError
+from requests import HTTPError
 
 
 class ContentPageTests(TestCase):
@@ -241,18 +242,41 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_not_called()
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    def test_create_whatsapp_template_submit_return_error(self):
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_create_whatsapp_template_submit_no_error_message(
+        self, mock_create_whatsapp_template
+    ):
+        """
+        Should not return an error message if template was submitted successfully
+        """
         page = create_page(is_whatsapp_template=True)
+        page.get_latest_revision().publish()
+        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
+        mock_create_whatsapp_template.assert_called_once_with(
+            expected_template_name,
+            "Test WhatsApp Message 1",
+            "UTILITY",
+            [],
+            None,
+            [],
+        )
 
-        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={}, status=500)
-
-        create_whatsapp_template("test-template", "Test Body", "UTILITY")
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_create_whatsapp_template_submit_return_error(
+        self, mock_create_whatsapp_template
+    ):
+        """
+        Test the error message on template submission failure
+        If template submission fails user should get descriptive error instead of internal server error
+        """
+        mock_create_whatsapp_template.side_effect = HTTPError("Failed")
 
         with self.assertRaises(ValidationError) as e:
-            page.save_revision()
+            create_page(is_whatsapp_template=True)
 
         self.assertRaises(ValidationError)
+        self.assertEqual(e.exception.message, f"Failed to submit template")
 
 
 class WhatsappBlockTests(TestCase):
