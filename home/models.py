@@ -97,19 +97,19 @@ class SiteSettings(BaseSiteSetting):
     title = models.CharField(
         max_length=30,
         blank=True,
-        null=True,
+        default="",
         help_text="The branding title shown in the CMS",
     )
     login_message = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
+        default="",
         help_text="The login message shown on the login page",
     )
     welcome_message = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
+        default="",
         help_text="The welcome message shown after logging in",
     )
     logo = models.ImageField(blank=True, null=True, upload_to="images")
@@ -465,7 +465,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     )
 
     # Web page setup
-    subtitle = models.CharField(max_length=200, blank=True, null=True)
+    subtitle = models.CharField(max_length=200, blank=True, default="")
     body = StreamField(
         [
             ("paragraph", blocks.RichTextBlock()),
@@ -500,7 +500,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         choices=WhatsAppTemplateCategory.choices,
         default=WhatsAppTemplateCategory.UTILITY,
     )
-    whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
+    whatsapp_title = models.CharField(max_length=200, blank=True, default="")
     whatsapp_body = StreamField(
         [
             (
@@ -575,7 +575,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     ]
 
     # messenger page setup
-    messenger_title = models.CharField(max_length=200, blank=True, null=True)
+    messenger_title = models.CharField(max_length=200, blank=True, default="")
     messenger_body = StreamField(
         [
             (
@@ -604,7 +604,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     ]
 
     # viber page setup
-    viber_title = models.CharField(max_length=200, blank=True, null=True)
+    viber_title = models.CharField(max_length=200, blank=True, default="")
     viber_body = StreamField(
         [
             (
@@ -1092,7 +1092,6 @@ class PageView(models.Model):
             ("MESSENGER", "messenger"),
             ("WEB", "web"),
         ],
-        null=True,
         blank=True,
         default="web",
         max_length=20,

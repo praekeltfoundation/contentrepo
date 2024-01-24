@@ -116,7 +116,7 @@ def test_build_simple_pages() -> None:
     assert ha_menu.seo_title == ""
     assert ha_menu.show_in_menus is False
     assert ha_menu.slug == "ha-menu"
-    assert ha_menu.subtitle is None
+    assert ha_menu.subtitle == ""
     assert list(ha_menu.tags.values()) == []
     assert ha_menu.title == "HealthAlert menu"
     assert isinstance(ha_menu.translation_key, UUID)
@@ -188,24 +188,24 @@ def test_build_web_content() -> None:
     assert ha_menu.live_revision == ha_menu.latest_revision
     assert ha_menu.locale == Locale.objects.get(language_code="en")
     assert unwagtail(ha_menu.messenger_body) == []
-    assert ha_menu.messenger_title is None
+    assert ha_menu.messenger_title == ""
     assert ha_menu.numchild == 0
     assert unwagtail(ha_menu.related_pages) == []
     assert ha_menu.search_description == ""
     assert ha_menu.seo_title == ""
     assert ha_menu.show_in_menus is False
     assert ha_menu.slug == "ha-menu"
-    assert ha_menu.subtitle is None
+    assert ha_menu.subtitle == ""
     assert list(ha_menu.tags.values()) == []
     assert ha_menu.title == "HealthAlert menu"
     assert isinstance(ha_menu.translation_key, UUID)
     assert ha_menu.url_path == "/home/main-menu/ha-menu/"
     assert unwagtail(ha_menu.viber_body) == []
-    assert ha_menu.viber_title is None
+    assert ha_menu.viber_title == ""
     assert unwagtail(ha_menu.whatsapp_body) == []
     assert ha_menu.whatsapp_template_category == "UTILITY"
     assert ha_menu.whatsapp_template_name == ""
-    assert ha_menu.whatsapp_title is None
+    assert ha_menu.whatsapp_title == ""
 
 
 @pytest.mark.django_db
@@ -297,19 +297,19 @@ def test_build_variations() -> None:
     assert cp_imp_exp.live_revision == cp_imp_exp.latest_revision
     assert cp_imp_exp.locale == Locale.objects.get(language_code="en")
     assert unwagtail(cp_imp_exp.messenger_body) == []
-    assert cp_imp_exp.messenger_title is None
+    assert cp_imp_exp.messenger_title == ""
     assert cp_imp_exp.numchild == 0
     assert unwagtail(cp_imp_exp.related_pages) == []
     assert cp_imp_exp.search_description == ""
     assert cp_imp_exp.seo_title == ""
     assert cp_imp_exp.show_in_menus is False
     assert cp_imp_exp.slug == "cp-import-export"
-    assert cp_imp_exp.subtitle is None
+    assert cp_imp_exp.subtitle == ""
     assert cp_imp_exp.title == "CP-Import/export"
     assert isinstance(cp_imp_exp.translation_key, UUID)
     assert cp_imp_exp.url_path == "/home/import-export/cp-import-export/"
     assert unwagtail(cp_imp_exp.viber_body) == []
-    assert cp_imp_exp.viber_title is None
+    assert cp_imp_exp.viber_title == ""
     assert unwagtail(cp_imp_exp.whatsapp_body) == [
         (
             "Whatsapp_Message",
