@@ -152,6 +152,9 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
     search_fields = ["name", "profile_fields"]
     filter_backends = (SearchFilter,)
 
+    def detail_view(self, request, pk):
+        return super().detail_view(request, pk)
+
 
 api_router = WagtailAPIRouter("wagtailapi")
 
