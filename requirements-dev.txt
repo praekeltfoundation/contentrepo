@@ -1,7 +1,7 @@
-black
-ruff
+black==24.1.1
+ruff==0.1.14
 responses
-pytest
+pytest==8.0.0
 pytest-django
 pytest-cov
 pytest-xdist
