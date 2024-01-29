@@ -235,11 +235,10 @@ class ContentImporter:
         try:
             with contextlib.suppress(NodeAlreadySaved):
                 self.home_page(locale).add_child(instance=index)
+            index.save_revision().publish()
         except ValidationError as err:
             # FIXME: Find a better way to represent this.
             raise ImportException(f"Validation error: {err}")
-
-        index.save_revision().publish()
 
     def create_shadow_content_page_from_row(
         self, row: "ContentRow", row_num: int
