@@ -402,11 +402,10 @@ class ShadowContentPage:
         try:
             with contextlib.suppress(NodeAlreadySaved):
                 parent.add_child(instance=page)
+            page.save_revision().publish()
         except ValidationError as err:
             # FIXME: Find a better way to represent this.
             raise ImportException(f"Validation error: {err}", self.row_num)
-
-        page.save_revision().publish()
 
     def add_web_to_page(self, page: ContentPage) -> None:
         page.enable_web = self.enable_web
