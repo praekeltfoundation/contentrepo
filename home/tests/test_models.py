@@ -334,6 +334,7 @@ class WhatsappBlockTests(TestCase):
         example_values=None,
         next_prompt="",
         buttons=None,
+        list_items=None,
     ):
         return {
             "image": image,
@@ -344,6 +345,7 @@ class WhatsappBlockTests(TestCase):
             "variation_messages": variation_messages,
             "next_prompt": next_prompt,
             "buttons": buttons or [],
+            "list_items": list_items or [],
         }
 
     def create_image(self, width=0, height=0):
@@ -400,6 +402,24 @@ class WhatsappBlockTests(TestCase):
         with self.assertRaises(StructBlockValidationError) as e:
             GoToPageButton().clean({"title": "a" * 21})
         self.assertEqual(list(e.exception.block_errors.keys()), ["title"])
+
+    def test_items_limit(self):
+        """WhatsApp messages can only have up to 10 list items"""
+        list_item = WhatsappBlock().child_blocks["list_items"]
+        items = list_item.to_python(
+            [{"type": "item", "value": "test"} for _ in range(1)]
+        )
+        print("##############", items)
+        WhatsappBlock().clean(self.create_message_value(message="a", list_items=items))
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            items = list_item.to_python(
+                [{"type": "next_message", "value": "test"} for _ in range(11)]
+            )
+            WhatsappBlock().clean(
+                self.create_message_value(message="a", list_items=items)
+            )
+        self.assertEqual(list(e.exception.block_errors.keys()), ["list_items"])
 
 
 class USSDBlockTests(TestCase):

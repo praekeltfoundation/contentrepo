@@ -267,6 +267,11 @@ class WhatsappBlock(blocks.StructBlock):
         required=False,
         max_num=3,
     )
+    list_items = blocks.ListBlock(blocks.CharBlock(label="Title"),
+                                  default=[],
+                                  help_text="List item title, up to 24 characters.",
+                                  required=False, max_num=10,
+                                  validators=(MaxLengthValidator(24)))
 
     class Meta:
         icon = "user"
@@ -298,6 +303,13 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
                 f"{len(result['message'])} characters long"
             )
+
+        list_items = result["list_items"]
+        for item in list_items:
+            if len(item) > 24:
+                errors["list_items"] = ValidationError(
+                    "List item title maximum charactor is 24 "
+                )
 
         if errors:
             raise StructBlockValidationError(errors)

@@ -137,6 +137,7 @@ def test_build_simple_pages() -> None:
                 "buttons": [],
                 "example_values": [],
                 "variation_messages": [],
+                "list_items": [],
             },
         ),
     ]
