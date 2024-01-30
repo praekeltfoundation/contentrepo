@@ -277,7 +277,7 @@ class ContentPageTests(TestCase):
                         "WA Title",
                         [
                             WABlk(
-                                "{{2}}{{1}} {{foo}}",
+                                "{{2}}{{1}} {{foo}} {{mismatch1} {mismatch2}}",
                             )
                         ],
                     )

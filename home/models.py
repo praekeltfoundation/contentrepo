@@ -876,6 +876,26 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         # The variable check is only for templates
         if self.is_whatsapp_template and len(self.whatsapp_body.raw_data) > 0:
             whatsapp_message = self.whatsapp_body.raw_data[0]["value"]["message"]
+
+            right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", whatsapp_message)
+            left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", whatsapp_message)
+            mismatches = right_mismatch + left_mismatch
+
+            if mismatches:
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f"Please provide variables with matching braces. You provided {mismatches}."
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
             vars_in_msg = re.findall(r"{{(.*?)}}", whatsapp_message)
             non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
 
