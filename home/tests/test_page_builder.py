@@ -131,13 +131,13 @@ def test_build_simple_pages() -> None:
             {
                 "document": None,
                 "image": None,
+                "list_items": [],
                 "media": None,
                 "message": "*Welcome to HealthAlert* WA",
                 "next_prompt": None,
                 "buttons": [],
                 "example_values": [],
                 "variation_messages": [],
-                "list_items": [],
             },
         ),
     ]
@@ -314,7 +314,7 @@ def test_build_variations() -> None:
     assert unwagtail(cp_imp_exp.whatsapp_body) == [
         (
             "Whatsapp_Message",
-            {"document": None, "image": None, "media": None, "example_values": None}
+            {"document": None, "image": None, "list_items": [], "media": None, "example_values": None}
             | msg,
         )
         for msg in wa_msgs

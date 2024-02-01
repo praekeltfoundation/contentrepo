@@ -311,6 +311,11 @@ class WhatsappBlock(blocks.StructBlock):
                     "List item title maximum charactor is 24 "
                 )
 
+        if len(list_items) > 10:
+            errors["list_items"] = ValidationError(
+                "List item can only add 10 items"
+            )
+
         if errors:
             raise StructBlockValidationError(errors)
         return result

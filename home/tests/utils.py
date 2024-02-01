@@ -50,6 +50,7 @@ def create_page(
         {
             "message": message,
             "image": None,
+            "list_items": [],
             "media": None,
             "document": None,
             "example_values": example_values,

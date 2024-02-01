@@ -330,6 +330,7 @@ def add_body_fields(page: DbDict) -> DbDict:
                 {
                     "document": None,
                     "image": None,
+                    "list_items": [],
                     "media": None,
                     "next_prompt": "",
                     "example_values": [],
