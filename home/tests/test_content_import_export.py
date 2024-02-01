@@ -334,6 +334,7 @@ def add_body_fields(page: DbDict) -> DbDict:
                     "next_prompt": "",
                     "example_values": [],
                     "variation_messages": [],
+                    "footer": None,
                 },
             )
     if "sms_body" in page["fields"]:

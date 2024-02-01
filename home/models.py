@@ -268,6 +268,12 @@ class WhatsappBlock(blocks.StructBlock):
         max_num=3,
     )
 
+    footer = blocks.CharBlock(
+        help_text="Footer cannot exceed 60 characters.",
+        required=False,
+        validators=(MaxLengthValidator(60),),
+    )
+
     class Meta:
         icon = "user"
         form_classname = "whatsapp-message-block struct-block"
