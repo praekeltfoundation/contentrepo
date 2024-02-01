@@ -38,7 +38,7 @@ from wagtail.admin.panels import (  # isort:skip
     MultiFieldPanel,
     ObjectList,
     TabbedInterface,
-    TitleFieldPanel
+    TitleFieldPanel,
 )
 import logging
 
