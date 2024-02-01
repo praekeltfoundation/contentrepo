@@ -14,9 +14,17 @@ from wagtail import blocks  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.query import PageQuerySet  # type: ignore
 
-from home.models import (ContentPage, ContentPageIndex, HomePage,
-                         MessengerBlock, SMSBlock, USSDBlock, VariationBlock,
-                         ViberBlock, WhatsappBlock)
+from home.models import (
+    ContentPage,
+    ContentPageIndex,
+    HomePage,
+    MessengerBlock,
+    SMSBlock,
+    USSDBlock,
+    VariationBlock,
+    ViberBlock,
+    WhatsappBlock,
+)
 
 HP_CTYPE = HomePage._meta.verbose_name
 CP_CTYPE = ContentPage._meta.verbose_name

@@ -19,9 +19,18 @@ from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
-from home.models import (ContentPage, ContentPageIndex, ContentQuickReply,
-                         ContentTrigger, HomePage, MessengerBlock, SMSBlock,
-                         USSDBlock, ViberBlock, WhatsappBlock)
+from home.models import (
+    ContentPage,
+    ContentPageIndex,
+    ContentQuickReply,
+    ContentTrigger,
+    HomePage,
+    MessengerBlock,
+    SMSBlock,
+    USSDBlock,
+    ViberBlock,
+    WhatsappBlock,
+)
 
 PageId = tuple[str, Locale]
 

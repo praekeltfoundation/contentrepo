@@ -6,8 +6,15 @@ from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
 
-from home.models import (GoToPageButton, HomePage, NextMessageButton, PageView,
-                         SMSBlock, USSDBlock, WhatsappBlock)
+from home.models import (
+    GoToPageButton,
+    HomePage,
+    NextMessageButton,
+    PageView,
+    SMSBlock,
+    USSDBlock,
+    WhatsappBlock,
+)
 
 from .page_builder import PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
