@@ -1,6 +1,8 @@
+from io import StringIO
 from unittest import mock
 
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
@@ -321,6 +323,15 @@ class ContentPageTests(TestCase):
 
         self.assertRaises(ValidationError)
         self.assertEqual(e.exception.message, "Failed to submit template")
+
+    def test_for_missing_migrations(self):
+        output = StringIO()
+        call_command("makemigrations", no_input=True, dry_run=True, stdout=output)
+        self.assertEqual(
+            output.getvalue().strip(),
+            "No changes detected",
+            "There are missing migrations:\n %s" % output.getvalue(),
+        )
 
 
 class WhatsappBlockTests(TestCase):
