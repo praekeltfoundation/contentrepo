@@ -949,6 +949,18 @@ class TestImportExport:
         )
 
 
+    def test_import_required_fields(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with only the required feids shoud not break
+
+        """
+        
+        csv_bytes = csv_impexp.import_file("required_fields_sample.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
