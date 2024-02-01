@@ -19,18 +19,9 @@ from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
-from home.models import (
-    ContentPage,
-    ContentPageIndex,
-    ContentQuickReply,
-    ContentTrigger,
-    HomePage,
-    MessengerBlock,
-    SMSBlock,
-    USSDBlock,
-    ViberBlock,
-    WhatsappBlock,
-)
+from home.models import (ContentPage, ContentPageIndex, ContentQuickReply,
+                         ContentTrigger, HomePage, MessengerBlock, SMSBlock,
+                         USSDBlock, ViberBlock, WhatsappBlock)
 
 PageId = tuple[str, Locale]
 
@@ -64,9 +55,9 @@ class ContentImporter:
         self.locale = locale
         self.locale_map: dict[str, Locale] = {}
         self.shadow_pages: dict[PageId, ShadowContentPage] = {}
-        self.go_to_page_buttons: dict[PageId, dict[int, list[dict[str, Any]]]] = (
-            defaultdict(lambda: defaultdict(list))
-        )
+        self.go_to_page_buttons: dict[
+            PageId, dict[int, list[dict[str, Any]]]
+        ] = defaultdict(lambda: defaultdict(list))
 
     def locale_from_display_name(self, langname: str) -> Locale:
         if langname not in self.locale_map:

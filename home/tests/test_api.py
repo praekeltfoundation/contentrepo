@@ -6,25 +6,11 @@ import pytest
 from wagtail import blocks
 
 from home.content_import_export import import_content
-from home.models import (
-    ContentPage,
-    HomePage,
-    OrderedContentSet,
-    PageView,
-    VariationBlock,
-)
+from home.models import (ContentPage, HomePage, OrderedContentSet, PageView,
+                         VariationBlock)
 
-from .page_builder import (
-    MBlk,
-    MBody,
-    PageBuilder,
-    SBlk,
-    SBody,
-    UBlk,
-    UBody,
-    WABlk,
-    WABody,
-)
+from .page_builder import (MBlk, MBody, PageBuilder, SBlk, SBody, UBlk, UBody,
+                           WABlk, WABody)
 from .utils import create_page
 
 

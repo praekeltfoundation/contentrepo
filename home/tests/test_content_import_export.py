@@ -22,22 +22,9 @@ from home.import_content_pages import ImportException
 from home.models import ContentPage, ContentPageIndex, HomePage
 
 from .helpers import set_profile_field_options
-from .page_builder import (
-    MBlk,
-    MBody,
-    NextBtn,
-    PageBtn,
-    PageBuilder,
-    SBlk,
-    SBody,
-    UBlk,
-    UBody,
-    VarMsg,
-    VBlk,
-    VBody,
-    WABlk,
-    WABody,
-)
+from .page_builder import (MBlk, MBody, NextBtn, PageBtn, PageBuilder, SBlk,
+                           SBody, UBlk, UBody, VarMsg, VBlk, VBody, WABlk,
+                           WABody)
 
 ExpDict = dict[str, Any]
 ExpPair = tuple[ExpDict, ExpDict]

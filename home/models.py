@@ -1,3 +1,4 @@
+import logging
 import re
 
 from django.conf import settings
@@ -14,7 +15,8 @@ from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
 from wagtail.api import APIField
-from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError
+from wagtail.blocks import (StreamBlockValidationError,
+                            StructBlockValidationError)
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
@@ -40,7 +42,6 @@ from wagtail.admin.panels import (  # isort:skip
     ObjectList,
     TabbedInterface,
 )
-import logging
 
 logger = logging.getLogger(__name__)
 
