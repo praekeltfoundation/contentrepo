@@ -76,6 +76,7 @@ class ExportRow:
     doc_link: str = ""
     media_link: str = ""
     related_pages: str = ""
+    footer: str = ""
 
     @classmethod
     def headings(cls) -> list[str]:
@@ -132,6 +133,8 @@ class ExportRow:
                 self.buttons = self.serialise_buttons(whatsapp.value["buttons"])
             if "example_values" in whatsapp.value:
                 self.example_values = ", ".join(whatsapp.value["example_values"])
+            if "footer" in whatsapp.value:
+                self.footer = whatsapp.value["footer"]
 
     @staticmethod
     def serialise_buttons(buttons: blocks.StreamValue.StreamChild) -> str:
@@ -341,6 +344,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "doc_link": 118,
         "media_link": 118,
         "related": 118,
+        "footer": 118,
     }
 
     for index, column_width in enumerate(column_widths_in_pts.values(), 2):
