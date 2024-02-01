@@ -477,6 +477,13 @@ class ImportExport:
             "xlsx": self._filter_export_XLSX,
         }[self.format]
 
+    @property
+    def _filter_export_test(self) -> Callable[..., bytes]:
+        return {
+            "csv": self._filter_export_CSV_test,
+            "xlsx": self._filter_export_XLSX,
+        }[self.format]
+
     def _filter_export_row(self, row: ExpDict, locale: str | None) -> bool:
         """
         Determine whether to keep a given export row.
@@ -496,6 +503,34 @@ class ImportExport:
             if self._filter_export_row(row, locale=locale):
                 writer.writerow(row)
         return out_content.getvalue().encode()
+
+
+    def _filter_export_CSV_test(self, content: bytes, locale: str | None) -> bytes:
+        reader = csv.DictReader(StringIO(content.decode()))
+        assert reader.fieldnames is not None
+        out_content = StringIO()
+
+        # Specify columns to exclude
+        columns_to_exclude = [
+            "structure", "page_id", "web_subtitle",
+            "web_body", "whatsapp_title", "whatsapp_body", "variation_title", "variation_body",
+            "sms_title", "sms_body", "ussd_title", "ussd_body", "messenger_title", "messenger_body",
+            "viber_title", "viber_body", "translation_tag", "tags", "quick_replies", "triggers",
+            "next_prompt", "buttons", "image_link", "doc_link", "media_link",
+            "related_pages", "example_values"
+        ]
+
+        # Create a filtered fieldnames list
+        filtered_fieldnames = [field for field in reader.fieldnames if field not in columns_to_exclude]
+    
+
+        writer = csv.DictWriter(out_content, fieldnames=reader.fieldnames)
+        writer.writeheader()
+        for row in reader:
+            if self._filter_export_row(row, locale=locale):
+                writer.writerow(row)
+        return out_content.getvalue().encode()
+        
 
     def _filter_export_XLSX(self, content: bytes, locale: str | None) -> bytes:
         workbook = load_workbook(BytesIO(content))
@@ -532,6 +567,31 @@ class ImportExport:
         # Hopefully we can get rid of this at some point.
         if locale:
             content = self._filter_export(content, locale=locale)
+        if self.format == "csv":
+            print("-v-CONTENT-v-")
+            print(content.decode())
+            print("-^-CONTENT-^-")
+        return content
+
+
+    def export_content_test(self, locale: str | None = None) -> bytes:
+        """
+        Export all (or filtered) content in the configured format.
+
+        FIXME:
+         * If we filter the export by locale, we only get ContentPage entries
+           for the given language, but we still get ContentPageIndex rows for
+           all languages.
+        """
+        url = f"/admin/home/contentpage/?export={self.format}"
+        if locale:
+            loc = Locale.objects.get(language_code=locale)
+            locale = str(loc)
+            url = f"{url}&locale__id__exact={loc.id}"
+        content = self.admin_client.get(url).content
+        # Hopefully we can get rid of this at some point.
+        if locale:
+            content = self._filter_export_test(content, locale=locale)
         if self.format == "csv":
             print("-v-CONTENT-v-")
             print(content.decode())
@@ -954,8 +1014,8 @@ class TestImportExport:
 
         """
 
-        csv_bytes = csv_impexp.import_file("required_fields_sample.csv")
-        content = csv_impexp.export_content()
+        csv_bytes = csv_impexp.import_file("required_fields.csv")
+        content = csv_impexp.export_content_test()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
