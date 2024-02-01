@@ -11,8 +11,18 @@ from wagtail.rich_text import RichText  # type: ignore
 from home.models import ContentPage, ContentPageIndex, HomePage
 
 from .helpers import set_profile_field_options
-from .page_builder import (MBlk, MBody, NextBtn, PageBtn, PageBuilder, VarMsg,
-                           VBlk, VBody, WABlk, WABody)
+from .page_builder import (
+    MBlk,
+    MBody,
+    NextBtn,
+    PageBtn,
+    PageBuilder,
+    VarMsg,
+    VBlk,
+    VBody,
+    WABlk,
+    WABody,
+)
 
 
 def unwagtail(val):  # type: ignore[no-untyped-def] # No type info
