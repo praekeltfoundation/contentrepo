@@ -536,7 +536,7 @@ class ImportExport:
         return filter_exports(src, dst)
 
 
-@pytest.fixture()
+@pytest.fixture(params=["new"])
 def csv_impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, "csv")
 
