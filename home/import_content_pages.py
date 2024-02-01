@@ -64,9 +64,9 @@ class ContentImporter:
         self.locale = locale
         self.locale_map: dict[str, Locale] = {}
         self.shadow_pages: dict[PageId, ShadowContentPage] = {}
-        self.go_to_page_buttons: dict[
-            PageId, dict[int, list[dict[str, Any]]]
-        ] = defaultdict(lambda: defaultdict(list))
+        self.go_to_page_buttons: dict[PageId, dict[int, list[dict[str, Any]]]] = (
+            defaultdict(lambda: defaultdict(list))
+        )
 
     def locale_from_display_name(self, langname: str) -> Locale:
         if langname not in self.locale_map:
@@ -235,11 +235,10 @@ class ContentImporter:
         try:
             with contextlib.suppress(NodeAlreadySaved):
                 self.home_page(locale).add_child(instance=index)
+            index.save_revision().publish()
         except ValidationError as err:
             # FIXME: Find a better way to represent this.
             raise ImportException(f"Validation error: {err}")
-
-        index.save_revision().publish()
 
     def create_shadow_content_page_from_row(
         self, row: "ContentRow", row_num: int
@@ -402,11 +401,10 @@ class ShadowContentPage:
         try:
             with contextlib.suppress(NodeAlreadySaved):
                 parent.add_child(instance=page)
+            page.save_revision().publish()
         except ValidationError as err:
             # FIXME: Find a better way to represent this.
             raise ImportException(f"Validation error: {err}", self.row_num)
-
-        page.save_revision().publish()
 
     def add_web_to_page(self, page: ContentPage) -> None:
         page.enable_web = self.enable_web

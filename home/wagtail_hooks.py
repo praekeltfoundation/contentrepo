@@ -189,9 +189,11 @@ class OrderedContentSetAdmin(ModelAdmin):
     def page(self, obj):
         if obj.pages:
             return [
-                p.value["contentpage"].slug
-                if p.value and "contentpage" in p.value
-                else ""
+                (
+                    p.value["contentpage"].slug
+                    if p.value and "contentpage" in p.value
+                    else ""
+                )
                 for p in obj.pages
             ]
         return ["-"]

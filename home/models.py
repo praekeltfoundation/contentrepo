@@ -7,14 +7,13 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
-from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
 from wagtail.api import APIField
-from wagtail.blocks import StructBlockValidationError
+from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
@@ -39,7 +38,11 @@ from wagtail.admin.panels import (  # isort:skip
     MultiFieldPanel,
     ObjectList,
     TabbedInterface,
+    TitleFieldPanel,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UniqueSlugMixin:
@@ -63,17 +66,6 @@ class UniqueSlugMixin:
             candidate_slug = f"{slug}-{suffix}"
         return candidate_slug
 
-    def full_clean(self, *args, **kwargs):
-        # Autogenerate slug if not present
-        if not self.slug:
-            allow_unicode = getattr(settings, "WAGTAIL_ALLOW_UNICODE_SLUGS", True)
-            base_slug = slugify(self.title, allow_unicode=allow_unicode)
-
-            if base_slug:
-                self.slug = self.get_unique_slug(base_slug)
-
-        super().full_clean(*args, **kwargs)
-
     def clean(self):
         super().clean()
 
@@ -94,19 +86,19 @@ class SiteSettings(BaseSiteSetting):
     title = models.CharField(
         max_length=30,
         blank=True,
-        null=True,
+        default="",
         help_text="The branding title shown in the CMS",
     )
     login_message = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
+        default="",
         help_text="The login message shown on the login page",
     )
     welcome_message = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
+        default="",
         help_text="The welcome message shown after logging in",
     )
     logo = models.ImageField(blank=True, null=True, upload_to="images")
@@ -235,7 +227,6 @@ class GoToPageButton(blocks.StructBlock):
 
 class WhatsappBlock(blocks.StructBlock):
     MEDIA_CAPTION_MAX_LENGTH = 1024
-
     image = ImageChooserBlock(required=False)
     document = DocumentChooserBlock(icon="document", required=False)
     media = MediaBlock(icon="media", required=False)
@@ -244,6 +235,7 @@ class WhatsappBlock(blocks.StructBlock):
         "media cannot exceed 1024 characters.",
         validators=(MaxLengthValidator(4096),),
     )
+
     example_values = blocks.ListBlock(
         blocks.CharBlock(
             label="Example Value",
@@ -295,6 +287,7 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
                 f"{len(result['message'])} characters long"
             )
+
         if errors:
             raise StructBlockValidationError(errors)
         return result
@@ -461,7 +454,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     )
 
     # Web page setup
-    subtitle = models.CharField(max_length=200, blank=True, null=True)
+    subtitle = models.CharField(max_length=200, blank=True, default="")
     body = StreamField(
         [
             ("paragraph", blocks.RichTextBlock()),
@@ -479,7 +472,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     web_panels = [
         MultiFieldPanel(
             [
-                FieldPanel("title"),
+                TitleFieldPanel("title"),
                 FieldPanel("subtitle"),
                 FieldPanel("body"),
                 FieldPanel("include_in_footer"),
@@ -496,7 +489,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         choices=WhatsAppTemplateCategory.choices,
         default=WhatsAppTemplateCategory.UTILITY,
     )
-    whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
+    whatsapp_title = models.CharField(max_length=200, blank=True, default="")
     whatsapp_body = StreamField(
         [
             (
@@ -571,7 +564,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     ]
 
     # messenger page setup
-    messenger_title = models.CharField(max_length=200, blank=True, null=True)
+    messenger_title = models.CharField(max_length=200, blank=True, default="")
     messenger_body = StreamField(
         [
             (
@@ -600,7 +593,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     ]
 
     # viber page setup
-    viber_title = models.CharField(max_length=200, blank=True, null=True)
+    viber_title = models.CharField(max_length=200, blank=True, default="")
     viber_body = StreamField(
         [
             (
@@ -665,7 +658,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         APIField("title"),
         APIField("subtitle"),
         APIField("body"),
-        APIField("whatsapp_template_example_values"),
         APIField("tags"),
         APIField("triggers"),
         APIField("quick_replies"),
@@ -834,15 +826,95 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             previous_revision,
             clean,
         )
-        template_name = self.submit_whatsapp_template(previous_revision)
+
+        try:
+            template_name = self.submit_whatsapp_template(previous_revision)
+        except Exception:
+            # Log the error to sentry and send error message to the user
+            logger.exception(
+                f"Failed to submit template name:  {self.whatsapp_template_name}"
+            )
+            raise ValidationError("Failed to submit template")
+
         if template_name:
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
         return revision
 
+    def clean(self):
+        result = super().clean()
+        errors = {}
 
-# Allow slug to be blank in forms, we fill it in in full_clean
-Page._meta.get_field("slug").blank = True
+        # The WA title is needed for all templates to generate a name for the template
+        if self.is_whatsapp_template and not self.whatsapp_title:
+            errors.setdefault("whatsapp_title", []).append(
+                ValidationError("All WhatsApp templates need a title.")
+            )
+        # The variable check is only for templates
+        if self.is_whatsapp_template and len(self.whatsapp_body.raw_data) > 0:
+            whatsapp_message = self.whatsapp_body.raw_data[0]["value"]["message"]
+
+            right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", whatsapp_message)
+            left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", whatsapp_message)
+            mismatches = right_mismatch + left_mismatch
+
+            if mismatches:
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f"Please provide variables with matching braces. You provided {mismatches}."
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+            vars_in_msg = re.findall(r"{{(.*?)}}", whatsapp_message)
+            non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
+
+            if non_digit_variables:
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f"Please provide numeric variables only. You provided {non_digit_variables}."
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+            # Check variable order
+            actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
+            expected_variables = [
+                str(j + 1) for j in range(len(actual_digit_variables))
+            ]
+            if actual_digit_variables != expected_variables:
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+        if errors:
+            raise ValidationError(errors)
+
+        return result
 
 
 @receiver(pre_save, sender=ContentPage)
@@ -1024,7 +1096,6 @@ class PageView(models.Model):
             ("MESSENGER", "messenger"),
             ("WEB", "web"),
         ],
-        null=True,
         blank=True,
         default="web",
         max_length=20,

@@ -264,9 +264,8 @@ class TestContentPageAPI:
         assert content == {
             "id": page2.id,
             "title": "self-help",
-            "subtitle": None,
+            "subtitle": "",
             "body": {"text": []},
-            "whatsapp_template_example_values": [],
             "tags": ["self_help"],
             "triggers": [],
             "quick_replies": [],
@@ -311,9 +310,8 @@ class TestContentPageAPI:
         assert content == {
             "id": page1.id,
             "title": "main menu first time user",
-            "subtitle": None,
+            "subtitle": "",
             "body": {"text": []},
-            "whatsapp_template_example_values": [],
             "tags": ["menu"],
             "triggers": ["Main menu"],
             "quick_replies": ["Health Info", "Self-help", "Settings"],
