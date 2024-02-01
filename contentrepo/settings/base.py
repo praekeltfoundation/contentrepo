@@ -90,7 +90,7 @@ DATABASES = {
     "default": dj_database_url.config(
         default=os.environ.get(
             "CONTENTREPO_DATABASE",
-            "postgres://postgres:myPassword@localhost/contentrepo",
+            "postgres://postgres@localhost/contentrepo",
         ),
         engine="django.db.backends.postgresql",
     )
