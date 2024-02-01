@@ -669,7 +669,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         APIField("title"),
         APIField("subtitle"),
         APIField("body"),
-        APIField("whatsapp_template_example_values"),
         APIField("tags"),
         APIField("triggers"),
         APIField("quick_replies"),
