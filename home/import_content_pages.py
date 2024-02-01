@@ -597,7 +597,7 @@ class ShadowViberBlock:
 
 @dataclass(slots=True, frozen=True)
 class ContentRow:
-    slug: str = 
+    slug: str
     page_id: int | None = None
     parent: str = ""
     web_title: str = ""

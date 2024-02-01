@@ -948,13 +948,12 @@ class TestImportExport:
             == "Validation error: {'whatsapp_template_category': [\"Value 'Marketing' is not a valid choice.\"]}"
         )
 
-
     def test_import_required_fields(self, csv_impexp: ImportExport) -> None:
         """
         Importing an CSV file with only the required feids shoud not break
 
         """
-        
+
         csv_bytes = csv_impexp.import_file("required_fields_sample.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
