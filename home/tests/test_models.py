@@ -417,9 +417,7 @@ class WhatsappBlockTests(TestCase):
     def test_list_items_limit(self):
         """WhatsApp messages can only have up to 10 list items"""
         list_item = WhatsappBlock().child_blocks["list_items"]
-        items = list_item.to_python(
-            [f"test {_}" for _ in range(12)]
-        )
+        items = list_item.to_python([f"test {_}" for _ in range(12)])
 
         with self.assertRaises(StructBlockValidationError) as e:
             WhatsappBlock().clean(
@@ -431,15 +429,22 @@ class WhatsappBlockTests(TestCase):
         """WhatsApp list item title can only have up to 24 char"""
         list_item = WhatsappBlock().child_blocks["list_items"]
 
-        WhatsappBlock().clean(self.create_message_value(message="a",
-                                                        list_items=["test more that max char",]))
+        WhatsappBlock().clean(
+            self.create_message_value(
+                message="a",
+                list_items=[
+                    "test more that max char",
+                ],
+            )
+        )
 
         with self.assertRaises(StructBlockValidationError) as e:
             items = list_item.to_python(
                 ["test limit", "it should fail as the title is above max"]
             )
-            WhatsappBlock().clean(self.create_message_value(message="a",
-                                                            list_items=items))
+            WhatsappBlock().clean(
+                self.create_message_value(message="a", list_items=items)
+            )
 
         self.assertEqual(list(e.exception.block_errors.keys()), ["list_items"])
 

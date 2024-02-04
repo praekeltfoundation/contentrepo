@@ -314,7 +314,13 @@ def test_build_variations() -> None:
     assert unwagtail(cp_imp_exp.whatsapp_body) == [
         (
             "Whatsapp_Message",
-            {"document": None, "image": None, "list_items": [], "media": None, "example_values": None}
+            {
+                "document": None,
+                "image": None,
+                "list_items": [],
+                "media": None,
+                "example_values": None,
+            }
             | msg,
         )
         for msg in wa_msgs

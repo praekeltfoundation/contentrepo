@@ -915,10 +915,9 @@ class Message:
         }
 
     @classmethod
-    def serialise_list_items(
-            cls, list_items: blocks.StreamValue.StreamChild
-    ) -> str:
+    def serialise_list_items(cls, list_items: blocks.StreamValue.StreamChild) -> str:
         return ", ".join(list_items)
+
 
 @dataclass
 class VariationMessage:
@@ -1438,9 +1437,7 @@ class ContentSheetRow:
         """Iterate over a dict of all whatsapp, messenger and viber messages to find list_items,
         if list_items are found in any of the platforms, the values will be saved to the sheet
         """
-        list_items = message_container.find_first_attachment(
-            index, "list_items"
-        )
+        list_items = message_container.find_first_attachment(index, "list_items")
         if list_items:
             return list_items
         return ""

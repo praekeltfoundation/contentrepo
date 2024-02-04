@@ -64,9 +64,9 @@ class ContentImporter:
         self.locale = locale
         self.locale_map: dict[str, Locale] = {}
         self.shadow_pages: dict[PageId, ShadowContentPage] = {}
-        self.go_to_page_buttons: dict[PageId, dict[int, list[dict[str, Any]]]] = (
-            defaultdict(lambda: defaultdict(list))
-        )
+        self.go_to_page_buttons: dict[
+            PageId, dict[int, list[dict[str, Any]]]
+        ] = defaultdict(lambda: defaultdict(list))
 
     def locale_from_display_name(self, langname: str) -> Locale:
         if langname not in self.locale_map:
