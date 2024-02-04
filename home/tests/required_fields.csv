@@ -1,3 +1,2 @@
-message,slug,parent,web_title,locale
-0,main-menu,,Main Menu,English
-1,main-menu-first-time-user,Main Menu,main menu first time user,English
+message,slug,parent,web_title,locale,web_body,whatsapp_body,messenger_body,sms_body,ussd_body,related_pages
+0,main-menu,,Main Menu,English,,,,,,

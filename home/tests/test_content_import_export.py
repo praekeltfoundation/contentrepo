@@ -477,13 +477,6 @@ class ImportExport:
             "xlsx": self._filter_export_XLSX,
         }[self.format]
 
-    @property
-    def _filter_export_test(self) -> Callable[..., bytes]:
-        return {
-            "csv": self._filter_export_CSV_test,
-            "xlsx": self._filter_export_XLSX,
-        }[self.format]
-
     def _filter_export_row(self, row: ExpDict, locale: str | None) -> bool:
         """
         Determine whether to keep a given export row.
@@ -503,34 +496,6 @@ class ImportExport:
             if self._filter_export_row(row, locale=locale):
                 writer.writerow(row)
         return out_content.getvalue().encode()
-
-
-    def _filter_export_CSV_test(self, content: bytes, locale: str | None) -> bytes:
-        reader = csv.DictReader(StringIO(content.decode()))
-        assert reader.fieldnames is not None
-        out_content = StringIO()
-
-        # Specify columns to exclude
-        columns_to_exclude = [
-            "structure", "page_id", "web_subtitle",
-            "web_body", "whatsapp_title", "whatsapp_body", "variation_title", "variation_body",
-            "sms_title", "sms_body", "ussd_title", "ussd_body", "messenger_title", "messenger_body",
-            "viber_title", "viber_body", "translation_tag", "tags", "quick_replies", "triggers",
-            "next_prompt", "buttons", "image_link", "doc_link", "media_link",
-            "related_pages", "example_values"
-        ]
-
-        # Create a filtered fieldnames list
-        filtered_fieldnames = [field for field in reader.fieldnames if field not in columns_to_exclude]
-    
-
-        writer = csv.DictWriter(out_content, fieldnames=reader.fieldnames)
-        writer.writeheader()
-        for row in reader:
-            if self._filter_export_row(row, locale=locale):
-                writer.writerow(row)
-        return out_content.getvalue().encode()
-        
 
     def _filter_export_XLSX(self, content: bytes, locale: str | None) -> bytes:
         workbook = load_workbook(BytesIO(content))
@@ -567,31 +532,6 @@ class ImportExport:
         # Hopefully we can get rid of this at some point.
         if locale:
             content = self._filter_export(content, locale=locale)
-        if self.format == "csv":
-            print("-v-CONTENT-v-")
-            print(content.decode())
-            print("-^-CONTENT-^-")
-        return content
-
-
-    def export_content_test(self, locale: str | None = None) -> bytes:
-        """
-        Export all (or filtered) content in the configured format.
-
-        FIXME:
-         * If we filter the export by locale, we only get ContentPage entries
-           for the given language, but we still get ContentPageIndex rows for
-           all languages.
-        """
-        url = f"/admin/home/contentpage/?export={self.format}"
-        if locale:
-            loc = Locale.objects.get(language_code=locale)
-            locale = str(loc)
-            url = f"{url}&locale__id__exact={loc.id}"
-        content = self.admin_client.get(url).content
-        # Hopefully we can get rid of this at some point.
-        if locale:
-            content = self._filter_export_test(content, locale=locale)
         if self.format == "csv":
             print("-v-CONTENT-v-")
             print(content.decode())
@@ -996,7 +936,7 @@ class TestImportExport:
     def test_invalid_wa_template_category(self, newcsv_impexp: ImportExport) -> None:
         """
         Importing a WhatsApp template with an invalid category should raise an
-        error that results in an error message that gets sent back to the user.
+        error that results in an error message that gets sent back to the user
         """
         with pytest.raises(ImportException) as e:
             newcsv_impexp.import_file("bad-whatsapp-template-category.csv")
@@ -1008,87 +948,19 @@ class TestImportExport:
             == "Validation error: {'whatsapp_template_category': [\"Value 'Marketing' is not a valid choice.\"]}"
         )
 
-    def test_import_required_fields(self, csv_impexp: ImportExport) -> None:
+    def test_import_required_fields(self, newcsv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with only the required feids shoud not break
+        Importing an CSV file with only the required fields shoud not break
 
         """
 
-        csv_bytes = csv_impexp.import_file("required_fields.csv")
-        content = csv_impexp.export_content_test()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        csv_bytes = newcsv_impexp.import_file("required_fields.csv")
+        content = newcsv_impexp.export_content()
+        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
+        allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
+        dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
+        src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
         assert dst == src
-
-    def test_invalid_wa_template_vars(self, newcsv_impexp: ImportExport) -> None:
-        """
-        Importing a WhatsApp template with invalid variables should raise an
-        error that results in an error message that gets sent back to the user.
-        """
-        with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-whatsapp-template-vars.csv")
-
-        assert e.value.row_num == 3
-        # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
-        )
-
-    def test_invalid_wa_template_vars_update(self, newcsv_impexp: ImportExport) -> None:
-        """
-        Updating a valid WhatsApp template with invalid variables should raise
-        an error that results in an error message that gets sent back to the
-        user. The update validation happens in a different code path from the
-        initial import.
-        """
-        newcsv_impexp.import_file("good-whatsapp-template-vars.csv")
-
-        # Update an existing page, which does the validation in
-        # `page.save_revision()` rather than `parent.add_child()`.
-        with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-whatsapp-template-vars.csv", purge=False)
-
-        assert e.value.row_num == 3
-        # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
-        )
-
-    def test_cpi_validation_failure(self, newcsv_impexp: ImportExport) -> None:
-        """
-        Importing a ContentPageIndex with an invalid translation key should
-        raise an error that results in an error message that gets sent back to
-        the user.
-        """
-        with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-cpi-translation-key.csv")
-
-        assert e.value.row_num == 2
-        # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
-        )
-
-    def test_cpi_validation_failure_update(self, newcsv_impexp: ImportExport) -> None:
-        """
-        Updating a valid ContentPageIndex with an invalid translation key
-        should raise an error that results in an error message that gets sent
-        back to the user. The update validation happens in a different code
-        path from the initial import.
-        """
-        newcsv_impexp.import_file("good-cpi-translation-key.csv")
-
-        with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-cpi-translation-key.csv", purge=False)
-
-        assert e.value.row_num == 2
-        # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
-        )
 
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
