@@ -8,7 +8,6 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
-from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
@@ -40,6 +39,7 @@ from wagtail.admin.panels import (  # isort:skip
     MultiFieldPanel,
     ObjectList,
     TabbedInterface,
+    TitleFieldPanel,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,17 +65,6 @@ class UniqueSlugMixin:
             suffix += 1
             candidate_slug = f"{slug}-{suffix}"
         return candidate_slug
-
-    def full_clean(self, *args, **kwargs):
-        # Autogenerate slug if not present
-        if not self.slug:
-            allow_unicode = getattr(settings, "WAGTAIL_ALLOW_UNICODE_SLUGS", True)
-            base_slug = slugify(self.title, allow_unicode=allow_unicode)
-
-            if base_slug:
-                self.slug = self.get_unique_slug(base_slug)
-
-        super().full_clean(*args, **kwargs)
 
     def clean(self):
         super().clean()
@@ -489,7 +478,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     web_panels = [
         MultiFieldPanel(
             [
-                FieldPanel("title"),
+                TitleFieldPanel("title"),
                 FieldPanel("subtitle"),
                 FieldPanel("body"),
                 FieldPanel("include_in_footer"),
@@ -870,6 +859,26 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         # The variable check is only for templates
         if self.is_whatsapp_template and len(self.whatsapp_body.raw_data) > 0:
             whatsapp_message = self.whatsapp_body.raw_data[0]["value"]["message"]
+
+            right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", whatsapp_message)
+            left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", whatsapp_message)
+            mismatches = right_mismatch + left_mismatch
+
+            if mismatches:
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f"Please provide variables with matching braces. You provided {mismatches}."
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
             vars_in_msg = re.findall(r"{{(.*?)}}", whatsapp_message)
             non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
 
@@ -912,10 +921,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             raise ValidationError(errors)
 
         return result
-
-
-# Allow slug to be blank in forms, we fill it in in full_clean
-Page._meta.get_field("slug").blank = True
 
 
 @receiver(pre_save, sender=ContentPage)
