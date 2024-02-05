@@ -848,7 +848,6 @@ class TestImportExport:
         )
 
 
-# "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["csv", "xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, request.param)
