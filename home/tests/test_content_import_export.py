@@ -69,14 +69,6 @@ def add_new_fields(entry: ExpDict) -> ExpDict:
     }
 
 
-def remove_translation_tag_from_tags(src: ExpDict, dst: ExpDict) -> ExpPair:
-    # FIXME: Do we actually need translation_tag to be added to tags?
-    if not src["translation_tag"]:
-        return src, dst
-    dtags = [tag for tag in dst["tags"].split(", ") if tag != src["translation_tag"]]
-    return src, dst | {"tags": ", ".join(dtags)}
-
-
 @filter_both
 def ignore_certain_fields(entry: ExpDict) -> ExpDict:
     # FIXME: Do we need page.id to be imported? At the moment nothing in the
@@ -291,40 +283,6 @@ def null_to_emptystr(page: DbDict) -> DbDict:
     return page | {"fields": fields}
 
 
-def _add_fields(body: dict[str, Any], extra_fields: dict[str, Any]) -> None:
-    body["value"] = extra_fields | body["value"]
-
-
-@per_page
-def add_body_fields(page: DbDict) -> DbDict:
-    if "whatsapp_body" in page["fields"]:
-        for body in page["fields"]["whatsapp_body"]:
-            _add_fields(
-                body,
-                {
-                    "document": None,
-                    "image": None,
-                    "media": None,
-                    "next_prompt": "",
-                    "example_values": [],
-                    "variation_messages": [],
-                },
-            )
-    if "sms_body" in page["fields"]:
-        for body in page["fields"]["sms_body"]:
-            _add_fields(body, {"image": None})
-    if "ussd_body" in page["fields"]:
-        for body in page["fields"]["ussd_body"]:
-            _add_fields(body, {"image": None})
-    if "messenger_body" in page["fields"]:
-        for body in page["fields"]["messenger_body"]:
-            _add_fields(body, {"image": None})
-    if "viber_body" in page["fields"]:
-        for body in page["fields"]["viber_body"]:
-            _add_fields(body, {"image": None})
-    return page
-
-
 WEB_PARA_RE = re.compile(r'^<div class="block-paragraph">(.*)</div>$')
 
 
@@ -337,46 +295,6 @@ def clean_web_paragraphs(page: DbDict) -> DbDict:
             for b in page["fields"]["body"]
         ]
         page = page | {"fields": page["fields"] | {"body": body}}
-    return page
-
-
-@per_page
-def remove_next_prompt(page: DbDict) -> DbDict:
-    if "whatsapp_body" in page["fields"]:
-        for body in page["fields"]["whatsapp_body"]:
-            body["value"].pop("next_prompt", None)
-    return page
-
-
-@per_page
-def remove_buttons(page: DbDict) -> DbDict:
-    if "whatsapp_body" in page["fields"]:
-        for body in page["fields"]["whatsapp_body"]:
-            body["value"].pop("buttons", None)
-    return page
-
-
-@per_page
-def remove_example_values(page: DbDict) -> DbDict:
-    if "whatsapp_body" in page["fields"]:
-        for body in page["fields"]["whatsapp_body"]:
-            body["value"].pop("example_values", None)
-    return page
-
-
-@per_page
-def remove_sms_fields(page: DbDict) -> DbDict:
-    if "sms_body" in page["fields"]:
-        for body in page["fields"]["sms_body"]:
-            body["value"].pop("sms_body", None)
-    return page
-
-
-@per_page
-def remove_ussd_fields(page: DbDict) -> DbDict:
-    if "ussd_body" in page["fields"]:
-        for body in page["fields"]["ussd_body"]:
-            body["value"].pop("ussd_body", None)
     return page
 
 
@@ -397,12 +315,6 @@ def remove_example_value_ids(page: DbDict) -> DbDict:
             example_values = body["value"].get("example_values", [])
             for example_value in example_values:
                 example_value.pop("id", None)
-    return page
-
-
-@per_page
-def enable_web(page: DbDict) -> DbDict:
-    page["fields"]["enable_web"] = True
     return page
 
 
