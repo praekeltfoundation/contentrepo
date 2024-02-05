@@ -1019,6 +1019,21 @@ class TestImportExport:
             == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
         )
 
+    def test_import_required_fields(self, newcsv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with only the required fields shoud not break
+
+        """
+
+        csv_bytes = newcsv_impexp.import_file("required_fields.csv")
+        content = newcsv_impexp.export_content()
+        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
+        allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
+        dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
+        src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
+        assert dst == src
+
+
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
 @pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
