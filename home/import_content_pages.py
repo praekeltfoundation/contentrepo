@@ -630,7 +630,7 @@ class ContentRow:
     doc_link: str = ""
     media_link: str = ""
     related_pages: list[str] = field(default_factory=list)
-    footer: str = ""
+    footer: str | None = None
 
     @classmethod
     def from_flat(cls, row: dict[str, str]) -> "ContentRow":
