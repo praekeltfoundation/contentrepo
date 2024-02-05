@@ -847,6 +847,42 @@ class TestImportExport:
             == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
         )
 
+    def test_ContentPageIndex_required_fields(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with only the required fields shoud not break
+
+        """
+
+        csv_bytes = csv_impexp.import_file("contentpage_index_required_fields.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        content_pages = ContentPageIndex.objects.all()
+
+        for page_data, content_page in zip(src, content_pages, strict=False):
+            assert page_data.get("slug", "") == content_page.slug
+
+        assert content_pages.count() == len(src)
+
+    def test_ContentPage_required_fields(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with only the required fields shoud not break
+
+        """
+
+        csv_bytes = csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        content_pages = list(ContentPageIndex.objects.all()) + list(
+            ContentPage.objects.all()
+        )
+
+        for page_data, content_page in zip(src, content_pages, strict=False):
+            assert page_data.get("slug", "") == content_page.slug
+
+        assert len(content_pages) == len(src)
+
 
 @pytest.fixture(params=["csv", "xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
