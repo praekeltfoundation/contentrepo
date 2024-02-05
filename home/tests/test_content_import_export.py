@@ -1457,7 +1457,7 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig_en
 
-    def test_footer(self, new_impexp: ImportExport) -> None:
+    def test_footer(self, impexp: ImportExport) -> None:
         """
         ContentPages with footer in whatsapp messages are preserved
         across export/import.
@@ -1486,9 +1486,9 @@ class TestExportImportRoundtrip:
             whatsapp_template_name="template-health-info",
         )
 
-        orig = new_impexp.get_page_json()
-        new_impexp.export_reimport()
-        imported = new_impexp.get_page_json()
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
         assert imported == orig
 
     def test_example_values(self, impexp: ImportExport) -> None:
