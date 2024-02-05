@@ -529,7 +529,7 @@ class ShadowWhatsappBlock:
     buttons: list[dict[str, Any]] = field(default_factory=list)
     example_values: list[str] = field(default_factory=list)
     variation_messages: list["ShadowVariationBlock"] = field(default_factory=list)
-    footer: str = ""
+    footer: str | None = None
 
     @property
     def wagtail_format(
