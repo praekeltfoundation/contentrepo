@@ -1579,3 +1579,37 @@ class TestExportImportRoundtrip:
         impexp.export_reimport()
         imported = impexp.get_page_json()
         assert imported == orig
+
+    def test_list_items(self, impexp: ImportExport) -> None:
+        """
+        ContentPages with list items in whatsapp messages are preserved
+        across export/import.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+        )
+
+        list_items = ["Item 1", "Item 2"]
+        _health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody(
+                    "health info",
+                    [WABlk("*Health information* WA", list_items=list_items)],
+                )
+            ],
+            whatsapp_template_name="template-health-info",
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
