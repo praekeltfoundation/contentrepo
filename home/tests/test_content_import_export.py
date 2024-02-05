@@ -17,7 +17,7 @@ from pytest_django.fixtures import SettingsWrapper
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 
-from home.content_import_export import import_content, old_import_content
+from home.content_import_export import import_content
 from home.import_content_pages import ImportException
 from home.models import ContentPage, ContentPageIndex, HomePage
 
@@ -69,14 +69,6 @@ def add_new_fields(entry: ExpDict) -> ExpDict:
     }
 
 
-def remove_translation_tag_from_tags(src: ExpDict, dst: ExpDict) -> ExpPair:
-    # FIXME: Do we actually need translation_tag to be added to tags?
-    if not src["translation_tag"]:
-        return src, dst
-    dtags = [tag for tag in dst["tags"].split(", ") if tag != src["translation_tag"]]
-    return src, dst | {"tags": ", ".join(dtags)}
-
-
 @filter_both
 def ignore_certain_fields(entry: ExpDict) -> ExpDict:
     # FIXME: Do we need page.id to be imported? At the moment nothing in the
@@ -88,12 +80,6 @@ def ignore_certain_fields(entry: ExpDict) -> ExpDict:
         "image_link",
         "media_link",
     }
-    return {k: v for k, v in entry.items() if k not in ignored_fields}
-
-
-@filter_both
-def ignore_old_fields(entry: ExpDict) -> ExpDict:
-    ignored_fields = {"next_prompt", "translation_tag", "buttons"}
     return {k: v for k, v in entry.items() if k not in ignored_fields}
 
 
@@ -110,20 +96,12 @@ EXPORT_FILTER_FUNCS = [
     strip_leading_whitespace,
 ]
 
-OLD_EXPORT_FILTER_FUNCS = [
-    remove_translation_tag_from_tags,
-    ignore_old_fields,
-]
 
-
-def filter_exports(srcs: ExpDicts, dsts: ExpDicts, importer: str) -> ExpDictsPair:
+def filter_exports(srcs: ExpDicts, dsts: ExpDicts) -> ExpDictsPair:
     fsrcs, fdsts = [], []
     for src, dst in zip(srcs, dsts, strict=True):
         for ff in EXPORT_FILTER_FUNCS:
             src, dst = ff(src, dst)
-        if importer == "old":
-            for ff in OLD_EXPORT_FILTER_FUNCS:
-                src, dst = ff(src, dst)
         fsrcs.append(src)
         fdsts.append(dst)
     return fsrcs, fdsts
@@ -285,18 +263,6 @@ def normalise_related_page_ids(page: DbDict) -> DbDict:
     return page | {"fields": fields}
 
 
-def remove_translation_key(pages: DbDicts) -> DbDicts:
-    # For old importer.
-    return _remove_fields(pages, {"translation_key"})
-
-
-def remove_revisions(pages: DbDicts) -> DbDicts:
-    # For old importer. Sometimes (maybe for the ContentPages imported after
-    # the first language?) we get higher revision numbers. Let's just strip
-    # them all and be done with it.
-    return _remove_fields(pages, {"latest_revision", "live_revision"})
-
-
 @per_page
 def null_to_emptystr(page: DbDict) -> DbDict:
     # FIXME: Confirm that there's no meaningful difference here, potentially
@@ -317,41 +283,6 @@ def null_to_emptystr(page: DbDict) -> DbDict:
     return page | {"fields": fields}
 
 
-def _add_fields(body: dict[str, Any], extra_fields: dict[str, Any]) -> None:
-    body["value"] = extra_fields | body["value"]
-
-
-@per_page
-def add_body_fields(page: DbDict) -> DbDict:
-    if "whatsapp_body" in page["fields"]:
-        for body in page["fields"]["whatsapp_body"]:
-            _add_fields(
-                body,
-                {
-                    "document": None,
-                    "image": None,
-                    "list_items": [],
-                    "media": None,
-                    "next_prompt": "",
-                    "example_values": [],
-                    "variation_messages": [],
-                },
-            )
-    if "sms_body" in page["fields"]:
-        for body in page["fields"]["sms_body"]:
-            _add_fields(body, {"image": None})
-    if "ussd_body" in page["fields"]:
-        for body in page["fields"]["ussd_body"]:
-            _add_fields(body, {"image": None})
-    if "messenger_body" in page["fields"]:
-        for body in page["fields"]["messenger_body"]:
-            _add_fields(body, {"image": None})
-    if "viber_body" in page["fields"]:
-        for body in page["fields"]["viber_body"]:
-            _add_fields(body, {"image": None})
-    return page
-
-
 WEB_PARA_RE = re.compile(r'^<div class="block-paragraph">(.*)</div>$')
 
 
@@ -364,46 +295,6 @@ def clean_web_paragraphs(page: DbDict) -> DbDict:
             for b in page["fields"]["body"]
         ]
         page = page | {"fields": page["fields"] | {"body": body}}
-    return page
-
-
-@per_page
-def remove_next_prompt(page: DbDict) -> DbDict:
-    if "whatsapp_body" in page["fields"]:
-        for body in page["fields"]["whatsapp_body"]:
-            body["value"].pop("next_prompt", None)
-    return page
-
-
-@per_page
-def remove_buttons(page: DbDict) -> DbDict:
-    if "whatsapp_body" in page["fields"]:
-        for body in page["fields"]["whatsapp_body"]:
-            body["value"].pop("buttons", None)
-    return page
-
-
-@per_page
-def remove_example_values(page: DbDict) -> DbDict:
-    if "whatsapp_body" in page["fields"]:
-        for body in page["fields"]["whatsapp_body"]:
-            body["value"].pop("example_values", None)
-    return page
-
-
-@per_page
-def remove_sms_fields(page: DbDict) -> DbDict:
-    if "sms_body" in page["fields"]:
-        for body in page["fields"]["sms_body"]:
-            body["value"].pop("sms_body", None)
-    return page
-
-
-@per_page
-def remove_ussd_fields(page: DbDict) -> DbDict:
-    if "ussd_body" in page["fields"]:
-        for body in page["fields"]["ussd_body"]:
-            body["value"].pop("ussd_body", None)
     return page
 
 
@@ -427,12 +318,6 @@ def remove_example_value_ids(page: DbDict) -> DbDict:
     return page
 
 
-@per_page
-def enable_web(page: DbDict) -> DbDict:
-    page["fields"]["enable_web"] = True
-    return page
-
-
 PAGE_FILTER_FUNCS = [
     normalise_pks,
     normalise_revisions,
@@ -445,31 +330,11 @@ PAGE_FILTER_FUNCS = [
     remove_example_value_ids,
 ]
 
-OLD_PAGE_FILTER_FUNCS = [
-    remove_translation_key,
-    remove_revisions,
-    add_body_fields,
-    remove_next_prompt,
-    remove_buttons,
-    remove_example_values,
-    enable_web,
-    remove_sms_fields,
-    remove_ussd_fields,
-]
-
 
 @dataclass
 class ImportExport:
     admin_client: Any
-    importer: str
     format: str
-
-    @property
-    def _import_content(self) -> Callable[..., None]:
-        return {
-            "new": import_content,
-            "old": old_import_content,
-        }[self.importer]
 
     @property
     def _filter_export(self) -> Callable[..., bytes]:
@@ -543,7 +408,7 @@ class ImportExport:
         """
         Import given content in the configured format with the configured importer.
         """
-        self._import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
+        import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
 
     def read_bytes(self, path_str: str, path_base: str = "home/tests") -> bytes:
         return (Path(path_base) / path_str).read_bytes()
@@ -570,9 +435,6 @@ class ImportExport:
         things that vary across import/export.
         """
         pages = decode_json_fields(get_page_json())
-        if self.importer == "old":
-            for ff in OLD_PAGE_FILTER_FUNCS:
-                pages = ff(pages)
         for ff in PAGE_FILTER_FUNCS:
             pages = ff(pages)
         if locale is not None:
@@ -583,17 +445,12 @@ class ImportExport:
     def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
         src = csv2dicts(src_bytes)
         dst = csv2dicts(dst_bytes)
-        return filter_exports(src, dst, self.importer)
-
-
-@pytest.fixture(params=["old", "new"])
-def csv_impexp(request: Any, admin_client: Any) -> ImportExport:
-    return ImportExport(admin_client, request.param, "csv")
+        return filter_exports(src, dst)
 
 
 @pytest.fixture()
-def newcsv_impexp(request: Any, admin_client: Any) -> ImportExport:
-    return ImportExport(admin_client, "new", "csv")
+def csv_impexp(request: Any, admin_client: Any) -> ImportExport:
+    return ImportExport(admin_client, "csv")
 
 
 @pytest.mark.django_db
@@ -657,35 +514,11 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_translations_sep(self, csv_impexp: ImportExport) -> None:
-        """
-        Importing a CSV file split into separate parts per locale and then
-        exporting it produces a duplicate of the original file.
-
-        (This uses translations-sp.csv and the two language-specific subsets thereof.)
-
-        FIXME:
-         * Remove this test when the old importer goes away completely.
-        """
-        # Create a new homepage for Portuguese.
-        pt, _created = Locale.objects.get_or_create(language_code="pt")
-        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
-
-        set_profile_field_options()
-        csv_impexp.import_file("translations-sep-en.csv")
-        csv_impexp.import_file("translations-sep-pt.csv", locale="pt", purge=False)
-        csv_bytes = csv_impexp.read_bytes("translations-sep.csv")
-        content = csv_impexp.export_content()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        assert dst == src
-
-    def test_default_locale(self, newcsv_impexp: ImportExport) -> None:
+    def test_default_locale(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with multiple languages and specifying a locale
         and then exporting it produces a duplicate of the original file but
         with only pages from the specifyied specified locale included.
-
-        NOTE: Old importer can't handle multiple languages at once.
 
         (This uses translations.csv and the en language-specific subset thereof.)
         """
@@ -694,19 +527,17 @@ class TestImportExportRoundtrip:
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        newcsv_impexp.import_file("translations.csv", locale="en")
-        csv_bytes = newcsv_impexp.read_bytes("translations-en.csv")
-        content = newcsv_impexp.export_content()
-        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
+        csv_impexp.import_file("translations.csv", locale="en")
+        csv_bytes = csv_impexp.read_bytes("translations-en.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_translated_locale(self, newcsv_impexp: ImportExport) -> None:
+    def test_translated_locale(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with multiple languages and specifying a locale
         and then exporting it produces a duplicate of the original file but
         with only pages from the specifyied specified locale included.
-
-        NOTE: Old importer can't handle multiple languages at once.
 
         (This uses translations.csv and the pt language-specific subset thereof.)
         """
@@ -715,18 +546,16 @@ class TestImportExportRoundtrip:
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        newcsv_impexp.import_file("translations.csv", locale="pt")
-        csv_bytes = newcsv_impexp.read_bytes("translations-pt.csv")
-        content = newcsv_impexp.export_content()
-        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
+        csv_impexp.import_file("translations.csv", locale="pt")
+        csv_bytes = csv_impexp.read_bytes("translations-pt.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_all_locales(self, newcsv_impexp: ImportExport) -> None:
+    def test_all_locales(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file containing translations and then exporting it
         produces a duplicate of the original file.
-
-        NOTE: Old importer can't handle multiple languages at once.
 
         (This uses translations.csv.)
         """
@@ -735,17 +564,15 @@ class TestImportExportRoundtrip:
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        csv_bytes = newcsv_impexp.import_file("translations.csv")
-        content = newcsv_impexp.export_content()
-        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
+        csv_bytes = csv_impexp.import_file("translations.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_all_locales_split(self, newcsv_impexp: ImportExport) -> None:
+    def test_all_locales_split(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file split into separate parts per locale and then
         exporting it produces a duplicate of the original file.
-
-        NOTE: Old importer can't handle non-unique slugs.
 
         (This uses translations.csv and the two language-specific subsets thereof.)
         """
@@ -754,12 +581,12 @@ class TestImportExportRoundtrip:
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
         set_profile_field_options()
-        csv_bytes = newcsv_impexp.read_bytes("translations.csv")
-        newcsv_impexp.import_file("translations.csv", locale="en")
-        newcsv_impexp.import_file("translations.csv", purge=False, locale="pt")
+        csv_bytes = csv_impexp.read_bytes("translations.csv")
+        csv_impexp.import_file("translations.csv", locale="en")
+        csv_impexp.import_file("translations.csv", purge=False, locale="pt")
 
-        content = newcsv_impexp.export_content()
-        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
 
@@ -791,17 +618,17 @@ class TestImportExport:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
-    def test_no_translation_key_default(self, newcsv_impexp: ImportExport) -> None:
+    def test_no_translation_key_default(self, csv_impexp: ImportExport) -> None:
         """
         Importing pages without translation keys in the default locale causes
         wagtail to generate new translation keys.
 
         (This uses no-translation-key-default.csv.)
         """
-        csv_bytes = newcsv_impexp.import_file("no-translation-key-default.csv")
+        csv_bytes = csv_impexp.import_file("no-translation-key-default.csv")
 
-        content = newcsv_impexp.export_content()
-        src, dst = newcsv_impexp.csvs2dicts(csv_bytes, content)
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         # Check that the export has translation keys for all rows and clear
         # them to match the imported data
         for row in dst:
@@ -809,7 +636,7 @@ class TestImportExport:
             row["translation_tag"] = ""
         assert dst == src
 
-    def test_no_translation_key_nondefault(self, newcsv_impexp: ImportExport) -> None:
+    def test_no_translation_key_nondefault(self, csv_impexp: ImportExport) -> None:
         """
         Importing pages without translation keys in the non-default locale
         causes a validation error.
@@ -822,7 +649,7 @@ class TestImportExport:
 
         # A ContentPageIndex without a translation key fails
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("no-translation-key-cpi.csv")
+            csv_impexp.import_file("no-translation-key-cpi.csv")
 
         assert e.value.row_num == 4
         # FIXME: Find a better way to represent this.
@@ -831,26 +658,26 @@ class TestImportExport:
 
         # A ContentPage without a translation key fails
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("no-translation-key-cp.csv")
+            csv_impexp.import_file("no-translation-key-cp.csv")
 
         assert e.value.row_num == 5
         # FIXME: Find a better way to represent this.
         assert "translation_key" in e.value.message
         assert "“” is not a valid UUID." in e.value.message
 
-    def test_invalid_locale_name(self, newcsv_impexp: ImportExport) -> None:
+    def test_invalid_locale_name(self, csv_impexp: ImportExport) -> None:
         """
         Importing pages with invalid locale names should raise an error that results
         in an error message that gets sent back to the user
         """
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("invalid-locale-name.csv")
+            csv_impexp.import_file("invalid-locale-name.csv")
 
         assert e.value.row_num == 2
         assert e.value.message == "Language not found: NotEnglish"
 
     def test_multiple_locales_for_name(
-        self, newcsv_impexp: ImportExport, settings: SettingsWrapper
+        self, csv_impexp: ImportExport, settings: SettingsWrapper
     ) -> None:
         """
         Importing pages with locale names that represent multiple locales should raise
@@ -861,7 +688,7 @@ class TestImportExport:
             ("en2", "NotEnglish"),
         ]
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("invalid-locale-name.csv")
+            csv_impexp.import_file("invalid-locale-name.csv")
 
         assert e.value.row_num == 2
         assert (
@@ -869,13 +696,13 @@ class TestImportExport:
             == "Multiple codes for language: NotEnglish -> ['en1', 'en2']"
         )
 
-    def test_missing_parent(self, newcsv_impexp: ImportExport) -> None:
+    def test_missing_parent(self, csv_impexp: ImportExport) -> None:
         """
         If the import file specifies a parent title, but there are no pages with that
         title, then an error message should get sent back to the user.
         """
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("missing-parent.csv")
+            csv_impexp.import_file("missing-parent.csv")
 
         assert e.value.row_num == 2
         assert (
@@ -884,7 +711,7 @@ class TestImportExport:
             "'English'"
         )
 
-    def test_multiple_parents(self, newcsv_impexp: ImportExport) -> None:
+    def test_multiple_parents(self, csv_impexp: ImportExport) -> None:
         """
         Because we use the title to find a parent page, and it's possible to have
         multiple pages with the same title, it's possible to have the situation where
@@ -896,7 +723,7 @@ class TestImportExport:
         PageBuilder.build_cpi(home_page, "missing-parent2", "missing-parent")
 
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("missing-parent.csv", purge=False)
+            csv_impexp.import_file("missing-parent.csv", purge=False)
         assert e.value.row_num == 2
         assert (
             e.value.message
@@ -904,14 +731,14 @@ class TestImportExport:
             "parent page: ['missing-parent1', 'missing-parent2']"
         )
 
-    def test_go_to_page_button_missing_page(self, newcsv_impexp: ImportExport) -> None:
+    def test_go_to_page_button_missing_page(self, csv_impexp: ImportExport) -> None:
         """
         Go to page buttons in the import file link to other pages using the slug. But
         if no page with that slug exists, then we should give the user an error message
         that tells them where and how to fix it.
         """
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("missing-gotopage.csv")
+            csv_impexp.import_file("missing-gotopage.csv")
         assert e.value.row_num == 2
         assert (
             e.value.message
@@ -919,14 +746,14 @@ class TestImportExport:
             "button 'Missing' on page 'ma_import-export'"
         )
 
-    def test_missing_related_pages(self, newcsv_impexp: ImportExport) -> None:
+    def test_missing_related_pages(self, csv_impexp: ImportExport) -> None:
         """
         Related pages are listed as comma separated slugs in imported files. If there
         is a slug listed that we cannot find the page for, then we should show the
         user an error with information about the missing page.
         """
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("missing-related-page.csv")
+            csv_impexp.import_file("missing-related-page.csv")
         assert e.value.row_num == 2
         assert (
             e.value.message
@@ -934,13 +761,13 @@ class TestImportExport:
             "'English'"
         )
 
-    def test_invalid_wa_template_category(self, newcsv_impexp: ImportExport) -> None:
+    def test_invalid_wa_template_category(self, csv_impexp: ImportExport) -> None:
         """
         Importing a WhatsApp template with an invalid category should raise an
         error that results in an error message that gets sent back to the user.
         """
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-whatsapp-template-category.csv")
+            csv_impexp.import_file("bad-whatsapp-template-category.csv")
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
@@ -949,13 +776,13 @@ class TestImportExport:
             == "Validation error: {'whatsapp_template_category': [\"Value 'Marketing' is not a valid choice.\"]}"
         )
 
-    def test_invalid_wa_template_vars(self, newcsv_impexp: ImportExport) -> None:
+    def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
         """
         Importing a WhatsApp template with invalid variables should raise an
         error that results in an error message that gets sent back to the user.
         """
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-whatsapp-template-vars.csv")
+            csv_impexp.import_file("bad-whatsapp-template-vars.csv")
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
@@ -964,19 +791,19 @@ class TestImportExport:
             == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
         )
 
-    def test_invalid_wa_template_vars_update(self, newcsv_impexp: ImportExport) -> None:
+    def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
         """
         Updating a valid WhatsApp template with invalid variables should raise
         an error that results in an error message that gets sent back to the
         user. The update validation happens in a different code path from the
         initial import.
         """
-        newcsv_impexp.import_file("good-whatsapp-template-vars.csv")
+        csv_impexp.import_file("good-whatsapp-template-vars.csv")
 
         # Update an existing page, which does the validation in
         # `page.save_revision()` rather than `parent.add_child()`.
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-whatsapp-template-vars.csv", purge=False)
+            csv_impexp.import_file("bad-whatsapp-template-vars.csv", purge=False)
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
@@ -985,14 +812,14 @@ class TestImportExport:
             == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
         )
 
-    def test_cpi_validation_failure(self, newcsv_impexp: ImportExport) -> None:
+    def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
         """
         Importing a ContentPageIndex with an invalid translation key should
         raise an error that results in an error message that gets sent back to
         the user.
         """
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-cpi-translation-key.csv")
+            csv_impexp.import_file("bad-cpi-translation-key.csv")
 
         assert e.value.row_num == 2
         # FIXME: Find a better way to represent this.
@@ -1001,17 +828,17 @@ class TestImportExport:
             == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
         )
 
-    def test_cpi_validation_failure_update(self, newcsv_impexp: ImportExport) -> None:
+    def test_cpi_validation_failure_update(self, csv_impexp: ImportExport) -> None:
         """
         Updating a valid ContentPageIndex with an invalid translation key
         should raise an error that results in an error message that gets sent
         back to the user. The update validation happens in a different code
         path from the initial import.
         """
-        newcsv_impexp.import_file("good-cpi-translation-key.csv")
+        csv_impexp.import_file("good-cpi-translation-key.csv")
 
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-cpi-translation-key.csv", purge=False)
+            csv_impexp.import_file("bad-cpi-translation-key.csv", purge=False)
 
         assert e.value.row_num == 2
         # FIXME: Find a better way to represent this.
@@ -1021,16 +848,9 @@ class TestImportExport:
         )
 
 
-# "old-xlsx" has at least three bugs, so we don't bother testing it.
-@pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
-def impexp(request: Any, admin_client: Any) -> ImportExport:
-    importer, format = request.param.split("-")
-    return ImportExport(admin_client, importer, format)
-
-
 @pytest.fixture(params=["csv", "xlsx"])
-def new_impexp(request: Any, admin_client: Any) -> ImportExport:
-    return ImportExport(admin_client, "new", request.param)
+def impexp(request: Any, admin_client: Any) -> ImportExport:
+    return ImportExport(admin_client, request.param)
 
 
 @pytest.fixture()
@@ -1164,12 +984,11 @@ class TestExportImportRoundtrip:
         assert imported == orig
 
     @pytest.mark.xfail(reason="Image imports are currently broken.")
-    def test_images(self, new_impexp: ImportExport) -> None:
+    def test_images(self, impexp: ImportExport) -> None:
         """
         ContentPages with images in multiple message types are preserved across
         export/import.
 
-        NOTE: Old importer can't handle images.
         """
         img_path = Path("home/tests/test_static") / "test.jpeg"
         img_wa = mk_img(img_path, "wa_image")
@@ -1189,9 +1008,9 @@ class TestExportImportRoundtrip:
             ],
         )
 
-        orig = new_impexp.get_page_json()
-        new_impexp.export_reimport()
-        imported = new_impexp.get_page_json()
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
         assert imported == orig
 
     def test_variations(self, impexp: ImportExport) -> None:
@@ -1199,8 +1018,6 @@ class TestExportImportRoundtrip:
         ContentPages with variation messages (and buttons and next prompts) are
         preserved across export/import.
 
-        NOTE: The old importer can't handle multiple restrictions on a
-            variation, so it gets a slightly simpler dataset.
         """
         set_profile_field_options()
 
@@ -1211,11 +1028,6 @@ class TestExportImportRoundtrip:
             VarMsg("Single male", gender="male", relationship="single"),
             VarMsg("Complicated male", gender="male", relationship="complicated"),
         ]
-        if impexp.importer == "old":
-            m1vars = [
-                VarMsg("Single", relationship="single"),
-                VarMsg("Complicated", relationship="complicated"),
-            ]
 
         cp_imp_exp_wablks = [
             WABlk(
@@ -1250,9 +1062,6 @@ class TestExportImportRoundtrip:
         """
         ContentPages with tags and related pages are preserved across
         export/import.
-
-        NOTE: The old importer can't handle non-ContentPage related pages, so
-            it doesn't get one of those.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
@@ -1281,10 +1090,7 @@ class TestExportImportRoundtrip:
             tags=["tag4"],
         )
         PageBuilder.link_related(health_info, [self_help])
-        if impexp.importer == "old":
-            PageBuilder.link_related(self_help, [health_info])
-        else:
-            PageBuilder.link_related(self_help, [health_info, main_menu])
+        PageBuilder.link_related(self_help, [health_info, main_menu])
 
         orig = impexp.get_page_json()
         impexp.export_reimport()
@@ -1355,12 +1161,10 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_translations(self, new_impexp: ImportExport) -> None:
+    def test_translations(self, impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages (with unique-per-locale slugs and
         titles) are preserved across export/import.
-
-        NOTE: Old importer can't handle non-unique slugs.
         """
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
@@ -1429,9 +1233,9 @@ class TestExportImportRoundtrip:
         assert imp_exp.translation_key == imp_exp_pt.translation_key
         assert non_tmpl.translation_key == non_tmpl_pt.translation_key
 
-        orig = new_impexp.get_page_json()
-        new_impexp.export_reimport()
-        imported = new_impexp.get_page_json()
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
         assert imported == orig
 
     def test_translations_sep(self, impexp: ImportExport) -> None:
@@ -1507,13 +1311,11 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_translations_split(self, new_impexp: ImportExport) -> None:
+    def test_translations_split(self, impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages (with unique-per-locale slugs and
         titles) are preserved across export/import with each language imported
         separately.
-
-        NOTE: Old importer can't handle non-unique slugs.
         """
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
@@ -1574,22 +1376,20 @@ class TestExportImportRoundtrip:
         assert imp_exp.translation_key == imp_exp_pt.translation_key
         assert non_tmpl.translation_key == non_tmpl_pt.translation_key
 
-        orig = new_impexp.get_page_json()
-        content_en = new_impexp.export_content(locale="en")
-        content_pt = new_impexp.export_content(locale="pt")
+        orig = impexp.get_page_json()
+        content_en = impexp.export_content(locale="en")
+        content_pt = impexp.export_content(locale="pt")
 
-        new_impexp.import_content(content_en, locale="en")
-        new_impexp.import_content(content_pt, locale="pt", purge=False)
-        imported = new_impexp.get_page_json()
+        impexp.import_content(content_en, locale="en")
+        impexp.import_content(content_pt, locale="pt", purge=False)
+        imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_translations_en(self, new_impexp: ImportExport) -> None:
+    def test_translations_en(self, impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages are that are imported with a locale
         specified have pages in that locale preserved and all other locales are
         removed.
-
-        NOTE: Old importer can't handle multiple languages at once.
         """
         # Create a new homepage for Portuguese.
         pt, _created = Locale.objects.get_or_create(language_code="pt")
@@ -1650,19 +1450,17 @@ class TestExportImportRoundtrip:
         assert imp_exp.translation_key == imp_exp_pt.translation_key
         assert non_tmpl.translation_key == non_tmpl_pt.translation_key
 
-        orig_en = new_impexp.get_page_json(locale="en")
-        content = new_impexp.export_content()
+        orig_en = impexp.get_page_json(locale="en")
+        content = impexp.export_content()
 
-        new_impexp.import_content(content, locale="en")
-        imported = new_impexp.get_page_json()
+        impexp.import_content(content, locale="en")
+        imported = impexp.get_page_json()
         assert imported == orig_en
 
-    def test_example_values(self, new_impexp: ImportExport) -> None:
+    def test_example_values(self, impexp: ImportExport) -> None:
         """
         ContentPages with example values in whatsapp messages are preserved
         across export/import.
-
-        NOTE: Old importer can't handle example values.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
@@ -1688,9 +1486,9 @@ class TestExportImportRoundtrip:
             whatsapp_template_name="template-health-info",
         )
 
-        orig = new_impexp.get_page_json()
-        new_impexp.export_reimport()
-        imported = new_impexp.get_page_json()
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
         assert imported == orig
 
     def test_export_missing_related_page(self, impexp: ImportExport) -> None:
@@ -1742,12 +1540,10 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig_without_self_help
 
-    def test_ussd_values(self, new_impexp: ImportExport) -> None:
+    def test_ussd_values(self, impexp: ImportExport) -> None:
         """
         ContentPages with USSD messages are preserved
         across export/import.
-
-        NOTE: Old importer can't handle USSD values.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
@@ -1759,17 +1555,15 @@ class TestExportImportRoundtrip:
             bodies=[UBody("HealthAlert menu", [UBlk("*Welcome to HealthAlert* USSD")])],
         )
 
-        orig = new_impexp.get_page_json()
-        new_impexp.export_reimport()
-        imported = new_impexp.get_page_json()
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_sms_values(self, new_impexp: ImportExport) -> None:
+    def test_sms_values(self, impexp: ImportExport) -> None:
         """
         ContentPages with SMS messages are preserved
         across export/import.
-
-        NOTE: Old importer can't handle SMS values.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
@@ -1781,7 +1575,7 @@ class TestExportImportRoundtrip:
             bodies=[SBody("HealthAlert menu", [SBlk("*Welcome to HealthAlert* SMS")])],
         )
 
-        orig = new_impexp.get_page_json()
-        new_impexp.export_reimport()
-        imported = new_impexp.get_page_json()
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
         assert imported == orig
