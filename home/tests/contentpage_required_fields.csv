@@ -1,5 +1,4 @@
 message,slug,parent,web_title,locale
-0,main-menu,,Main Menu,English
-1,main-menu-first-time-user,Main Menu,main menu first time user,English
-1,health-info,main menu first time user,health info,English
-1,self-help,main menu first time user,self-help,English
+0,main_menu,,Main Menu,English
+1,first_time_user,Main Menu,main menu first time user,English
+1,health_info,main menu first time user,health info,English

@@ -849,37 +849,37 @@ class TestImportExport:
 
     def test_ContentPageIndex_required_fields(self, csv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with only the required fields shoud not break
-
+        Importing an CSV file with only the required fields for a ContentPageIndex shoud not break
         """
 
         csv_bytes = csv_impexp.import_file("contentpage_index_required_fields.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
 
-        content_pages = ContentPageIndex.objects.all()
+        [main_menu] = ContentPageIndex.objects.all()
+        assert main_menu.slug == "main-menu"
 
-        for page_data, content_page in zip(src, content_pages, strict=False):
-            assert page_data.get("slug", "") == content_page.slug
-
-        assert content_pages.count() == len(list(src))
+        assert ContentPageIndex.objects.all().count() == len(list(src))
 
     def test_ContentPage_required_fields(self, csv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with only the required fields shoud not break
-
+        Importing an CSV file with only the required fields for a ContentPage shoud not break
         """
 
         csv_bytes = csv_impexp.import_file("contentpage_required_fields.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
 
+        [main_menu] = ContentPageIndex.objects.all()
+        [first_time_user, health_info] = ContentPage.objects.all()
+
+        assert main_menu.slug == "main_menu"
+        assert first_time_user.slug == "first_time_user"
+        assert health_info.slug == "health_info"
+
         content_pages = list(ContentPageIndex.objects.all()) + list(
             ContentPage.objects.all()
         )
-
-        for page_data, content_page in zip(src, content_pages, strict=False):
-            assert page_data.get("slug", "") == content_page.slug
 
         assert len(content_pages) == len(list(src))
 
