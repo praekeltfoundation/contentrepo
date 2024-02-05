@@ -223,6 +223,12 @@ def _normalise_varmsg_ids(page_id: str, var_list: list[dict[str, Any]]) -> None:
             rest["id"] = f"{page_id}:var:{i}:var:{ir}"
 
 
+def _normalise_list_item_ids(page_id: str, var_list: list[dict[str, Any]]) -> None:
+    for i, list_item in enumerate(var_list):
+        assert "id" in list_item
+        list_item["id"] = f"{page_id}:li:{i}"
+
+
 def _normalise_body_field_ids(
     page: DbDict, body_name: str, body_list: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -231,6 +237,8 @@ def _normalise_body_field_ids(
         body["id"] = f"fake:{page['pk']}:{body_name}:{i}"
         if "variation_messages" in body["value"]:
             _normalise_varmsg_ids(body["id"], body["value"]["variation_messages"])
+        if "list_items" in body["value"]:
+            _normalise_list_item_ids(body["id"], body["value"]["list_items"])
     return body_list
 
 
