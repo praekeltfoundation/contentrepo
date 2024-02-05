@@ -597,6 +597,19 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
+    def test_list_items_values(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file containing list items of each type for a
+        page and then exporting it produces a duplicate of the original file.
+
+        (This uses list_items.csv.)
+        """
+        set_profile_field_options()
+        csv_bytes = csv_impexp.import_file("list_items.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
 
 @pytest.mark.django_db
 class TestImportExport:
