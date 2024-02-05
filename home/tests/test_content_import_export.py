@@ -536,7 +536,7 @@ class ImportExport:
         return filter_exports(src, dst)
 
 
-@pytest.fixture(params=["new"])
+@pytest.fixture()
 def csv_impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, "csv")
 
@@ -849,13 +849,13 @@ class TestImportExport:
             "'English'"
         )
 
-    def test_invalid_wa_template_category(self, newcsv_impexp: ImportExport) -> None:
+    def test_invalid_wa_template_category(self, csv_impexp: ImportExport) -> None:
         """
         Importing a WhatsApp template with an invalid category should raise an
         error that results in an error message that gets sent back to the user.
         """
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-whatsapp-template-category.csv")
+            csv_impexp.import_file("bad-whatsapp-template-category.csv")
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
@@ -864,13 +864,13 @@ class TestImportExport:
             == "Validation error: {'whatsapp_template_category': [\"Value 'Marketing' is not a valid choice.\"]}"
         )
 
-    def test_invalid_wa_template_vars(self, newcsv_impexp: ImportExport) -> None:
+    def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
         """
         Importing a WhatsApp template with invalid variables should raise an
         error that results in an error message that gets sent back to the user.
         """
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-whatsapp-template-vars.csv")
+            csv_impexp.import_file("bad-whatsapp-template-vars.csv")
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
@@ -879,19 +879,19 @@ class TestImportExport:
             == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
         )
 
-    def test_invalid_wa_template_vars_update(self, newcsv_impexp: ImportExport) -> None:
+    def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
         """
         Updating a valid WhatsApp template with invalid variables should raise
         an error that results in an error message that gets sent back to the
         user. The update validation happens in a different code path from the
         initial import.
         """
-        newcsv_impexp.import_file("good-whatsapp-template-vars.csv")
+        csv_impexp.import_file("good-whatsapp-template-vars.csv")
 
         # Update an existing page, which does the validation in
         # `page.save_revision()` rather than `parent.add_child()`.
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-whatsapp-template-vars.csv", purge=False)
+            csv_impexp.import_file("bad-whatsapp-template-vars.csv", purge=False)
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
@@ -900,14 +900,14 @@ class TestImportExport:
             == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
         )
 
-    def test_cpi_validation_failure(self, newcsv_impexp: ImportExport) -> None:
+    def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
         """
         Importing a ContentPageIndex with an invalid translation key should
         raise an error that results in an error message that gets sent back to
         the user.
         """
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-cpi-translation-key.csv")
+            csv_impexp.import_file("bad-cpi-translation-key.csv")
 
         assert e.value.row_num == 2
         # FIXME: Find a better way to represent this.
@@ -916,17 +916,17 @@ class TestImportExport:
             == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
         )
 
-    def test_cpi_validation_failure_update(self, newcsv_impexp: ImportExport) -> None:
+    def test_cpi_validation_failure_update(self, csv_impexp: ImportExport) -> None:
         """
         Updating a valid ContentPageIndex with an invalid translation key
         should raise an error that results in an error message that gets sent
         back to the user. The update validation happens in a different code
         path from the initial import.
         """
-        newcsv_impexp.import_file("good-cpi-translation-key.csv")
+        csv_impexp.import_file("good-cpi-translation-key.csv")
 
         with pytest.raises(ImportException) as e:
-            newcsv_impexp.import_file("bad-cpi-translation-key.csv", purge=False)
+            csv_impexp.import_file("bad-cpi-translation-key.csv", purge=False)
 
         assert e.value.row_num == 2
         # FIXME: Find a better way to represent this.
@@ -937,7 +937,7 @@ class TestImportExport:
 
 
 # "old-xlsx" has at least three bugs, so we don't bother testing it.
-@pytest.fixture(params=["old-csv", "new-csv", "new-xlsx"])
+@pytest.fixture(params=["csv", "xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, request.param)
 
