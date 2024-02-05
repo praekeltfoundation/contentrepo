@@ -630,7 +630,7 @@ class ContentRow:
     doc_link: str = ""
     media_link: str = ""
     related_pages: list[str] = field(default_factory=list)
-    footer: str | None = None
+    footer: str = ""
 
     @classmethod
     def from_flat(cls, row: dict[str, str]) -> "ContentRow":
@@ -650,7 +650,7 @@ class ContentRow:
             related_pages=deserialise_list(row.pop("related_pages", "")),
             example_values=deserialise_list(row.pop("example_values", "")),
             buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
-            footer=row.pop("footer") if row.get("footer") else None,
+            footer=row.pop("footer") if row.get("footer") else "",
             **row,
         )
 
