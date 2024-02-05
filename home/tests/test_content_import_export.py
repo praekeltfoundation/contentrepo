@@ -862,7 +862,7 @@ class TestImportExport:
         for page_data, content_page in zip(src, content_pages, strict=False):
             assert page_data.get("slug", "") == content_page.slug
 
-        assert content_pages.count() == len(src)
+        assert content_pages.count() == len(list(src))
 
     def test_ContentPage_required_fields(self, csv_impexp: ImportExport) -> None:
         """
@@ -881,7 +881,7 @@ class TestImportExport:
         for page_data, content_page in zip(src, content_pages, strict=False):
             assert page_data.get("slug", "") == content_page.slug
 
-        assert len(content_pages) == len(src)
+        assert len(content_pages) == len(list(src))
 
 
 @pytest.fixture(params=["csv", "xlsx"])
