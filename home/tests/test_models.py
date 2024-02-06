@@ -346,6 +346,7 @@ class WhatsappBlockTests(TestCase):
         next_prompt="",
         buttons=None,
         list_items=None,
+        footer="",
     ):
         return {
             "image": image,
@@ -357,6 +358,7 @@ class WhatsappBlockTests(TestCase):
             "next_prompt": next_prompt,
             "buttons": buttons or [],
             "list_items": list_items or [],
+            "footer": footer,
         }
 
     def create_image(self, width=0, height=0):

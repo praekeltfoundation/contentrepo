@@ -138,6 +138,7 @@ def test_build_simple_pages() -> None:
                 "buttons": [],
                 "example_values": [],
                 "variation_messages": [],
+                "footer": "",
             },
         ),
     ]
@@ -261,6 +262,7 @@ def test_build_variations() -> None:
                 {"message": "Single male", "variation_restrictions": v_single_male},
                 {"message": "Comp male", "variation_restrictions": v_complicated_male},
             ],
+            "footer": "",
         },
         {
             "message": "Message 2, variable placeholders as well {{0}}",
@@ -272,6 +274,7 @@ def test_build_variations() -> None:
             "variation_messages": [
                 {"message": "Teen", "variation_restrictions": [("age", "15-18")]}
             ],
+            "footer": "",
         },
         {
             "message": "Message 3 with no variation",
@@ -279,6 +282,7 @@ def test_build_variations() -> None:
             "buttons": [("next_message", {"title": "end"})],
             "example_values": [],
             "variation_messages": [],
+            "footer": "",
         },
     ]
 

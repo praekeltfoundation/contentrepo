@@ -1,3 +1,4 @@
+import logging
 import re
 
 from django.conf import settings
@@ -40,7 +41,6 @@ from wagtail.admin.panels import (  # isort:skip
     TabbedInterface,
     TitleFieldPanel,
 )
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -263,6 +263,12 @@ class WhatsappBlock(blocks.StructBlock):
         required=False,
         max_num=10,
         validators=(MaxLengthValidator(24)),
+    )
+
+    footer = blocks.CharBlock(
+        help_text="Footer cannot exceed 60 characters.",
+        required=False,
+        validators=(MaxLengthValidator(60),),
     )
 
     class Meta:

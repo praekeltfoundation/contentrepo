@@ -1520,6 +1520,40 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig_en
 
+    def test_footer(self, impexp: ImportExport) -> None:
+        """
+        ContentPages with footer in whatsapp messages are preserved
+        across export/import.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+        )
+
+        footer = "Test footer"
+        _health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody(
+                    "health info",
+                    [WABlk("*Health information* WA", footer=footer)],
+                )
+            ],
+            whatsapp_template_name="template-health-info",
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
     def test_example_values(self, impexp: ImportExport) -> None:
         """
         ContentPages with example values in whatsapp messages are preserved

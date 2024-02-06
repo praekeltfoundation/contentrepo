@@ -326,6 +326,7 @@ class ContentImporter:
                     next_prompt=row.next_prompt,
                     example_values=row.example_values,
                     buttons=buttons,
+                    footer=row.footer,
                     list_items=row.list_items,
                 )
             )
@@ -530,6 +531,7 @@ class ShadowWhatsappBlock:
     example_values: list[str] = field(default_factory=list)
     variation_messages: list["ShadowVariationBlock"] = field(default_factory=list)
     list_items: list[str] = field(default_factory=list)
+    footer: str = ""
 
     @property
     def wagtail_format(
@@ -542,6 +544,7 @@ class ShadowWhatsappBlock:
             "buttons": self.buttons,
             "variation_messages": [m.wagtail_format for m in self.variation_messages],
             "list_items": self.list_items,
+            "footer": self.footer,
         }
 
 
@@ -631,6 +634,7 @@ class ContentRow:
     doc_link: str = ""
     media_link: str = ""
     related_pages: list[str] = field(default_factory=list)
+    footer: str = ""
 
     @classmethod
     def from_flat(cls, row: dict[str, str]) -> "ContentRow":
@@ -651,6 +655,7 @@ class ContentRow:
             example_values=deserialise_list(row.pop("example_values", "")),
             buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
             list_items=deserialise_list(row.pop("list_items", "")),
+            footer=row.pop("footer") if row.get("footer") else "",
             **row,
         )
 
