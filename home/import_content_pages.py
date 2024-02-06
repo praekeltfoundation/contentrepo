@@ -326,6 +326,7 @@ class ContentImporter:
                     next_prompt=row.next_prompt,
                     example_values=row.example_values,
                     buttons=buttons,
+                    list_items=row.list_items,
                 )
             )
         if row.is_sms_message:
@@ -528,6 +529,7 @@ class ShadowWhatsappBlock:
     buttons: list[dict[str, Any]] = field(default_factory=list)
     example_values: list[str] = field(default_factory=list)
     variation_messages: list["ShadowVariationBlock"] = field(default_factory=list)
+    list_items: list[str] = field(default_factory=list)
 
     @property
     def wagtail_format(
@@ -539,6 +541,7 @@ class ShadowWhatsappBlock:
             "example_values": self.example_values,
             "buttons": self.buttons,
             "variation_messages": [m.wagtail_format for m in self.variation_messages],
+            "list_items": self.list_items,
         }
 
 
@@ -608,6 +611,7 @@ class ContentRow:
     example_values: list[str] = field(default_factory=list)
     variation_title: dict[str, str] = field(default_factory=dict)
     variation_body: str = ""
+    list_items: list[str] = field(default_factory=list)
     sms_title: str = ""
     sms_body: str = ""
     ussd_title: str = ""
@@ -646,6 +650,7 @@ class ContentRow:
             related_pages=deserialise_list(row.pop("related_pages", "")),
             example_values=deserialise_list(row.pop("example_values", "")),
             buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
+            list_items=deserialise_list(row.pop("list_items", "")),
             **row,
         )
 

@@ -223,6 +223,12 @@ def _normalise_varmsg_ids(page_id: str, var_list: list[dict[str, Any]]) -> None:
             rest["id"] = f"{page_id}:var:{i}:var:{ir}"
 
 
+def _normalise_list_item_ids(page_id: str, var_list: list[dict[str, Any]]) -> None:
+    for i, list_item in enumerate(var_list):
+        assert "id" in list_item
+        list_item["id"] = f"{page_id}:li:{i}"
+
+
 def _normalise_body_field_ids(
     page: DbDict, body_name: str, body_list: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -231,6 +237,8 @@ def _normalise_body_field_ids(
         body["id"] = f"fake:{page['pk']}:{body_name}:{i}"
         if "variation_messages" in body["value"]:
             _normalise_varmsg_ids(body["id"], body["value"]["variation_messages"])
+        if "list_items" in body["value"]:
+            _normalise_list_item_ids(body["id"], body["value"]["list_items"])
     return body_list
 
 
@@ -585,6 +593,19 @@ class TestImportExportRoundtrip:
         csv_impexp.import_file("translations.csv", locale="en")
         csv_impexp.import_file("translations.csv", purge=False, locale="pt")
 
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
+    def test_list_items_values(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file containing list items of each type for a
+        page and then exporting it produces a duplicate of the original file.
+
+        (This uses list_items.csv.)
+        """
+        set_profile_field_options()
+        csv_bytes = csv_impexp.import_file("list_items.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
@@ -1615,6 +1636,40 @@ class TestExportImportRoundtrip:
             slug="ha-menu",
             title="HealthAlert menu",
             bodies=[SBody("HealthAlert menu", [SBlk("*Welcome to HealthAlert* SMS")])],
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    def test_list_items(self, impexp: ImportExport) -> None:
+        """
+        ContentPages with list items in whatsapp messages are preserved
+        across export/import.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+        )
+
+        list_items = ["Item 1", "Item 2"]
+        _health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody(
+                    "health info",
+                    [WABlk("*Health information* WA", list_items=list_items)],
+                )
+            ],
+            whatsapp_template_name="template-health-info",
         )
 
         orig = impexp.get_page_json()

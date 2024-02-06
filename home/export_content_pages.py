@@ -57,6 +57,7 @@ class ExportRow:
     example_values: str = ""
     variation_title: str = ""
     variation_body: str = ""
+    list_items: str = ""
     sms_title: str = ""
     sms_body: str = ""
     ussd_title: str = ""
@@ -132,6 +133,8 @@ class ExportRow:
                 self.buttons = self.serialise_buttons(whatsapp.value["buttons"])
             if "example_values" in whatsapp.value:
                 self.example_values = ", ".join(whatsapp.value["example_values"])
+            if "list_items" in whatsapp.value:
+                self.list_items = ", ".join(whatsapp.value["list_items"])
 
     @staticmethod
     def serialise_buttons(buttons: blocks.StreamValue.StreamChild) -> str:
