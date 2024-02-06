@@ -847,6 +847,48 @@ class TestImportExport:
             == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
         )
 
+    def test_ContentPageIndex_required_fields(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with only the required fields for a ContentPageIndex shoud not break
+        """
+
+        csv_bytes = csv_impexp.import_file("contentpage_index_required_fields.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        # the importer adds extra fields, so we fikter for the ones we want
+        allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
+        dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
+        src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
+
+        [main_menu] = ContentPageIndex.objects.all()
+        assert main_menu.slug == "main-menu"
+
+        assert src == dst
+
+    def test_ContentPage_required_fields(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with only the required fields for a ContentPage shoud not break
+        """
+
+        csv_bytes = csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        # the importer adds extra fields, so we fikter for the ones we want
+        allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
+        dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
+        src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
+
+        [main_menu] = ContentPageIndex.objects.all()
+        [first_time_user, health_info] = ContentPage.objects.all()
+
+        assert main_menu.slug == "main_menu"
+        assert first_time_user.slug == "first_time_user"
+        assert health_info.slug == "health_info"
+
+        assert src == dst
+
 
 @pytest.fixture(params=["csv", "xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
