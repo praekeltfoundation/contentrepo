@@ -856,10 +856,15 @@ class TestImportExport:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
 
+        # the importer adds extra fields, so we fikter for the ones we want
+        allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
+        dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
+        src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
+
         [main_menu] = ContentPageIndex.objects.all()
         assert main_menu.slug == "main-menu"
 
-        assert ContentPageIndex.objects.all().count() == len(list(src))
+        assert src == dst
 
     def test_ContentPage_required_fields(self, csv_impexp: ImportExport) -> None:
         """
@@ -870,6 +875,11 @@ class TestImportExport:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
 
+        # the importer adds extra fields, so we fikter for the ones we want
+        allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
+        dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
+        src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
+
         [main_menu] = ContentPageIndex.objects.all()
         [first_time_user, health_info] = ContentPage.objects.all()
 
@@ -877,11 +887,7 @@ class TestImportExport:
         assert first_time_user.slug == "first_time_user"
         assert health_info.slug == "health_info"
 
-        content_pages = list(ContentPageIndex.objects.all()) + list(
-            ContentPage.objects.all()
-        )
-
-        assert len(content_pages) == len(list(src))
+        assert src == dst
 
 
 @pytest.fixture(params=["csv", "xlsx"])
