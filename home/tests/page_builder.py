@@ -112,6 +112,7 @@ class WABlk(ContentBlock):
     variation_messages: list[VarMsg] = field(default_factory=list)
     example_values: list[str] = field(default_factory=list)
     buttons: list[Btn] = field(default_factory=list)
+    list_items: list[str] = field(default_factory=list)
     footer: str = ""
 
     def to_dict(self) -> dict[str, Any]:

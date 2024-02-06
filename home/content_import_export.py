@@ -44,6 +44,7 @@ EXPORT_FIELDNAMES = [
     "example_values",
     "variation_title",
     "variation_body",
+    "list_items",
     "sms_title",
     "sms_body",
     "ussd_title",
@@ -117,6 +118,7 @@ def style_sheet(wb: Workbook, sheet: Worksheet) -> Tuple[Workbook, Worksheet]:
         "example_values": 118,
         "variation_title": 118,
         "variation_body": 370,
+        "list_items": 118,
         "sms_title": 118,
         "sms_body": 370,
         "ussd_title": 118,
@@ -346,6 +348,7 @@ class Message:
     next_prompt: str = None
     example_values: str = None
     buttons: str = None
+    list_items: str = None
 
     @classmethod
     def from_platform_body_element(
@@ -387,6 +390,11 @@ class Message:
             if "example_values" in platform_body_element.value
             else ""
         )
+        message.list_items = (
+            cls.serialise_list_items(platform_body_element.value["list_items"])
+            if "list_items" in platform_body_element.value
+            else ""
+        )
         return message
 
     @classmethod
@@ -420,6 +428,10 @@ class Message:
             "title": button.value["title"],
             "slug": button.value["page"].slug,
         }
+
+    @classmethod
+    def serialise_list_items(cls, list_items: blocks.StreamValue.StreamChild) -> str:
+        return ", ".join(list_items)
 
 
 @dataclass
@@ -549,6 +561,7 @@ class ContentSheetRow:
     whatsapp_body: str = ""
     whatsapp_template_name: str = ""
     whatsapp_template_category: str = ""
+    list_items: str = ""
     sms_title: str = ""
     sms_body: str = ""
     ussd_title: str = ""
@@ -694,6 +707,7 @@ class ContentSheetRow:
             self.example_values,
             self.variation_title,
             self.variation_body,
+            self.list_items,
             self.sms_title,
             self.sms_body,
             self.ussd_title,
@@ -783,6 +797,7 @@ class ContentSheetRow:
         self.doc_link = self._get_doc_link(message_container)
         self.image_link = self._get_image_link(message_container)
         self.media_link = self._get_media_link(message_container)
+        self.list_items = self._get_list_items(message_container)
 
         temp_rows = []
         if side_panel_message_number == 0 and most_messages > 1:
@@ -929,4 +944,15 @@ class ContentSheetRow:
         )
         if example_values:
             return example_values
+        return ""
+
+    def _get_list_items(
+        self, message_container: MessageContainer, index: int = 0
+    ) -> str:
+        """Iterate over a dict of all whatsapp, messenger and viber messages to find list_items,
+        if list_items are found in any of the platforms, the values will be saved to the sheet
+        """
+        list_items = message_container.find_first_attachment(index, "list_items")
+        if list_items:
+            return list_items
         return ""

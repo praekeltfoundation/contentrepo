@@ -178,6 +178,19 @@ class Migration(migrations.Migration):
                                     ),
                                 ),
                                 (
+                                    "list_items",
+                                    wagtail.blocks.ListBlock(
+                                        wagtail.blocks.CharBlock(label="Title"),
+                                        default=[],
+                                        help_text="List item title, up to 24 characters.",
+                                        max_num=10,
+                                        required=False,
+                                        validators=django.core.validators.MaxLengthValidator(
+                                            24
+                                        ),
+                                    ),
+                                ),
+                                (
                                     "footer",
                                     wagtail.blocks.CharBlock(
                                         help_text="Footer cannot exceed 60 characters.",
@@ -200,3 +213,4 @@ class Migration(migrations.Migration):
             ),
         ),
     ]
+
