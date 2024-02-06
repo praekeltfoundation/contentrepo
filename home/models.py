@@ -272,7 +272,6 @@ class WhatsappBlock(blocks.StructBlock):
                     "Example values cannot contain commas"
                 )
 
-
         if (result["image"] or result["document"] or result["media"]) and len(
             result["message"]
         ) > self.MEDIA_CAPTION_MAX_LENGTH:
@@ -904,30 +903,31 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                         }
                     )
                 )
-           
+
+            #here is the issue, this piece was in the WhatsAppaBlock class before, but had to be moved here so all the errors
+            #were in one place
             example_values = self.whatsapp_body.raw_data[0]["value"].get(
                 "example_values", []
             )
-            example_values =  [v["value"] for v in example_values]
+            example_values = [v["value"] for v in example_values]
 
             if len(vars_in_msg) > 0:
                 num_example_values = len(example_values)
                 if len(vars_in_msg) != num_example_values:
                     errors.setdefault("whatsapp_body", []).append(
-                    StreamBlockValidationError(
-                        {
-                            0: StreamBlockValidationError(
-                                {
-                                    "example_values": ValidationError(
-                                        f"The number of example values provided ({num_example_values}) "
-                                        f"does not match the number of variables used in the template ({vars_in_msg})",
-                                    )
-                                }
-                            )
-                        }
+                        StreamBlockValidationError(
+                            {
+                                0: StreamBlockValidationError(
+                                    {
+                                        "example_values": ValidationError(
+                                            f"The number of example values provided ({num_example_values}) "
+                                            f"does not match the number of variables used in the template ({vars_in_msg})",
+                                        )
+                                    }
+                                )
+                            }
+                        )
                     )
-                )
-
 
         if errors:
             raise ValidationError(errors)
