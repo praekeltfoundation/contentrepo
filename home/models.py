@@ -1,6 +1,7 @@
 import re
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.db import models
@@ -18,7 +19,7 @@ from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import Page, Revision
+from wagtail.models import DraftStateMixin, Page, Revision, RevisionMixin
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
@@ -983,7 +984,8 @@ def update_embedding(sender, instance, *args, **kwargs):
     instance.embedding = embedding
 
 
-class OrderedContentSet(index.Indexed, models.Model):
+class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Model):
+    revisions = GenericRelation("wagtailcore.Revision", related_query_name="orderedcontentset")
     name = models.CharField(
         max_length=255, help_text="The name of the ordered content set."
     )
