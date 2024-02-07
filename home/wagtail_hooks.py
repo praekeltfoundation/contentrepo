@@ -4,6 +4,7 @@ from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
+from wagtail.snippets.models import register_snippet
 
 from .models import ContentPage, OrderedContentSet
 
@@ -15,6 +16,7 @@ from .views import (  # isort:skip
     ContentUploadView,
 )
 
+register_snippet(OrderedContentSet)
 
 @hooks.register("register_admin_urls")
 def register_import_urls():

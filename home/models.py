@@ -983,9 +983,10 @@ def update_embedding(sender, instance, *args, **kwargs):
 
     instance.embedding = embedding
 
-
 class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Model):
-    revisions = GenericRelation("wagtailcore.Revision", related_query_name="orderedcontentset")
+    revisions = GenericRelation(
+        "wagtailcore.Revision", related_query_name="orderedcontentset"
+    )
     name = models.CharField(
         max_length=255, help_text="The name of the ordered content set."
     )
