@@ -610,6 +610,72 @@ class TestOrderedContentSetAPI:
         }
         assert content["pages"][0]["tags"] == [t.name for t in self.page1.tags.all()]
 
+    def test_orderedcontent_endpoint_with_drafts(self, uclient):
+        """
+        Unpublished ordered content sets are returned if the qa param is set.
+        """
+        self.ordered_content_set.unpublish()
+        url = "/api/v2/orderedcontent/?qa=True"
+        # it should return a list of ordered content sets with the unpublished one included
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the content set is not live but content is returned
+        assert not self.ordered_content_set.live
+        assert content["count"] == 2
+        assert content["results"][0]["name"] == self.ordered_content_set.name
+        assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+    def test_orderedcontent_endpoint_without_drafts(self, uclient):
+        """
+        Unpublished ordered content sets are not returned if the qa param is not set.
+        """
+        self.ordered_content_set.unpublish()
+        url = "/api/v2/orderedcontent/"
+        # it should return a list of ordered content sets with the unpublished one excluded
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the content set is not live but content is returned
+        assert not self.ordered_content_set.live
+        assert content["count"] == 1
+        assert content["results"][0]["name"] == self.ordered_content_set_timed.name
+        assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+
+    def test_orderedcontent_detail_endpoint_with_drafts(self, uclient):
+        """
+        Unpublished ordered content sets are returned if the qa param is set.
+        """
+        self.ordered_content_set.unpublish()
+        url = f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?qa=True"
+        # it should return specific ordered content set that is in draft
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the content set is not live but content is returned
+        assert not self.ordered_content_set.live
+        assert content["name"] == self.ordered_content_set.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+
+    def test_orderedcontent_detail_endpoint_without_drafts(self, uclient):
+        """
+        Unpublished ordered content sets are not returned if the qa param is not set.
+        """
+        self.ordered_content_set.unpublish()
+        url = f"/api/v2/orderedcontent/{self.ordered_content_set.id}"
+        # it should return nothing
+        response = uclient.get(url)
+
+        # it redirects :TODO is it possible to resolve the redirect?
+        assert response.status_code == 301
 
 @pytest.mark.django_db
 class TestContentPageAPI2:

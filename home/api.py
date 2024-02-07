@@ -147,10 +147,19 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
         "name",
         "profile_fields",
     ]
-    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["page"])
+    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["page", "qa"])
     pagination_class = PageNumberPagination
     search_fields = ["name", "profile_fields"]
     filter_backends = (SearchFilter,)
+
+    def get_queryset(self):
+        qa = self.request.query_params.get("qa")
+
+        if qa:
+            queryset = OrderedContentSet.objects.all()
+        else:
+            queryset = OrderedContentSet.objects.filter(live=True)
+        return queryset
 
 
 api_router = WagtailAPIRouter("wagtailapi")
