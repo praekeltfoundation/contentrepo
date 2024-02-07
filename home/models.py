@@ -1073,6 +1073,9 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
         null=True,
     )
 
+    def num_pages(self):
+        return len(self.pages)
+
     panels = [
         FieldPanel("name"),
         FieldPanel("profile_fields"),
