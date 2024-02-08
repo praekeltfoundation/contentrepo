@@ -180,14 +180,9 @@ class OrderedContentSetViewSet(SnippetViewSet):
     add_to_admin_menu = True
     add_to_settings_menu = False
     exclude_from_explorer = False
-    list_display = ("name", "profile_fields", "num_pages")
+    list_display = ("name", "latest_draft_profile_fields", "num_pages", "status")
     list_export = ("name", "profile_field", "page")
     search_fields = ("name", "profile_fields")
-
-    def profile_field(self, obj):
-        return [f"{x.block_type}:{x.value}" for x in obj.profile_fields]
-
-    profile_field.short_description = "Profile Fields"
 
     def page(self, obj):
         if obj.pages:
@@ -202,11 +197,6 @@ class OrderedContentSetViewSet(SnippetViewSet):
         return ["-"]
 
     page.short_description = "Page Slugs"
-
-    def num_pages(self, obj):
-        return len(obj.pages)
-
-    num_pages.short_description = "Number of Pages"
 
 
 register_snippet(OrderedContentSetViewSet)
