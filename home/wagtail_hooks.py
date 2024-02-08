@@ -17,6 +17,7 @@ from .views import (  # isort:skip
     ContentUploadView,
 )
 
+
 @hooks.register("register_admin_urls")
 def register_import_urls():
     return [
@@ -206,6 +207,7 @@ class OrderedContentSetViewSet(SnippetViewSet):
         return len(obj.pages)
 
     num_pages.short_description = "Number of Pages"
+
 
 register_snippet(OrderedContentSetViewSet)
 # Now you just need to register your customised ModelAdmin class with Wagtail

@@ -628,6 +628,7 @@ class TestOrderedContentSetAPI:
             "profile_field": "gender",
             "value": "female",
         }
+
     def test_orderedcontent_endpoint_without_drafts(self, uclient):
         """
         Unpublished ordered content sets are not returned if the qa param is not set.
@@ -676,6 +677,7 @@ class TestOrderedContentSetAPI:
 
         # it redirects :TODO is it possible to resolve the redirect?
         assert response.status_code == 301
+
 
 @pytest.mark.django_db
 class TestContentPageAPI2:
