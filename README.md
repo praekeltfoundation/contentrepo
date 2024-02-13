@@ -32,7 +32,6 @@ This content repository allows easy content management via a headless CMS, using
 
 1. Development releases
     - Development versions have the `-dev.N` suffix
-    - They are used to test new code in QA
     - They are built off of the `main` git branch
     - They are created with git tags, eg. `v1.2.0-dev.2`
     - Development releases are created before releases, eg. `v1.2.0-dev.0` gets created before `v1.2.0`
