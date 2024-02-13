@@ -28,26 +28,29 @@ This content repository allows easy content management via a headless CMS, using
 
 
 ## Releases
-The current LTS release is: 1.0
-
 [Semantic versioning](https://semver.org/) is in use in this project.
-1. Feature releases
-    - Feature releases are a MAJOR.MINOR combination, eg. `1.2`
-    - Feature releases occur once every 3 months, but only if required. eg. If there were only patch releases in the last 3 months, no feature release will occur.
-    - The latest feature release will receive any security or bug fixes as patch releases
-    - Each feature release will have a separate git branch
-1. Patch releases
-    - Patch releases are used to fix bugs and security issues
-    - They are released as soon as they are ready
-1. LTS (Long-Term Support) Releases
-    - Every fourth release is an LTS release
-    - LTS releases are listed in the documentation
-    - LTS releases receive security patches
-    - LTS releases are supported for 5 feature releases, allowing for 15 months of support with a 3 month switchover time to the next LTS
+
 1. Development releases
-    - Development have the `-dev.N` suffix
-    - They are used to test new code before an official release is made
+    - Development versions have the `-dev.N` suffix
+    - They are used to test new code in QA
     - They are built off of the `main` git branch
+    - They are created with git tags, eg. `v1.2.0-dev.2`
+    - Development releases are created before releases, eg. `v1.2.0-dev.0` gets created before `v1.2.0`
+1. Releases
+    - Releases have a semantic version number, eg. `1.2.0`
+    - Releases are created when the changes have passed QA
+    - They are built off of the `main` git branch
+    - They are created with git tags, eg. `v1.2.0`
+
+### How to create a release
+
+1. Check that `CHANGELOG.md` is up to date.
+1. Update the version number in `pyproject.toml` to the version you want to release, eg. change `1.2.0-dev.0` to `1.2.0`
+1. Either create a pull request with these changes, and have it reviewed, or post a diff in Slack and have it reviewed there. Then merge, or commit and push, the changes.
+1. Tag these changes with the desired release, eg. `git tag v1.2.0`, and push the tag, eg. `git push origin v1.2.0`
+1. Update the version number in `pyproject.toml` to the next version number, eg. `1.2.1-dev.0`.
+1. Commit and push that change.
+
 
 ## Setting up locally
 
