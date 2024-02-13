@@ -11,13 +11,13 @@ from typing import Any
 
 import pytest
 from django.core import serializers  # type: ignore
-from django.core.files.base import File
+from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
-from wagtailmedia.models import Media
+from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content
 from home.import_content_pages import ImportException
@@ -912,6 +912,7 @@ class TestImportExport:
 
         assert src == dst
 
+
 @pytest.mark.django_db
 class TestExport:
     """
@@ -920,7 +921,8 @@ class TestExport:
     NOTE: This is not a Django (or even unittest) TestCase. It's just a
         container for related tests.
     """
-    def test_export_wa_with_image(self, impexp: ImportExport):
+
+    def test_export_wa_with_image(self, impexp: ImportExport) -> None:
         img_path = Path("home/tests/test_static") / "test.jpeg"
         img_wa = mk_img(img_path, "wa_image")
 
@@ -935,9 +937,10 @@ class TestExport:
             ],
         )
         content = impexp.export_content(locale="en")
-        assert True
+        # Export should succeed
+        assert content is not None
 
-    def test_export_viber_with_image(self, impexp: ImportExport):
+    def test_export_viber_with_image(self, impexp: ImportExport) -> None:
         img_path = Path("home/tests/test_static") / "test.jpeg"
         img_v = mk_img(img_path, "v_image")
 
@@ -952,9 +955,10 @@ class TestExport:
             ],
         )
         content = impexp.export_content(locale="en")
-        assert True
+        # Export should succeed
+        assert content is not None
 
-    def test_export_messenger_with_image(self, impexp: ImportExport):
+    def test_export_messenger_with_image(self, impexp: ImportExport) -> None:
         img_path = Path("home/tests/test_static") / "test.jpeg"
         img_m = mk_img(img_path, "m_image")
 
@@ -969,9 +973,10 @@ class TestExport:
             ],
         )
         content = impexp.export_content(locale="en")
-        assert True
+        # Export should succeed
+        assert content is not None
 
-    def test_export_wa_with_media(self, impexp: ImportExport):
+    def test_export_wa_with_media(self, impexp: ImportExport) -> None:
         media_path = Path("home/tests/test_static") / "test.mp4"
         media_wa = mk_media(media_path, "wa_media")
 
@@ -986,7 +991,8 @@ class TestExport:
             ],
         )
         content = impexp.export_content(locale="en")
-        assert True
+        # Export should succeed
+        assert content is not None
 
 
 @pytest.fixture(params=["csv", "xlsx"])
@@ -1003,6 +1009,7 @@ def mk_img(img_path: Path, title: str) -> Image:
     img = Image(title=title, file=ImageFile(img_path.open("rb"), name=img_path.name))
     img.save()
     return img
+
 
 def mk_media(media_path: Path, title: str) -> File:
     media = Media(title=title, file=File(media_path.open("rb"), name=media_path.name))
