@@ -47,7 +47,7 @@ This content repository allows easy content management via a headless CMS, using
 1. Check that `CHANGELOG.md` is up to date.
 1. Update the version number in `pyproject.toml` to the version you want to release, eg. change `1.2.0-dev.0` to `1.2.0`
 1. Either create a pull request with these changes, and have it reviewed, or post a diff in Slack and have it reviewed there. Then merge, or commit and push, the changes.
-1. Tag these changes with the desired release, eg. `git tag v1.2.0`, and push the tag, eg. `git push origin v1.2.0`
+1. Tag these changes with the desired release, eg. `git tag v1.2.0`, and push the tag, eg. `git push --tags`
 1. Update the version number in `pyproject.toml` to the next version number, eg. `1.2.1-dev.0`.
 1. Commit and push that change.
 
