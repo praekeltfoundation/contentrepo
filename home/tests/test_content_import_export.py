@@ -11,11 +11,13 @@ from typing import Any
 
 import pytest
 from django.core import serializers  # type: ignore
+from django.core.files.base import File
 from django.core.files.images import ImageFile  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
+from wagtailmedia.models import Media
 
 from home.content_import_export import import_content
 from home.import_content_pages import ImportException
@@ -910,6 +912,82 @@ class TestImportExport:
 
         assert src == dst
 
+@pytest.mark.django_db
+class TestExport:
+    """
+    Test that the export is valid.
+
+    NOTE: This is not a Django (or even unittest) TestCase. It's just a
+        container for related tests.
+    """
+    def test_export_wa_with_image(self, impexp: ImportExport):
+        img_path = Path("home/tests/test_static") / "test.jpeg"
+        img_wa = mk_img(img_path, "wa_image")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome WA", image=img_wa.id)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        assert True
+
+    def test_export_viber_with_image(self, impexp: ImportExport):
+        img_path = Path("home/tests/test_static") / "test.jpeg"
+        img_v = mk_img(img_path, "v_image")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                VBody("HA menu", [VBlk("Welcome V", image=img_v.id)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        assert True
+
+    def test_export_messenger_with_image(self, impexp: ImportExport):
+        img_path = Path("home/tests/test_static") / "test.jpeg"
+        img_m = mk_img(img_path, "m_image")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                MBody("HA menu", [MBlk("Welcome M", image=img_m.id)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        assert True
+
+    def test_export_wa_with_media(self, impexp: ImportExport):
+        media_path = Path("home/tests/test_static") / "test.mp4"
+        media_wa = mk_media(media_path, "wa_media")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome WA", media=media_wa.id)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        assert True
+
 
 @pytest.fixture(params=["csv", "xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
@@ -926,13 +1004,18 @@ def mk_img(img_path: Path, title: str) -> Image:
     img.save()
     return img
 
+def mk_media(media_path: Path, title: str) -> File:
+    media = Media(title=title, file=File(media_path.open("rb"), name=media_path.name))
+    media.save()
+    return media
+
 
 @pytest.mark.usefixtures("tmp_media_path")
 @pytest.mark.django_db
 class TestExportImportRoundtrip:
     """
     Test that the db state after exporting and reimporting content is
-    equilavent to what it was before.
+    equivalent to what it was before.
 
     NOTE: This is not a Django (or even unittest) TestCase. It's just a
         container for related tests.
