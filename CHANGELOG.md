@@ -10,11 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-
 ### Added
 
 ### Changed
-
 
 -->
 ## v1.1.0
@@ -23,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Web content preview in CMS
 - Fixed related pages export
 - Fixed API tests
-
 
 ### Added
 - Added support for SMS content
@@ -37,8 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added CI checks for pending migrations
 - Fixed Redis caching issues
 
-
-
 ### Changed
 - Moved slug uniqueness validation to the model validation/clean
 - Empty slugs will auto-generate a unique slug, but if a duplicate slug is specified the user will get a validation error instead of their chosen slug getting overwritten with a unique one.
@@ -50,8 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Made text fields non-nullable
 - Converted API tests to pytest and added docstrings
 - Updated release process in Readme.
-
-
 
 ### Deprecated
  - Removed the old importer
