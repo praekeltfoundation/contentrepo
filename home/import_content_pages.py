@@ -1,5 +1,6 @@
 import contextlib
 import csv
+import io
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field, fields
@@ -654,7 +655,7 @@ class ContentRow:
             related_pages=deserialise_list(row.pop("related_pages", "")),
             example_values=deserialise_list(row.pop("example_values", "")),
             buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
-            list_items=deserialise_list(row.pop("list_items", "")),
+            list_items=deserialise_list_with_char(row.pop("list_items", "")),
             footer=row.pop("footer") if row.get("footer") else "",
             **row,
         )
@@ -720,3 +721,13 @@ def deserialise_list(value: str) -> list[str]:
     if not value:
         return []
     return [item.strip() for item in value.strip().split(",")]
+
+
+def deserialise_list_with_char(value: str) -> list[str]:
+    if not value:
+        return []
+
+    data = io.StringIO(value)
+    reader = data.readlines()
+    items = csv.reader(reader)
+    return list(items)[0]
