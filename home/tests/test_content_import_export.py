@@ -890,7 +890,7 @@ class TestImportExport:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
 
-        # the importer adds extra fields, so we fikter for the ones we want
+        # the importer adds extra fields, so we filter for the ones we want
         allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
         dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
         src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
@@ -909,7 +909,7 @@ class TestImportExport:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
 
-        # the importer adds extra fields, so we fikter for the ones we want
+        # the importer adds extra fields, so we filter for the ones we want
         allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
         dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
         src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
