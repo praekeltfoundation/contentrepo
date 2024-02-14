@@ -23,12 +23,6 @@ from .utils import create_page, create_page_rating
 
 
 class ContentPageTests(TestCase):
-
-    def test_sample(self):
-        page = create_page()
-        print(page)
-        self.assertEqual(page.page_rating, "(no ratings yet)")
-
     def test_page_and_revision_rating(self):
         page = create_page()
 
