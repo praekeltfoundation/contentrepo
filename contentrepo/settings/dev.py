@@ -15,5 +15,3 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # We default to using local memory for dev and tests, so that Redis isn't a dependancy
 # We test against Redis in the CI
 CACHES = {"default": env.cache("CACHE_URL", default="locmemcache://")}
-
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
