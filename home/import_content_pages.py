@@ -1,6 +1,5 @@
 import contextlib
 import csv
-import io
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field, fields
@@ -723,4 +722,3 @@ def deserialise_list(value: str) -> list[str]:
 
     items = list(csv.reader([value]))[0]
     return [item.strip() for item in items]
-
