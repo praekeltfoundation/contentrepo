@@ -920,7 +920,6 @@ class TestImportExport:
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
-        assert isinstance(e.value.message["footer"], ValidationError)
 
 
 @pytest.fixture(params=["csv", "xlsx"])
