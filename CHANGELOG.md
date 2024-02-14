@@ -20,10 +20,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v1.1.0
 ### Fixed
 - Autofill for empty slug
+- Fixed Web content preview in CMS
+- Fixed related pages export
+- Fixed API tests
+
 
 ### Added
 - Added support for SMS content
 - Added support for USSD content
+- Added support for a Footer in WhatsApp content
+- Added support for List Messages in WhatsApp content
+- Added error handling on WhatsApp template submission errors, and adds issue to sentry
+- Added validation of variables used in WhatsApp template submission
+- Added WhatsApp title check
+- Added typing information for migration test
+- Added CI checks for pending migrations
+- Fixed Redis caching issues
+
 
 
 ### Changed
@@ -33,10 +46,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test speedups. Tests now run in parallel by default, and there's a separate contentrepo/settings/test.py for test-specific settings.
 - Tests no longer run in parallel by default, because the output is a little less clear and the speedup is negligible on some systems.
 - WhatsApp example values no longer show on the default API view, and forms part of the fields returned when the parameter `whatsapp=true` is added to the api call
+- Improved testing of Importer
+- Made text fields non-nullable
+- Converted API tests to pytest and added docstrings
+
 
 
 ### Deprecated
  - Removed the old importer
+ - Removed the `Authorization` and `Authentication` WhatsApp template category
 
 
 ## v1.1.0-dev.5
@@ -71,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated next_prompt on WhatsApp messages to buttons
 - Refactored ContentPage import. Translation keys are now added as translation keys instead of as tags
 - Improved testing for import and export
+- Updated release process in Readme.
 
 ### Deprecated
 - next_prompt on WhatsApp messages is deprecated, use buttons instead. Will be removed on the next major release
