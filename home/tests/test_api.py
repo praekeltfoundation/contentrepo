@@ -1,9 +1,14 @@
 import json
 import queue
 from pathlib import Path
+from bs4 import BeautifulSoup
+
 
 import pytest
 from wagtail import blocks
+from django.test import Client
+from pytest_django.asserts import assertTemplateUsed
+
 
 from home.content_import_export import import_content
 from home.models import (
@@ -27,6 +32,14 @@ from .page_builder import (
 )
 from .utils import create_page
 
+
+#use this to access the admin interface
+@pytest.fixture()
+def admin_client(client, django_user_model):
+    creds = {"username": "test", "password": "test"}
+    django_user_model.objects.create_superuser(**creds)
+    client.login(**creds)
+    return client
 
 @pytest.fixture()
 def uclient(client, django_user_model):
@@ -88,6 +101,34 @@ class TestContentPageAPI:
             tags=["self_help"],
         )
 
+
+    def test_import_button_text(self, admin_client):
+
+        page = ContentPage.objects.first()
+        page_id = page.id
+        url = f"/admin/pages/{page_id}/edit/"
+        response = admin_client.get(url)
+
+        assert response.status_code == 200
+        content_str = response.content.decode("utf-8")
+
+        # Use BeautifulSoup to parse the HTML content
+        soup = BeautifulSoup(content_str, 'html.parser')
+
+        #confirm the correct template is rendered
+        assertTemplateUsed(response, 'wagtail_content_import/picker_buttons_base.html')
+
+        # Find the div with the specified class
+        div_element = soup.find('div', class_='content-import button button-longrunning dropdown-toggle')
+
+        # Check if the text is present in the div's contents
+        assert div_element and "Import web from doc" in div_element.get_text(strip=True), "Text not found on the page."
+
+
+
+      
+
+       
     def test_login_required(self, client):
         """
         Users that aren't logged in shouldn't be allowed to access the API
