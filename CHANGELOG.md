@@ -9,9 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Fixed
+
+
+### Added
+
+### Changed
+
+
+-->
+## v1.1.0
+### Fixed
 - Autofill for empty slug
 
 ### Added
+- Added support for SMS content
+- Added support for USSD content
+
 
 ### Changed
 - Moved slug uniqueness validation to the model validation/clean
@@ -19,8 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Slug uniqueness is per-locale
 - Test speedups. Tests now run in parallel by default, and there's a separate contentrepo/settings/test.py for test-specific settings.
 - Tests no longer run in parallel by default, because the output is a little less clear and the speedup is negligible on some systems.
+- WhatsApp example values no longer show on the default API view, and forms part of the fields returned when the parameter `whatsapp=true` is added to the api call
 
--->
+
+### Deprecated
+ - Removed the old importer
+
 
 ## v1.1.0-dev.5
 ### Fixed
