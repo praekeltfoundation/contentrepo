@@ -260,14 +260,10 @@ class ContentImporter:
         )
 
         if len(row.footer) > 60:
-            raise ImportException(
-                f"footer too long: {row.footer}", row.page_id
-            )
+            raise ImportException(f"footer too long: {row.footer}", row.page_id)
 
         if len(row.list_items) > 24:
-            raise ImportException(
-                f"list_items too long: {row.list_items}", row.page_id
-            )
+            raise ImportException(f"list_items too long: {row.list_items}", row.page_id)
 
         self.shadow_pages[(row.slug, locale)] = page
 
@@ -341,7 +337,6 @@ class ContentImporter:
                     list_items=row.list_items,
                 )
             )
-
         if row.is_sms_message:
             page.enable_sms = True
             page.sms_body.append(ShadowSMSBlock(message=row.sms_body))

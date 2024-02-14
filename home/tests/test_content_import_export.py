@@ -11,7 +11,6 @@ from typing import Any
 
 import pytest
 from django.core import serializers  # type: ignore
-from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
