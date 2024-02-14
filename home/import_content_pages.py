@@ -258,6 +258,20 @@ class ContentImporter:
             parent=row.parent,
             related_pages=row.related_pages,
         )
+        errors = {}
+        if len(row.footer) > 60:
+            errors["footer"] = ValidationError(
+                f"footer too long: {row.footer}", row.page_id
+            )
+
+        if len(row.list_items) > 24:
+            errors["list_items"] = ValidationError(
+                f"list_items too long: {row.list_items}", row.page_id
+            )
+
+        if errors:
+            raise ImportException(errors)
+
         self.shadow_pages[(row.slug, locale)] = page
 
         self.add_message_to_shadow_content_page_from_row(row, locale)
@@ -330,6 +344,7 @@ class ContentImporter:
                     list_items=row.list_items,
                 )
             )
+
         if row.is_sms_message:
             page.enable_sms = True
             page.sms_body.append(ShadowSMSBlock(message=row.sms_body))
