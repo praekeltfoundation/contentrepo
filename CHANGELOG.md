@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved testing of Importer
 - Made text fields non-nullable
 - Converted API tests to pytest and added docstrings
+- Updated release process in Readme.
 
 
 
@@ -89,7 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated next_prompt on WhatsApp messages to buttons
 - Refactored ContentPage import. Translation keys are now added as translation keys instead of as tags
 - Improved testing for import and export
-- Updated release process in Readme.
+
 
 ### Deprecated
 - next_prompt on WhatsApp messages is deprecated, use buttons instead. Will be removed on the next major release
