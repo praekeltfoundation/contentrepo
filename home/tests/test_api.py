@@ -488,7 +488,7 @@ class TestOrderedContentSetAPI:
         self.ordered_content_set.save()
         # self.ordered_content_set.save_revision().publish()
 
-        self.ordered_content_set_timed = OrderedContentSet(name="Test set timed")
+        self.ordered_content_set_timed = OrderedContentSet(name="Test set")
         self.ordered_content_set_timed.pages.append(
             (
                 "pages",
@@ -647,7 +647,7 @@ class TestOrderedContentSetAPI:
         assert (
             content["count"] == 2
         )  # TODO: Change this when we add support for qa param
-        assert content["results"][0]["name"] == self.ordered_content_set.name
+        assert content["results"][0]["name"] == self.ordered_content_set_timed.name
         assert content["results"][0]["profile_fields"][0] == {
             "profile_field": "gender",
             "value": "female",
@@ -700,7 +700,7 @@ class TestOrderedContentSetAPI:
 
         assert content["count"] == 2
         assert len(content["results"][0]["profile_fields"]) == 1
-        assert content["results"][0]["name"] == self.ordered_content_set.name
+        assert content["results"][0]["name"] == self.ordered_content_set_timed.name
         assert content["results"][0]["profile_fields"][0] == {
             "profile_field": "gender",
             "value": "female",
