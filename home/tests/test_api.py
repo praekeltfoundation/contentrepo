@@ -644,7 +644,9 @@ class TestOrderedContentSetAPI:
 
         # the content set is not live but content is returned
         assert not self.ordered_content_set.live
-        assert content["count"] == 2 #TODO: Change this when we add support for qa param
+        assert (
+            content["count"] == 2
+        )  # TODO: Change this when we add support for qa param
         assert content["results"][0]["name"] == self.ordered_content_set.name
         assert content["results"][0]["profile_fields"][0] == {
             "profile_field": "gender",
