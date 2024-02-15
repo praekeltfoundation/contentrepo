@@ -726,4 +726,6 @@ def deserialise_dict(value: str) -> dict[str, str]:
 def deserialise_list(value: str) -> list[str]:
     if not value:
         return []
-    return [item.strip() for item in value.strip().split(",")]
+
+    items = list(csv.reader([value]))[0]
+    return [item.strip() for item in items]

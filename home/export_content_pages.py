@@ -1,5 +1,6 @@
 import copy
 import csv
+import io
 from dataclasses import asdict, astuple, dataclass, fields
 from itertools import zip_longest
 from json import dumps
@@ -137,7 +138,11 @@ class ExportRow:
             if "footer" in whatsapp.value:
                 self.footer = whatsapp.value["footer"]
             if "list_items" in whatsapp.value:
-                self.list_items = ", ".join(whatsapp.value["list_items"])
+                output = io.StringIO()
+                writer = csv.writer(output)
+                writer.writerow(whatsapp.value["list_items"])
+                self.list_items = output.getvalue().strip()
+                output.close()
 
     @staticmethod
     def serialise_buttons(buttons: blocks.StreamValue.StreamChild) -> str:
