@@ -910,6 +910,16 @@ class TestImportExport:
 
         assert src == dst
 
+    def test_field_maximum_characters(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with list_items and and footer chsaracters exceeding maximum charactercount
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp_footer_max_characters.csv")
+
+        assert isinstance(e.value, ImportException)
+        assert e.value.row_num == 4
+
 
 @pytest.fixture(params=["csv", "xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
