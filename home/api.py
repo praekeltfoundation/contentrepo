@@ -1,3 +1,5 @@
+
+from django.db.models.manager import BaseManager
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -153,12 +155,10 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
     filter_backends = (SearchFilter,)
 
     def get_queryset(self):
-        qa = self.request.query_params.get("qa")
+        #TODO: Filter using the qa Param
+        #qa = self.request.query_params.get("qa")
 
-        if qa:
-            queryset = OrderedContentSet.objects.all()
-        else:
-            queryset = OrderedContentSet.objects.filter(live=True)
+        queryset = OrderedContentSet.objects.all()
         return queryset
 
 
