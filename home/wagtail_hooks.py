@@ -178,7 +178,7 @@ class OrderedContentSetAdmin(ModelAdmin):
     add_to_settings_menu = False
     exclude_from_explorer = False
     list_display = ("name", "profile_fields", "num_pages")
-    list_export = ("name", "profile_field", "page")
+    list_export = ("name", "profile_field", "page", "time", "before_or_after", "contact_field")
     search_fields = ("name", "profile_fields")
 
     def profile_field(self, obj):
@@ -199,6 +199,47 @@ class OrderedContentSetAdmin(ModelAdmin):
         return ["-"]
 
     page.short_description = "Page Slugs"
+
+    def time(self, obj):
+        if obj.pages:
+            return [
+                (
+                    f"{p.value['time']} {p.value['unit']}"
+                    if p.value and "time" in p.value
+                    else ""
+                )
+                for p in obj.pages
+            ]
+        return ["-"]
+    time.short_description = "Time"
+
+    def before_or_after(self, obj):
+        if obj.pages:
+            return [
+                (
+                    p.value["before_or_after"]
+                    if p.value and "before_or_after" in p.value
+                    else ""
+                )
+                for p in obj.pages
+            ]
+        return ["-"]
+
+    before_or_after.short_description = "Before or After"
+
+    def contact_field(self, obj):
+        if obj.pages:
+            return [
+                (
+                    p.value["contact_field"]
+                    if p.value and "contact_field" in p.value
+                    else ""
+                )
+                for p in obj.pages
+            ]
+        return ["-"]
+
+    contact_field.short_description = "Contact Field"
 
     def num_pages(self, obj):
         return len(obj.pages)
