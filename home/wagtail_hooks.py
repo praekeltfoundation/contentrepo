@@ -178,7 +178,14 @@ class OrderedContentSetAdmin(ModelAdmin):
     add_to_settings_menu = False
     exclude_from_explorer = False
     list_display = ("name", "profile_fields", "num_pages")
-    list_export = ("name", "profile_field", "page", "time", "before_or_after", "contact_field")
+    list_export = (
+        "name",
+        "profile_field",
+        "page",
+        "time",
+        "before_or_after",
+        "contact_field",
+    )
     search_fields = ("name", "profile_fields")
 
     def profile_field(self, obj):
@@ -211,6 +218,7 @@ class OrderedContentSetAdmin(ModelAdmin):
                 for p in obj.pages
             ]
         return ["-"]
+
     time.short_description = "Time"
 
     def before_or_after(self, obj):
