@@ -643,9 +643,7 @@ class TestOrderedContentSetAPI:
 
         # the content set is not live but content is returned
         assert not self.ordered_content_set.live
-        assert (
-            content["count"] == 2
-        )
+        assert content["count"] == 2
         assert content["results"][0]["name"] == self.ordered_content_set_timed.name
         assert content["results"][0]["profile_fields"][0] == {
             "profile_field": "gender",
