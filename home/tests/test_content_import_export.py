@@ -612,6 +612,19 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
+    def test_list_items_values_with_comma(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file containing list items that has a comma
+        page and then exporting it produces a duplicate of the original file.
+
+        (This uses list_items_with_comma.csv.)
+        """
+        set_profile_field_options()
+        csv_bytes = csv_impexp.import_file("list_items_with_comma.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
 
 @pytest.mark.django_db
 class TestImportExport:
@@ -879,7 +892,7 @@ class TestImportExport:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
 
-        # the importer adds extra fields, so we fikter for the ones we want
+        # the importer adds extra fields, so we filter for the ones we want
         allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
         dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
         src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
@@ -898,7 +911,7 @@ class TestImportExport:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
 
-        # the importer adds extra fields, so we fikter for the ones we want
+        # the importer adds extra fields, so we filter for the ones we want
         allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
         dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
         src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
@@ -911,6 +924,16 @@ class TestImportExport:
         assert health_info.slug == "health_info"
 
         assert src == dst
+
+    def test_field_maximum_characters(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with list_items and and footer chsaracters exceeding maximum charactercount
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp_footer_max_characters.csv")
+
+        assert isinstance(e.value, ImportException)
+        assert e.value.row_num == 4
 
 
 @pytest.mark.django_db
@@ -1609,6 +1632,40 @@ class TestExportImportRoundtrip:
         impexp.import_content(content, locale="en")
         imported = impexp.get_page_json()
         assert imported == orig_en
+
+    def test_footer(self, impexp: ImportExport) -> None:
+        """
+        ContentPages with footer in whatsapp messages are preserved
+        across export/import.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+        )
+
+        footer = "Test footer"
+        _health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody(
+                    "health info",
+                    [WABlk("*Health information* WA", footer=footer)],
+                )
+            ],
+            whatsapp_template_name="template-health-info",
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
 
     def test_example_values(self, impexp: ImportExport) -> None:
         """

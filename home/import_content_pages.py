@@ -258,6 +258,13 @@ class ContentImporter:
             parent=row.parent,
             related_pages=row.related_pages,
         )
+
+        if len(row.footer) > 60:
+            raise ImportException(f"footer too long: {row.footer}", row.page_id)
+
+        if len(row.list_items) > 24:
+            raise ImportException(f"list_items too long: {row.list_items}", row.page_id)
+
         self.shadow_pages[(row.slug, locale)] = page
 
         self.add_message_to_shadow_content_page_from_row(row, locale)
@@ -326,6 +333,7 @@ class ContentImporter:
                     next_prompt=row.next_prompt,
                     example_values=row.example_values,
                     buttons=buttons,
+                    footer=row.footer,
                     list_items=row.list_items,
                 )
             )
@@ -530,6 +538,7 @@ class ShadowWhatsappBlock:
     example_values: list[str] = field(default_factory=list)
     variation_messages: list["ShadowVariationBlock"] = field(default_factory=list)
     list_items: list[str] = field(default_factory=list)
+    footer: str = ""
 
     @property
     def wagtail_format(
@@ -542,6 +551,7 @@ class ShadowWhatsappBlock:
             "buttons": self.buttons,
             "variation_messages": [m.wagtail_format for m in self.variation_messages],
             "list_items": self.list_items,
+            "footer": self.footer,
         }
 
 
@@ -631,6 +641,7 @@ class ContentRow:
     doc_link: str = ""
     media_link: str = ""
     related_pages: list[str] = field(default_factory=list)
+    footer: str = ""
 
     @classmethod
     def from_flat(cls, row: dict[str, str]) -> "ContentRow":
@@ -651,6 +662,7 @@ class ContentRow:
             example_values=deserialise_list(row.pop("example_values", "")),
             buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
             list_items=deserialise_list(row.pop("list_items", "")),
+            footer=row.pop("footer") if row.get("footer") else "",
             **row,
         )
 
@@ -714,4 +726,6 @@ def deserialise_dict(value: str) -> dict[str, str]:
 def deserialise_list(value: str) -> list[str]:
     if not value:
         return []
-    return [item.strip() for item in value.strip().split(",")]
+
+    items = list(csv.reader([value]))[0]
+    return [item.strip() for item in items]
