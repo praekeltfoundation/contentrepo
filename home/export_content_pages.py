@@ -111,24 +111,24 @@ class ExportRow:
         # exporter if there's more than one.
         if viber:
             self.viber_body = viber.value["message"].strip()
-            if "image" in viber.value:
-                self.image_link = viber.value["image"]
+            if "image" in viber.value and viber.value["image"] is not None:
+                self.image_link = viber.value["image"].file.url
         if messenger:
             self.messenger_body = messenger.value["message"].strip()
-            if "image" in messenger.value:
-                self.image_link = messenger.value["image"]
+            if "image" in messenger.value and messenger.value["image"] is not None:
+                self.image_link = messenger.value["image"].file.url
         if sms:
             self.sms_body = sms.value["message"].strip()
         if ussd:
             self.ussd_body = ussd.value["message"].strip()
         if whatsapp:
             self.whatsapp_body = whatsapp.value["message"].strip()
-            if "image" in whatsapp.value:
-                self.image_link = whatsapp.value["image"]
+            if "image" in whatsapp.value and whatsapp.value["image"] is not None:
+                self.image_link = whatsapp.value["image"].file.url
             if "document" in whatsapp.value:
                 self.doc_link = whatsapp.value["document"]
-            if "media" in whatsapp.value:
-                self.media_link = whatsapp.value["media"]
+            if "media" in whatsapp.value and whatsapp.value["media"] is not None:
+                self.media_link = whatsapp.value["media"].file.url
             if "next_prompt" in whatsapp.value:
                 self.next_prompt = whatsapp.value["next_prompt"]
             if "buttons" in whatsapp.value:
