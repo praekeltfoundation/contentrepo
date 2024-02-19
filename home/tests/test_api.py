@@ -612,25 +612,24 @@ class TestOrderedContentSetAPI:
         }
         assert content["pages"][0]["tags"] == [t.name for t in self.page1.tags.all()]
 
-    # TODO: Add this when we add support for qa param
-    # def test_orderedcontent_endpoint_with_drafts(self, uclient):
-    #     """
-    #     Unpublished ordered content sets are returned if the qa param is set.
-    #     """
-    #     self.ordered_content_set.unpublish()
-    #     url = "/api/v2/orderedcontent/?qa=True"
-    #     # it should return a list of ordered content sets with the unpublished one included
-    #     response = uclient.get(url)
-    #     content = json.loads(response.content)
+    def test_orderedcontent_endpoint_with_drafts(self, uclient):
+        """
+        Unpublished ordered content sets are returned if the qa param is set.
+        """
+        self.ordered_content_set.unpublish()
+        url = "/api/v2/orderedcontent/?qa=True"
+        # it should return a list of ordered content sets with the unpublished one included
+        response = uclient.get(url)
+        content = json.loads(response.content)
 
-    #     # the content set is not live but content is returned
-    #     assert not self.ordered_content_set.live
-    #     assert content["count"] == 2
-    #     assert content["results"][0]["name"] == self.ordered_content_set.name
-    #     assert content["results"][0]["profile_fields"][0] == {
-    #         "profile_field": "gender",
-    #         "value": "female",
-    #     }
+        # the content set is not live but content is returned
+        assert not self.ordered_content_set.live
+        assert content["count"] == 2
+        assert content["results"][0]["name"] == self.ordered_content_set.name
+        assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
 
     def test_orderedcontent_endpoint_without_drafts(self, uclient):
         """
@@ -646,31 +645,30 @@ class TestOrderedContentSetAPI:
         assert not self.ordered_content_set.live
         assert (
             content["count"] == 2
-        )  # TODO: Change this when we add support for qa param
+        )
         assert content["results"][0]["name"] == self.ordered_content_set_timed.name
         assert content["results"][0]["profile_fields"][0] == {
             "profile_field": "gender",
             "value": "female",
         }
 
-    # TODO: Add this when we add support for qa param
-    # def test_orderedcontent_detail_endpoint_with_drafts(self, uclient):
-    #     """
-    #     Unpublished ordered content sets are returned if the qa param is set.
-    #     """
-    #     self.ordered_content_set.unpublish()
-    #     url = f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?qa=True"
-    #     # it should return specific ordered content set that is in draft
-    #     response = uclient.get(url)
-    #     content = json.loads(response.content)
+    def test_orderedcontent_detail_endpoint_with_drafts(self, uclient):
+        """
+        Unpublished ordered content sets are returned if the qa param is set.
+        """
+        self.ordered_content_set.unpublish()
+        url = f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?qa=True"
+        # it should return specific ordered content set that is in draft
+        response = uclient.get(url)
+        content = json.loads(response.content)
 
-    #     # the content set is not live but content is returned
-    #     assert not self.ordered_content_set.live
-    #     assert content["name"] == self.ordered_content_set.name
-    #     assert content["profile_fields"][0] == {
-    #         "profile_field": "gender",
-    #         "value": "female",
-    #     }
+        # the content set is not live but content is returned
+        assert not self.ordered_content_set.live
+        assert content["name"] == self.ordered_content_set.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
 
     def test_orderedcontent_detail_endpoint_without_drafts(self, uclient):
         """
@@ -706,18 +704,17 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
 
-        # TODO: When the qa param is introduced
-        # response = uclient.get("/api/v2/orderedcontent/?qa=True")
-        # content = json.loads(response.content)
-        # assert len(content["results"][0]["profile_fields"]) == 2
-        # assert content["results"][0]["profile_fields"][0] == {
-        #     "profile_field": "gender",
-        #     "value": "female",
-        # }
-        # assert content["results"][0]["profile_fields"][1] == {
-        #     "profile_field": "relationship",
-        #     "value": "in_a_relationship",
-        # }
+        response = uclient.get("/api/v2/orderedcontent/?qa=True")
+        content = json.loads(response.content)
+        assert len(content["results"][0]["profile_fields"]) == 2
+        assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["results"][0]["profile_fields"][1] == {
+            "profile_field": "relationship",
+            "value": "in_a_relationship",
+        }
 
 
 @pytest.mark.django_db

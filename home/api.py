@@ -153,10 +153,19 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
     filter_backends = (SearchFilter,)
 
     def get_queryset(self):
-        # TODO: Filter using the qa Param
-        # qa = self.request.query_params.get("qa")
+        qa = self.request.query_params.get("qa")
 
-        queryset = OrderedContentSet.objects.all()
+        if qa:
+            # return the latest revision for each OrderedContentSet
+            queryset = OrderedContentSet.objects.all()
+            for ocs in queryset:
+                latest_revision = ocs.revisions.order_by("-created_at").first()
+                if latest_revision:
+                    latest_revision = latest_revision.as_object()
+                    ocs.profile_fields = latest_revision.profile_fields
+
+        else:
+            queryset = OrderedContentSet.objects.all()
         return queryset
 
 
