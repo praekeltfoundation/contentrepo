@@ -211,11 +211,7 @@ class OrderedContentSetAdmin(ModelAdmin):
     def time(self, obj):
         if obj.pages:
             return [
-                (
-                    f"{p.value['time']}"
-                    if p.value and "time" in p.value
-                    else ""
-                )
+                (f"{p.value['time']}" if p.value and "time" in p.value else "")
                 for p in obj.pages
             ]
         return ["-"]
@@ -225,11 +221,7 @@ class OrderedContentSetAdmin(ModelAdmin):
     def unit(self, obj):
         if obj.pages:
             return [
-                (
-                    p.value['unit']
-                    if p.value and "unit" in p.value
-                    else ""
-                )
+                (p.value["unit"] if p.value and "unit" in p.value else "")
                 for p in obj.pages
             ]
         return ["-"]

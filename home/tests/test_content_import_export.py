@@ -464,6 +464,7 @@ class ImportExport:
 def csv_impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, "csv")
 
+
 @pytest.fixture()
 def xlsx_impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, "xlsx")
@@ -950,7 +951,9 @@ class TestImportExport:
         dict_content = csv2dicts(content)
         csv_impexp.import_ordered_sets(content)
 
-        ordered_set = OrderedContentSet.objects.filter(name=dict_content[0]["Name"]).first()
+        ordered_set = OrderedContentSet.objects.filter(
+            name=dict_content[0]["Name"]
+        ).first()
 
         assert ordered_set.name == "Test Set"
         pages = unwagtail(ordered_set.pages)
@@ -961,9 +964,14 @@ class TestImportExport:
         assert page["unit"] == "days"
         assert page["before_or_after"] == "before"
         assert page["contact_field"] == "edd"
-        assert unwagtail(ordered_set.profile_fields) == [("gender", "male"), ("relationship", "in_a_relationship")]
+        assert unwagtail(ordered_set.profile_fields) == [
+            ("gender", "male"),
+            ("relationship", "in_a_relationship"),
+        ]
 
-    def test_import_ordered_sets_xlsx(self, xlsx_impexp: ImportExport, csv_impexp: ImportExport):
+    def test_import_ordered_sets_xlsx(
+        self, xlsx_impexp: ImportExport, csv_impexp: ImportExport
+    ):
         """
         Importing a XLSX file with ordered content sets should not break
         """
@@ -982,7 +990,10 @@ class TestImportExport:
         assert page["unit"] == "days"
         assert page["before_or_after"] == "before"
         assert page["contact_field"] == "edd"
-        assert unwagtail(ordered_set.profile_fields) == [("gender", "male"), ("relationship", "in_a_relationship")]
+        assert unwagtail(ordered_set.profile_fields) == [
+            ("gender", "male"),
+            ("relationship", "in_a_relationship"),
+        ]
 
 
 @pytest.fixture(params=["csv", "xlsx"])
