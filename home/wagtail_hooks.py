@@ -183,6 +183,7 @@ class OrderedContentSetAdmin(ModelAdmin):
         "profile_field",
         "page",
         "time",
+        "unit",
         "before_or_after",
         "contact_field",
     )
@@ -211,7 +212,7 @@ class OrderedContentSetAdmin(ModelAdmin):
         if obj.pages:
             return [
                 (
-                    f"{p.value['time']} {p.value['unit']}"
+                    f"{p.value['time']}"
                     if p.value and "time" in p.value
                     else ""
                 )
@@ -220,6 +221,20 @@ class OrderedContentSetAdmin(ModelAdmin):
         return ["-"]
 
     time.short_description = "Time"
+
+    def unit(self, obj):
+        if obj.pages:
+            return [
+                (
+                    p.value['unit']
+                    if p.value and "unit" in p.value
+                    else ""
+                )
+                for p in obj.pages
+            ]
+        return ["-"]
+
+    unit.short_description = "Unit"
 
     def before_or_after(self, obj):
         if obj.pages:
@@ -233,7 +248,7 @@ class OrderedContentSetAdmin(ModelAdmin):
             ]
         return ["-"]
 
-    before_or_after.short_description = "Before or After"
+    before_or_after.short_description = "Before Or After"
 
     def contact_field(self, obj):
         if obj.pages:
