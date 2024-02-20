@@ -419,7 +419,7 @@ class ImportExport:
         """
         import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
 
-    def import_ordered_sets(self, content_bytes: bytes, purge=False) -> None:
+    def import_ordered_sets(self, content_bytes: bytes, purge: bool = False) -> None:
         import_ordered_sets(BytesIO(content_bytes), self.format.upper(), Queue(), purge)
 
     def read_bytes(self, path_str: str, path_base: str = "home/tests") -> bytes:
