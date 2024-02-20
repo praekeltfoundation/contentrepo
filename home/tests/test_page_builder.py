@@ -3,10 +3,8 @@ from typing import Any
 from uuid import UUID
 
 import pytest
-from wagtail.blocks import StreamValue, StructValue  # type: ignore
-from wagtail.blocks.list_block import ListValue  # type: ignore
+from utils import unwagtail
 from wagtail.models import Locale, Page  # type: ignore
-from wagtail.rich_text import RichText  # type: ignore
 
 from home.models import ContentPage, ContentPageIndex, HomePage
 
@@ -23,24 +21,6 @@ from .page_builder import (
     WABlk,
     WABody,
 )
-
-
-def unwagtail(val):  # type: ignore[no-untyped-def] # No type info
-    """
-    Recursively convert values from the various Wagtail StreamField types to
-    something we can more easily assert on.
-    """
-    match val:
-        case StreamValue():  # type: ignore[misc] # No type info
-            return [(b.block_type, unwagtail(b.value)) for b in val]
-        case StructValue():  # type: ignore[misc] # No type info
-            return {k: unwagtail(v) for k, v in val.items()}
-        case ListValue():  # type: ignore[misc] # No type info
-            return [unwagtail(v) for v in val]
-        case RichText():  # type: ignore[misc] # No type info
-            return val.source
-        case _:
-            return val
 
 
 def tagslugs(taglikes: Iterable[dict[str, str]]) -> list[str]:
