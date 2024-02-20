@@ -419,7 +419,7 @@ class ImportExport:
         """
         import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
 
-    def import_ordered_sets(self, content_bytes: bytes, purge=False):
+    def import_ordered_sets(self, content_bytes: bytes, purge=False) -> None:
         import_ordered_sets(BytesIO(content_bytes), self.format.upper(), Queue(), purge)
 
     def read_bytes(self, path_str: str, path_base: str = "home/tests") -> bytes:
@@ -942,18 +942,15 @@ class TestImportExport:
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
 
-    def test_import_ordered_sets_csv(self, csv_impexp: ImportExport):
+    def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with ordered content sets should not break
         """
         csv_impexp.import_file("contentpage_required_fields.csv")
         content = csv_impexp.read_bytes("ordered_content.csv")
-        dict_content = csv2dicts(content)
         csv_impexp.import_ordered_sets(content)
 
-        ordered_set = OrderedContentSet.objects.filter(
-            name=dict_content[0]["Name"]
-        ).first()
+        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
 
         assert ordered_set.name == "Test Set"
         pages = unwagtail(ordered_set.pages)
@@ -971,7 +968,7 @@ class TestImportExport:
 
     def test_import_ordered_sets_xlsx(
         self, xlsx_impexp: ImportExport, csv_impexp: ImportExport
-    ):
+    ) -> None:
         """
         Importing a XLSX file with ordered content sets should not break
         """

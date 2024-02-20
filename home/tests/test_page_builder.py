@@ -3,10 +3,10 @@ from typing import Any
 from uuid import UUID
 
 import pytest
-from utils import unwagtail
 from wagtail.models import Locale, Page  # type: ignore
 
 from home.models import ContentPage, ContentPageIndex, HomePage
+from home.tests.utils import unwagtail
 
 from .helpers import set_profile_field_options
 from .page_builder import (

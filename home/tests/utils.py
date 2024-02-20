@@ -97,6 +97,7 @@ def create_page_rating(page, helpful=True, comment=""):
         comment=comment,
     )
 
+
 def unwagtail(val):  # type: ignore[no-untyped-def] # No type info
     """
     Recursively convert values from the various Wagtail StreamField types to
