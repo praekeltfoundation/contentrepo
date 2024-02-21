@@ -165,7 +165,7 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
                     ocs.profile_fields = latest_revision.profile_fields
 
         else:
-            queryset = OrderedContentSet.objects.all()
+            queryset = OrderedContentSet.objects.filter(live=True).order_by("last_published_at")
         return queryset
 
 

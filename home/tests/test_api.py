@@ -481,14 +481,12 @@ class TestOrderedContentSetAPI:
         with path.open(mode="rb") as f:
             import_content(f, "CSV", queue.Queue())
         self.page1 = ContentPage.objects.first()
-        # self.page1.save_revision().publish()
         self.ordered_content_set = OrderedContentSet(name="Test set")
         self.ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         self.ordered_content_set.profile_fields.append(("gender", "female"))
         self.ordered_content_set.save()
-        # self.ordered_content_set.save_revision().publish()
 
-        self.ordered_content_set_timed = OrderedContentSet(name="Test set")
+        self.ordered_content_set_timed = OrderedContentSet(name="Test set timed")
         self.ordered_content_set_timed.pages.append(
             (
                 "pages",
@@ -643,7 +641,7 @@ class TestOrderedContentSetAPI:
 
         # the content set is not live but content is returned
         assert not self.ordered_content_set.live
-        assert content["count"] == 2
+        assert content["count"] == 1
         assert content["results"][0]["name"] == self.ordered_content_set_timed.name
         assert content["results"][0]["profile_fields"][0] == {
             "profile_field": "gender",
@@ -696,14 +694,20 @@ class TestOrderedContentSetAPI:
 
         assert content["count"] == 2
         assert len(content["results"][0]["profile_fields"]) == 1
-        assert content["results"][0]["name"] == self.ordered_content_set_timed.name
+        assert content["results"][0]["name"] == self.ordered_content_set.name
         assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["results"][1]["name"] == self.ordered_content_set_timed.name
+        assert content["results"][1]["profile_fields"][0] == {
             "profile_field": "gender",
             "value": "female",
         }
 
         response = uclient.get("/api/v2/orderedcontent/?qa=True")
         content = json.loads(response.content)
+        assert content["count"] == 2
         assert len(content["results"][0]["profile_fields"]) == 2
         assert content["results"][0]["profile_fields"][0] == {
             "profile_field": "gender",
