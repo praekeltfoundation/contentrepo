@@ -158,7 +158,7 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
 
         if qa:
             # return the latest revision for each OrderedContentSet
-            queryset = OrderedContentSet.objects.all()
+            queryset = OrderedContentSet.objects.all().order_by("last_published_at")
             for ocs in queryset:
                 latest_revision = ocs.revisions.order_by("-created_at").first()
                 if latest_revision:
