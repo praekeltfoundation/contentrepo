@@ -703,25 +703,38 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
 
-    def test_orderedcontent_detail_endpoint_without_drafts(self, uclient):
+    def test_orderedcontent_detail_endpoint_without_drafts(self, uclient, settings):
         """
         Unpublished ordered content sets are not returned if the qa param is not set.
         """
+        settings.STATIC_ROOT = Path("home/tests/test_static")
         self.ordered_content_set.unpublish()
         url = f"/api/v2/orderedcontent/{self.ordered_content_set.id}"
-        # it should return nothing
-        response = uclient.get(url)
 
-        # it redirects :TODO is it possible to resolve the redirect?
-        assert response.status_code == 301
+        response = uclient.get(url, follow=True)
+
+        assert response.status_code == 404
 
     def test_orderedcontent_new_draft(self, uclient):
         """
         New revisions are returned if the qa param is set
         """
+        self.ordered_content_set.pages.append(
+            (
+                "pages",
+                {
+                    "contentpage": self.page1,
+                    "time": 2,
+                    "unit": "Hours",
+                    "before_or_after": "After",
+                    "contact_field": "something",
+                },
+            )
+        )
         self.ordered_content_set.profile_fields.append(
             ("relationship", "in_a_relationship")
         )
+
         self.ordered_content_set.save_revision()
 
         response = uclient.get("/api/v2/orderedcontent/")
@@ -753,6 +766,14 @@ class TestOrderedContentSetAPI:
         assert content["results"][0]["profile_fields"][1] == {
             "profile_field": "relationship",
             "value": "in_a_relationship",
+        }
+        assert content["results"][0]["pages"][1] == {
+            "id": self.page1.id,
+            "title": self.page1.title,
+            "time": 2,
+            "unit": "Hours",
+            "before_or_after": "After",
+            "contact_field": "something",
         }
 
 

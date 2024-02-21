@@ -146,6 +146,7 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
     listing_default_fields = BaseAPIViewSet.listing_default_fields + [
         "name",
         "profile_fields",
+        "pages",
     ]
     known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["page", "qa"])
     pagination_class = PageNumberPagination
@@ -162,6 +163,8 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
                 latest_revision = ocs.revisions.order_by("-created_at").first()
                 if latest_revision:
                     latest_revision = latest_revision.as_object()
+                    ocs.name = latest_revision.name
+                    ocs.pages = latest_revision.pages
                     ocs.profile_fields = latest_revision.profile_fields
 
         else:
