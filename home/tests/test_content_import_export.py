@@ -11,11 +11,13 @@ from typing import Any
 
 import pytest
 from django.core import serializers  # type: ignore
+from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
+from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content
 from home.import_content_pages import ImportException
@@ -610,6 +612,19 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
+    def test_list_items_values_with_comma(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file containing list items that has a comma
+        page and then exporting it produces a duplicate of the original file.
+
+        (This uses list_items_with_comma.csv.)
+        """
+        set_profile_field_options()
+        csv_bytes = csv_impexp.import_file("list_items_with_comma.csv")
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
 
 @pytest.mark.django_db
 class TestImportExport:
@@ -877,7 +892,7 @@ class TestImportExport:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
 
-        # the importer adds extra fields, so we fikter for the ones we want
+        # the importer adds extra fields, so we filter for the ones we want
         allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
         dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
         src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
@@ -896,7 +911,7 @@ class TestImportExport:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
 
-        # the importer adds extra fields, so we fikter for the ones we want
+        # the importer adds extra fields, so we filter for the ones we want
         allowed_keys = ["message", "slug", "parent", "web_title", "locale"]
         dst = [{k: v for k, v in item.items() if k in allowed_keys} for item in dst]
         src = [{k: v for k, v in item.items() if k in allowed_keys} for item in src]
@@ -909,6 +924,98 @@ class TestImportExport:
         assert health_info.slug == "health_info"
 
         assert src == dst
+
+    def test_field_maximum_characters(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with list_items and and footer chsaracters exceeding maximum charactercount
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp_footer_max_characters.csv")
+
+        assert isinstance(e.value, ImportException)
+        assert e.value.row_num == 4
+
+
+@pytest.mark.django_db
+class TestExport:
+    """
+    Test that the export is valid.
+
+    NOTE: This is not a Django (or even unittest) TestCase. It's just a
+        container for related tests.
+    """
+
+    def test_export_wa_with_image(self, impexp: ImportExport) -> None:
+        img_path = Path("home/tests/test_static") / "test.jpeg"
+        img_wa = mk_img(img_path, "wa_image")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome WA", image=img_wa.id)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        # Export should succeed
+        assert content is not None
+
+    def test_export_viber_with_image(self, impexp: ImportExport) -> None:
+        img_path = Path("home/tests/test_static") / "test.jpeg"
+        img_v = mk_img(img_path, "v_image")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                VBody("HA menu", [VBlk("Welcome V", image=img_v.id)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        # Export should succeed
+        assert content is not None
+
+    def test_export_messenger_with_image(self, impexp: ImportExport) -> None:
+        img_path = Path("home/tests/test_static") / "test.jpeg"
+        img_m = mk_img(img_path, "m_image")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                MBody("HA menu", [MBlk("Welcome M", image=img_m.id)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        # Export should succeed
+        assert content is not None
+
+    def test_export_wa_with_media(self, impexp: ImportExport) -> None:
+        media_path = Path("home/tests/test_static") / "test.mp4"
+        media_wa = mk_media(media_path, "wa_media")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome WA", media=media_wa.id)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        # Export should succeed
+        assert content is not None
 
 
 @pytest.fixture(params=["csv", "xlsx"])
@@ -927,12 +1034,18 @@ def mk_img(img_path: Path, title: str) -> Image:
     return img
 
 
+def mk_media(media_path: Path, title: str) -> File:
+    media = Media(title=title, file=File(media_path.open("rb"), name=media_path.name))
+    media.save()
+    return media
+
+
 @pytest.mark.usefixtures("tmp_media_path")
 @pytest.mark.django_db
 class TestExportImportRoundtrip:
     """
     Test that the db state after exporting and reimporting content is
-    equilavent to what it was before.
+    equivalent to what it was before.
 
     NOTE: This is not a Django (or even unittest) TestCase. It's just a
         container for related tests.
@@ -1519,6 +1632,40 @@ class TestExportImportRoundtrip:
         impexp.import_content(content, locale="en")
         imported = impexp.get_page_json()
         assert imported == orig_en
+
+    def test_footer(self, impexp: ImportExport) -> None:
+        """
+        ContentPages with footer in whatsapp messages are preserved
+        across export/import.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+        )
+
+        footer = "Test footer"
+        _health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody(
+                    "health info",
+                    [WABlk("*Health information* WA", footer=footer)],
+                )
+            ],
+            whatsapp_template_name="template-health-info",
+        )
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
 
     def test_example_values(self, impexp: ImportExport) -> None:
         """
