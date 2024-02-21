@@ -1026,10 +1026,10 @@ class OrderedContentSet(index.Indexed, models.Model):
         blank=True,
     )
     search_fields = [
-        index.SearchField("name", partial_match=True),
-        index.SearchField("get_gender", partial_match=True),
-        index.SearchField("get_age", partial_match=True),
-        index.SearchField("get_relationship", partial_match=True),
+        index.SearchField("name"),
+        index.SearchField("get_gender"),
+        index.SearchField("get_age"),
+        index.SearchField("get_relationship"),
     ]
     pages = StreamField(
         [
