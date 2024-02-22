@@ -9,7 +9,7 @@ from queue import Queue
 from typing import Any
 from uuid import uuid4
 
-from django.core.exceptions import ValidationError  # type: ignore
+from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
@@ -74,13 +74,26 @@ class ContentImporter:
             for lang_code, lang_dn in get_content_languages().items():
                 if lang_dn == langname:
                     codes.append(lang_code)
+            print(f"Debug: langname={langname}, codes={codes}")
             if not codes:
                 raise ImportException(f"Language not found: {langname}")
             if len(codes) > 1:
                 raise ImportException(
                     f"Multiple codes for language: {langname} -> {codes}"
                 )
-            self.locale_map[langname] = Locale.objects.get(language_code=codes[0])
+            # print(f"Debug:  lanuage code 0 = {codes[0]}")
+            # self.locale_map[langname] = Locale.objects.get(language_code=codes[0])
+
+            for code in codes:
+                try:
+                    # Retrieve the Locale object for each language code in the codes list
+                    self.locale_map[langname] = Locale.objects.get(
+                        language_code=code, language_code__iexact=code
+                    )
+                except Locale.DoesNotExist:
+                    print(f"Debug: Locale not found for language code: {code}")
+                    raise ImportException(f"Locale not found for language code: {code}")
+
         return self.locale_map[langname]
 
     def perform_import(self) -> None:
@@ -214,7 +227,12 @@ class ContentImporter:
         ContentPageIndex.objects.all().delete()
 
     def home_page(self, locale: Locale) -> HomePage:
-        return HomePage.objects.get(locale=locale)
+        try:
+            return HomePage.objects.get(locale=locale)
+        except ObjectDoesNotExist:
+            raise ImportException(
+                f"You are trying to add a child page to a '{locale}' HomePage that does not exist. Please create the '{locale}' HomePage first"
+            )
 
     def default_locale(self) -> Locale:
         site = Site.objects.get(is_default_site=True)
