@@ -114,6 +114,7 @@ class WABlk(ContentBlock):
     buttons: list[Btn] = field(default_factory=list)
     list_items: list[str] = field(default_factory=list)
     media: int | None = None
+    document: str | None = None
     footer: str = ""
 
     def to_dict(self) -> dict[str, Any]:
