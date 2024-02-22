@@ -3,7 +3,6 @@ wagtail==5.0.5
 wagtailmedia
 psycopg2-binary
 wagtail-content-import
-wagtail-localize
 drf-spectacular
 dj-database-url
 django-environ==0.4.5
