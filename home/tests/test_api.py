@@ -522,6 +522,7 @@ class TestOrderedContentSetAPI:
         self.ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         self.ordered_content_set.profile_fields.append(("gender", "female"))
         self.ordered_content_set.save()
+        self.ordered_content_set.save_revision().publish()
 
         self.ordered_content_set_timed = OrderedContentSet(name="Test set timed")
         self.ordered_content_set_timed.pages.append(
@@ -539,6 +540,7 @@ class TestOrderedContentSetAPI:
 
         self.ordered_content_set_timed.profile_fields.append(("gender", "female"))
         self.ordered_content_set_timed.save()
+        self.ordered_content_set_timed.save_revision().publish()
 
     def test_orderedcontent_endpoint(self, uclient):
         """
