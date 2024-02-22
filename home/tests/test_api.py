@@ -100,7 +100,9 @@ class TestContentPageAPI:
         )
 
     def test_import_button_text(self, admin_client):
-
+        """
+        Test that the import button on picker button template has the correct text
+        """
         page = ContentPage.objects.first()
         page_id = page.id
         url = f"/admin/pages/{page_id}/edit/"
@@ -197,53 +199,21 @@ class TestContentPageAPI:
         assert not page2.live
         assert content["body"]["text"]["message"].replace("\r", "") == message
 
-    def test_pagination(self, uclient):
+    def test_whatsapp_disabled(self, uclient):
         """
-        FIXME:
-         * It's unclear what this is actually testing.
-         * Should it be multiple tests instead of just one?
+        It should not return the web body if enable_whatsapp=false
         """
-        page1 = ContentPage.objects.first()
+        page = ContentPage.objects.first()
+        page.enable_whatsapp = False
+        page.save_revision().publish()
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
+        assert response.content == b""
 
-        # it should not return the web body if enable_whatsapp=false
-        page1.enable_whatsapp = False
-        page1.save_revision().publish()
-        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=True")
-
-        content = response.content
-        assert content == b""
-
-        # it should only return the whatsapp body if enable_whatsapp=True
-        page1.enable_whatsapp = True
-        page1.save_revision().publish()
-
-        # it should only return the first paragraph if no specific message
-        # is requested
-        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=True")
-        content = json.loads(response.content)
-        assert content["body"]["message"] == 1
-        assert content["body"]["previous_message"] is None
-        assert content["body"]["total_messages"] == 1
-        assert content["body"]["revision"] == page1.get_latest_revision().id
-        assert "*Welcome to HealthAlert*" in content["body"]["text"]["value"]["message"]
-
-        # it should return an appropriate error if requested message index
-        # is out of range
-        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=True&message=3")
-        content = json.loads(response.content)
-        assert response.status_code == 400
-        assert content == ["The requested message does not exist"]
-
-        # it should return an appropriate error if requested message is not
-        # a positive integer value
-        response = uclient.get(
-            f"/api/v2/pages/{page1.id}/?whatsapp=True&message=notint"
-        )
-        content = json.loads(response.content)
-        assert response.status_code == 400
-        assert content == [
-            "Please insert a positive integer for message in the query string"
-        ]
+    def test_message_number_specified(self, uclient):
+        """
+        It should only return the 11th paragraph if 11th message is requested
+        """
+        page = ContentPage.objects.first()
 
         body = []
         for i in range(15):
@@ -258,17 +228,53 @@ class TestContentPageAPI:
             )
             body.append(("Whatsapp_Message", block_value))
 
-        page1.whatsapp_body = body
-        page1.save_revision().publish()
+        page.whatsapp_body = body
+        page.save_revision().publish()
 
-        # it should only return the 11th paragraph if 11th message
-        # is requested
-        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=True&message=11")
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=11")
         content = json.loads(response.content)
+
         assert content["body"]["message"] == 11
         assert content["body"]["next_message"] == 12
         assert content["body"]["previous_message"] == 10
         assert content["body"]["text"]["value"]["message"] == "WA Message 11"
+
+    def test_no_message_number_specified(self, uclient):
+        """
+        It should only return the first paragraph if no specific message is requested
+        """
+        page = ContentPage.objects.first()
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
+        content = response.json()
+
+        assert content["body"]["message"] == 1
+        assert content["body"]["previous_message"] is None
+        assert content["body"]["total_messages"] == 1
+        assert content["body"]["revision"] == page.get_latest_revision().id
+        assert "*Welcome to HealthAlert*" in content["body"]["text"]["value"]["message"]
+
+    def test_message_number_requested_out_of_range(self, uclient):
+        """
+        It should return an appropriate error if requested message index is out of range
+        """
+        page = ContentPage.objects.first()
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=3")
+
+        assert response.status_code == 400
+        assert response.json() == ["The requested message does not exist"]
+
+    def test_message_number_requested_invalid(self, uclient):
+        """
+        It should return an appropriate error if requested message is not a positive
+        integer value
+        """
+        page = ContentPage.objects.first()
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=notint")
+
+        assert response.status_code == 400
+        assert response.json() == [
+            "Please insert a positive integer for message in the query string"
+        ]
 
     def test_number_of_queries(self, uclient, django_assert_num_queries):
         """
