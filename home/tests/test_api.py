@@ -760,16 +760,16 @@ class TestOrderedContentSetAPI:
         response = uclient.get("/api/v2/orderedcontent/?qa=True")
         content = json.loads(response.content)
         assert content["count"] == 2
-        assert len(content["results"][0]["profile_fields"]) == 2
-        assert content["results"][0]["profile_fields"][0] == {
+        assert len(content["results"][1]["profile_fields"]) == 2
+        assert content["results"][1]["profile_fields"][0] == {
             "profile_field": "gender",
             "value": "female",
         }
-        assert content["results"][0]["profile_fields"][1] == {
+        assert content["results"][1]["profile_fields"][1] == {
             "profile_field": "relationship",
             "value": "in_a_relationship",
         }
-        assert content["results"][0]["pages"][1] == {
+        assert content["results"][1]["pages"][1] == {
             "id": self.page1.id,
             "title": self.page1.title,
             "time": 2,
