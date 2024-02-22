@@ -181,7 +181,15 @@ class OrderedContentSetViewSet(SnippetViewSet):
     add_to_settings_menu = False
     exclude_from_explorer = False
     list_display = ("name", "latest_draft_profile_fields", "num_pages", "status")
-    list_export = ("name", "profile_field", "page")
+    list_export = (
+        "name",
+        "profile_field",
+        "page",
+        "time",
+        "unit",
+        "before_or_after",
+        "contact_field",
+    )
     search_fields = ("name", "profile_fields")
 
     def page(self, obj):
@@ -197,6 +205,59 @@ class OrderedContentSetViewSet(SnippetViewSet):
         return ["-"]
 
     page.short_description = "Page Slugs"
+
+    def time(self, obj):
+        if obj.pages:
+            return [
+                (f"{p.value['time']}" if p.value and "time" in p.value else "")
+                for p in obj.pages
+            ]
+        return ["-"]
+
+    time.short_description = "Time"
+
+    def unit(self, obj):
+        if obj.pages:
+            return [
+                (p.value["unit"] if p.value and "unit" in p.value else "")
+                for p in obj.pages
+            ]
+        return ["-"]
+
+    unit.short_description = "Unit"
+
+    def before_or_after(self, obj):
+        if obj.pages:
+            return [
+                (
+                    p.value["before_or_after"]
+                    if p.value and "before_or_after" in p.value
+                    else ""
+                )
+                for p in obj.pages
+            ]
+        return ["-"]
+
+    before_or_after.short_description = "Before Or After"
+
+    def contact_field(self, obj):
+        if obj.pages:
+            return [
+                (
+                    p.value["contact_field"]
+                    if p.value and "contact_field" in p.value
+                    else ""
+                )
+                for p in obj.pages
+            ]
+        return ["-"]
+
+    contact_field.short_description = "Contact Field"
+
+    def num_pages(self, obj):
+        return len(obj.pages)
+
+    num_pages.short_description = "Number of Pages"
 
 
 register_snippet(OrderedContentSetViewSet)

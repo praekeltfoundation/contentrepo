@@ -301,7 +301,18 @@ def import_ordered_sets(file, filetype, progress_queue, purge=False):
                 continue
             page = ContentPage.objects.filter(slug=page_slug).first()
             if page:
-                ordered_set.pages.append(("pages", {"contentpage": page}))
+                ordered_set.pages.append(
+                    (
+                        "pages",
+                        {
+                            "contentpage": page,
+                            "time": row["Time"] or "",
+                            "unit": row["Unit"] or "",
+                            "before_or_after": row["Before Or After"] or "",
+                            "contact_field": row["Contact Field"] or "",
+                        },
+                    )
+                )
             else:
                 logger.warning(f"Content page not found for slug '{page_slug}'")
 
@@ -315,7 +326,15 @@ def import_ordered_sets(file, filetype, progress_queue, purge=False):
         ws = wb.worksheets[0]
         ws.delete_rows(1)
         for row in ws.iter_rows(values_only=True):
-            row_dict = {"Name": row[0], "Profile Fields": row[1], "Page Slugs": row[2]}
+            row_dict = {
+                "Name": row[0],
+                "Profile Fields": row[1],
+                "Page Slugs": row[2],
+                "Time": row[3],
+                "Unit": row[4],
+                "Before Or After": row[5],
+                "Contact Field": row[6],
+            }
             lines.append(row_dict)
     else:
         if isinstance(file, bytes):
