@@ -49,63 +49,41 @@ def uclient(client, django_user_model):
 
 @pytest.mark.django_db
 class TestContentPageAPI:
-    @pytest.fixture(autouse=True)
-    def create_test_data(self):
-        """
-        Create the content that all the tests in this class will use.
-        """
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        content_page1 = PageBuilder.build_cp(
-            parent=main_menu,
-            slug="main-menu-first-time-user",
-            title="main menu first time user",
-            bodies=[
-                WABody(
-                    "main menu first time user", [WABlk("*Welcome to HealthAlert* 🌍")]
-                ),
-                MBody(
-                    "main menu first time user", [MBlk("*Welcome to HealthAlert* 🌍")]
-                ),
-                SBody("main menu first time user", [SBlk("*Welcome to HealthAlert*")]),
-                UBody("main menu first time user", [UBlk("*Welcome to HealthAlert*")]),
-            ],
-            tags=["menu"],
-            quick_replies=["Self-help", "Settings", "Health Info"],
-            triggers=["Main menu"],
+    def create_content_page(
+        self, parent=None, title="default page", tags=[], wa_body_count=1
+    ):
+        if not parent:
+            home_page = HomePage.objects.first()
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+            parent = main_menu
+
+        bodies = [
+            MBody(title, [MBlk("*Default Messenger Content* 🏥")]),
+            SBody(title, [SBlk("*Default SMS Content* ")]),
+            UBody(title, [UBlk("*Default USSD Content* ")]),
+        ]
+
+        for i in range(wa_body_count):
+            wa_body = f"*Default WhatsApp Content {i+1}* 🏥"
+            bodies.append(WABody(title, [WABlk(wa_body)]))
+
+        content_page = PageBuilder.build_cp(
+            parent=parent,
+            slug=title.replace(" ", "-"),
+            title=title,
+            bodies=bodies,
+            tags=tags,
+            quick_replies=[],
+            triggers=[],
         )
-        PageBuilder.build_cp(
-            parent=content_page1,
-            slug="health-info",
-            title="health info",
-            bodies=[
-                WABody("health info", [WABlk("*Health information* 🏥")]),
-                MBody("health info", [MBlk("*Health information* 🏥")]),
-                SBody("health info", [SBlk("*Health information* ")]),
-                UBody("health info", [UBlk("*Health information* ")]),
-            ],
-            tags=["health_info"],
-        )
-        PageBuilder.build_cp(
-            parent=content_page1,
-            slug="self-help",
-            title="self-help",
-            bodies=[
-                WABody("self-help", [WABlk("*Self-help programs* 🌬️")]),
-                MBody("self-help", [MBlk("*Self-help programs* 🌬️")]),
-                SBody("self-help", [SBlk("*Self-help programs*")]),
-                UBody("self-help", [UBlk("*Self-help programs*")]),
-            ],
-            tags=["self_help"],
-        )
+        return content_page
 
     def test_import_button_text(self, admin_client):
         """
         Test that the import button on picker button template has the correct text
         """
-        page = ContentPage.objects.first()
-        page_id = page.id
-        url = f"/admin/pages/{page_id}/edit/"
+        page = self.create_content_page()
+        url = f"/admin/pages/{page.id}/edit/"
         response = admin_client.get(url)
 
         assert response.status_code == 200
@@ -137,29 +115,39 @@ class TestContentPageAPI:
     def test_tag_filtering(self, uclient):
         """
         If a tag filter is provided, only pages with matching tags are returned.
+
+        FIXME:
+         * We should probably split this one too
         """
-        # it should return 1 page for correct tag
+        page = self.create_content_page(tags=["menu"])
+        self.create_content_page(page, title="Content Page 1")
+        self.create_content_page(page, title="Content Page 2")
+        unpublished_page = self.create_content_page(
+            page, title="Unpublished Page", tags=["Menu"]
+        )
+        unpublished_page.unpublish()
+
+        # it should return 1 page for correct tag, excluding unpublished pages with the
+        # same tag
         response = uclient.get("/api/v2/pages/?tag=menu")
         content = json.loads(response.content)
         assert content["count"] == 1
+
         # it should return 1 page for Uppercase tag
         response = uclient.get("/api/v2/pages/?tag=Menu")
         content = json.loads(response.content)
         assert content["count"] == 1
+
         # it should not return any pages for bogus tag
         response = uclient.get("/api/v2/pages/?tag=bogus")
         content = json.loads(response.content)
         assert content["count"] == 0
-        # it should return all pages for no tag
+
+        # it should return all pages for no tag, excluding home pages and index pages
         response = uclient.get("/api/v2/pages/")
         content = json.loads(response.content)
-        # exclude home pages and index pages
         assert content["count"] == 3
-        # it should not return pages with tags in the draft
-        create_page(tags=["Menu"]).unpublish()
-        response = uclient.get("/api/v2/pages/?tag=Menu")
-        content = json.loads(response.content)
-        assert content["count"] == 1
+
         # If QA flag is sent then it should return pages with tags in the draft
         response = uclient.get("/api/v2/pages/?tag=Menu&qa=True")
         content = json.loads(response.content)
@@ -169,41 +157,41 @@ class TestContentPageAPI:
         """
         Unpublished whatsapp pages are returned if the qa param is set.
         """
-        page2 = ContentPage.objects.last()
-        page2.unpublish()
-        page_id = page2.id
-        url = f"/api/v2/pages/{page_id}/?whatsapp=True&qa=True"
+        page = self.create_content_page()
+        page.unpublish()
+
+        url = f"/api/v2/pages/{page.id}/?whatsapp=True&qa=True"
         # it should return specific page that is in draft
         response = uclient.get(url)
-        content = json.loads(response.content)
-        message = "*Self-help programs* 🌬️"
+        content = response.json()
+
         # the page is not live but whatsapp content is returned
-        assert not page2.live
-        assert content["body"]["text"]["value"]["message"].replace("\r", "") == message
+        assert not page.live
+        body = content["body"]["text"]["value"]["message"].replace("\r", "")
+        assert body == "*Default WhatsApp Content 1* 🏥"
 
     def test_messenger_draft(self, uclient):
         """
         Unpublished messenger pages are returned if the qa param is set.
         """
-        page2 = ContentPage.objects.last()
-        page2.unpublish()
-        page_id = page2.id
-        url = f"/api/v2/pages/{page_id}/?messenger=True&qa=True"
+        page = self.create_content_page()
+        page.unpublish()
+
+        url = f"/api/v2/pages/{page.id}/?messenger=True&qa=True"
         # it should return specific page that is in draft
         response = uclient.get(url)
-
-        message = "*Self-help programs* 🌬️"
-        content = json.loads(response.content)
+        content = response.json()
 
         # the page is not live but messenger content is returned
-        assert not page2.live
-        assert content["body"]["text"]["message"].replace("\r", "") == message
+        assert not page.live
+        body = content["body"]["text"]["message"].replace("\r", "")
+        assert body == "*Default Messenger Content* 🏥"
 
     def test_whatsapp_disabled(self, uclient):
         """
         It should not return the web body if enable_whatsapp=false
         """
-        page = ContentPage.objects.first()
+        page = self.create_content_page()
         page.enable_whatsapp = False
         page.save_revision().publish()
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
@@ -213,23 +201,7 @@ class TestContentPageAPI:
         """
         It should only return the 11th paragraph if 11th message is requested
         """
-        page = ContentPage.objects.first()
-
-        body = []
-        for i in range(15):
-            block = blocks.StructBlock(
-                [
-                    ("message", blocks.TextBlock()),
-                    ("variation_messages", blocks.ListBlock(VariationBlock())),
-                ]
-            )
-            block_value = block.to_python(
-                {"message": f"WA Message {i+1}", "variation_messages": []}
-            )
-            body.append(("Whatsapp_Message", block_value))
-
-        page.whatsapp_body = body
-        page.save_revision().publish()
+        page = self.create_content_page(wa_body_count=15)
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=11")
         content = json.loads(response.content)
@@ -237,13 +209,14 @@ class TestContentPageAPI:
         assert content["body"]["message"] == 11
         assert content["body"]["next_message"] == 12
         assert content["body"]["previous_message"] == 10
-        assert content["body"]["text"]["value"]["message"] == "WA Message 11"
+        body = content["body"]["text"]["value"]["message"]
+        assert body == "*Default WhatsApp Content 11* 🏥"
 
     def test_no_message_number_specified(self, uclient):
         """
         It should only return the first paragraph if no specific message is requested
         """
-        page = ContentPage.objects.first()
+        page = self.create_content_page()
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
         content = response.json()
 
@@ -251,13 +224,14 @@ class TestContentPageAPI:
         assert content["body"]["previous_message"] is None
         assert content["body"]["total_messages"] == 1
         assert content["body"]["revision"] == page.get_latest_revision().id
-        assert "*Welcome to HealthAlert*" in content["body"]["text"]["value"]["message"]
+        body = content["body"]["text"]["value"]["message"]
+        assert body == "*Default WhatsApp Content 1* 🏥"
 
     def test_message_number_requested_out_of_range(self, uclient):
         """
         It should return an appropriate error if requested message index is out of range
         """
-        page = ContentPage.objects.first()
+        page = self.create_content_page()
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=3")
 
         assert response.status_code == 400
@@ -268,7 +242,7 @@ class TestContentPageAPI:
         It should return an appropriate error if requested message is not a positive
         integer value
         """
-        page = ContentPage.objects.first()
+        page = self.create_content_page()
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=notint")
 
         assert response.status_code == 400
@@ -285,6 +259,8 @@ class TestContentPageAPI:
         """
         # Run this once without counting, because there are two queries at the
         # end that only happen if this is the first test that runs.
+        page = self.create_content_page()
+        page = self.create_content_page(page, title="Content Page 1")
         uclient.get("/api/v2/pages/")
         with django_assert_num_queries(8):
             uclient.get("/api/v2/pages/")
@@ -293,20 +269,20 @@ class TestContentPageAPI:
         """
         Fetching the detail view of a page returns the page content.
         """
-        page2 = ContentPage.objects.last()
-        response = uclient.get(f"/api/v2/pages/{page2.id}/")
+        page = self.create_content_page(tags=["self_help"])
+        response = uclient.get(f"/api/v2/pages/{page.id}/")
         content = response.json()
 
         # There's a lot of metadata, so only check selected fields.
         meta = content.pop("meta")
         assert meta["type"] == "home.ContentPage"
-        assert meta["slug"] == page2.slug
-        assert meta["parent"]["id"] == page2.get_parent().id
+        assert meta["slug"] == page.slug
+        assert meta["parent"]["id"] == page.get_parent().id
         assert meta["locale"] == "en"
 
         assert content == {
-            "id": page2.id,
-            "title": "self-help",
+            "id": page.id,
+            "title": "default page",
             "subtitle": "",
             "body": {"text": []},
             "tags": ["self_help"],
@@ -320,16 +296,16 @@ class TestContentPageAPI:
         """
         Fetching the detail view of a page increments the view count.
         """
-        page2 = ContentPage.objects.last()
+        page = self.create_content_page()
         assert PageView.objects.count() == 0
 
-        uclient.get(f"/api/v2/pages/{page2.id}/")
+        uclient.get(f"/api/v2/pages/{page.id}/")
         assert PageView.objects.count() == 1
         view = PageView.objects.last()
         assert view.message is None
 
-        uclient.get(f"/api/v2/pages/{page2.id}/")
-        uclient.get(f"/api/v2/pages/{page2.id}/")
+        uclient.get(f"/api/v2/pages/{page.id}/")
+        uclient.get(f"/api/v2/pages/{page.id}/")
         assert PageView.objects.count() == 3
         view = PageView.objects.last()
         assert view.message is None
@@ -339,47 +315,40 @@ class TestContentPageAPI:
         Fetching the detail view of a page with children indicates that the
         page has children.
         """
-        page1 = ContentPage.objects.first()
-        response = uclient.get(f"/api/v2/pages/{page1.id}/")
+        page = self.create_content_page()
+        self.create_content_page(page, title="Content Page 1")
+        self.create_content_page(page, title="Content Page 2")
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/")
         content = response.json()
 
         # There's a lot of metadata, so only check selected fields.
         meta = content.pop("meta")
         assert meta["type"] == "home.ContentPage"
-        assert meta["slug"] == page1.slug
-        assert meta["parent"]["id"] == page1.get_parent().id
+        assert meta["slug"] == page.slug
+        assert meta["parent"]["id"] == page.get_parent().id
         assert meta["locale"] == "en"
 
-        assert content == {
-            "id": page1.id,
-            "title": "main menu first time user",
-            "subtitle": "",
-            "body": {"text": []},
-            "tags": ["menu"],
-            "triggers": ["Main menu"],
-            "quick_replies": ["Health Info", "Self-help", "Settings"],
-            "related_pages": [],
-            "has_children": True,
-        }
+        assert content["has_children"] is True
 
     def test_detail_view_whatsapp_message(self, uclient):
         """
         Fetching a detail page and selecting the WhatsApp content returns the
         first WhatsApp message in the body.
         """
-        page1 = ContentPage.objects.first()
-        response = uclient.get(f"/api/v2/pages/{page1.id}/?whatsapp=true")
+        page = self.create_content_page()
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
         content = response.json()
 
         # There's a lot of metadata, so only check selected fields.
         meta = content.pop("meta")
         assert meta["type"] == "home.ContentPage"
-        assert meta["slug"] == page1.slug
-        assert meta["parent"]["id"] == page1.get_parent().id
+        assert meta["slug"] == page.slug
+        assert meta["parent"]["id"] == page.get_parent().id
         assert meta["locale"] == "en"
 
-        assert content["id"] == page1.id
-        assert content["title"] == "main menu first time user"
+        assert content["id"] == page.id
+        assert content["title"] == "default page"
 
         # There's a lot of body, so only check selected fields.
         body = content.pop("body")
@@ -388,7 +357,7 @@ class TestContentPageAPI:
         assert body["previous_message"] is None
         assert body["total_messages"] == 1
         assert body["text"]["type"] == "Whatsapp_Message"
-        assert body["text"]["value"]["message"] == "*Welcome to HealthAlert* 🌍"
+        assert body["text"]["value"]["message"] == "*Default WhatsApp Content 1* 🏥"
 
     def test_detail_view_no_content_page(self, uclient):
         """
