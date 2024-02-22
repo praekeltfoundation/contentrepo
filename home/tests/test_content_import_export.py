@@ -19,9 +19,10 @@ from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtailmedia.models import Media  # type: ignore
 
-from home.content_import_export import import_content
+from home.content_import_export import import_content, import_ordered_sets
 from home.import_content_pages import ImportException
-from home.models import ContentPage, ContentPageIndex, HomePage
+from home.models import ContentPage, ContentPageIndex, HomePage, OrderedContentSet
+from home.tests.utils import unwagtail
 
 from .helpers import set_profile_field_options
 from .page_builder import (
@@ -425,6 +426,9 @@ class ImportExport:
         """
         import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
 
+    def import_ordered_sets(self, content_bytes: bytes, purge: bool = False) -> None:
+        import_ordered_sets(BytesIO(content_bytes), self.format.upper(), Queue(), purge)
+
     def read_bytes(self, path_str: str, path_base: str = "home/tests") -> bytes:
         return (Path(path_base) / path_str).read_bytes()
 
@@ -466,6 +470,11 @@ class ImportExport:
 @pytest.fixture()
 def csv_impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, "csv")
+
+
+@pytest.fixture()
+def xlsx_impexp(request: Any, admin_client: Any) -> ImportExport:
+    return ImportExport(admin_client, "xlsx")
 
 
 @pytest.mark.django_db
@@ -939,6 +948,56 @@ class TestImportExport:
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
+
+    def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file with ordered content sets should not break
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.read_bytes("ordered_content.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
+
+        assert ordered_set.name == "Test Set"
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 1
+        page = pages[0][1]
+        assert page["contentpage"].slug == "first_time_user"
+        assert page["time"] == "2"
+        assert page["unit"] == "days"
+        assert page["before_or_after"] == "before"
+        assert page["contact_field"] == "edd"
+        assert unwagtail(ordered_set.profile_fields) == [
+            ("gender", "male"),
+            ("relationship", "in_a_relationship"),
+        ]
+
+    def test_import_ordered_sets_xlsx(
+        self, xlsx_impexp: ImportExport, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a XLSX file with ordered content sets should not break
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+        content = xlsx_impexp.read_bytes("ordered_content.xlsx")
+        xlsx_impexp.import_ordered_sets(content)
+
+        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
+
+        assert ordered_set.name == "Test Set"
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 1
+        page = pages[0][1]
+        assert page["contentpage"].slug == "first_time_user"
+        assert page["time"] == "2"
+        assert page["unit"] == "days"
+        assert page["before_or_after"] == "before"
+        assert page["contact_field"] == "edd"
+        assert unwagtail(ordered_set.profile_fields) == [
+            ("gender", "male"),
+            ("relationship", "in_a_relationship"),
+        ]
 
 
 @pytest.mark.django_db
