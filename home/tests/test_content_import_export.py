@@ -152,11 +152,15 @@ def decode_json_fields(page: DbDict) -> DbDict:
 
 
 def _normalise_button_pks(body: DbDict, min_pk: int) -> DbDict:
+    print(">>>>>", body["value"])
     value = body["value"]
     if "buttons" in value:
         buttons = []
         for button in value["buttons"]:
             if button["type"] == "go_to_page":
+                print("8888888", button.get("value").get("page"))
+                if button.get("value").get("page") is None:
+                    continue
                 v = button["value"]
                 button = button | {"value": v | {"page": v["page"] - min_pk}}
             buttons.append(button)
@@ -310,6 +314,7 @@ def clean_web_paragraphs(page: DbDict) -> DbDict:
 
 @per_page
 def remove_button_ids(page: DbDict) -> DbDict:
+    print("remove_button_ids********")
     if "whatsapp_body" in page["fields"]:
         for body in page["fields"]["whatsapp_body"]:
             buttons = body["value"].get("buttons", [])
@@ -1823,3 +1828,51 @@ class TestExportImportRoundtrip:
         impexp.export_reimport()
         imported = impexp.get_page_json()
         assert imported == orig
+
+    def test_export_missing_go_to_button(self, impexp: ImportExport) -> None:
+        """
+        If a page has a button go to page that no longer exists, the missing button
+        is skipped during export.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        imp_exp = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
+
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert*")])],
+        )
+        health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[WABody("health info", [WABlk("*Health information*", buttons=[NextBtn("Next message button")])])],
+        )
+        self_help = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="self-help",
+            title="self-help",
+            bodies=[WABody("self-help", [WABlk("*Self-help programs*", buttons=[PageBtn("Import Export", page=imp_exp)],)])],
+        )
+        # health_info = PageBuilder.link_related(health_info, [self_help])
+        # This is what we expect to see after export/import, so we fetch the
+        # JSON to compare with before adding the missing related page.
+        orig = impexp.get_page_json()
+        print("%%%%%%", orig)
+
+        # delete page referenced by other content page
+        imp_exp.delete()
+
+        # Ideally, all related page links would be removed when the page they
+        # link to is deleted. We don't currently do that, so for now we just
+        # make sure that we skip such links during export.
+        sh_page = Page.objects.get(pk=self_help.id)
+        print("$$$$$$$", sh_page)
+        assert [rp.value for rp in health_info.related_pages] == [sh_page]
+
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        print("99999999", imported)
+        assert imported == orig_without_self_help
