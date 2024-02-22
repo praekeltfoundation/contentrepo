@@ -74,26 +74,13 @@ class ContentImporter:
             for lang_code, lang_dn in get_content_languages().items():
                 if lang_dn == langname:
                     codes.append(lang_code)
-            print(f"Debug: langname={langname}, codes={codes}")
             if not codes:
                 raise ImportException(f"Language not found: {langname}")
             if len(codes) > 1:
                 raise ImportException(
                     f"Multiple codes for language: {langname} -> {codes}"
                 )
-            # print(f"Debug:  lanuage code 0 = {codes[0]}")
-            # self.locale_map[langname] = Locale.objects.get(language_code=codes[0])
-
-            for code in codes:
-                try:
-                    # Retrieve the Locale object for each language code in the codes list
-                    self.locale_map[langname] = Locale.objects.get(
-                        language_code=code, language_code__iexact=code
-                    )
-                except Locale.DoesNotExist:
-                    print(f"Debug: Locale not found for language code: {code}")
-                    raise ImportException(f"Locale not found for language code: {code}")
-
+            self.locale_map[langname] = Locale.objects.get(language_code=codes[0])
         return self.locale_map[langname]
 
     def perform_import(self) -> None:
