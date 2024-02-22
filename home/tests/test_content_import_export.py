@@ -730,10 +730,9 @@ class TestImportExport:
             == "Multiple codes for language: NotEnglish -> ['en1', 'en2']"
         )
 
-    
     def test_locale_HomePage_DNE(self, csv_impexp: ImportExport) -> None:
         """
-        Importing files with non default locale HomePages that do not exist in the db should raise 
+        Importing files with non default locale HomePages that do not exist in the db should raise
         an error that results in an error message that gets sent back to the user
         """
         pt, _created = Locale.objects.get_or_create(language_code="pt")
@@ -742,8 +741,7 @@ class TestImportExport:
         assert e.value.row_num == 13
         assert (
             e.value.message
-            =="You are trying to add a child page to a 'Portuguese' HomePage that does not exist. Please create the 'Portuguese' HomePage first"
-
+            == "You are trying to add a child page to a 'Portuguese' HomePage that does not exist. Please create the 'Portuguese' HomePage first"
         )
 
     def test_missing_parent(self, csv_impexp: ImportExport) -> None:
