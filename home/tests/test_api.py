@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 from pytest_django.asserts import assertTemplateUsed
-from wagtail import blocks
 
 from home.content_import_export import import_content
 from home.models import (
@@ -13,7 +12,6 @@ from home.models import (
     HomePage,
     OrderedContentSet,
     PageView,
-    VariationBlock,
 )
 
 from .page_builder import (
@@ -50,7 +48,7 @@ def uclient(client, django_user_model):
 @pytest.mark.django_db
 class TestContentPageAPI:
     def create_content_page(
-        self, parent=None, title="default page", tags=[], wa_body_count=1
+        self, parent=None, title="default page", tags=None, wa_body_count=1
     ):
         if not parent:
             home_page = HomePage.objects.first()
@@ -72,7 +70,7 @@ class TestContentPageAPI:
             slug=title.replace(" ", "-"),
             title=title,
             bodies=bodies,
-            tags=tags,
+            tags=tags or [],
             quick_replies=[],
             triggers=[],
         )
