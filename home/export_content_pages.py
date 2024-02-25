@@ -147,19 +147,16 @@ class ExportRow:
     @staticmethod
     def serialise_buttons(buttons: blocks.StreamValue.StreamChild) -> str:
         button_dicts = []
-        print("##########", buttons)
+
         for button in buttons:
             button_dict = {"type": button.block_type, "title": button.value["title"]}
             if button.block_type == "go_to_page":
-                print("#######", button.value, "@@@@@@@", button.value.get("page"))
                 # try:
                 if button.value.get("page") is None:
                     continue
-                print(">>>>Sila>>>", button.value.get("page"))
                 button_dict["slug"] = button.value["page"].slug
 
             button_dicts.append(button_dict)
-        print("Buttons:", dumps(button_dicts))
         return dumps(button_dicts)
 
 
