@@ -1992,7 +1992,8 @@ class TestExportImportRoundtrip:
         orig = impexp.get_page_json()
 
         orig_btn = (
-            orig[3].get("fields").get("whatsapp_body")[0].get("value").get("buttons")
+            # list(orig)[3].get("fields").get("whatsapp_body")[0].get("value").get("buttons")
+            list(orig)[3]["fields"]["whatsapp_body"][0]["value"]["buttons"]
         )
 
         # delete page referenced by other content page
@@ -2000,13 +2001,9 @@ class TestExportImportRoundtrip:
 
         impexp.export_reimport()
         imported = impexp.get_page_json()
-        imported_btn = (
-            imported[3]
-            .get("fields")
-            .get("whatsapp_body")[0]
-            .get("value")
-            .get("buttons")
-        )
+        imported_btn = list(imported)[3]["fields"]["whatsapp_body"][0]["value"][
+            "buttons"
+        ]
 
         assert imported != orig
         assert imported_btn != orig_btn
