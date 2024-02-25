@@ -151,7 +151,7 @@ class ExportRow:
         for button in buttons:
             button_dict = {"type": button.block_type, "title": button.value["title"]}
             if button.block_type == "go_to_page":
-                # try:
+                # Exclude buttons that has deleted pages that they are linked to it
                 if button.value.get("page") is None:
                     continue
                 button_dict["slug"] = button.value["page"].slug
