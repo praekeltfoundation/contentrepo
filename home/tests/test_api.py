@@ -48,8 +48,32 @@ def uclient(client, django_user_model):
 @pytest.mark.django_db
 class TestContentPageAPI:
     def create_content_page(
-        self, parent=None, title="default page", tags=None, wa_body_count=1
+        self,
+        parent=None,
+        title="default page",
+        tags=None,
+        wa_body_count=1,
+        publish=True,
     ):
+        """
+        Helper function to create pages needed for each test.
+
+        Parameters
+        ----------
+        parent : ContentPage
+            The ContentPage that will be used as the parent of the content page.
+
+            If this is not provided, a ContentPageIndex object is created as a child of
+            the default home page and that is used as the parent.
+        title : str
+            Title of the content page.
+        tags : [str]
+            List of tags on the content page.
+        wa_body_count : int
+            How many WhatsApp message bodies to create on the content page.
+        publish: bool
+            Should the content page be published or not.
+        """
         if not parent:
             home_page = HomePage.objects.first()
             main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
@@ -73,6 +97,7 @@ class TestContentPageAPI:
             tags=tags or [],
             quick_replies=[],
             triggers=[],
+            publish=publish,
         )
         return content_page
 
@@ -120,10 +145,9 @@ class TestContentPageAPI:
         page = self.create_content_page(tags=["menu"])
         self.create_content_page(page, title="Content Page 1")
         self.create_content_page(page, title="Content Page 2")
-        unpublished_page = self.create_content_page(
-            page, title="Unpublished Page", tags=["Menu"]
+        self.create_content_page(
+            page, title="Unpublished Page", tags=["Menu"], publish=False
         )
-        unpublished_page.unpublish()
 
         # it should return 1 page for correct tag, excluding unpublished pages with the
         # same tag
@@ -155,8 +179,7 @@ class TestContentPageAPI:
         """
         Unpublished whatsapp pages are returned if the qa param is set.
         """
-        page = self.create_content_page()
-        page.unpublish()
+        page = self.create_content_page(publish=False)
 
         url = f"/api/v2/pages/{page.id}/?whatsapp=True&qa=True"
         # it should return specific page that is in draft
@@ -165,15 +188,14 @@ class TestContentPageAPI:
 
         # the page is not live but whatsapp content is returned
         assert not page.live
-        body = content["body"]["text"]["value"]["message"].replace("\r", "")
+        body = content["body"]["text"]["value"]["message"]
         assert body == "*Default WhatsApp Content 1* 🏥"
 
     def test_messenger_draft(self, uclient):
         """
         Unpublished messenger pages are returned if the qa param is set.
         """
-        page = self.create_content_page()
-        page.unpublish()
+        page = self.create_content_page(publish=False)
 
         url = f"/api/v2/pages/{page.id}/?messenger=True&qa=True"
         # it should return specific page that is in draft
@@ -182,7 +204,7 @@ class TestContentPageAPI:
 
         # the page is not live but messenger content is returned
         assert not page.live
-        body = content["body"]["text"]["message"].replace("\r", "")
+        body = content["body"]["text"]["message"]
         assert body == "*Default Messenger Content* 🏥"
 
     def test_whatsapp_disabled(self, uclient):
