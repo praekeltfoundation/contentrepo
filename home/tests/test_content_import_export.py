@@ -1885,9 +1885,9 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_content_page_with_no_go_to_button(self, impexp: ImportExport) -> None:
+    def test_export_import_page_with_go_to_button(self, impexp: ImportExport) -> None:
         """
-        If a page has a button go to page it should export all buttons.
+        If pages linked to another page with go to button are not deleted, all buttons will be exported to a file.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
@@ -1991,10 +1991,7 @@ class TestExportImportRoundtrip:
 
         orig = impexp.get_page_json()
 
-        orig_btn = (
-            # list(orig)[3].get("fields").get("whatsapp_body")[0].get("value").get("buttons")
-            list(orig)[3]["fields"]["whatsapp_body"][0]["value"]["buttons"]
-        )
+        orig_btn = list(orig)[4]["fields"]["whatsapp_body"][0]["value"]["buttons"]
 
         # delete page referenced by other content page
         imp_exp.delete()
@@ -2005,7 +2002,7 @@ class TestExportImportRoundtrip:
             "buttons"
         ]
 
-        assert imported != orig
-        assert imported_btn != orig_btn
         assert imported_btn == []
-        assert orig_btn != []
+        assert orig_btn == [
+            {"type": "go_to_page", "value": {"page": 1, "title": "Import Export"}}
+        ]
