@@ -1095,6 +1095,21 @@ class TestExport:
         # Export should succeed
         assert content is not None
 
+    def test_export_wa_with_none_document(self, impexp: ImportExport) -> None:
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome WA", document=None)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        # Export should succeed
+        assert content is not None
+
 
 @pytest.fixture(params=["csv", "xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
