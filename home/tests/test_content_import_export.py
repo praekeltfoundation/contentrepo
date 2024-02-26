@@ -1882,3 +1882,75 @@ class TestExportImportRoundtrip:
         impexp.export_reimport()
         imported = impexp.get_page_json()
         assert imported == orig
+
+    def test_unordered_parentpage(self, impexp: ImportExport) -> None:
+        """
+        ContentPages with the parent page created after the child page
+        """
+
+        #It seems we cannot reference the parent page before creating it
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+        )
+        
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig    
+
+    def test_changed_parentpage(self, impexp: ImportExport) -> None:
+        """
+        ContentPages with the parent page changed for an existing childpage
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+        )
+
+        child_menu = PageBuilder.build_cp(
+        parent=ha_menu,
+        slug="child-menu",
+        title="Child menu",
+        bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
+        )
+ 
+        #The title field is generated, but the parent is not, so the parent change is not reflected
+        child_menu.parent = main_menu
+        child_menu.title = "changed_title"
+        child_menu.save()
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+
+        #debug stuff
+        for page_data in orig:
+            # Extract the fields dictionary for each page
+            old_fields = page_data.get('fields', {})
+
+            # Extract and print the parent_page field for each page
+            title_value = old_fields.get('draft_title', None)
+            print(f"Old titles:  {title_value}")
+
+        for page_data in imported:
+            # Extract the fields dictionary for each page
+            new_fields = page_data.get('fields', {})
+
+            # Extract and print the parent_page field for each page
+            title_value = new_fields.get('draft_title', None)
+            print(f"New titles:  {title_value}")
+
+        assert imported == orig   
+
