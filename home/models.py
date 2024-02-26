@@ -432,7 +432,6 @@ class QuickReplyContent(ItemBase):
         related_name="quick_reply_items",
     )
 
-
 class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     class WhatsAppTemplateCategory(models.TextChoices):
         MARKETING = "MARKETING", _("Marketing")
@@ -1133,3 +1132,46 @@ class PageView(models.Model):
     )
     message = models.IntegerField(blank=True, default=None, null=True)
     data = models.JSONField(default=dict, blank=True, null=True)
+
+
+
+
+class WhatsAppTemplate():    
+    class WhatsAppTemplateCategory(models.TextChoices):
+        MARKETING = "MARKETING", _("Marketing")
+        UTILITY = "UTILITY", _("Utility")
+
+
+    name = models.CharField(max_length=512, blank=True, default="")
+    category = models.CharField(
+        max_length=14,
+        choices=WhatsAppTemplateCategory.choices,
+        default=WhatsAppTemplateCategory.UTILITY,
+    )
+    body = StreamField(
+        [
+            (
+                "Whatsapp_Message",
+                WhatsappBlock(
+                    help_text="Each message will be sent with the text and media"
+                ),
+            ),
+        ],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
+
+    panels = [
+        MultiFieldPanel(
+            [
+                FieldPanel("name"),
+                FieldPanel("is_whatsapp_template"),
+                FieldPanel("category"),
+                FieldPanel("body"),
+            ],
+            heading="Whatsapp Template",
+        ),
+    ]
+
+    

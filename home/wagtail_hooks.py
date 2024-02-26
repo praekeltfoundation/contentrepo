@@ -5,7 +5,7 @@ from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
-from .models import ContentPage, OrderedContentSet
+from .models import ContentPage, OrderedContentSet, WhatsAppTemplate
 
 from .views import (  # isort:skip
     ContentPageReportView,
@@ -261,7 +261,29 @@ class OrderedContentSetAdmin(ModelAdmin):
 
     num_pages.short_description = "Number of Pages"
 
+class WhatsAppTemplateAdmin(ModelAdmin):
+    body_truncate_size = 200
+    model = WhatsAppTemplate
+    menu_label = "WhatsAppTemplates"
+    menu_icon = "pilcrow"
+    menu_order = 200
+    add_to_settings_menu = False
+    exclude_from_explorer = False
+    index_view_class = CustomIndexView
+    list_display = (
+        "name",
+        "category",
+        "body",
+    )
+    list_filter = ("locale",)
+    search_fields = (
+        "name",
+        "category",
+        "body",
+    )
+
 
 # Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
 modeladmin_register(OrderedContentSetAdmin)
+modeladmin_register(WhatsAppTemplateAdmin)
