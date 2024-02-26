@@ -75,6 +75,7 @@ filterwarnings = [
     "ignore::django.utils.deprecation.RemovedInDjango50Warning:modelcluster.models:28",
     "ignore::DeprecationWarning:l18n.translation:17",
     "ignore::DeprecationWarning:wagtail.images.views.serve:1",
+    "ignore::django.utils.deprecation.RemovedInDjango50Warning:home.tests.test_forms:13"
 ]
 
 [tool.ruff]

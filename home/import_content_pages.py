@@ -9,7 +9,7 @@ from queue import Queue
 from typing import Any
 from uuid import uuid4
 
-from django.core.exceptions import ValidationError  # type: ignore
+from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
@@ -214,7 +214,12 @@ class ContentImporter:
         ContentPageIndex.objects.all().delete()
 
     def home_page(self, locale: Locale) -> HomePage:
-        return HomePage.objects.get(locale=locale)
+        try:
+            return HomePage.objects.get(locale=locale)
+        except ObjectDoesNotExist:
+            raise ImportException(
+                f"You are trying to add a child page to a '{locale}' HomePage that does not exist. Please create the '{locale}' HomePage first"
+            )
 
     def default_locale(self) -> Locale:
         site = Site.objects.get(is_default_site=True)
