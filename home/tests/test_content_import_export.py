@@ -1132,6 +1132,7 @@ def mk_media(media_path: Path, title: str) -> File:
     media.save()
     return media
 
+
 def mk_doc(doc_path: Path, title: str) -> Image:
     doc = Document(title=title, file=File(doc_path.open("rb"), name=doc_path.name))
     doc.save()
