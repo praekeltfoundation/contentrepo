@@ -106,7 +106,7 @@ Authentication is required to access the API. Session, basic, and token authenti
 To create an authentication token, you can do so via the Django Admin (available at the `/django-admin` endpoint), or by `POST`ing the username and password of the user you want to generate a token for to the `/api/v2/token/` endpoint.
 
 ### Internationalisation
-To create or import pages in other languages, the user must first create the locale and HomePage in the specified language. To create a new locale, go to "Settings" => "Locales" in the admin interface, and click "Add a new locale". Then go to the default(most likely English) homepage, click the kebab menu and select translate. This will copies the whole default tree into the new locale, creating the new homepage with all the required pages. After you press "Save", there should be two "Home" pages in the page explorer. 
+To create or import pages in other languages, the user must first create the locale and HomePage in the specified language. To create a new locale, go to "Settings" => "Locales" in the admin interface, and click "Add a new locale". Then go to the default(most likely English) homepage, click the kebab menu and select translate. This will copy the whole default tree into the new locale, creating the new homepage with all the required pages. After you press "Save", there should be two "Home" pages in the page explorer. 
 
 ## Running in Production
 There is a [docker image](https://github.com/praekeltfoundation/contentrepo/pkgs/container/contentrepo) that can be used to easily run this service. It uses the following environment variables for configuration:
