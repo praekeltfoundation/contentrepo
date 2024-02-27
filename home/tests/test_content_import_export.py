@@ -21,7 +21,13 @@ from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content, import_ordered_sets
 from home.import_content_pages import ImportException
-from home.models import ContentPage, ContentPageIndex, HomePage, OrderedContentSet, GoToPageButton
+from home.models import (
+    ContentPage,
+    ContentPageIndex,
+    GoToPageButton,
+    HomePage,
+    OrderedContentSet,
+)
 from home.tests.utils import unwagtail
 
 from .helpers import set_profile_field_options
@@ -39,7 +45,7 @@ from .page_builder import (
     VBlk,
     VBody,
     WABlk,
-    WABody, Btn,
+    WABody,
 )
 
 ExpDict = dict[str, Any]
@@ -2062,7 +2068,9 @@ class TestExportImportRoundtrip:
         index = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
 
         # Add another button to existing page (first_page)
-        add_go_to_page_button(first_page.whatsapp_body[0], PageBtn("Go to Btn_2", page=index))
+        add_go_to_page_button(
+            first_page.whatsapp_body[0], PageBtn("Go to Btn_2", page=index)
+        )
 
         first_page.save()
         rev = first_page.save_revision()
