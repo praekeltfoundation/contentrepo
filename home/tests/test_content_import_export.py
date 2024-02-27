@@ -21,7 +21,13 @@ from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content, import_ordered_sets
 from home.import_content_pages import ImportException
-from home.models import ContentPage, ContentPageIndex, HomePage, OrderedContentSet
+from home.models import (
+    ContentPage,
+    ContentPageIndex,
+    GoToPageButton,
+    HomePage,
+    OrderedContentSet,
+)
 from home.tests.utils import unwagtail
 
 from .helpers import set_profile_field_options
@@ -158,6 +164,8 @@ def _normalise_button_pks(body: DbDict, min_pk: int) -> DbDict:
         buttons = []
         for button in value["buttons"]:
             if button["type"] == "go_to_page":
+                if button.get("value").get("page") is None:
+                    continue
                 v = button["value"]
                 button = button | {"value": v | {"page": v["page"] - min_pk}}
             buttons.append(button)
@@ -1113,6 +1121,11 @@ def mk_media(media_path: Path, title: str) -> File:
     return media
 
 
+def add_go_to_page_button(whatsapp_block: Any, button: PageBtn) -> None:
+    button_val = GoToPageButton().to_python(button.value_dict())
+    whatsapp_block.value["buttons"].append(("go_to_page", button_val))
+
+
 @pytest.mark.usefixtures("tmp_media_path")
 @pytest.mark.django_db
 class TestExportImportRoundtrip:
@@ -1896,3 +1909,113 @@ class TestExportImportRoundtrip:
         impexp.export_reimport()
         imported = impexp.get_page_json()
         assert imported == orig
+
+    def test_export_import_page_with_go_to_button(self, impexp: ImportExport) -> None:
+        """
+        If pages linked to another page with go to button are not deleted, all buttons will be exported to a file.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        imp_exp = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
+
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert*")])],
+        )
+        PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody(
+                    "health info",
+                    [
+                        WABlk(
+                            "*Health information*",
+                            buttons=[NextBtn("Next message button")],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        self_help = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="self-help",
+            title="self-help",
+            bodies=[
+                WABody(
+                    "self-help",
+                    [
+                        WABlk(
+                            "*Self-help programs*",
+                            buttons=[PageBtn("Import Export", page=imp_exp)],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        rev = self_help.save_revision()
+        rev.publish()
+
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    def test_export_missing_go_to_button(self, impexp: ImportExport) -> None:
+        """
+        If a page has a button go to page that no longer exists, the missing button
+        is skipped during export.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert*")])],
+        )
+
+        first_page = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[
+                WABody(
+                    "health info",
+                    [
+                        WABlk(
+                            "*Health information*",
+                            buttons=[NextBtn("Next message button")],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        orig_json = impexp.get_page_json()
+
+        index = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
+
+        # Add another button to existing page (first_page)
+        add_go_to_page_button(
+            first_page.whatsapp_body[0], PageBtn("Go to Btn_2", page=index)
+        )
+
+        first_page.save()
+        rev = first_page.save_revision()
+        rev.publish()
+        first_page.refresh_from_db()
+
+        # Delete page linked to got to button
+        index.delete()
+
+        impexp.export_reimport()
+        updated_json = impexp.get_page_json()
+
+        assert orig_json == updated_json
