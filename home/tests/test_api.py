@@ -52,8 +52,10 @@ class TestContentPageAPI:
         parent=None,
         title="default page",
         tags=None,
-        wa_body_count=1,
+        body_type="WhatsApp",
+        body_count=1,
         publish=True,
+        web_body=None,
     ):
         """
         Helper function to create pages needed for each test.
@@ -69,25 +71,37 @@ class TestContentPageAPI:
             Title of the content page.
         tags : [str]
             List of tags on the content page.
-        wa_body_count : int
-            How many WhatsApp message bodies to create on the content page.
+        body_type : str
+            Which body type the test messages should be. It can be WhatsApp, Messenger,
+            SMS or USSD.
+
+            This can be set to None to have no message bodies. It defaults to WhatsApp
+        body_count : int
+            How many message bodies to create on the content page.
         publish: bool
             Should the content page be published or not.
+        web_body : str
+            The web body of the content page.
         """
         if not parent:
             home_page = HomePage.objects.first()
-            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+            main_menu = home_page.get_children().filter(slug="main-menu").first()
+            if not main_menu:
+                main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
             parent = main_menu
 
-        bodies = [
-            MBody(title, [MBlk("*Default Messenger Content* 🏥")]),
-            SBody(title, [SBlk("*Default SMS Content* ")]),
-            UBody(title, [UBlk("*Default USSD Content* ")]),
-        ]
+        bodies = []
 
-        for i in range(wa_body_count):
-            wa_body = f"*Default WhatsApp Content {i+1}* 🏥"
-            bodies.append(WABody(title, [WABlk(wa_body)]))
+        for i in range(body_count):
+            msg_body = f"*Default {body_type} Content {i+1}* 🏥"
+            if body_type == "WhatsApp":
+                bodies.append(WABody(title, [WABlk(msg_body)]))
+            elif body_type == "Messenger":
+                bodies.append(MBody(title, [MBlk(msg_body)]))
+            elif body_type == "SMS":
+                bodies.append(SBody(title, [SBlk(msg_body)]))
+            elif body_type == "USSD":
+                bodies.append(UBody(title, [UBlk(msg_body)]))
 
         content_page = PageBuilder.build_cp(
             parent=parent,
@@ -98,6 +112,7 @@ class TestContentPageAPI:
             quick_replies=[],
             triggers=[],
             publish=publish,
+            web_body=web_body,
         )
         return content_page
 
@@ -175,6 +190,53 @@ class TestContentPageAPI:
         content = json.loads(response.content)
         assert content["count"] == 2
 
+    def test_platform_filtering(self, uclient):
+        """
+        If a platform filter is provided, only pages with content for that
+        platform are returned.
+        """
+        self.create_content_page(web_body=["Colour"], body_type=None)
+        self.create_content_page(title="Health Info")
+        self.create_content_page(title="Self Help", body_type="Messenger")
+        self.create_content_page(title="Self Help SMS", body_type="SMS")
+        self.create_content_page(title="Self Help USSD", body_type="USSD")
+
+        # it should return only web pages if filtered
+        response = uclient.get("/api/v2/pages/?web=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+
+        # it should return only whatsapp pages if filtered
+        response = uclient.get("/api/v2/pages/?whatsapp=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+
+        # it should return only sms pages if filtered
+        response = uclient.get("/api/v2/pages/?sms=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+
+        # it should return only ussd pages if filtered
+        response = uclient.get("/api/v2/pages/?ussd=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+
+        # it should return only messenger pages if filtered
+        response = uclient.get("/api/v2/pages/?messenger=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+
+        # it should return only viber pages if filtered
+        response = uclient.get("/api/v2/pages/?viber=true")
+        content = json.loads(response.content)
+        assert content["count"] == 0
+
+        # it should return all pages for no filter
+        response = uclient.get("/api/v2/pages/")
+        content = json.loads(response.content)
+        # exclude home pages and index pages
+        assert content["count"] == 5
+
     def test_whatsapp_draft(self, uclient):
         """
         Unpublished whatsapp pages are returned if the qa param is set.
@@ -195,7 +257,7 @@ class TestContentPageAPI:
         """
         Unpublished messenger pages are returned if the qa param is set.
         """
-        page = self.create_content_page(publish=False)
+        page = self.create_content_page(publish=False, body_type="Messenger")
 
         url = f"/api/v2/pages/{page.id}/?messenger=True&qa=True"
         # it should return specific page that is in draft
@@ -205,7 +267,7 @@ class TestContentPageAPI:
         # the page is not live but messenger content is returned
         assert not page.live
         body = content["body"]["text"]["message"]
-        assert body == "*Default Messenger Content* 🏥"
+        assert body == "*Default Messenger Content 1* 🏥"
 
     def test_whatsapp_disabled(self, uclient):
         """
@@ -221,7 +283,7 @@ class TestContentPageAPI:
         """
         It should only return the 11th paragraph if 11th message is requested
         """
-        page = self.create_content_page(wa_body_count=15)
+        page = self.create_content_page(body_count=15)
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=11")
         content = json.loads(response.content)
@@ -772,143 +834,3 @@ class TestOrderedContentSetAPI:
             "before_or_after": "After",
             "contact_field": "something",
         }
-
-
-@pytest.mark.django_db
-class TestContentPageAPI2:
-    """
-    Tests contentpage API without test data fixtures
-    """
-
-    def test_platform_filtering(self, uclient):
-        """
-        If a platform filter is provided, only pages with content for that
-        platform are returned.
-        """
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="main-menu-first-time-user",
-            title="main menu first time user",
-            bodies=[],
-            web_body=["Colour"],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="health-info",
-            title="health info",
-            bodies=[
-                WABody("health info", [WABlk("*Health information* 🏥")]),
-            ],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="self-help",
-            title="self-help",
-            bodies=[
-                MBody("self-help", [MBlk("*Self-help programs* 🌬️")]),
-            ],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="self-help-sms",
-            title="self-help-sms",
-            bodies=[
-                SBody("self-help-sms", [SBlk("*Self-help programs*SMS")]),
-            ],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="self-help-ussd",
-            title="self-help-ussd",
-            bodies=[
-                UBody("self-help-ussd", [UBlk("*Self-help programs* USSD")]),
-            ],
-        )
-
-        # it should return only web pages if filtered
-        response = uclient.get("/api/v2/pages/?web=true")
-        content = json.loads(response.content)
-        assert content["count"] == 1
-        # it should return only whatsapp pages if filtered
-        response = uclient.get("/api/v2/pages/?whatsapp=true")
-        content = json.loads(response.content)
-        assert content["count"] == 1
-        # it should return only sms pages if filtered
-        response = uclient.get("/api/v2/pages/?sms=true")
-        content = json.loads(response.content)
-        assert content["count"] == 1
-        # it should return only ussd pages if filtered
-        response = uclient.get("/api/v2/pages/?ussd=true")
-        content = json.loads(response.content)
-        assert content["count"] == 1
-        # it should return only messenger pages if filtered
-        response = uclient.get("/api/v2/pages/?messenger=true")
-        content = json.loads(response.content)
-        assert content["count"] == 1
-        # it should return only viber pages if filtered
-        response = uclient.get("/api/v2/pages/?viber=true")
-        content = json.loads(response.content)
-        assert content["count"] == 0
-        # it should return all pages for no filter
-        response = uclient.get("/api/v2/pages/")
-        content = json.loads(response.content)
-        # exclude home pages and index pages
-        assert content["count"] == 5
-
-    def test_ussd_content(self, uclient):
-        """
-        If a ussd query param is provided, only pages with content for that
-        platform are returned.
-        """
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="main-menu-first-time-user",
-            title="main menu first time user",
-            bodies=[],
-            web_body=["Colour"],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="health-info",
-            title="health info",
-            bodies=[
-                UBody("health info", [UBlk("*Health information* U")]),
-            ],
-        )
-
-        # it should return only USSD pages if filtered
-        response = uclient.get("/api/v2/pages/?ussd=true")
-        content = json.loads(response.content)
-        assert content["count"] == 1
-
-    def test_sms_content(self, uclient):
-        """
-        If a sms query param is provided, only pages with content for that
-        platform are returned.
-        """
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="main-menu-first-time-user",
-            title="main menu first time user",
-            bodies=[],
-            web_body=["Colour"],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="health-info",
-            title="health info",
-            bodies=[
-                SBody("health info", [SBlk("*Health information* S")]),
-            ],
-        )
-
-        # it should return only USSD pages if filtered
-        response = uclient.get("/api/v2/pages/?sms=true")
-        content = json.loads(response.content)
-        assert content["count"] == 1
