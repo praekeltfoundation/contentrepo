@@ -197,60 +197,35 @@ class OrderedContentSetAdmin(ModelAdmin):
 
     def page(self, obj):
         if obj.pages:
-            return [
-                (
-                    self._get_field_value(p, "contentpage")
-                )
-                for p in obj.pages
-            ]
+            return [(self._get_field_value(p, "contentpage")) for p in obj.pages]
         return ["-"]
 
     page.short_description = "Page Slugs"
 
     def time(self, obj):
         if obj.pages:
-            return [
-                (
-                    self._get_field_value(p, "time")
-                )
-                for p in obj.pages
-            ]
+            return [(self._get_field_value(p, "time")) for p in obj.pages]
         return ["-"]
 
     time.short_description = "Time"
 
     def unit(self, obj):
         if obj.pages:
-            return [
-                (
-                    self._get_field_value(p, "unit")
-                )
-                for p in obj.pages
-            ]
+            return [(self._get_field_value(p, "unit")) for p in obj.pages]
         return ["-"]
 
     unit.short_description = "Unit"
 
     def before_or_after(self, obj):
         if obj.pages:
-            return [
-                (
-                    self._get_field_value(p, "before_or_after")
-                )
-                for p in obj.pages
-            ]
+            return [(self._get_field_value(p, "before_or_after")) for p in obj.pages]
         return ["-"]
 
     before_or_after.short_description = "Before Or After"
 
     def contact_field(self, obj):
         if obj.pages:
-            return [
-                (
-                    self._get_field_value(p, "contact_field")
-                )
-                for p in obj.pages
-            ]
+            return [(self._get_field_value(p, "contact_field")) for p in obj.pages]
         return ["-"]
 
     contact_field.short_description = "Contact Field"
