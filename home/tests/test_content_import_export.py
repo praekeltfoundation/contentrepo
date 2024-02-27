@@ -158,13 +158,11 @@ def _normalise_button_pks(body: DbDict, min_pk: int) -> DbDict:
         buttons = []
         for button in value["buttons"]:
             if button["type"] == "go_to_page":
-                print("*****", button, "11111", button.get("value").get("page") is None)
                 if button.get("value").get("page") is None:
                     continue
                 v = button["value"]
                 button = button | {"value": v | {"page": v["page"] - min_pk}}
             buttons.append(button)
-        print("Buttons: ......", buttons)
         value = value | {"buttons": buttons}
     return body | {"value": value}
 
@@ -2034,7 +2032,6 @@ class TestExportImportRoundtrip:
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        parent = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
 
         ha_menu = PageBuilder.build_cp(
             parent=main_menu,
@@ -2060,25 +2057,22 @@ class TestExportImportRoundtrip:
             ],
         )
 
-        # export the pages
-        impexp.export_content()
-        orig_first_page = impexp.get_page_json()
-        print(">>***>>>", orig_first_page)
+        orig_json = impexp.get_page_json()
+
+        index = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
 
         # Add another button to existing page (first_page)
-        add_go_to_page_button(first_page.whatsapp_body[0], PageBtn("Go to Btn_2", page=parent))
+        add_go_to_page_button(first_page.whatsapp_body[0], PageBtn("Go to Btn_2", page=index))
 
         first_page.save()
         rev = first_page.save_revision()
         rev.publish()
         first_page.refresh_from_db()
 
-        parent.delete()
-        # rev_p = parent.save_revision()
-        # parent.publish()
+        # Delete page linked to got to button
+        index.delete()
 
-        impexp.export_content()
-        updated_first_page = impexp.get_page_json()
-        print(">>>>>", updated_first_page)
+        impexp.export_reimport()
+        updated_json = impexp.get_page_json()
 
-        assert orig_first_page == updated_first_page
+        assert orig_json == updated_json
