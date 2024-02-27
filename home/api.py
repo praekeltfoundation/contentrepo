@@ -146,11 +146,32 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
     listing_default_fields = BaseAPIViewSet.listing_default_fields + [
         "name",
         "profile_fields",
+        "pages",
     ]
-    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["page"])
+    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["page", "qa"])
     pagination_class = PageNumberPagination
     search_fields = ["name", "profile_fields"]
     filter_backends = (SearchFilter,)
+
+    def get_queryset(self):
+        qa = self.request.query_params.get("qa")
+
+        if qa:
+            # return the latest revision for each OrderedContentSet
+            queryset = OrderedContentSet.objects.all().order_by("latest_revision_id")
+            for ocs in queryset:
+                latest_revision = ocs.revisions.order_by("-created_at").first()
+                if latest_revision:
+                    latest_revision = latest_revision.as_object()
+                    ocs.name = latest_revision.name
+                    ocs.pages = latest_revision.pages
+                    ocs.profile_fields = latest_revision.profile_fields
+
+        else:
+            queryset = OrderedContentSet.objects.filter(live=True).order_by(
+                "last_published_at"
+            )
+        return queryset
 
 
 api_router = WagtailAPIRouter("wagtailapi")
