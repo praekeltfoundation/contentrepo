@@ -4,6 +4,7 @@ from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
+from wagtail.models import Page
 
 from .models import ContentPage, OrderedContentSet
 
@@ -198,9 +199,7 @@ class OrderedContentSetAdmin(ModelAdmin):
         if obj.pages:
             return [
                 (
-                    p.value["contentpage"].slug
-                    if p.value and "contentpage" in p.value
-                    else ""
+                    self._get_field_value(p, "contentpage")
                 )
                 for p in obj.pages
             ]
@@ -212,9 +211,7 @@ class OrderedContentSetAdmin(ModelAdmin):
         if obj.pages:
             return [
                 (
-                    f"{p.value['time']}"
-                    if p.value and "time" in p.value and p.value["time"]
-                    else ""
+                    self._get_field_value(p, "time")
                 )
                 for p in obj.pages
             ]
@@ -226,9 +223,7 @@ class OrderedContentSetAdmin(ModelAdmin):
         if obj.pages:
             return [
                 (
-                    p.value["unit"]
-                    if p.value and "unit" in p.value and p.value["unit"]
-                    else ""
+                    self._get_field_value(p, "unit")
                 )
                 for p in obj.pages
             ]
@@ -240,11 +235,7 @@ class OrderedContentSetAdmin(ModelAdmin):
         if obj.pages:
             return [
                 (
-                    p.value["before_or_after"]
-                    if p.value
-                    and "before_or_after" in p.value
-                    and p.value["before_or_after"]
-                    else ""
+                    self._get_field_value(p, "before_or_after")
                 )
                 for p in obj.pages
             ]
@@ -256,11 +247,7 @@ class OrderedContentSetAdmin(ModelAdmin):
         if obj.pages:
             return [
                 (
-                    p.value["contact_field"]
-                    if p.value
-                    and "contact_field" in p.value
-                    and p.value["contact_field"]
-                    else ""
+                    self._get_field_value(p, "contact_field")
                 )
                 for p in obj.pages
             ]
@@ -272,6 +259,15 @@ class OrderedContentSetAdmin(ModelAdmin):
         return len(obj.pages)
 
     num_pages.short_description = "Number of Pages"
+
+    def _get_field_value(self, page: Page, field: str) -> str:
+        try:
+            if value := page.value[field]:
+                return f"{value}"
+            else:
+                return ""
+        except (AttributeError, TypeError):
+            return ""
 
 
 # Now you just need to register your customised ModelAdmin class with Wagtail
