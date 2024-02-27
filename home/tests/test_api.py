@@ -579,8 +579,9 @@ class TestOrderedContentSetAPI:
         self.ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         self.ordered_content_set.profile_fields.append(("gender", "female"))
         self.ordered_content_set.save()
+        self.ordered_content_set.save_revision().publish()
 
-        self.ordered_content_set_timed = OrderedContentSet(name="Test set")
+        self.ordered_content_set_timed = OrderedContentSet(name="Test set timed")
         self.ordered_content_set_timed.pages.append(
             (
                 "pages",
@@ -596,6 +597,7 @@ class TestOrderedContentSetAPI:
 
         self.ordered_content_set_timed.profile_fields.append(("gender", "female"))
         self.ordered_content_set_timed.save()
+        self.ordered_content_set_timed.save_revision().publish()
 
     def test_orderedcontent_endpoint(self, uclient):
         """
@@ -703,3 +705,132 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
         assert content["pages"][0]["tags"] == [t.name for t in self.page1.tags.all()]
+
+    def test_orderedcontent_endpoint_with_drafts(self, uclient):
+        """
+        Unpublished ordered content sets are returned if the qa param is set.
+        """
+        self.ordered_content_set.unpublish()
+        url = "/api/v2/orderedcontent/?qa=True"
+        # it should return a list of ordered content sets with the unpublished one included
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the content set is not live but content is returned
+        assert not self.ordered_content_set.live
+        assert content["count"] == 2
+        assert content["results"][0]["name"] == self.ordered_content_set.name
+        assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+
+    def test_orderedcontent_endpoint_without_drafts(self, uclient):
+        """
+        Unpublished ordered content sets are not returned if the qa param is not set.
+        """
+        self.ordered_content_set.unpublish()
+        url = "/api/v2/orderedcontent/"
+        # it should return a list of ordered content sets with the unpublished one excluded
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the content set is not live but content is returned
+        assert not self.ordered_content_set.live
+        assert content["count"] == 1
+        assert content["results"][0]["name"] == self.ordered_content_set_timed.name
+        assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+
+    def test_orderedcontent_detail_endpoint_with_drafts(self, uclient):
+        """
+        Unpublished ordered content sets are returned if the qa param is set.
+        """
+        self.ordered_content_set.unpublish()
+        url = f"/api/v2/orderedcontent/{self.ordered_content_set.id}/?qa=True"
+        # it should return specific ordered content set that is in draft
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the content set is not live but content is returned
+        assert not self.ordered_content_set.live
+        assert content["name"] == self.ordered_content_set.name
+        assert content["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+
+    def test_orderedcontent_detail_endpoint_without_drafts(self, uclient, settings):
+        """
+        Unpublished ordered content sets are not returned if the qa param is not set.
+        """
+        settings.STATIC_ROOT = Path("home/tests/test_static")
+        self.ordered_content_set.unpublish()
+        url = f"/api/v2/orderedcontent/{self.ordered_content_set.id}"
+
+        response = uclient.get(url, follow=True)
+
+        assert response.status_code == 404
+
+    def test_orderedcontent_new_draft(self, uclient):
+        """
+        New revisions are returned if the qa param is set
+        """
+        self.ordered_content_set.pages.append(
+            (
+                "pages",
+                {
+                    "contentpage": self.page1,
+                    "time": 2,
+                    "unit": "Hours",
+                    "before_or_after": "After",
+                    "contact_field": "something",
+                },
+            )
+        )
+        self.ordered_content_set.profile_fields.append(
+            ("relationship", "in_a_relationship")
+        )
+
+        self.ordered_content_set.save_revision()
+
+        response = uclient.get("/api/v2/orderedcontent/")
+        content = json.loads(response.content)
+
+        assert self.ordered_content_set.live
+
+        assert content["count"] == 2
+        assert len(content["results"][0]["profile_fields"]) == 1
+        assert content["results"][0]["name"] == self.ordered_content_set.name
+        assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["results"][1]["name"] == self.ordered_content_set_timed.name
+        assert content["results"][1]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+
+        response = uclient.get("/api/v2/orderedcontent/?qa=True")
+        content = json.loads(response.content)
+        assert content["count"] == 2
+        assert len(content["results"][1]["profile_fields"]) == 2
+        assert content["results"][1]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+        assert content["results"][1]["profile_fields"][1] == {
+            "profile_field": "relationship",
+            "value": "in_a_relationship",
+        }
+        assert content["results"][1]["pages"][1] == {
+            "id": self.page1.id,
+            "title": self.page1.title,
+            "time": 2,
+            "unit": "Hours",
+            "before_or_after": "After",
+            "contact_field": "something",
+        }

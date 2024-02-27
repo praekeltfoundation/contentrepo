@@ -62,8 +62,8 @@ For Linux and WSL2 (Windows Subsystem for Linux)
  Creating a docker container with the ports exposed, called `cr_redis`
 `docker run -d -p 6379:6379 --name cr_redis redis`
 
-To then run the docker container,
-`docker run cr_redis`
+To then start the docker container,
+`docker start cr_redis`
 
 This can work for mac and (possibly Windows) by setting the environment variable `CACHE_URL=redis://0.0.0.0:6379/0`
 
@@ -72,13 +72,20 @@ This can work for mac and (possibly Windows) by setting the environment variable
 Local tests run using in-memory sqlite, so postgres isn't required.
 
 For Linux and WSL2 (Windows Subsystem for Linux)
-Creating a docker container that doesnt require a password and matches the setup of the database in settings
+Creating a docker container that doesn't require a password and matches the setup of the database in settings
 `docker run --name cr_postgres -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_USER=postgres -e POSTGRES_DB=contentrepo -d postgres:latest`
 
-To then run the docker container,
-`docker run cr_postgres`
+To then start the docker container,
+`docker start cr_postgres`
 
 This can work for mac and (possibly Windows) by setting the environment variable `DATABASE_URL=postgres://postgres@0.0.0.0/contentrepo`
+
+Then create the DB by entering the cr_postgres container and creating a db, note that the user will need to be changed from root to postgres
+```bash
+docker exec -it cr_postgres bash  
+su - postgres
+createdb contentrepo
+```
 
 ### Wagtail server
 
@@ -87,7 +94,6 @@ Run the following in a virtual environment
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
-createdb contentrepo
 ./manage.py migrate
 ./manage.py createsuperuser
 ./manage.py runserver
@@ -104,6 +110,9 @@ The API documentation is available at the `/api/schema/swagger-ui/` endpoint.
 Authentication is required to access the API. Session, basic, and token authentication is supported, but token authentication is advised.
 
 To create an authentication token, you can do so via the Django Admin (available at the `/django-admin` endpoint), or by `POST`ing the username and password of the user you want to generate a token for to the `/api/v2/token/` endpoint.
+
+### Internationalisation
+To create or import pages in other languages, the user must first create the locale and HomePage in the specified language. To create a new locale, go to "Settings" => "Locales" in the admin interface, and click "Add a new locale". Then go to the default(most likely English) homepage, click the kebab menu and select translate. This will copy the whole default tree into the new locale, creating the new homepage with all the required pages. After you press "Save", there should be two "Home" pages in the page explorer. 
 
 ## Running in Production
 There is a [docker image](https://github.com/praekeltfoundation/contentrepo/pkgs/container/contentrepo) that can be used to easily run this service. It uses the following environment variables for configuration:
