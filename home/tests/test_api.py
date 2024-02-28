@@ -17,11 +17,13 @@ from home.models import (
 from .page_builder import (
     MBlk,
     MBody,
+    NextBtn,
     PageBuilder,
     SBlk,
     SBody,
     UBlk,
     UBody,
+    VarMsg,
     WABlk,
     WABody,
 )
@@ -462,33 +464,61 @@ class TestContentPageAPI:
 @pytest.mark.django_db
 class TestWhatsAppMessages:
     """
-    FIXME:
-     * Should some of the WhatsApp tests from TestPagination live here instead?
+    Test the WhatsApp specific functionality of ContentPage like buttons templates and
+    variations
     """
+
+    def create_content_page(
+        self,
+        buttons=None,
+        whatsapp_template_category=None,
+        whatsapp_template_name=None,
+        variation_messages=None,
+    ):
+        """
+        Helper function to create pages needed for each test.
+
+        Parameters
+        ----------
+        buttons : [NextBtn | PageBtn]
+            List of buttons to add to the content page.
+        whatsapp_template_category : str
+            Category of the WhatsApp template.
+        whatsapp_template_name : str
+            Name of the WhatsApp template
+        variation_messages : [VarMsg]
+            Variation messages added to the WhatsApp content block
+        """
+        title = "default page"
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        content_page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug=title.replace(" ", "-"),
+            title=title,
+            bodies=[
+                WABody(
+                    title,
+                    [
+                        WABlk(
+                            "Test WhatsApp Message 1",
+                            buttons=buttons or [],
+                            variation_messages=variation_messages or [],
+                        )
+                    ],
+                )
+            ],
+            whatsapp_template_category=whatsapp_template_category,
+            whatsapp_template_name=whatsapp_template_name,
+        )
+        return content_page
 
     def test_whatsapp_detail_view_with_button(self, uclient):
         """
         Next page buttons in WhatsApp messages are present in the message body.
         """
-        page = ContentPage(
-            title="test",
-            slug="text",
-            enable_whatsapp=True,
-            whatsapp_body=[
-                {
-                    "type": "Whatsapp_Message",
-                    "value": {
-                        "message": "test message",
-                        "buttons": [
-                            {"type": "next_message", "value": {"title": "Tell me more"}}
-                        ],
-                    },
-                }
-            ],
-        )
-        homepage = HomePage.objects.first()
-        homepage.add_child(instance=page)
-        page.save_revision().publish()
+        page = self.create_content_page(buttons=[NextBtn("Tell me more")])
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
         content = response.json()
@@ -496,59 +526,33 @@ class TestWhatsAppMessages:
         button.pop("id")
         assert button == {"type": "next_message", "value": {"title": "Tell me more"}}
 
-    def test_whatsapp_template(self, uclient):
-        """
-        FIXME:
-         * Is this actually a template message?
-        """
-        page = ContentPage(
-            title="test",
-            slug="text",
-            enable_whatsapp=True,
-            whatsapp_body=[
-                {
-                    "type": "Whatsapp_Message",
-                    "value": {
-                        "message": "test message",
-                        "buttons": [
-                            {"type": "next_message", "value": {"title": "Tell me more"}}
-                        ],
-                    },
-                }
-            ],
-            whatsapp_template_category="MARKETING",
-        )
-        homepage = HomePage.objects.first()
-        homepage.add_child(instance=page)
-        page.save_revision().publish()
-
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
-        content = response.json()
-        body = content["body"]
-        assert body["whatsapp_template_category"] == "MARKETING"
-
-    def test_whatsapp_body(self, uclient):
+    def test_whatsapp_template_fields(self, uclient):
         """
         Should have the WhatsApp specific fields included in the body; if it's a
         template, what's the template name, the text body of the message.
         """
-        page = create_page(
-            is_whatsapp_template=True, whatsapp_template_name="test_template"
+        page = self.create_content_page(
+            whatsapp_template_category=ContentPage.WhatsAppTemplateCategory.MARKETING,
+            whatsapp_template_name="test_template",
         )
 
-        # it should return the correct details
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp")
-        content = response.json()
-        assert content["body"]["is_whatsapp_template"]
-        assert content["body"]["whatsapp_template_name"] == "test_template"
-        assert content["body"]["text"]["value"]["message"] == "Test WhatsApp Message 1"
+        body = response.json()["body"]
+
+        assert body["is_whatsapp_template"]
+        assert body["whatsapp_template_name"] == "test_template"
+        assert body["text"]["value"]["message"] == "Test WhatsApp Message 1"
+        assert body["whatsapp_template_category"] == "MARKETING"
 
     def test_whatsapp_detail_view_with_variations(self, uclient):
         """
         Variation blocks in WhatsApp messages are present in the message body.
         """
-        # variations should be in the whatsapp content
-        page = create_page(tags=["tag1", "tag2"], add_variation=True)
+        page = self.create_content_page(
+            variation_messages=[
+                VarMsg("Test Title - female variation", gender="female")
+            ],
+        )
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
         content = response.json()
