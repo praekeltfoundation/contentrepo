@@ -800,6 +800,46 @@ class TestImportExport:
             "parent page: ['missing-parent1', 'missing-parent2']"
         )
 
+    def test_message_for_missing_page(self, csv_impexp: ImportExport) -> None:
+        """
+        If we try to import a message for a page that isn't in the same import,
+        an error message should get sent back to the user.
+
+        FIXME:
+         * We currently assume that messages belong to the content page immediately
+           above them, but we don't check or enforce this.
+         * We also get the locale from the content page immediately above the message.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("message-row-missing-page.csv")
+
+        assert e.value.row_num == 4
+        assert (
+            e.value.message
+            == "Cannot find content page with slug 'not-cp-import-export' and locale "
+            "'English'"
+        )
+
+    def test_variation_for_missing_page(self, csv_impexp: ImportExport) -> None:
+        """
+        If we try to import a variation message for a page that isn't in the
+        same import, an error message should get sent back to the user.
+
+        FIXME:
+         * We currently assume that messages belong to the content page immediately
+           above them, but we don't check or enforce this.
+         * We also get the locale from the content page immediately above the message.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("variation-row-missing-page.csv")
+
+        assert e.value.row_num == 4
+        assert (
+            e.value.message
+            == "Cannot find content page with slug 'not-cp-import-export' and locale "
+            "'English'"
+        )
+
     def test_go_to_page_button_missing_page(self, csv_impexp: ImportExport) -> None:
         """
         Go to page buttons in the import file link to other pages using the slug. But
