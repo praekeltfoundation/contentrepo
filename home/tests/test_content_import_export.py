@@ -48,6 +48,8 @@ from .page_builder import (
     WABody,
 )
 
+IMP_EXP_DATA_BASE = Path("home/tests/import-export-data")
+
 ExpDict = dict[str, Any]
 ExpPair = tuple[ExpDict, ExpDict]
 ExpDicts = Iterable[ExpDict]
@@ -432,11 +434,11 @@ class ImportExport:
     def import_ordered_sets(self, content_bytes: bytes, purge: bool = False) -> None:
         import_ordered_sets(BytesIO(content_bytes), self.format.upper(), Queue(), purge)
 
-    def read_bytes(self, path_str: str, path_base: str = "home/tests") -> bytes:
-        return (Path(path_base) / path_str).read_bytes()
+    def read_bytes(self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE) -> bytes:
+        return (path_base / path_str).read_bytes()
 
     def import_file(
-        self, path_str: str, path_base: str = "home/tests", **kw: Any
+        self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE, **kw: Any
     ) -> bytes:
         """
         Import given content file in the configured format with the configured importer.
