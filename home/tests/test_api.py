@@ -575,7 +575,7 @@ class TestOrderedContentSetAPI:
         """
         Create the content that all the tests in this class will use.
         """
-        path = Path("home/tests/content2.csv")
+        path = Path("home/tests/import-export-data/content2.csv")
         with path.open(mode="rb") as f:
             import_content(f, "CSV", queue.Queue())
         self.page1 = ContentPage.objects.first()
