@@ -1201,7 +1201,8 @@ def mk_doc(doc_path: Path, title: str) -> Image:
     doc = Document(title=title, file=File(doc_path.open("rb"), name=doc_path.name))
     doc.save()
     return doc
-  
+
+
 def add_go_to_page_button(whatsapp_block: Any, button: PageBtn) -> None:
     button_val = GoToPageButton().to_python(button.value_dict())
     whatsapp_block.value["buttons"].append(("go_to_page", button_val))
