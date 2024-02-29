@@ -5,6 +5,8 @@ from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.models import Page
+from wagtail.snippets.models import register_snippet
+from wagtail.snippets.views.snippets import SnippetViewSet
 
 from .models import ContentPage, OrderedContentSet
 
@@ -172,13 +174,14 @@ class ContentPageAdmin(ModelAdmin):
     parental.short_description = "Parent"
 
 
-class OrderedContentSetAdmin(ModelAdmin):
+class OrderedContentSetViewSet(SnippetViewSet):
     model = OrderedContentSet
-    menu_icon = "order"
+    icon = "order"
     menu_order = 200
+    add_to_admin_menu = True
     add_to_settings_menu = False
     exclude_from_explorer = False
-    list_display = ("name", "profile_fields", "num_pages")
+    list_display = ("name", "latest_draft_profile_fields", "num_pages", "status")
     list_export = (
         "name",
         "profile_field",
@@ -189,11 +192,6 @@ class OrderedContentSetAdmin(ModelAdmin):
         "contact_field",
     )
     search_fields = ("name", "profile_fields")
-
-    def profile_field(self, obj):
-        return [f"{x.block_type}:{x.value}" for x in obj.profile_fields]
-
-    profile_field.short_description = "Profile Fields"
 
     def page(self, obj):
         if obj.pages:
@@ -245,6 +243,6 @@ class OrderedContentSetAdmin(ModelAdmin):
             return ""
 
 
+register_snippet(OrderedContentSetViewSet)
 # Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
-modeladmin_register(OrderedContentSetAdmin)

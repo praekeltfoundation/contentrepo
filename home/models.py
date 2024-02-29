@@ -2,6 +2,7 @@ import logging
 import re
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.db import models
@@ -19,7 +20,7 @@ from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import Page, Revision
+from wagtail.models import DraftStateMixin, Page, Revision, RevisionMixin
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
@@ -989,25 +990,41 @@ def update_embedding(sender, instance, *args, **kwargs):
     instance.embedding = embedding
 
 
-class OrderedContentSet(index.Indexed, models.Model):
+class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Model):
+    revisions = GenericRelation(
+        "wagtailcore.Revision", related_query_name="orderedcontentset"
+    )
     name = models.CharField(
         max_length=255, help_text="The name of the ordered content set."
     )
 
     def get_gender(self):
-        for item in self.profile_fields.raw_data:
+        for item in self.get_latest_revision_as_object().profile_fields.raw_data:
             if item["type"] == "gender":
                 return item["value"]
 
     def get_age(self):
-        for item in self.profile_fields.raw_data:
+        for item in self.get_latest_revision_as_object().profile_fields.raw_data:
             if item["type"] == "age":
                 return item["value"]
 
     def get_relationship(self):
-        for item in self.profile_fields.raw_data:
+        for item in self.get_latest_revision_as_object().profile_fields.raw_data:
             if item["type"] == "relationship":
                 return item["value"]
+
+    def profile_field(self):
+        return [
+            f"{x.block_type}:{x.value}"
+            for x in self.get_latest_revision_as_object().profile_fields
+        ]
+
+    profile_field.short_description = "Profile Fields"
+
+    def latest_draft_profile_fields(self):
+        return self.get_latest_revision_as_object().profile_fields
+
+    latest_draft_profile_fields.short_description = "Profile Fields"
 
     profile_fields = StreamField(
         [
@@ -1075,6 +1092,14 @@ class OrderedContentSet(index.Indexed, models.Model):
         blank=True,
         null=True,
     )
+
+    def num_pages(self):
+        return len(self.pages)
+
+    num_pages.short_description = "Number of Pages"
+
+    def status(self):
+        return "Live" if self.live else "Draft"
 
     panels = [
         FieldPanel("name"),
