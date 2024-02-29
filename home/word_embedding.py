@@ -7,7 +7,7 @@ from .constants import model
 
 
 def cosine_similarity(A, B):
-    return float((np.dot(A, B) / (np.linalg.norm(A) * np.linalg.norm(B))))
+    return float(np.dot(A, B) / (np.linalg.norm(A) * np.linalg.norm(B)))
 
 
 def retrieve_top_n_content_pieces(
