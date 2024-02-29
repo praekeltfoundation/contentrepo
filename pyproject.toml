@@ -82,7 +82,7 @@ filterwarnings = [
 select = [
     "E", "F", "W", # pycodestyle + pyflakes == flake8 - mccabe
     "I",           # isort
-    # "UP",          # pyupgrade
+    "UP",          # pyupgrade
     "S",           # flake8-bandit
     "B",           # flake8-bugbear
     "C4",          # flake8-comprehensions
@@ -114,4 +114,5 @@ ignore = [
 ]
 "**/migrations/**" = [
     "E501",  # Long lines are okay in generated code.
+    "UP",  # We don't care about new syntax in generated code.
 ]

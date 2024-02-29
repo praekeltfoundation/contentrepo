@@ -15,7 +15,7 @@ def create_whatsapp_template(
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
     )
     headers = {
-        "Authorization": "Bearer {}".format(settings.WHATSAPP_ACCESS_TOKEN),
+        "Authorization": f"Bearer {settings.WHATSAPP_ACCESS_TOKEN}",
         "Content-Type": "application/json",
     }
 
