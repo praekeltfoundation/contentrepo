@@ -9,7 +9,7 @@ from queue import Queue
 from typing import Any
 from uuid import uuid4
 
-from django.core.exceptions import ValidationError  # type: ignore
+from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
@@ -214,7 +214,12 @@ class ContentImporter:
         ContentPageIndex.objects.all().delete()
 
     def home_page(self, locale: Locale) -> HomePage:
-        return HomePage.objects.get(locale=locale)
+        try:
+            return HomePage.objects.get(locale=locale)
+        except ObjectDoesNotExist:
+            raise ImportException(
+                f"You are trying to add a child page to a '{locale}' HomePage that does not exist. Please create the '{locale}' HomePage first"
+            )
 
     def default_locale(self) -> Locale:
         site = Site.objects.get(is_default_site=True)
@@ -297,10 +302,20 @@ class ContentImporter:
         if row.translation_tag or locale != self.default_locale():
             page.translation_key = row.translation_tag
 
+    def find_shadow_content_page(
+        self, row: "ContentRow", locale: Locale
+    ) -> "ShadowContentPage":
+        try:
+            return self.shadow_pages[(row.slug, locale)]
+        except KeyError:
+            raise ImportException(
+                f"Cannot find content page with slug '{row.slug}' and locale '{locale}'"
+            )
+
     def add_variation_to_shadow_content_page_from_row(
         self, row: "ContentRow", locale: Locale
     ) -> None:
-        page = self.shadow_pages[(row.slug, locale)]
+        page = self.find_shadow_content_page(row, locale)
         whatsapp_block = page.whatsapp_body[-1]
         whatsapp_block.variation_messages.append(
             ShadowVariationBlock(
@@ -311,7 +326,7 @@ class ContentImporter:
     def add_message_to_shadow_content_page_from_row(
         self, row: "ContentRow", locale: Locale
     ) -> None:
-        page = self.shadow_pages[(row.slug, locale)]
+        page = self.find_shadow_content_page(row, locale)
         if row.is_whatsapp_message:
             page.enable_whatsapp = True
             buttons = []
