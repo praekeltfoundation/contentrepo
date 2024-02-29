@@ -147,10 +147,15 @@ class ExportRow:
     @staticmethod
     def serialise_buttons(buttons: blocks.StreamValue.StreamChild) -> str:
         button_dicts = []
+
         for button in buttons:
             button_dict = {"type": button.block_type, "title": button.value["title"]}
             if button.block_type == "go_to_page":
+                # Exclude buttons that has deleted pages that they are linked to it
+                if button.value.get("page") is None:
+                    continue
                 button_dict["slug"] = button.value["page"].slug
+
             button_dicts.append(button_dict)
         return dumps(button_dicts)
 
@@ -276,7 +281,7 @@ class ContentExporter:
         return parent.title
 
     @staticmethod
-    def _related_pages(page: Page) -> list[str]:
+    def _related_pages(page: ContentPage) -> list[str]:
         # Ideally, all related page links would be removed when the page they
         # link to is deleted. We don't currently do that, so for now we just
         # make sure that we skip such links during export.

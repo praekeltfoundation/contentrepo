@@ -6,7 +6,7 @@ certifi==2023.11.17
 charset-normalizer==3.3.2
 defusedxml==0.7.1
 dj-database-url==2.1.0
-Django==4.2.9
+Django==4.2.10
 django-environ==0.11.2
 django-filter==23.5
 django-modelcluster==6.2.1

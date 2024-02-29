@@ -227,6 +227,7 @@ class PageBuilder(Generic[TPage]):
         whatsapp_template_name: str | None = None,
         whatsapp_template_category: str | None = None,
         translated_from: ContentPage | None = None,
+        publish: bool = True,
     ) -> ContentPage:
         builder = cls.cp(parent, slug, title).add_bodies(*bodies)
         if web_body:
@@ -243,13 +244,15 @@ class PageBuilder(Generic[TPage]):
             builder = builder.set_whatsapp_template_category(whatsapp_template_category)
         if translated_from:
             builder = builder.translated_from(translated_from)
-        return builder.build()
+        return builder.build(publish=publish)
 
     def build(self, publish: bool = True) -> TPage:
         self.parent.add_child(instance=self.page)
         rev = self.page.save_revision()
         if publish:
             rev.publish()
+        else:
+            self.page.unpublish()
         # The page instance is out of date after revision operations, so reload.
         self.page.refresh_from_db()
         return self.page
