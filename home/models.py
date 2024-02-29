@@ -1021,6 +1021,73 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
 
     profile_field.short_description = "Profile Fields"
 
+    def page(self):
+        if self.pages:
+            return [
+                (
+                    p.value["contentpage"].slug
+                    if p.value and "contentpage" in p.value
+                    else ""
+                )
+                for p in self.pages
+            ]
+        return ["-"]
+
+    page.short_description = "Page Slugs"
+
+    def time(self):
+        if self.pages:
+            return [
+                (f"{p.value['time']}" if p.value and "time" in p.value else "")
+                for p in self.pages
+            ]
+        return ["-"]
+
+    time.short_description = "Time"
+
+    def unit(self):
+        if self.pages:
+            return [
+                (p.value["unit"] if p.value and "unit" in p.value else "")
+                for p in self.pages
+            ]
+        return ["-"]
+
+    unit.short_description = "Unit"
+
+    def before_or_after(self):
+        if self.pages:
+            return [
+                (
+                    p.value["before_or_after"]
+                    if p.value and "before_or_after" in p.value
+                    else ""
+                )
+                for p in self.pages
+            ]
+        return ["-"]
+
+    before_or_after.short_description = "Before Or After"
+
+    def contact_field(self):
+        if self.pages:
+            return [
+                (
+                    p.value["contact_field"]
+                    if p.value and "contact_field" in p.value
+                    else ""
+                )
+                for p in self.pages
+            ]
+        return ["-"]
+
+    contact_field.short_description = "Contact Field"
+
+    def num_pages(self):
+        return len(self.pages)
+
+    num_pages.short_description = "Number of Pages"
+
     def latest_draft_profile_fields(self):
         return self.get_latest_revision_as_object().profile_fields
 

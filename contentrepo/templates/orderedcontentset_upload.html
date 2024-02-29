@@ -55,7 +55,7 @@
 {% block extra_js %}
     <script>
       var importURL = "{% url 'import_orderedcontentset' %}";
-      var destinationURL = "{% url 'home_orderedcontentset_modeladmin_index' %}";
+      var destinationURL = "{% url 'wagtailsnippets_home_orderedcontentset:index' %}";
     </script>
     <script type="text/javascript" src="{% static 'js/contentrepo.js' %}"></script>
 {% endblock %}
