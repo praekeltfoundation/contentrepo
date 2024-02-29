@@ -1,0 +1,28 @@
+
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+flowchart TD;
+
+   ContentPageIndex2["ContentPageIndex"]
+   ContentPageIndex3["ContentPageIndex"]
+
+   ContentPage2["ContentPage"]
+   ContentPage3["ContentPage"]
+
+   ContentPageChild["ContentPage"]
+   ContentPageChild2["ContentPage"]
+   ContentPageChild3["ContentPage"]
+   
+   Pages -- "1 or more, 1 per language" --> Homepage
+     
+   Homepage  --> ContentPageIndex3
+   Homepage  --> ContentPageIndex2
+   Homepage  --> ContentPageIndex
+   
+   ContentPageIndex3 --> ContentPage
+   ContentPageIndex3 --> ContentPage2
+   ContentPageIndex3 --> ContentPage3
+
+   ContentPageChild["ContentPage"]
+   ContentPage3 --> ContentPageChild
+   ContentPage3 --> ContentPageChild2
+   ContentPage3 --> ContentPageChild3
