@@ -1,34 +1,14 @@
-import copy
 import csv
 import io
-from dataclasses import dataclass
 from io import BytesIO
-from json import dumps
 from logging import getLogger
-from math import ceil
-from typing import List, Tuple, Union
 
 from django.db import transaction
 from django.http import HttpResponse
 from openpyxl import load_workbook
-from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
-from openpyxl.utils import get_column_letter
-from openpyxl.workbook import Workbook
-from openpyxl.worksheet.worksheet import Worksheet
-from wagtail import blocks
-from wagtail.documents.models import Document
-from wagtail.images.models import Image
-from wagtail.models import Locale
 from wagtail.query import PageQuerySet
-from wagtailmedia.models import Media
 
-from home.models import (  # isort:skip
-    ContentPage,
-    ContentPageIndex,
-    HomePage,
-    OrderedContentSet,
-)
-
+from home.models import ContentPage, OrderedContentSet
 
 EXPORT_FIELDNAMES = [
     "page_id",
