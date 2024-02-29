@@ -10,42 +10,6 @@ from wagtail.query import PageQuerySet
 
 from home.models import ContentPage, OrderedContentSet
 
-EXPORT_FIELDNAMES = [
-    "page_id",
-    "slug",
-    "parent",
-    "web_title",
-    "web_subtitle",
-    "web_body",
-    "whatsapp_title",
-    "whatsapp_body",
-    "whatsapp_template_name",
-    "whatsapp_template_category",
-    "example_values",
-    "variation_title",
-    "variation_body",
-    "list_items",
-    "sms_title",
-    "sms_body",
-    "ussd_title",
-    "ussd_body",
-    "messenger_title",
-    "messenger_body",
-    "viber_title",
-    "viber_body",
-    "translation_tag",
-    "tags",
-    "quick_replies",
-    "triggers",
-    "locale",
-    "next_prompt",
-    "buttons",
-    "image_link",
-    "doc_link",
-    "media_link",
-    "related_pages",
-]
-
 logger = getLogger(__name__)
 
 
