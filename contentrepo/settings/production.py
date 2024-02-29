@@ -1,4 +1,4 @@
-from os.path import abspath, dirname, join
+from pathlib import Path
 
 import dj_database_url
 
@@ -6,10 +6,10 @@ from .base import *  # noqa
 
 DEBUG = env.bool("DEBUG", False)
 
-PROJECT_ROOT = os.environ.get("PROJECT_ROOT") or dirname(dirname(abspath(__file__)))
+PROJECT_ROOT = os.environ.get("PROJECT_ROOT") or Path(__file__).resolve().parent
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{join(PROJECT_ROOT, 'contentrepo.db')}"
+        default=f"sqlite:///{PROJECT_ROOT / 'contentrepo.db'}"
     )
 }
 

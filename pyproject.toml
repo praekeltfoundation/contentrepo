@@ -107,7 +107,6 @@ ignore = [
 "contentrepo/settings/**" = [
     "S105",  # TODO: Get rid of default DEFAULT_SECRET_KEY.
     "F405",  # We import * in settings files.
-    "PTH",  # TODO: Use pathlib in settings.
 ]
 "**/tests/**" = [
     "S101",  # It's okay to use `assert` in tests.
