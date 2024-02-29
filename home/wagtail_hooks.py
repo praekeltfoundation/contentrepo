@@ -4,7 +4,6 @@ from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
-from wagtail.models import Page
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
@@ -192,55 +191,6 @@ class OrderedContentSetViewSet(SnippetViewSet):
         "contact_field",
     )
     search_fields = ("name", "profile_fields")
-
-    def page(self, obj):
-        if obj.pages:
-            return [(self._get_field_value(p, "contentpage")) for p in obj.pages]
-        return ["-"]
-
-    page.short_description = "Page Slugs"
-
-    def time(self, obj):
-        if obj.pages:
-            return [(self._get_field_value(p, "time")) for p in obj.pages]
-        return ["-"]
-
-    time.short_description = "Time"
-
-    def unit(self, obj):
-        if obj.pages:
-            return [(self._get_field_value(p, "unit")) for p in obj.pages]
-        return ["-"]
-
-    unit.short_description = "Unit"
-
-    def before_or_after(self, obj):
-        if obj.pages:
-            return [(self._get_field_value(p, "before_or_after")) for p in obj.pages]
-        return ["-"]
-
-    before_or_after.short_description = "Before Or After"
-
-    def contact_field(self, obj):
-        if obj.pages:
-            return [(self._get_field_value(p, "contact_field")) for p in obj.pages]
-        return ["-"]
-
-    contact_field.short_description = "Contact Field"
-
-    def num_pages(self, obj):
-        return len(obj.pages)
-
-    num_pages.short_description = "Number of Pages"
-
-    def _get_field_value(self, page: Page, field: str) -> str:
-        try:
-            if value := page.value[field]:
-                return f"{value}"
-            else:
-                return ""
-        except (AttributeError, TypeError):
-            return ""
 
 
 register_snippet(OrderedContentSetViewSet)

@@ -15,6 +15,7 @@ from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
+from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtailmedia.models import Media  # type: ignore
@@ -1140,6 +1141,39 @@ class TestExport:
         # Export should succeed
         assert content is not None
 
+    def test_export_wa_with_document(self, impexp: ImportExport) -> None:
+        doc_path = Path("home/tests/test_static") / "test.txt"
+        doc_wa = mk_doc(doc_path, "wa_document")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome WA", document=doc_wa.id)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        # Export should succeed
+        assert content is not None
+
+    def test_export_wa_with_none_document(self, impexp: ImportExport) -> None:
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome WA", document=None)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        # Export should succeed
+        assert content is not None
+
 
 @pytest.fixture(params=["csv", "xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
@@ -1161,6 +1195,12 @@ def mk_media(media_path: Path, title: str) -> File:
     media = Media(title=title, file=File(media_path.open("rb"), name=media_path.name))
     media.save()
     return media
+
+
+def mk_doc(doc_path: Path, title: str) -> Image:
+    doc = Document(title=title, file=File(doc_path.open("rb"), name=doc_path.name))
+    doc.save()
+    return doc
 
 
 def add_go_to_page_button(whatsapp_block: Any, button: PageBtn) -> None:
