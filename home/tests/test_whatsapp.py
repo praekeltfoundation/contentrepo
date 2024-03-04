@@ -202,7 +202,7 @@ class TestWhatsApp:
         # The default English locale gives us a language of "en_US".
         # FIXME: Should this be "en" instead?
         en = Locale.objects.get(language_code="en")
-        create_whatsapp_template("Test-Template", "Test Body", "UTILITY", locale=en)
+        create_whatsapp_template("test-template", "Test Body", "UTILITY", locale=en)
         assert json.loads(responses.calls[-1].request.body) == {
             "category": "UTILITY",
             "name": "test-template",
@@ -213,7 +213,7 @@ class TestWhatsApp:
         # WhatsApp doesn't support Portuguese without a country code, so we
         # pick "pt_PT" rather than "pt_BR".
         pt, _created = Locale.objects.get_or_create(language_code="pt")
-        create_whatsapp_template("Test-pt", "Corpo de Teste", "UTILITY", locale=pt)
+        create_whatsapp_template("test-pt", "Corpo de Teste", "UTILITY", locale=pt)
         assert json.loads(responses.calls[-1].request.body) == {
             "category": "UTILITY",
             "name": "test-pt",
@@ -224,7 +224,7 @@ class TestWhatsApp:
         # If we specifically want Brazillian Portuguese, we can use a locale
         # specifically for that.
         ptbr, _created = Locale.objects.get_or_create(language_code="pt_BR")
-        create_whatsapp_template("Test-pt-BR", "Corpo de Teste", "UTILITY", locale=ptbr)
+        create_whatsapp_template("test-pt-br", "Corpo de Teste", "UTILITY", locale=ptbr)
         assert json.loads(responses.calls[-1].request.body) == {
             "category": "UTILITY",
             "name": "test-pt-br",
