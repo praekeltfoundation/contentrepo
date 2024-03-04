@@ -25,7 +25,7 @@ from .page_builder import (
 
 def create_content_page(
     wa_body_count: int = 1,
-    wa_var: int = 0,
+    wa_gender_var: list[str] | None = None,
 ) -> ContentPage:
     """
     Helper function to create pages needed for each test.
@@ -34,57 +34,34 @@ def create_content_page(
     ----------
     wa_body_count : int
         How many WhatsApp message bodies to create on the content page.
-    wa_var: int
-        How many WhatsApp variation message bodies to create on the content page. All variations will be on gender
+    wa_gender_var: list[str]
+        Variation restriction
     """
     title = "default page"
     home_page = HomePage.objects.first()
     main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
     parent = main_menu
 
+    if wa_gender_var is None:
+        wa_gender_var = []
+
     bodies = [
-        MBody(
-            title,
-            [
-                MBlk("*Default Messenger Content* 🏥1"),
-                MBlk("*Default Messenger Content* 2🏥"),
-            ],
-        ),
-        SBody(
-            title, [SBlk("*Default SMS Content* 1"), SBlk("*Default SMS Content*2 ")]
-        ),
-        UBody(
-            title,
-            [UBlk("*Default USSD Content* 1"), UBlk("*Default USSD Content* 2")],
-        ),
-        VBody(
-            title,
-            [VBlk("*Default Viber Content* 1"), VBlk("*Default Viber Content* 2")],
-        ),
+        MBody(title, [MBlk("Messenger 1"), MBlk("Messenger 2")]),
+        SBody(title, [SBlk("SMS 1"), SBlk("SMS 2")]),
+        UBody(title, [UBlk("USSD 1"), UBlk("USSD 2")]),
+        VBody(title, [VBlk("Viber 1"), VBlk("Viber 2")]),
     ]
-    gender_variations = ["female", "male", "non-binary", "rather not say"]
 
     for i in range(wa_body_count):
-        wa_body = f"*Default WhatsApp Content {i+1}* 🏥"
+        wa_body = f"WhatsApp {i+1}"
 
         variation_messages = [
-            VarMsg(
-                wa_body.replace("Default", f"Varied {var+1}"),
-                gender=gender_variations[var],
-            )
-            for var in range(wa_var)
+            VarMsg(f"WhatsApp Varied {var+1}", gender=wa_gender_var[var])
+            for var in range(len(wa_gender_var))
         ]
 
         bodies.append(
-            WABody(
-                title,
-                [
-                    WABlk(
-                        wa_body,
-                        variation_messages=variation_messages,
-                    )
-                ],
-            )
+            WABody(title, [WABlk(wa_body, variation_messages=variation_messages)])
         )
 
     content_page = PageBuilder.build_cp(
@@ -102,25 +79,60 @@ def create_content_page(
 
 @pytest.mark.django_db
 class TestHasNextMessage:
-    # Test has_next_message
     def test_next_message_whatsapp(self) -> None:
         """Checks if the next message matches up.
         Index of first message is 0, next message is then message 2 with index 1"""
-        page = create_content_page(wa_body_count=2, wa_var=0)
+        page = create_content_page(wa_body_count=2, wa_gender_var=["female"])
         assert page.whatsapp_body
         assert has_next_message(0, page, "whatsapp") == 2
 
     def test_no_next_message_for_viber(self) -> None:
-        """On a page with 2 viber messages, the next message is None"""
+        """The next message after the last message is None."""
         page = create_content_page()
         assert page.viber_body
         assert has_next_message(2, page, "viber") is None
 
     def test_next_message_for_viber(self) -> None:
-        """On a page with 2 viber messages, the next message is None"""
+        """Next message after 1st message (index 0) is message 2 (index 1)"""
         page = create_content_page()
         assert page.viber_body
-        assert has_next_message(1, page, "viber") is None
+        assert has_next_message(0, page, "viber") == 2
+
+    def test_no_next_message_for_sms(self) -> None:
+        """SMS The next message after the last message is None."""
+        page = create_content_page()
+        assert page.sms_body
+        assert has_next_message(2, page, "sms") is None
+
+    def test_next_message_for_sms(self) -> None:
+        """SMS Next message after 1st message (index 0) is message 2 (index 1)"""
+        page = create_content_page()
+        assert page.sms_body
+        assert has_next_message(0, page, "sms") == 2
+
+    def test_no_next_message_for_ussd(self) -> None:
+        """USSD The next message after the last message is None."""
+        page = create_content_page()
+        assert page.ussd_body
+        assert has_next_message(2, page, "ussd") is None
+
+    def test_next_message_for_ussd(self) -> None:
+        """USSD Next message after 1st message (index 0) is message 2 (index 1)"""
+        page = create_content_page()
+        assert page.ussd_body
+        assert has_next_message(0, page, "ussd") == 2
+
+    def test_no_next_message_for_messenger(self) -> None:
+        """Messenger The next message after the last message is None."""
+        page = create_content_page()
+        assert page.messenger_body
+        assert has_next_message(2, page, "messenger") is None
+
+    def test_next_message_for_messenger(self) -> None:
+        """Messenger Next message after 1st message (index 0) is message 2 (index 1)"""
+        page = create_content_page()
+        assert page.messenger_body
+        assert has_next_message(0, page, "messenger") == 2
 
     def test_no_next_message_for_invalid_platform(self) -> None:
         """Returns none on a platform that is unrecognised"""
@@ -135,42 +147,69 @@ class TestHasNextMessage:
     def test_no_next_message_empty_body(self) -> None:
         """No next message on a page with no whatsapp body"""
         page = create_content_page(wa_body_count=0)
+        assert page.whatsapp_body._raw_data == []
         assert has_next_message(0, page, "whatsapp") is None
 
     def test_no_next_message_on_last_message(self) -> None:
         """last messages' next message is None"""
-        page = create_content_page(wa_body_count=1)
+        page = create_content_page(wa_body_count=2)
+        # first asser that the previous message has a next message,
+        # added due to confusing indexing
+        assert has_next_message(0, page, "whatsapp") == 2
+        # then assert that the last message has no next message
         assert has_next_message(1, page, "whatsapp") is None
 
     def test_next_message_on_first_message_of_many(self) -> None:
         """Page with many whatsapp messages has a next message on the first"""
         page = create_content_page(wa_body_count=5)
+        assert page.whatsapp_body
         assert has_next_message(0, page, "whatsapp") == 2
 
     def test_next_message_large_input(self) -> None:
         """Check next message for very long message sets"""
         page = create_content_page(wa_body_count=1000)
+        assert page.whatsapp_body
         # second to last message has index 998, last message has index 999 but is message 1000
         assert has_next_message(998, page, "whatsapp") == 999 + 1
 
 
 @pytest.mark.django_db
 class TestHasPreviousMessage:
-    # Test has_previous_message
     def test_no_previous_message_on_0_whatsapp_messages(self) -> None:
         """First WA message has no previous message"""
         page = create_content_page(wa_body_count=0)
+        assert page.whatsapp_body._raw_data == []
         assert has_previous_message(0, page, "whatsapp") is None
 
     def test_previous_message_on_whatsapp_message(self) -> None:
         """Second WA message has a previous message"""
         page = create_content_page(wa_body_count=2)
+        assert page.whatsapp_body
         assert has_previous_message(1, page, "whatsapp") == 1
 
     def test_previous_message_on_sms_message(self) -> None:
         """Second SMS message has a previous message"""
         page = create_content_page()
+        assert page.sms_body
         assert has_previous_message(1, page, "sms") == 1
+
+    def test_previous_message_on_ussd_message(self) -> None:
+        """Second USSD message has a previous message"""
+        page = create_content_page()
+        assert page.ussd_body
+        assert has_previous_message(1, page, "ussd") == 1
+
+    def test_previous_message_on_viber_message(self) -> None:
+        """Second Viber message has a previous message"""
+        page = create_content_page()
+        assert page.viber_body
+        assert has_previous_message(1, page, "viber") == 1
+
+    def test_previous_message_on_messenger_message(self) -> None:
+        """Second Messenger message has a previous message"""
+        page = create_content_page()
+        assert page.messenger_body
+        assert has_previous_message(1, page, "messenger") == 1
 
     def test_no_previous_message_on_invalid_platform(self) -> None:
         """An invalid plaform type returns None"""
@@ -193,6 +232,7 @@ class TestFormatMessage:
     def test_with_empty_input(self) -> None:
         "Page with no wa messages"
         page = create_content_page(wa_body_count=0)
+        assert page.whatsapp_body._raw_data == []
         with pytest.raises(IndexError):
             format_whatsapp_message(0, page, "whatsapp")
 
@@ -204,11 +244,13 @@ class TestFormatMessage:
     def test_with_invalid_index(self) -> None:
         """Page with 1 wa message should throw an error on request for 11th message"""
         page = create_content_page(wa_body_count=1)
+        assert page.whatsapp_body
+        assert len(page.whatsapp_body) == 1
         with pytest.raises(IndexError):
             format_whatsapp_message(10, page, "whatsapp")
 
     def test_happy_case_single_variation_message(self) -> None:
-        page = create_content_page(wa_body_count=1, wa_var=1)
+        page = create_content_page(wa_body_count=1, wa_gender_var=["female"])
         result = format_whatsapp_message(0, page, "whatsapp")
 
         expected_result = {
@@ -217,13 +259,13 @@ class TestFormatMessage:
                 "image": None,
                 "document": None,
                 "media": None,
-                "message": "*Default WhatsApp Content 1* 🏥",
+                "message": "WhatsApp 1",
                 "example_values": [],
                 "variation_messages": [
                     {
                         "profile_field": "gender",
                         "value": "female",
-                        "message": "*Varied 1 WhatsApp Content 1* 🏥",
+                        "message": "WhatsApp Varied 1",
                     }
                 ],
                 "next_prompt": None,
@@ -245,7 +287,7 @@ class TestFormatMessage:
                 "image": None,
                 "document": None,
                 "media": None,
-                "message": "*Default WhatsApp Content 1* 🏥",
+                "message": "WhatsApp 1",
                 "example_values": [],
                 "variation_messages": [],
                 "next_prompt": None,
