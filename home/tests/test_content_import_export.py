@@ -1065,7 +1065,7 @@ class TestImportExport:
         """
         home_page = HomePage.objects.first()
 
-        self_help = PageBuilder.build_cp(
+        _self_help = PageBuilder.build_cp(
             parent=home_page,
             slug="self-help",
             title="self help",
