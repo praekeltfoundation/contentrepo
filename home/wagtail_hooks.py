@@ -282,6 +282,5 @@ class WhatsAppTemplateAdmin(ModelAdmin):
 
 
 register_snippet(OrderedContentSetViewSet)
-# Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
 modeladmin_register(WhatsAppTemplateAdmin)

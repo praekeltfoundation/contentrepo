@@ -1161,7 +1161,7 @@ class PageView(models.Model):
 
 
 
-class WhatsAppTemplate():    
+class WhatsAppTemplate(models.Model):    
     class WhatsAppTemplateCategory(models.TextChoices):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
