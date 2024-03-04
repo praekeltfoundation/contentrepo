@@ -190,24 +190,24 @@ class TestHasPreviousMessage:
 
 @pytest.mark.django_db
 class TestFormatMessage:
-    def test_format_whatsapp_message_with_empty_input(self) -> None:
+    def test_with_empty_input(self) -> None:
         "Page with no wa messages"
         page = create_content_page(wa_body_count=0)
         with pytest.raises(IndexError):
             format_whatsapp_message(0, page, "whatsapp")
 
-    def test_format_whatsapp_message_with_null_input(self) -> None:
+    def test_with_null_input(self) -> None:
         """Invalid input should raise AttributeError"""
         with pytest.raises(AttributeError):
             format_whatsapp_message(None, None, None)
 
-    def test_format_whatsapp_message_with_invalid_index(self) -> None:
+    def test_with_invalid_index(self) -> None:
         """Page with 1 wa message should throw an error on request for 11th message"""
         page = create_content_page(wa_body_count=1)
         with pytest.raises(IndexError):
             format_whatsapp_message(10, page, "whatsapp")
 
-    def test_format_whatsapp_message_happy_case_single_variation_message(self) -> None:
+    def test_happy_case_single_variation_message(self) -> None:
         page = create_content_page(wa_body_count=1, wa_var=1)
         result = format_whatsapp_message(0, page, "whatsapp")
 
@@ -236,7 +236,7 @@ class TestFormatMessage:
 
         assert result == expected_result
 
-    def test_format_whatsapp_message_happy_case_no_variation_messages(self) -> None:
+    def test_happy_case_no_variation_messages(self) -> None:
         page = create_content_page(wa_body_count=1)
         result = format_whatsapp_message(0, page, "whatsapp")
         expected_result = {
