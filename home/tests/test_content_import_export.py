@@ -1059,6 +1059,27 @@ class TestImportExport:
             ("relationship", "in_a_relationship"),
         ]
 
+    def test_changed_parentpage(self, csv_impexp: ImportExport) -> None:
+        """
+        Users should not be allowed to import a file where a parent of an existing contentpage. A descriptive error should be sent back.
+        """
+        home_page = HomePage.objects.first()
+
+        self_help = PageBuilder.build_cp(
+            parent=home_page,
+            slug="self-help",
+            title="self help",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert*")])],
+        )
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("changed_parent.csv", purge=False)
+        assert e.value.row_num == 5
+        assert (
+            e.value.message
+            == "Changing the parent from 'Home' to 'Main Menu' for the page with title 'self-help' during import is not allowed. Please use the UI"
+        )
+
 
 @pytest.mark.django_db
 class TestExport:
