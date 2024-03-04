@@ -69,10 +69,6 @@ def create_content_page(
         slug=title.replace(" ", "-"),
         title=title,
         bodies=bodies,
-        tags=[],
-        quick_replies=[],
-        triggers=[],
-        publish=True,
     )
     return content_page
 
