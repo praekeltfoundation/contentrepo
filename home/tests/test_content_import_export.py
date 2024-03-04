@@ -645,6 +645,18 @@ class TestImportExport:
         container for related tests.
     """
 
+    def test_import_parent_change(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an invalid CSV file leaves the db as-is.
+
+        (This uses content2.csv from test_api.py and broken.csv.)
+        """
+        # Start with some existing content.
+        csv_bytes = csv_impexp.import_file("content2.csv")
+
+        print(csv_bytes)
+        assert 1 == 2
+
     def test_import_error(self, csv_impexp: ImportExport) -> None:
         """
         Importing an invalid CSV file leaves the db as-is.
@@ -993,6 +1005,27 @@ class TestImportExport:
             ("gender", "male"),
             ("relationship", "in_a_relationship"),
         ]
+
+    def test_changed_parentpage(self, csv_impexp: ImportExport) -> None:
+        """
+        Users should not be allowed to import a file where a parent of an existing contentpage. A descriptive error should be sent back.
+        """
+        home_page = HomePage.objects.first()
+
+        self_help = PageBuilder.build_cp(
+            parent=home_page,
+            slug="self-help",
+            title="self help",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert*")])],
+        )
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("changed_parent.csv", purge=False)
+        assert e.value.row_num == 5
+        assert (
+            e.value.message
+            == "Changing the parent from 'Home' to 'Main Menu' for the page with title 'self-help' during import is not allowed. Please use the UI"
+        )
 
 
 @pytest.mark.django_db
@@ -1882,75 +1915,3 @@ class TestExportImportRoundtrip:
         impexp.export_reimport()
         imported = impexp.get_page_json()
         assert imported == orig
-
-    def test_unordered_parentpage(self, impexp: ImportExport) -> None:
-        """
-        ContentPages with the parent page created after the child page
-        """
-
-        #It seems we cannot reference the parent page before creating it
-        ha_menu = PageBuilder.build_cp(
-            parent=main_menu,
-            slug="ha-menu",
-            title="HealthAlert menu",
-            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
-        )
-        
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-
-
-        orig = impexp.get_page_json()
-        impexp.export_reimport()
-        imported = impexp.get_page_json()
-        assert imported == orig    
-
-    def test_changed_parentpage(self, impexp: ImportExport) -> None:
-        """
-        ContentPages with the parent page changed for an existing childpage
-        """
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-
-        ha_menu = PageBuilder.build_cp(
-            parent=main_menu,
-            slug="ha-menu",
-            title="HealthAlert menu",
-            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
-        )
-
-        child_menu = PageBuilder.build_cp(
-        parent=ha_menu,
-        slug="child-menu",
-        title="Child menu",
-        bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
-        )
- 
-        #The title field is generated, but the parent is not, so the parent change is not reflected
-        child_menu.parent = main_menu
-        child_menu.title = "changed_title"
-        child_menu.save()
-
-        orig = impexp.get_page_json()
-        impexp.export_reimport()
-        imported = impexp.get_page_json()
-
-        #debug stuff
-        for page_data in orig:
-            # Extract the fields dictionary for each page
-            old_fields = page_data.get('fields', {})
-
-            # Extract and print the parent_page field for each page
-            title_value = old_fields.get('draft_title', None)
-            print(f"Old titles:  {title_value}")
-
-        for page_data in imported:
-            # Extract the fields dictionary for each page
-            new_fields = page_data.get('fields', {})
-
-            # Extract and print the parent_page field for each page
-            title_value = new_fields.get('draft_title', None)
-            print(f"New titles:  {title_value}")
-
-        assert imported == orig   
-

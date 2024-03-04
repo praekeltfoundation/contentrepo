@@ -143,6 +143,16 @@ class ContentImporter:
                         f"'{page.locale}' for parent page: {list(parents)}",
                         page.row_num,
                     )
+                if not self.purge:
+                    # check if the contentpage actually exists in the db
+                    if Page.objects.filter(slug=page.slug).exists():
+                        child = Page.objects.get(slug=page.slug, locale=page.locale)
+                        if child.get_parent().title != page.parent:
+                            raise ImportException(
+                                f"Changing the parent from '{child.get_parent()}' to '{page.parent}' "
+                                f"for the page with title '{page.title}' during import is not allowed. Please use the UI",
+                                page.row_num,
+                            )
             else:
                 parent = self.home_page(page.locale)
             page.save(parent)
