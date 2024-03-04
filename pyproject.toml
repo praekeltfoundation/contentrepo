@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "contentrepo"
-version = "1.1.0-dev.4"
+version = "1.1.1-dev.0"
 authors = [
   { name="Praekelt.org", email="dev@praekelt.org" },
 ]
@@ -60,6 +60,8 @@ exclude = [  # Regexes.
     '^home/tests/test_(management|management_related_tag|models)\.py',
     '^home/tests/test_(unique_slug_hook|views|wagtail_hooks)\.py',
     '^home/tests/test_(whatsapp_template_name_migration)\.py',
+    '^home/tests/test_(whatsapp|whatsapp_template_name_migration)\.py',
+    '^home/tests/test_(forms)\.py',
 ]
 files = "."
 follow_imports = "skip"
@@ -74,13 +76,14 @@ filterwarnings = [
     "ignore::django.utils.deprecation.RemovedInDjango50Warning:modelcluster.models:28",
     "ignore::DeprecationWarning:l18n.translation:17",
     "ignore::DeprecationWarning:wagtail.images.views.serve:1",
+    "ignore::django.utils.deprecation.RemovedInDjango50Warning:home.tests.test_forms:13"
 ]
 
 [tool.ruff]
 select = [
     "E", "F", "W", # pycodestyle + pyflakes == flake8 - mccabe
     "I",           # isort
-    # "UP",          # pyupgrade
+    "UP",          # pyupgrade
     "S",           # flake8-bandit
     "B",           # flake8-bugbear
     "C4",          # flake8-comprehensions
@@ -105,11 +108,11 @@ ignore = [
 "contentrepo/settings/**" = [
     "S105",  # TODO: Get rid of default DEFAULT_SECRET_KEY.
     "F405",  # We import * in settings files.
-    "PTH",  # TODO: Use pathlib in settings.
 ]
 "**/tests/**" = [
     "S101",  # It's okay to use `assert` in tests.
 ]
 "**/migrations/**" = [
     "E501",  # Long lines are okay in generated code.
+    "UP",  # We don't care about new syntax in generated code.
 ]

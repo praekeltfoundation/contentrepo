@@ -1,5 +1,6 @@
 import copy
 import csv
+import io
 from dataclasses import asdict, astuple, dataclass, fields
 from itertools import zip_longest
 from json import dumps
@@ -19,6 +20,8 @@ from home.models import (
     ContentPageIndex,
     HomePage,
     MessengerBlock,
+    SMSBlock,
+    USSDBlock,
     VariationBlock,
     ViberBlock,
     WhatsappBlock,
@@ -29,7 +32,13 @@ CP_CTYPE = ContentPage._meta.verbose_name
 CPI_CTYPE = ContentPageIndex._meta.verbose_name
 
 
-MsgBlocks = tuple[WhatsappBlock | None, MessengerBlock | None, ViberBlock | None]
+MsgBlocks = tuple[
+    WhatsappBlock | None,
+    SMSBlock | None,
+    USSDBlock | None,
+    MessengerBlock | None,
+    ViberBlock | None,
+]
 
 
 @dataclass
@@ -49,6 +58,11 @@ class ExportRow:
     example_values: str = ""
     variation_title: str = ""
     variation_body: str = ""
+    list_items: str = ""
+    sms_title: str = ""
+    sms_body: str = ""
+    ussd_title: str = ""
+    ussd_body: str = ""
     messenger_title: str = ""
     messenger_body: str = ""
     viber_title: str = ""
@@ -64,6 +78,7 @@ class ExportRow:
     doc_link: str = ""
     media_link: str = ""
     related_pages: str = ""
+    footer: str = ""
 
     @classmethod
     def headings(cls) -> list[str]:
@@ -91,39 +106,56 @@ class ExportRow:
         )
 
     def add_message_fields(self, msg_blocks: MsgBlocks) -> None:
-        whatsapp, messenger, viber = msg_blocks
+        whatsapp, sms, ussd, messenger, viber = msg_blocks
         # We do these in reverse order to pick the same image as the old
         # exporter if there's more than one.
         if viber:
             self.viber_body = viber.value["message"].strip()
-            if "image" in viber.value:
-                self.image_link = viber.value["image"]
+            if "image" in viber.value and viber.value["image"] is not None:
+                self.image_link = viber.value["image"].file.url
         if messenger:
             self.messenger_body = messenger.value["message"].strip()
-            if "image" in messenger.value:
-                self.image_link = messenger.value["image"]
+            if "image" in messenger.value and messenger.value["image"] is not None:
+                self.image_link = messenger.value["image"].file.url
+        if sms:
+            self.sms_body = sms.value["message"].strip()
+        if ussd:
+            self.ussd_body = ussd.value["message"].strip()
         if whatsapp:
             self.whatsapp_body = whatsapp.value["message"].strip()
-            if "image" in whatsapp.value:
-                self.image_link = whatsapp.value["image"]
-            if "document" in whatsapp.value:
-                self.doc_link = whatsapp.value["document"]
-            if "media" in whatsapp.value:
-                self.media_link = whatsapp.value["media"]
+            if "image" in whatsapp.value and whatsapp.value["image"] is not None:
+                self.image_link = whatsapp.value["image"].file.url
+            if "document" in whatsapp.value and whatsapp.value["document"] is not None:
+                self.doc_link = whatsapp.value["document"].file.url
+            if "media" in whatsapp.value and whatsapp.value["media"] is not None:
+                self.media_link = whatsapp.value["media"].file.url
             if "next_prompt" in whatsapp.value:
                 self.next_prompt = whatsapp.value["next_prompt"]
             if "buttons" in whatsapp.value:
                 self.buttons = self.serialise_buttons(whatsapp.value["buttons"])
             if "example_values" in whatsapp.value:
                 self.example_values = ", ".join(whatsapp.value["example_values"])
+            if "footer" in whatsapp.value:
+                self.footer = whatsapp.value["footer"]
+            if "list_items" in whatsapp.value:
+                output = io.StringIO()
+                writer = csv.writer(output)
+                writer.writerow(whatsapp.value["list_items"])
+                self.list_items = output.getvalue().strip()
+                output.close()
 
     @staticmethod
     def serialise_buttons(buttons: blocks.StreamValue.StreamChild) -> str:
         button_dicts = []
+
         for button in buttons:
             button_dict = {"type": button.block_type, "title": button.value["title"]}
             if button.block_type == "go_to_page":
+                # Exclude buttons that has deleted pages that they are linked to it
+                if button.value.get("page") is None:
+                    continue
                 button_dict["slug"] = button.value["page"].slug
+
             button_dicts.append(button_dict)
         return dumps(button_dicts)
 
@@ -184,6 +216,8 @@ class ContentExporter:
             whatsapp_title=page.whatsapp_title,
             whatsapp_template_name=page.whatsapp_template_name,
             whatsapp_template_category=page.whatsapp_template_category,
+            sms_title=page.sms_title,
+            ussd_title=page.ussd_title,
             messenger_title=page.messenger_title,
             viber_title=page.viber_title,
             translation_tag=str(page.translation_key),
@@ -195,7 +229,13 @@ class ContentExporter:
         )
         self.rows.append(row)
         message_bodies = list(
-            zip_longest(page.whatsapp_body, page.messenger_body, page.viber_body)
+            zip_longest(
+                page.whatsapp_body,
+                page.sms_body,
+                page.ussd_body,
+                page.messenger_body,
+                page.viber_body,
+            )
         )
         for msg_blocks in message_bodies:
             self._export_row_message(row, msg_blocks)
@@ -241,8 +281,11 @@ class ContentExporter:
         return parent.title
 
     @staticmethod
-    def _related_pages(page: Page) -> list[str]:
-        return [rp.value.slug for rp in page.related_pages]
+    def _related_pages(page: ContentPage) -> list[str]:
+        # Ideally, all related page links would be removed when the page they
+        # link to is deleted. We don't currently do that, so for now we just
+        # make sure that we skip such links during export.
+        return [rp.value.slug for rp in page.related_pages if rp.value is not None]
 
     @staticmethod
     def _comma_sep_qs(unformatted_query: PageQuerySet) -> str:
@@ -295,6 +338,10 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "whatsapp_template_category": 118,
         "variation_title": 118,
         "variation_body": 370,
+        "sms_title": 118,
+        "sms_body": 370,
+        "ussd_title": 118,
+        "ussd_body": 370,
         "messenger_title": 118,
         "messenger_body": 370,
         "viber_title": 118,
@@ -310,6 +357,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "doc_link": 118,
         "media_link": 118,
         "related": 118,
+        "footer": 118,
     }
 
     for index, column_width in enumerate(column_widths_in_pts.values(), 2):
@@ -369,4 +417,4 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
             cell.font = general_font
             alignment = copy.copy(cell.alignment)
             alignment.wrapText = True
-            cell.alignment = alignment
+            cell.alignment = alignment  # type: ignore # Broken typeshed update, maybe?

@@ -1,6 +1,10 @@
+from io import StringIO
 from unittest import mock
 
+from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.test import TestCase, override_settings
+from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
 
@@ -9,6 +13,8 @@ from home.models import (
     HomePage,
     NextMessageButton,
     PageView,
+    SMSBlock,
+    USSDBlock,
     WhatsappBlock,
 )
 
@@ -58,7 +64,7 @@ class ContentPageTests(TestCase):
     def test_template_create_on_save(self, mock_create_whatsapp_template):
         page = create_page(is_whatsapp_template=True)
         mock_create_whatsapp_template.assert_called_with(
-            f"WA_Title_{page.get_latest_revision().id}",
+            f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
             "UTILITY",
             [],
@@ -71,7 +77,7 @@ class ContentPageTests(TestCase):
     def test_template_create_with_buttons_on_save(self, mock_create_whatsapp_template):
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
         mock_create_whatsapp_template.assert_called_with(
-            f"WA_Title_{page.get_latest_revision().id}",
+            f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
             "UTILITY",
             ["button 1", "button 2"],
@@ -86,7 +92,7 @@ class ContentPageTests(TestCase):
     ):
         page = create_page(is_whatsapp_template=True, add_example_values=True)
         mock_create_whatsapp_template.assert_called_with(
-            f"WA_Title_{page.get_latest_revision().id}",
+            f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message with two variables, {{1}} and {{2}}",
             "UTILITY",
             [],
@@ -103,7 +109,7 @@ class ContentPageTests(TestCase):
         """
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
         mock_create_whatsapp_template.assert_called_once_with(
-            f"WA_Title_{page.get_latest_revision().pk}",
+            f"wa_title_{page.get_latest_revision().pk}",
             "Test WhatsApp Message 1",
             "UTILITY",
             ["button 1", "button 2"],
@@ -116,7 +122,7 @@ class ContentPageTests(TestCase):
         revision = page.save_revision()
         revision.publish()
 
-        expected_title = f"WA_Title_{page.get_latest_revision().pk}"
+        expected_title = f"wa_title_{page.get_latest_revision().pk}"
         mock_create_whatsapp_template.assert_called_once_with(
             expected_title,
             "Test WhatsApp Message 2",
@@ -138,7 +144,7 @@ class ContentPageTests(TestCase):
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
         page.get_latest_revision().publish()
         page.refresh_from_db()
-        expected_template_name = f"WA_Title_{page.get_latest_revision().pk}"
+        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
@@ -172,7 +178,7 @@ class ContentPageTests(TestCase):
         page.save_revision().publish()
 
         page.refresh_from_db()
-        expected_template_name = f"WA_Title_{page.get_latest_revision().pk}"
+        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
         self.assertEqual(page.whatsapp_template_name, expected_template_name)
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
@@ -205,7 +211,7 @@ class ContentPageTests(TestCase):
         page.is_whatsapp_template = True
         page.save_revision()
 
-        expected_template_name = f"WA_Title_{page.get_latest_revision().pk}"
+        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
@@ -225,15 +231,107 @@ class ContentPageTests(TestCase):
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
         PageBuilder.build_cp(
             parent=main_menu,
             slug="ha-menu",
             title="HealthAlert menu",
-            bodies=[],
+            bodies=[WABody("WA Title", [])],
             whatsapp_template_name="WA_Title_1",
         )
 
         mock_create_whatsapp_template.assert_not_called()
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_submitted_with_no_title(self, mock_create_whatsapp_template):
+        """
+        If the page is a WA template and how no title, then it shouldn't be submitted
+        """
+
+        with self.assertRaises(ValidationError):
+            home_page = HomePage.objects.first()
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+            PageBuilder.build_cp(
+                parent=main_menu,
+                slug="template-no-title",
+                title="HealthAlert menu",
+                bodies=[WABody("", [])],
+                whatsapp_template_name="WA_Title_1",
+            )
+
+        mock_create_whatsapp_template.assert_not_called()
+
+    def test_clean_text_valid_variables(self):
+        """
+        The message should accept variables if and only if they are numeric and ordered
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        with self.assertRaises(ValidationError):
+            PageBuilder.build_cp(
+                parent=main_menu,
+                slug="ha-menu",
+                title="HealthAlert menu",
+                bodies=[
+                    WABody(
+                        "WA Title",
+                        [
+                            WABlk(
+                                "{{2}}{{1}} {{foo}} {{mismatch1} {mismatch2}}",
+                            )
+                        ],
+                    )
+                ],
+                whatsapp_template_name="WA_Title_1",
+            )
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_create_whatsapp_template_submit_no_error_message(
+        self, mock_create_whatsapp_template
+    ):
+        """
+        Should not return an error message if template was submitted successfully
+        """
+        page = create_page(is_whatsapp_template=True)
+        page.get_latest_revision().publish()
+        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
+        mock_create_whatsapp_template.assert_called_once_with(
+            expected_template_name,
+            "Test WhatsApp Message 1",
+            "UTILITY",
+            [],
+            None,
+            [],
+        )
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_create_whatsapp_template_submit_return_error(
+        self, mock_create_whatsapp_template
+    ):
+        """
+        Test the error message on template submission failure
+        If template submission fails user should get descriptive error instead of internal server error
+        """
+        mock_create_whatsapp_template.side_effect = HTTPError("Failed")
+
+        with self.assertRaises(ValidationError) as e:
+            create_page(is_whatsapp_template=True)
+
+        self.assertRaises(ValidationError)
+        self.assertEqual(e.exception.message, "Failed to submit template")
+
+    def test_for_missing_migrations(self):
+        output = StringIO()
+        call_command("makemigrations", no_input=True, dry_run=True, stdout=output)
+        self.assertEqual(
+            output.getvalue().strip(),
+            "No changes detected",
+            "There are missing migrations:\n %s" % output.getvalue(),
+        )
 
 
 class WhatsappBlockTests(TestCase):
@@ -247,6 +345,8 @@ class WhatsappBlockTests(TestCase):
         example_values=None,
         next_prompt="",
         buttons=None,
+        list_items=None,
+        footer="",
     ):
         return {
             "image": image,
@@ -257,6 +357,8 @@ class WhatsappBlockTests(TestCase):
             "variation_messages": variation_messages,
             "next_prompt": next_prompt,
             "buttons": buttons or [],
+            "list_items": list_items or [],
+            "footer": footer,
         }
 
     def create_image(self, width=0, height=0):
@@ -313,3 +415,73 @@ class WhatsappBlockTests(TestCase):
         with self.assertRaises(StructBlockValidationError) as e:
             GoToPageButton().clean({"title": "a" * 21})
         self.assertEqual(list(e.exception.block_errors.keys()), ["title"])
+
+    def test_list_items_limit(self):
+        """WhatsApp messages can only have up to 10 list items"""
+        list_item = WhatsappBlock().child_blocks["list_items"]
+        items = list_item.to_python([f"test {_}" for _ in range(12)])
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            WhatsappBlock().clean(
+                self.create_message_value(message="a", list_items=items)
+            )
+        self.assertEqual(list(e.exception.block_errors.keys()), ["list_items"])
+
+    def test_list_items_character_limit(self):
+        """WhatsApp list item title can only have up to 24 char"""
+        list_item = WhatsappBlock().child_blocks["list_items"]
+
+        WhatsappBlock().clean(
+            self.create_message_value(
+                message="a",
+                list_items=[
+                    "test more that max char",
+                ],
+            )
+        )
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            items = list_item.to_python(
+                ["test limit", "it should fail as the title is above max"]
+            )
+            WhatsappBlock().clean(
+                self.create_message_value(message="a", list_items=items)
+            )
+
+        self.assertEqual(list(e.exception.block_errors.keys()), ["list_items"])
+
+
+class USSDBlockTests(TestCase):
+    def create_message_value(
+        self,
+        message="",
+    ):
+        return {
+            "message": message,
+        }
+
+    def test_clean_text_char_limit(self):
+        """Text messages should be limited to 160 characters"""
+        USSDBlock().clean(self.create_message_value(message="a" * 160))
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            USSDBlock().clean(self.create_message_value(message="a" * 161))
+        self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
+
+
+class SMSBlockTests(TestCase):
+    def create_message_value(
+        self,
+        message="",
+    ):
+        return {
+            "message": message,
+        }
+
+    def test_clean_text_char_limit(self):
+        """Text messages should be limited to 160 characters"""
+        SMSBlock().clean(self.create_message_value(message="a" * 160))
+
+        with self.assertRaises(StructBlockValidationError) as e:
+            SMSBlock().clean(self.create_message_value(message="a" * 161))
+        self.assertEqual(list(e.exception.block_errors.keys()), ["message"])

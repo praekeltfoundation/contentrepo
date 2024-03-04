@@ -20,6 +20,12 @@ class TitleField(serializers.Field):
         if "whatsapp" in request.GET and page.enable_whatsapp is True:
             if page.whatsapp_title:
                 return page.whatsapp_title
+        if "sms" in request.GET and page.enable_sms is True:
+            if page.sms_title:
+                return page.sms_title
+        if "ussd" in request.GET and page.enable_ussd is True:
+            if page.ussd_title:
+                return page.ussd_title
         elif "messenger" in request.GET and page.enable_messenger is True:
             if page.messenger_title:
                 return page.messenger_title
@@ -57,6 +63,10 @@ def has_next_message(message_index, content_page, platform):
     messages_length = None
     if platform == "whatsapp":
         messages_length = len(content_page.whatsapp_body._raw_data) - 1
+    elif platform == "sms":
+        messages_length = len(content_page.sms_body._raw_data) - 1
+    elif platform == "ussd":
+        messages_length = len(content_page.ussd_body._raw_data) - 1
     elif platform == "viber":
         messages_length = len(content_page.viber_body._raw_data) - 1
     elif platform == "messenger":
@@ -71,6 +81,10 @@ def has_previous_message(message_index, content_page, platform):
     messages_length = None
     if platform == "whatsapp":
         messages_length = len(content_page.whatsapp_body._raw_data) - 1
+    elif platform == "sms":
+        messages_length = len(content_page.sms_body._raw_data) - 1
+    elif platform == "ussd":
+        messages_length = len(content_page.ussd_body._raw_data) - 1
     elif platform == "viber":
         messages_length = len(content_page.viber_body._raw_data) - 1
     elif platform == "messenger":
@@ -160,6 +174,52 @@ class BodyField(serializers.Field):
                     )
                 except IndexError:
                     raise ValidationError("The requested message does not exist")
+        elif "sms" in request.GET and (
+            page.enable_sms is True
+            or ("qa" in request.GET and request.GET["qa"] == "True")
+        ):
+            if page.sms_body != []:
+                try:
+                    return OrderedDict(
+                        [
+                            ("message", message + 1),
+                            (
+                                "next_message",
+                                has_next_message(message, page, "sms"),
+                            ),
+                            (
+                                "previous_message",
+                                has_previous_message(message, page, "sms"),
+                            ),
+                            ("total_messages", len(page.sms_body._raw_data)),
+                            ("text", page.sms_body._raw_data[message]["value"]),
+                        ]
+                    )
+                except IndexError:
+                    raise ValidationError("The requested message does not exist")
+        elif "ussd" in request.GET and (
+            page.enable_ussd is True
+            or ("qa" in request.GET and request.GET["qa"] == "True")
+        ):
+            if page.ussd_body != []:
+                try:
+                    return OrderedDict(
+                        [
+                            ("message", message + 1),
+                            (
+                                "next_message",
+                                has_next_message(message, page, "ussd"),
+                            ),
+                            (
+                                "previous_message",
+                                has_previous_message(message, page, "ussd"),
+                            ),
+                            ("total_messages", len(page.ussd_body._raw_data)),
+                            ("text", page.ussd_body._raw_data[message]["value"]),
+                        ]
+                    )
+                except IndexError:
+                    raise ValidationError("The requested message does not exist")
         elif "messenger" in request.GET and (
             page.enable_messenger is True
             or ("qa" in request.GET and request.GET["qa"] == "True")
@@ -227,6 +287,12 @@ class RelatedPagesField(serializers.Field):
             if "whatsapp" in request.GET and related_page.enable_whatsapp is True:
                 if related_page.whatsapp_title:
                     title = related_page.whatsapp_title
+            elif "sms" in request.GET and related_page.enable_sms is True:
+                if related_page.sms_title:
+                    title = related_page.sms_title
+            elif "ussd" in request.GET and related_page.enable_ussd is True:
+                if related_page.ussd_title:
+                    title = related_page.ussd_title
             elif "messenger" in request.GET and related_page.enable_messenger is True:
                 if related_page.messenger_title:
                     title = related_page.messenger_title
@@ -295,6 +361,12 @@ class PagesField(serializers.Field):
             if "whatsapp" in request.GET and page.enable_whatsapp is True:
                 if page.whatsapp_title:
                     title = page.whatsapp_title
+            elif "sms" in request.GET and page.enable_sms is True:
+                if page.sms_title:
+                    title = page.sms_title
+            elif "ussd" in request.GET and page.enable_ussd is True:
+                if page.ussd_title:
+                    title = page.ussd_title
             elif "messenger" in request.GET and page.enable_messenger is True:
                 if page.messenger_title:
                     title = page.messenger_title
@@ -327,10 +399,16 @@ class OrderedPagesField(serializers.Field):
         pages = []
         for member in instance.pages:
             page = self.get_page_as_content_page(member.value.get("contentpage"))
-            title = page.title
+            title = page.title if page else ""
             if "whatsapp" in request.GET and page.enable_whatsapp is True:
                 if page.whatsapp_title:
                     title = page.whatsapp_title
+            elif "sms" in request.GET and page.enable_sms is True:
+                if page.sms_title:
+                    title = page.sms_title
+            elif "ussd" in request.GET and page.enable_ussd is True:
+                if page.ussd_title:
+                    title = page.ussd_title
             elif "messenger" in request.GET and page.enable_messenger is True:
                 if page.messenger_title:
                     title = page.messenger_title
@@ -338,7 +416,7 @@ class OrderedPagesField(serializers.Field):
                 if page.viber_title:
                     title = page.viber_title
             page_data = {
-                "id": page.id,
+                "id": page.id if page else "",
                 "title": title,
                 "time": member.value.get("time"),
                 "unit": member.value.get("unit"),

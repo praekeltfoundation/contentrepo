@@ -121,7 +121,7 @@ def create_whatsapp_template(
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
     )
     headers = {
-        "Authorization": "Bearer {}".format(settings.WHATSAPP_ACCESS_TOKEN),
+        "Authorization": f"Bearer {settings.WHATSAPP_ACCESS_TOKEN}",
         "Content-Type": "application/json",
     }
 
@@ -157,7 +157,7 @@ def create_whatsapp_template(
 
     data = {
         "category": category,
-        "name": name.lower(),
+        "name": name,
         "language": WhatsAppLanguage.from_locale(locale).value,
         "components": components,
     }
@@ -166,6 +166,8 @@ def create_whatsapp_template(
         headers=headers,
         data=json.dumps(data, indent=4),
     )
+
+    # Check if an error has occurred
     response.raise_for_status()
 
 

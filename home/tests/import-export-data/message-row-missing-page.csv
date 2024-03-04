@@ -1,0 +1,4 @@
+structure,message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,whatsapp_template_name,variation_title,variation_body,list_items,sms_title,sms_body,ussd_title,ussd_body,messenger_title,messenger_body,viber_title,viber_body,translation_tag,tags,quick_replies,triggers,locale,next_prompt,buttons,image_link,doc_link,media_link,related_pages,example_values,footer
+Menu 1,0,164,import-export,,Import Export,,,,,,,,,,,,,,,,,497bdc1f-43fc-4925-80a1-e68cb942faa4,,,,English,,,,,,,,
+Sub 1.1,1,165,cp-import-export,Import Export,CP-Import/export,,,WA import export data,Message 1,,,,,,,,,,,,,8ac50daf-de21-4d05-b697-6d983b7ed3d5,,,,English,,[],,,,,,
+,2,165,not-cp-import-export,,,,,,Message2,,,,,,,,,,,,,,,,,,,[],,,,,,

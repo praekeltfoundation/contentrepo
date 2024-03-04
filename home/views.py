@@ -28,6 +28,7 @@ from wagtail.contrib.modeladmin.views import IndexView
 
 from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
+from .import_content_pages import ImportException
 from .mixins import SpreadsheetExportMixin
 from .models import ContentPage, ContentPageRating, OrderedContentSet, PageView
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
@@ -63,6 +64,8 @@ class PageViewFilterSet(WagtailFilterSet):
     platform_choices = [
         ("web", "Web"),
         ("whatsapp", "Whatsapp"),
+        ("sms", "SMS"),
+        ("ussd", "USSD"),
         ("messenger", "Messenger"),
         ("viber", "Viber"),
     ]
@@ -132,19 +135,26 @@ class UploadThread(threading.Thread):
         self.file_type = file_type
         self.result_queue = queue.Queue()
         self.progress_queue = queue.Queue()
-        super(UploadThread, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class ContentUploadThread(UploadThread):
     def __init__(self, purge, locale, **kwargs):
         self.purge = purge
         self.locale = locale
-        super(ContentUploadThread, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def run(self):
         try:
             import_content(
                 self.file, self.file_type, self.progress_queue, self.purge, self.locale
+            )
+        except ImportException as e:
+            self.result_queue.put(
+                (
+                    messages.ERROR,
+                    f"Content import failed on row {e.row_num}: {e.message}",
+                )
             )
         except Exception:
             self.result_queue.put((messages.ERROR, "Content import failed"))
@@ -158,7 +168,7 @@ class ContentUploadThread(UploadThread):
 class OrderedContentSetUploadThread(UploadThread):
     def __init__(self, purge, **kwargs):
         self.purge = purge
-        super(OrderedContentSetUploadThread, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def run(self):
         try:
@@ -294,7 +304,7 @@ def CursorPaginationFactory(field):
         ordering = field
         page_size = 1000
 
-    name = "{}CursorPagination".format(field.capitalize())
+    name = f"{field.capitalize()}CursorPagination"
     CustomCursorPagination.__name__ = name
     CustomCursorPagination.__qualname__ = name
 

@@ -12,6 +12,8 @@ from home.models import (
     ContentQuickReply,
     ContentTrigger,
     MessengerBlock,
+    SMSBlock,
+    USSDBlock,
     ViberBlock,
     WhatsappBlock,
 )
@@ -110,6 +112,10 @@ class WABlk(ContentBlock):
     variation_messages: list[VarMsg] = field(default_factory=list)
     example_values: list[str] = field(default_factory=list)
     buttons: list[Btn] = field(default_factory=list)
+    list_items: list[str] = field(default_factory=list)
+    media: int | None = None
+    document: str | None = None
+    footer: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         varmsgs = [vm.to_dict() for vm in self.variation_messages]
@@ -118,9 +124,25 @@ class WABlk(ContentBlock):
 
 
 @dataclass
+class SBlk(ContentBlock):
+    BLOCK_TYPE_STR = "SMS_Message"
+    BLOCK_TYPE = SMSBlock
+
+    # TODO: More body things.
+
+
+@dataclass
 class MBlk(ContentBlock):
     BLOCK_TYPE_STR = "messenger_block"
     BLOCK_TYPE = MessengerBlock
+
+    # TODO: More body things.
+
+
+@dataclass
+class UBlk(ContentBlock):
+    BLOCK_TYPE_STR = "USSD_Message"
+    BLOCK_TYPE = USSDBlock
 
     # TODO: More body things.
 
@@ -135,6 +157,14 @@ class VBlk(ContentBlock):
 
 class WABody(ContentBody[WABlk]):
     ATTR_STR = "whatsapp"
+
+
+class SBody(ContentBody[SBlk]):
+    ATTR_STR = "sms"
+
+
+class UBody(ContentBody[UBlk]):
+    ATTR_STR = "ussd"
 
 
 class MBody(ContentBody[MBlk]):
@@ -197,6 +227,7 @@ class PageBuilder(Generic[TPage]):
         whatsapp_template_name: str | None = None,
         whatsapp_template_category: str | None = None,
         translated_from: ContentPage | None = None,
+        publish: bool = True,
     ) -> ContentPage:
         builder = cls.cp(parent, slug, title).add_bodies(*bodies)
         if web_body:
@@ -213,13 +244,15 @@ class PageBuilder(Generic[TPage]):
             builder = builder.set_whatsapp_template_category(whatsapp_template_category)
         if translated_from:
             builder = builder.translated_from(translated_from)
-        return builder.build()
+        return builder.build(publish=publish)
 
     def build(self, publish: bool = True) -> TPage:
         self.parent.add_child(instance=self.page)
         rev = self.page.save_revision()
         if publish:
             rev.publish()
+        else:
+            self.page.unpublish()
         # The page instance is out of date after revision operations, so reload.
         self.page.refresh_from_db()
         return self.page
@@ -273,6 +306,10 @@ class PageBuilder(Generic[TPage]):
         page: ContentPage, related_pages: Iterable[Page], publish: bool = True
     ) -> ContentPage:
         for related_page in related_pages:
+            # If we don't fetch all existing related pages before adding new
+            # ones, we get an inexplicable TypeError deep in the bowels of
+            # wagtail/blocks/stream_block.py. Good going, wagtail.
+            list(page.related_pages)
             page.related_pages.append(("related_page", related_page))
         rev = page.save_revision()
         if publish:

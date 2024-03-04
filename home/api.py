@@ -22,7 +22,19 @@ from .models import (  # isort:skip
 class ContentPagesViewSet(PagesAPIViewSet):
     base_serializer_class = ContentPageSerializer
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
-        ["tag", "trigger", "page", "qa", "whatsapp", "viber", "messenger", "web", "s"]
+        [
+            "tag",
+            "trigger",
+            "page",
+            "qa",
+            "whatsapp",
+            "viber",
+            "messenger",
+            "web",
+            "s",
+            "sms",
+            "ussd",
+        ]
     )
     pagination_class = PageNumberPagination
 
@@ -79,6 +91,10 @@ class ContentPagesViewSet(PagesAPIViewSet):
             queryset = queryset.filter(enable_web=True)
         elif "whatsapp" in self.request.query_params:
             queryset = queryset.filter(enable_whatsapp=True)
+        elif "sms" in self.request.query_params:
+            queryset = queryset.filter(enable_sms=True)
+        elif "ussd" in self.request.query_params:
+            queryset = queryset.filter(enable_ussd=True)
         elif "messenger" in self.request.query_params:
             queryset = queryset.filter(enable_messenger=True)
         elif "viber" in self.request.query_params:
@@ -103,6 +119,10 @@ class ContentPagesViewSet(PagesAPIViewSet):
             platform = "web"
             if "whatsapp" in self.request.query_params:
                 platform = "whatsapp"
+            if "sms" in self.request.query_params:
+                platform = "sms"
+            if "ussd" in self.request.query_params:
+                platform = "ussd"
             elif "messenger" in self.request.query_params:
                 platform = "messenger"
             elif "viber" in self.request.query_params:
@@ -126,11 +146,32 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
     listing_default_fields = BaseAPIViewSet.listing_default_fields + [
         "name",
         "profile_fields",
+        "pages",
     ]
-    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["page"])
+    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["page", "qa"])
     pagination_class = PageNumberPagination
     search_fields = ["name", "profile_fields"]
     filter_backends = (SearchFilter,)
+
+    def get_queryset(self):
+        qa = self.request.query_params.get("qa")
+
+        if qa:
+            # return the latest revision for each OrderedContentSet
+            queryset = OrderedContentSet.objects.all().order_by("latest_revision_id")
+            for ocs in queryset:
+                latest_revision = ocs.revisions.order_by("-created_at").first()
+                if latest_revision:
+                    latest_revision = latest_revision.as_object()
+                    ocs.name = latest_revision.name
+                    ocs.pages = latest_revision.pages
+                    ocs.profile_fields = latest_revision.profile_fields
+
+        else:
+            queryset = OrderedContentSet.objects.filter(live=True).order_by(
+                "last_published_at"
+            )
+        return queryset
 
 
 api_router = WagtailAPIRouter("wagtailapi")

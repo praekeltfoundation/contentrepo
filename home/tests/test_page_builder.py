@@ -3,12 +3,10 @@ from typing import Any
 from uuid import UUID
 
 import pytest
-from wagtail.blocks import StreamValue, StructValue  # type: ignore
-from wagtail.blocks.list_block import ListValue  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
-from wagtail.rich_text import RichText  # type: ignore
 
 from home.models import ContentPage, ContentPageIndex, HomePage
+from home.tests.utils import unwagtail
 
 from .helpers import set_profile_field_options
 from .page_builder import (
@@ -23,24 +21,6 @@ from .page_builder import (
     WABlk,
     WABody,
 )
-
-
-def unwagtail(val):  # type: ignore[no-untyped-def] # No type info
-    """
-    Recursively convert values from the various Wagtail StreamField types to
-    something we can more easily assert on.
-    """
-    match val:
-        case StreamValue():  # type: ignore[misc] # No type info
-            return [(b.block_type, unwagtail(b.value)) for b in val]
-        case StructValue():  # type: ignore[misc] # No type info
-            return {k: unwagtail(v) for k, v in val.items()}
-        case ListValue():  # type: ignore[misc] # No type info
-            return [unwagtail(v) for v in val]
-        case RichText():  # type: ignore[misc] # No type info
-            return val.source
-        case _:
-            return val
 
 
 def tagslugs(taglikes: Iterable[dict[str, str]]) -> list[str]:
@@ -116,7 +96,7 @@ def test_build_simple_pages() -> None:
     assert ha_menu.seo_title == ""
     assert ha_menu.show_in_menus is False
     assert ha_menu.slug == "ha-menu"
-    assert ha_menu.subtitle is None
+    assert ha_menu.subtitle == ""
     assert list(ha_menu.tags.values()) == []
     assert ha_menu.title == "HealthAlert menu"
     assert isinstance(ha_menu.translation_key, UUID)
@@ -131,12 +111,14 @@ def test_build_simple_pages() -> None:
             {
                 "document": None,
                 "image": None,
+                "list_items": [],
                 "media": None,
                 "message": "*Welcome to HealthAlert* WA",
                 "next_prompt": None,
                 "buttons": [],
                 "example_values": [],
                 "variation_messages": [],
+                "footer": "",
             },
         ),
     ]
@@ -188,24 +170,24 @@ def test_build_web_content() -> None:
     assert ha_menu.live_revision == ha_menu.latest_revision
     assert ha_menu.locale == Locale.objects.get(language_code="en")
     assert unwagtail(ha_menu.messenger_body) == []
-    assert ha_menu.messenger_title is None
+    assert ha_menu.messenger_title == ""
     assert ha_menu.numchild == 0
     assert unwagtail(ha_menu.related_pages) == []
     assert ha_menu.search_description == ""
     assert ha_menu.seo_title == ""
     assert ha_menu.show_in_menus is False
     assert ha_menu.slug == "ha-menu"
-    assert ha_menu.subtitle is None
+    assert ha_menu.subtitle == ""
     assert list(ha_menu.tags.values()) == []
     assert ha_menu.title == "HealthAlert menu"
     assert isinstance(ha_menu.translation_key, UUID)
     assert ha_menu.url_path == "/home/main-menu/ha-menu/"
     assert unwagtail(ha_menu.viber_body) == []
-    assert ha_menu.viber_title is None
+    assert ha_menu.viber_title == ""
     assert unwagtail(ha_menu.whatsapp_body) == []
     assert ha_menu.whatsapp_template_category == "UTILITY"
     assert ha_menu.whatsapp_template_name == ""
-    assert ha_menu.whatsapp_title is None
+    assert ha_menu.whatsapp_title == ""
 
 
 @pytest.mark.django_db
@@ -260,6 +242,7 @@ def test_build_variations() -> None:
                 {"message": "Single male", "variation_restrictions": v_single_male},
                 {"message": "Comp male", "variation_restrictions": v_complicated_male},
             ],
+            "footer": "",
         },
         {
             "message": "Message 2, variable placeholders as well {{0}}",
@@ -271,6 +254,7 @@ def test_build_variations() -> None:
             "variation_messages": [
                 {"message": "Teen", "variation_restrictions": [("age", "15-18")]}
             ],
+            "footer": "",
         },
         {
             "message": "Message 3 with no variation",
@@ -278,6 +262,7 @@ def test_build_variations() -> None:
             "buttons": [("next_message", {"title": "end"})],
             "example_values": [],
             "variation_messages": [],
+            "footer": "",
         },
     ]
 
@@ -297,23 +282,29 @@ def test_build_variations() -> None:
     assert cp_imp_exp.live_revision == cp_imp_exp.latest_revision
     assert cp_imp_exp.locale == Locale.objects.get(language_code="en")
     assert unwagtail(cp_imp_exp.messenger_body) == []
-    assert cp_imp_exp.messenger_title is None
+    assert cp_imp_exp.messenger_title == ""
     assert cp_imp_exp.numchild == 0
     assert unwagtail(cp_imp_exp.related_pages) == []
     assert cp_imp_exp.search_description == ""
     assert cp_imp_exp.seo_title == ""
     assert cp_imp_exp.show_in_menus is False
     assert cp_imp_exp.slug == "cp-import-export"
-    assert cp_imp_exp.subtitle is None
+    assert cp_imp_exp.subtitle == ""
     assert cp_imp_exp.title == "CP-Import/export"
     assert isinstance(cp_imp_exp.translation_key, UUID)
     assert cp_imp_exp.url_path == "/home/import-export/cp-import-export/"
     assert unwagtail(cp_imp_exp.viber_body) == []
-    assert cp_imp_exp.viber_title is None
+    assert cp_imp_exp.viber_title == ""
     assert unwagtail(cp_imp_exp.whatsapp_body) == [
         (
             "Whatsapp_Message",
-            {"document": None, "image": None, "media": None, "example_values": None}
+            {
+                "document": None,
+                "image": None,
+                "list_items": [],
+                "media": None,
+                "example_values": None,
+            }
             | msg,
         )
         for msg in wa_msgs

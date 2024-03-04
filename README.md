@@ -4,7 +4,7 @@ This content repository allows easy content management via a headless CMS, using
 
 ## Features
 
-- **Multi-channel support:** Currently supports Web, WhatsApp, Messenger, and Viber.
+- **Multi-channel support:** Currently supports Web, WhatsApp,Messenger,Viber, SMS and USSD.
 - **Ordered content sets:** You can take individual pieces of content and group them in a set, in a specific order. They can also be restricted to users with specific profile field values.
 - **Stage based messaging:** Ordered content sets can be expanded to include a relative time (eg. 23 days before x), to create a timing-based push-message journey.
 - **Import and export:** Content and ordered content sets can be exported and imported in CSV and Excel formats
@@ -28,26 +28,28 @@ This content repository allows easy content management via a headless CMS, using
 
 
 ## Releases
-The current LTS release is: 1.0
-
 [Semantic versioning](https://semver.org/) is in use in this project.
-1. Feature releases
-    - Feature releases are a MAJOR.MINOR combination, eg. `1.2`
-    - Feature releases occur once every 3 months, but only if required. eg. If there were only patch releases in the last 3 months, no feature release will occur.
-    - The latest feature release will receive any security or bug fixes as patch releases
-    - Each feature release will have a separate git branch
-1. Patch releases
-    - Patch releases are used to fix bugs and security issues
-    - They are released as soon as they are ready
-1. LTS (Long-Term Support) Releases
-    - Every fourth release is an LTS release
-    - LTS releases are listed in the documentation
-    - LTS releases receive security patches
-    - LTS releases are supported for 5 feature releases, allowing for 15 months of support with a 3 month switchover time to the next LTS
+
 1. Development releases
-    - Development have the `-dev.N` suffix
-    - They are used to test new code before an official release is made
+    - Development versions have the `-dev.N` suffix
     - They are built off of the `main` git branch
+    - They are created with git tags, eg. `v1.2.0-dev.2`
+    - Development releases are created before releases, eg. `v1.2.0-dev.0` gets created before `v1.2.0`
+1. Releases
+    - Releases have a semantic version number, eg. `1.2.0`
+    - Releases are created when the changes have passed QA
+    - They are built off of the `main` git branch
+    - They are created with git tags, eg. `v1.2.0`
+
+### How to create a release
+
+1. Check that `CHANGELOG.md` is up to date.
+1. Update the version number in `pyproject.toml` to the version you want to release, eg. change `1.2.0-dev.0` to `1.2.0`
+1. Either create a pull request with these changes, and have it reviewed, or post a diff in Slack and have it reviewed there. Then merge, or commit and push, the changes.
+1. Tag these changes with the desired release, eg. `git tag v1.2.0`, and push the tag, eg. `git push --tags`
+1. Update the version number in `pyproject.toml` to the next version number, eg. `1.2.1-dev.0`.
+1. Commit and push that change.
+
 
 ## Setting up locally
 
@@ -60,8 +62,8 @@ For Linux and WSL2 (Windows Subsystem for Linux)
  Creating a docker container with the ports exposed, called `cr_redis`
 `docker run -d -p 6379:6379 --name cr_redis redis`
 
-To then run the docker container,
-`docker run cr_redis`
+To then start the docker container,
+`docker start cr_redis`
 
 This can work for mac and (possibly Windows) by setting the environment variable `CACHE_URL=redis://0.0.0.0:6379/0`
 
@@ -70,20 +72,28 @@ This can work for mac and (possibly Windows) by setting the environment variable
 Local tests run using in-memory sqlite, so postgres isn't required.
 
 For Linux and WSL2 (Windows Subsystem for Linux)
-Creating a docker container that doesnt require a password and matches the setup of the database in settings
+Creating a docker container that doesn't require a password and matches the setup of the database in settings
 `docker run --name cr_postgres -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_USER=postgres -e POSTGRES_DB=contentrepo -d postgres:latest`
 
-To then run the docker container,
-`docker run cr_postgres`
+To then start the docker container,
+`docker start cr_postgres`
 
 This can work for mac and (possibly Windows) by setting the environment variable `DATABASE_URL=postgres://postgres@0.0.0.0/contentrepo`
+
+Then create the DB by entering the cr_postgres container and creating a db, note that the user will need to be changed from root to postgres
+```bash
+docker exec -it cr_postgres bash  
+su - postgres
+createdb contentrepo
+```
 
 ### Wagtail server
 
 Run the following in a virtual environment
 ```bash
-pip install -e .[dev]
-createdb contentrepo
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ./manage.py migrate
 ./manage.py createsuperuser
 ./manage.py runserver
@@ -91,7 +101,7 @@ createdb contentrepo
 
 ### Automated tests
 
-Tests are run using [pytest](https://pytest.org)). For faster test runs, try adding `--no-cov` to disable coverage reporting and/or `-n auto` to run multiple tests in parallel.
+Tests are run using [pytest](https://pytest.org). For faster test runs, try adding `--no-cov` to disable coverage reporting and/or `-n auto` to run multiple tests in parallel.
 
 ## API
 The API documentation is available at the `/api/schema/swagger-ui/` endpoint.
@@ -100,6 +110,9 @@ The API documentation is available at the `/api/schema/swagger-ui/` endpoint.
 Authentication is required to access the API. Session, basic, and token authentication is supported, but token authentication is advised.
 
 To create an authentication token, you can do so via the Django Admin (available at the `/django-admin` endpoint), or by `POST`ing the username and password of the user you want to generate a token for to the `/api/v2/token/` endpoint.
+
+### Internationalisation
+To create or import pages in other languages, the user must first create the locale and HomePage in the specified language. To create a new locale, go to "Settings" => "Locales" in the admin interface, and click "Add a new locale". Then go to the default(most likely English) homepage, click the kebab menu and select translate. This will copy the whole default tree into the new locale, creating the new homepage with all the required pages. After you press "Save", there should be two "Home" pages in the page explorer. 
 
 ## Running in Production
 There is a [docker image](https://github.com/praekeltfoundation/contentrepo/pkgs/container/contentrepo) that can be used to easily run this service. It uses the following environment variables for configuration:

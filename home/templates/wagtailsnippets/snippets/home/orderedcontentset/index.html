@@ -1,0 +1,10 @@
+{% extends "wagtailsnippets/snippets/index.html" %}
+{% load i18n wagtailadmin_tags %}
+
+{% block import_button %}
+    <div class="actionbutton">
+            <div class="dropdown dropdown-button match-width col">
+                <a href="{% url 'import_orderedcontentset' %}" class="button bicolor button--icon">{% icon name="download" wrapped=1 %}{% trans 'Import' %}</a>
+            </div>
+    </div>
+{% endblock %}

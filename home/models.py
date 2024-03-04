@@ -1,25 +1,26 @@
+import logging
 import re
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
-from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
 from wagtail.api import APIField
-from wagtail.blocks import StructBlockValidationError
+from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import Page, Revision
+from wagtail.models import DraftStateMixin, Page, Revision, RevisionMixin
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
@@ -39,7 +40,10 @@ from wagtail.admin.panels import (  # isort:skip
     MultiFieldPanel,
     ObjectList,
     TabbedInterface,
+    TitleFieldPanel,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UniqueSlugMixin:
@@ -63,17 +67,6 @@ class UniqueSlugMixin:
             candidate_slug = f"{slug}-{suffix}"
         return candidate_slug
 
-    def full_clean(self, *args, **kwargs):
-        # Autogenerate slug if not present
-        if not self.slug:
-            allow_unicode = getattr(settings, "WAGTAIL_ALLOW_UNICODE_SLUGS", True)
-            base_slug = slugify(self.title, allow_unicode=allow_unicode)
-
-            if base_slug:
-                self.slug = self.get_unique_slug(base_slug)
-
-        super().full_clean(*args, **kwargs)
-
     def clean(self):
         super().clean()
 
@@ -94,19 +87,19 @@ class SiteSettings(BaseSiteSetting):
     title = models.CharField(
         max_length=30,
         blank=True,
-        null=True,
+        default="",
         help_text="The branding title shown in the CMS",
     )
     login_message = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
+        default="",
         help_text="The login message shown on the login page",
     )
     welcome_message = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
+        default="",
         help_text="The welcome message shown after logging in",
     )
     logo = models.ImageField(blank=True, null=True, upload_to="images")
@@ -235,7 +228,6 @@ class GoToPageButton(blocks.StructBlock):
 
 class WhatsappBlock(blocks.StructBlock):
     MEDIA_CAPTION_MAX_LENGTH = 1024
-
     image = ImageChooserBlock(required=False)
     document = DocumentChooserBlock(icon="document", required=False)
     media = MediaBlock(icon="media", required=False)
@@ -244,6 +236,7 @@ class WhatsappBlock(blocks.StructBlock):
         "media cannot exceed 1024 characters.",
         validators=(MaxLengthValidator(4096),),
     )
+
     example_values = blocks.ListBlock(
         blocks.CharBlock(
             label="Example Value",
@@ -263,6 +256,20 @@ class WhatsappBlock(blocks.StructBlock):
         [("next_message", NextMessageButton()), ("go_to_page", GoToPageButton())],
         required=False,
         max_num=3,
+    )
+    list_items = blocks.ListBlock(
+        blocks.CharBlock(label="Title"),
+        default=[],
+        help_text="List item title, up to 24 characters.",
+        required=False,
+        max_num=10,
+        validators=(MaxLengthValidator(24)),
+    )
+
+    footer = blocks.CharBlock(
+        help_text="Footer cannot exceed 60 characters.",
+        required=False,
+        validators=(MaxLengthValidator(60),),
     )
 
     class Meta:
@@ -295,6 +302,47 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
                 f"{len(result['message'])} characters long"
             )
+
+        list_items = result["list_items"]
+        for item in list_items:
+            if len(item) > 24:
+                errors["list_items"] = ValidationError(
+                    "List item title maximum charactor is 24 "
+                )
+
+        if len(list_items) > 10:
+            errors["list_items"] = ValidationError("List item can only add 10 items")
+
+        if errors:
+            raise StructBlockValidationError(errors)
+        return result
+
+
+class SMSBlock(blocks.StructBlock):
+    message = blocks.TextBlock(
+        help_text="each message cannot exceed 160 characters.",
+        validators=(MaxLengthValidator(160),),
+    )
+
+    class Meta:
+        icon = "user"
+        form_classname = "whatsapp-message-block struct-block"
+
+
+class USSDBlock(blocks.StructBlock):
+    message = blocks.TextBlock(
+        help_text="each message cannot exceed 160 characters.",
+        validators=(MaxLengthValidator(160),),
+    )
+
+    class Meta:
+        icon = "user"
+        form_classname = "whatsapp-message-block struct-block"
+
+    def clean(self, value):
+        result = super().clean(value)
+        errors = {}
+
         if errors:
             raise StructBlockValidationError(errors)
         return result
@@ -414,6 +462,14 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         default=False,
         help_text="When enabled, the API will include the whatsapp content",
     )
+    enable_sms = models.BooleanField(
+        default=False,
+        help_text="When enabled, the API will include the SMS content",
+    )
+    enable_ussd = models.BooleanField(
+        default=False,
+        help_text="When enabled, the API will include the USSD content",
+    )
     enable_messenger = models.BooleanField(
         default=False,
         help_text="When enabled, the API will include the messenger content",
@@ -423,7 +479,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     )
 
     # Web page setup
-    subtitle = models.CharField(max_length=200, blank=True, null=True)
+    subtitle = models.CharField(max_length=200, blank=True, default="")
     body = StreamField(
         [
             ("paragraph", blocks.RichTextBlock()),
@@ -441,7 +497,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     web_panels = [
         MultiFieldPanel(
             [
-                FieldPanel("title"),
+                TitleFieldPanel("title"),
                 FieldPanel("subtitle"),
                 FieldPanel("body"),
                 FieldPanel("include_in_footer"),
@@ -458,7 +514,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         choices=WhatsAppTemplateCategory.choices,
         default=WhatsAppTemplateCategory.UTILITY,
     )
-    whatsapp_title = models.CharField(max_length=200, blank=True, null=True)
+    whatsapp_title = models.CharField(max_length=200, blank=True, default="")
     whatsapp_body = StreamField(
         [
             (
@@ -486,8 +542,54 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         ),
     ]
 
+    sms_title = models.CharField(max_length=200, blank=True)
+    sms_body = StreamField(
+        [
+            (
+                "SMS_Message",
+                SMSBlock(help_text="Each message will be sent with the text"),
+            ),
+        ],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
+    # sms panels
+    sms_panels = [
+        MultiFieldPanel(
+            [
+                FieldPanel("sms_title"),
+                FieldPanel("sms_body"),
+            ],
+            heading="SMS",
+        ),
+    ]
+
+    ussd_title = models.CharField(max_length=200, blank=True)
+    ussd_body = StreamField(
+        [
+            (
+                "USSD_Message",
+                USSDBlock(help_text="Each message will be sent with the text"),
+            ),
+        ],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
+    # USSD panels
+    ussd_panels = [
+        MultiFieldPanel(
+            [
+                FieldPanel("ussd_title"),
+                FieldPanel("ussd_body"),
+            ],
+            heading="USSD",
+        ),
+    ]
+
     # messenger page setup
-    messenger_title = models.CharField(max_length=200, blank=True, null=True)
+    messenger_title = models.CharField(max_length=200, blank=True, default="")
     messenger_body = StreamField(
         [
             (
@@ -516,7 +618,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     ]
 
     # viber page setup
-    viber_title = models.CharField(max_length=200, blank=True, null=True)
+    viber_title = models.CharField(max_length=200, blank=True, default="")
     viber_body = StreamField(
         [
             (
@@ -556,6 +658,8 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             [
                 FieldPanel("enable_web"),
                 FieldPanel("enable_whatsapp"),
+                FieldPanel("enable_sms"),
+                FieldPanel("enable_ussd"),
                 FieldPanel("enable_messenger"),
                 FieldPanel("enable_viber"),
             ],
@@ -566,6 +670,8 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         [
             ObjectList(web_panels, heading="Web"),
             ObjectList(whatsapp_panels, heading="Whatsapp"),
+            ObjectList(sms_panels, heading="SMS"),
+            ObjectList(ussd_panels, heading="USSD"),
             ObjectList(messenger_panels, heading="Messenger"),
             ObjectList(viber_panels, heading="Viber"),
             ObjectList(promote_panels, heading="Promotional"),
@@ -577,7 +683,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         APIField("title"),
         APIField("subtitle"),
         APIField("body"),
-        APIField("whatsapp_template_example_values"),
         APIField("tags"),
         APIField("triggers"),
         APIField("quick_replies"),
@@ -605,7 +710,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
     @property
     def whatsapp_template_prefix(self):
-        return self.whatsapp_title.replace(" ", "_")
+        return self.whatsapp_title.lower().replace(" ", "_")
 
     @property
     def whatsapp_template_body(self):
@@ -643,6 +748,10 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         if not platform and query_params:
             if "whatsapp" in query_params:
                 platform = "whatsapp"
+            elif "sms" in query_params:
+                platform = "sms"
+            elif "ussd" in query_params:
+                platform = "ussd"
             elif "messenger" in query_params:
                 platform = "messenger"
             elif "viber" in query_params:
@@ -742,15 +851,95 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             previous_revision,
             clean,
         )
-        template_name = self.submit_whatsapp_template(previous_revision)
+
+        try:
+            template_name = self.submit_whatsapp_template(previous_revision)
+        except Exception:
+            # Log the error to sentry and send error message to the user
+            logger.exception(
+                f"Failed to submit template name:  {self.whatsapp_template_name}"
+            )
+            raise ValidationError("Failed to submit template")
+
         if template_name:
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
         return revision
 
+    def clean(self):
+        result = super().clean()
+        errors = {}
 
-# Allow slug to be blank in forms, we fill it in in full_clean
-Page._meta.get_field("slug").blank = True
+        # The WA title is needed for all templates to generate a name for the template
+        if self.is_whatsapp_template and not self.whatsapp_title:
+            errors.setdefault("whatsapp_title", []).append(
+                ValidationError("All WhatsApp templates need a title.")
+            )
+        # The variable check is only for templates
+        if self.is_whatsapp_template and len(self.whatsapp_body.raw_data) > 0:
+            whatsapp_message = self.whatsapp_body.raw_data[0]["value"]["message"]
+
+            right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", whatsapp_message)
+            left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", whatsapp_message)
+            mismatches = right_mismatch + left_mismatch
+
+            if mismatches:
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f"Please provide variables with matching braces. You provided {mismatches}."
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+            vars_in_msg = re.findall(r"{{(.*?)}}", whatsapp_message)
+            non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
+
+            if non_digit_variables:
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f"Please provide numeric variables only. You provided {non_digit_variables}."
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+            # Check variable order
+            actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
+            expected_variables = [
+                str(j + 1) for j in range(len(actual_digit_variables))
+            ]
+            if actual_digit_variables != expected_variables:
+                errors.setdefault("whatsapp_body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+        if errors:
+            raise ValidationError(errors)
+
+        return result
 
 
 @receiver(pre_save, sender=ContentPage)
@@ -773,6 +962,18 @@ def update_embedding(sender, instance, *args, **kwargs):
             content.append(block.value["message"])
         body = preprocess_content_for_embedding("/n/n".join(content))
         embedding["whatsapp"] = {"values": [float(i) for i in model.encode(body)]}
+    if instance.enable_sms:
+        content = []
+        for block in instance.sms_body:
+            content.append(block.value["message"])
+        body = preprocess_content_for_embedding("/n/n".join(content))
+        embedding["sms"] = {"values": [float(i) for i in model.encode(body)]}
+    if instance.enable_ussd:
+        content = []
+        for block in instance.ussd_body:
+            content.append(block.value["message"])
+        body = preprocess_content_for_embedding("/n/n".join(content))
+        embedding["ussd"] = {"values": [float(i) for i in model.encode(body)]}
     if instance.enable_messenger:
         content = []
         for block in instance.messenger_body:
@@ -789,25 +990,90 @@ def update_embedding(sender, instance, *args, **kwargs):
     instance.embedding = embedding
 
 
-class OrderedContentSet(index.Indexed, models.Model):
+class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Model):
+    revisions = GenericRelation(
+        "wagtailcore.Revision", related_query_name="orderedcontentset"
+    )
     name = models.CharField(
         max_length=255, help_text="The name of the ordered content set."
     )
 
     def get_gender(self):
-        for item in self.profile_fields.raw_data:
+        for item in self.get_latest_revision_as_object().profile_fields.raw_data:
             if item["type"] == "gender":
                 return item["value"]
 
     def get_age(self):
-        for item in self.profile_fields.raw_data:
+        for item in self.get_latest_revision_as_object().profile_fields.raw_data:
             if item["type"] == "age":
                 return item["value"]
 
     def get_relationship(self):
-        for item in self.profile_fields.raw_data:
+        for item in self.get_latest_revision_as_object().profile_fields.raw_data:
             if item["type"] == "relationship":
                 return item["value"]
+
+    def profile_field(self):
+        return [
+            f"{x.block_type}:{x.value}"
+            for x in self.get_latest_revision_as_object().profile_fields
+        ]
+
+    profile_field.short_description = "Profile Fields"
+
+    def page(self):
+        if self.pages:
+            return [(self._get_field_value(p, "contentpage")) for p in self.pages]
+        return ["-"]
+
+    page.short_description = "Page Slugs"
+
+    def time(self):
+        if self.pages:
+            return [(self._get_field_value(p, "time")) for p in self.pages]
+        return ["-"]
+
+    time.short_description = "Time"
+
+    def unit(self):
+        if self.pages:
+            return [(self._get_field_value(p, "unit")) for p in self.pages]
+        return ["-"]
+
+    unit.short_description = "Unit"
+
+    def before_or_after(self):
+        if self.pages:
+            return [(self._get_field_value(p, "before_or_after")) for p in self.pages]
+        return ["-"]
+
+    before_or_after.short_description = "Before Or After"
+
+    def contact_field(self):
+        if self.pages:
+            return [(self._get_field_value(p, "contact_field")) for p in self.pages]
+        return ["-"]
+
+    contact_field.short_description = "Contact Field"
+
+    def num_pages(self):
+        return len(self.pages)
+
+    num_pages.short_description = "Number of Pages"
+
+    def _get_field_value(self, page: Page, field: str) -> str:
+        try:
+            if value := page.value[field]:
+                return f"{value}"
+            else:
+                return ""
+        except (AttributeError, TypeError):
+            return ""
+
+    def latest_draft_profile_fields(self):
+        return self.get_latest_revision_as_object().profile_fields
+
+    latest_draft_profile_fields.short_description = "Profile Fields"
 
     profile_fields = StreamField(
         [
@@ -826,10 +1092,10 @@ class OrderedContentSet(index.Indexed, models.Model):
         blank=True,
     )
     search_fields = [
-        index.SearchField("name", partial_match=True),
-        index.SearchField("get_gender", partial_match=True),
-        index.SearchField("get_age", partial_match=True),
-        index.SearchField("get_relationship", partial_match=True),
+        index.SearchField("name"),
+        index.SearchField("get_gender"),
+        index.SearchField("get_age"),
+        index.SearchField("get_relationship"),
     ]
     pages = StreamField(
         [
@@ -876,6 +1142,14 @@ class OrderedContentSet(index.Indexed, models.Model):
         null=True,
     )
 
+    def num_pages(self):
+        return len(self.pages)
+
+    num_pages.short_description = "Number of Pages"
+
+    def status(self):
+        return "Live" if self.live else "Draft"
+
     panels = [
         FieldPanel("name"),
         FieldPanel("profile_fields"),
@@ -914,11 +1188,12 @@ class PageView(models.Model):
     platform = models.CharField(
         choices=[
             ("WHATSAPP", "whatsapp"),
+            ("SMS", "sms"),
+            ("USSD", "ussd"),
             ("VIBER", "viber"),
             ("MESSENGER", "messenger"),
             ("WEB", "web"),
         ],
-        null=True,
         blank=True,
         default="web",
         max_length=20,

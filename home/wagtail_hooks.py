@@ -4,6 +4,8 @@ from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
+from wagtail.snippets.models import register_snippet
+from wagtail.snippets.views.snippets import SnippetViewSet
 
 from .models import ContentPage, OrderedContentSet
 
@@ -92,6 +94,8 @@ class ContentPageAdmin(ModelAdmin):
         "web_body",
         "subtitle",
         "wa_body",
+        "sms_body",
+        "ussd_body",
         "mess_body",
         "vib_body",
         "replies",
@@ -105,6 +109,8 @@ class ContentPageAdmin(ModelAdmin):
         "title",
         "body",
         "whatsapp_body",
+        "sms_body",
+        "ussd_body",
         "messenger_body",
         "viber_body",
         "slug",
@@ -132,6 +138,18 @@ class ContentPageAdmin(ModelAdmin):
 
     wa_body.short_description = "Whatsapp Body"
 
+    def sms_body(self, obj):
+        body = "\n".join(m.value["message"] for m in obj.sms_body)
+        return truncatechars(str(body), self.body_truncate_size)
+
+    sms_body.short_description = "SMS Body"
+
+    def ussd_body(self, obj):
+        body = "\n".join(m.value["message"] for m in obj.ussd_body)
+        return truncatechars(str(body), self.body_truncate_size)
+
+    ussd_body.short_description = "USSD Body"
+
     def mess_body(self, obj):
         body = "\n".join(m.value["message"] for m in obj.messenger_body)
         return truncatechars(str(body), self.body_truncate_size)
@@ -155,39 +173,26 @@ class ContentPageAdmin(ModelAdmin):
     parental.short_description = "Parent"
 
 
-class OrderedContentSetAdmin(ModelAdmin):
+class OrderedContentSetViewSet(SnippetViewSet):
     model = OrderedContentSet
-    menu_icon = "order"
+    icon = "order"
     menu_order = 200
+    add_to_admin_menu = True
     add_to_settings_menu = False
     exclude_from_explorer = False
-    list_display = ("name", "profile_fields", "num_pages")
-    list_export = ("name", "profile_field", "page")
+    list_display = ("name", "latest_draft_profile_fields", "num_pages", "status")
+    list_export = (
+        "name",
+        "profile_field",
+        "page",
+        "time",
+        "unit",
+        "before_or_after",
+        "contact_field",
+    )
     search_fields = ("name", "profile_fields")
 
-    def profile_field(self, obj):
-        return [f"{x.block_type}:{x.value}" for x in obj.profile_fields]
 
-    profile_field.short_description = "Profile Fields"
-
-    def page(self, obj):
-        if obj.pages:
-            return [
-                p.value["contentpage"].slug
-                if p.value and "contentpage" in p.value
-                else ""
-                for p in obj.pages
-            ]
-        return ["-"]
-
-    page.short_description = "Page Slugs"
-
-    def num_pages(self, obj):
-        return len(obj.pages)
-
-    num_pages.short_description = "Number of Pages"
-
-
+register_snippet(OrderedContentSetViewSet)
 # Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
-modeladmin_register(OrderedContentSetAdmin)
