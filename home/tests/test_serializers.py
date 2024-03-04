@@ -103,7 +103,6 @@ class TestHasNextMessage:
         assert has_next_message(2, page, "sms") is None
         assert has_next_message(0, page, "sms") == 2
 
-
     def test_next_messages_for_ussd(self) -> None:
         """USSD The next message after the last message is None.
         Next message after 1st message (index 0) is message 2 (index 1)"""
