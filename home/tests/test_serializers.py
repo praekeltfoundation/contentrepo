@@ -79,59 +79,45 @@ def create_content_page(
 
 @pytest.mark.django_db
 class TestHasNextMessage:
-    def test_next_message_whatsapp(self) -> None:
-        """Checks if the next message matches up.
+    def test_next_messages_whatsapp(self) -> None:
+        """WhatsApp The next message after the last message is None.
         Index of first message is 0, next message is then message 2 with index 1"""
         page = create_content_page(wa_body_count=2, wa_gender_var=["female"])
         assert page.whatsapp_body
+        assert has_next_message(2, page, "whatsapp") is None
         assert has_next_message(0, page, "whatsapp") == 2
 
-    def test_no_next_message_for_viber(self) -> None:
-        """The next message after the last message is None."""
+    def test_next_messages_for_viber(self) -> None:
+        """Viber The next message after the last message is None.
+        Next message after 1st message (index 0) is message 2 (index 1)"""
         page = create_content_page()
         assert page.viber_body
         assert has_next_message(2, page, "viber") is None
-
-    def test_next_message_for_viber(self) -> None:
-        """Next message after 1st message (index 0) is message 2 (index 1)"""
-        page = create_content_page()
-        assert page.viber_body
         assert has_next_message(0, page, "viber") == 2
 
-    def test_no_next_message_for_sms(self) -> None:
-        """SMS The next message after the last message is None."""
+    def test_next_messages_for_sms(self) -> None:
+        """SMS The next message after the last message is None.
+        Next message after 1st message (index 0) is message 2 (index 1)"""
         page = create_content_page()
         assert page.sms_body
         assert has_next_message(2, page, "sms") is None
-
-    def test_next_message_for_sms(self) -> None:
-        """SMS Next message after 1st message (index 0) is message 2 (index 1)"""
-        page = create_content_page()
-        assert page.sms_body
         assert has_next_message(0, page, "sms") == 2
 
-    def test_no_next_message_for_ussd(self) -> None:
-        """USSD The next message after the last message is None."""
+
+    def test_next_messages_for_ussd(self) -> None:
+        """USSD The next message after the last message is None.
+        Next message after 1st message (index 0) is message 2 (index 1)"""
         page = create_content_page()
         assert page.ussd_body
         assert has_next_message(2, page, "ussd") is None
-
-    def test_next_message_for_ussd(self) -> None:
-        """USSD Next message after 1st message (index 0) is message 2 (index 1)"""
-        page = create_content_page()
-        assert page.ussd_body
         assert has_next_message(0, page, "ussd") == 2
 
-    def test_no_next_message_for_messenger(self) -> None:
-        """Messenger The next message after the last message is None."""
+    def test_next_messages_for_messenger(self) -> None:
+        """Messenger The next message after the last message is None.
+        Next message after 1st message (index 0) is message 2 (index 1)"""
         page = create_content_page()
         assert page.messenger_body
         assert has_next_message(2, page, "messenger") is None
-
-    def test_next_message_for_messenger(self) -> None:
-        """Messenger Next message after 1st message (index 0) is message 2 (index 1)"""
-        page = create_content_page()
-        assert page.messenger_body
         assert has_next_message(0, page, "messenger") == 2
 
     def test_no_next_message_for_invalid_platform(self) -> None:
