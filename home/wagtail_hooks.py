@@ -104,7 +104,7 @@ class ContentPageAdmin(ModelAdmin):
         "related_pages",
         "parental",
     )
-    list_filter = ("locale",)
+   
     search_fields = (
         "title",
         "body",
@@ -115,7 +115,7 @@ class ContentPageAdmin(ModelAdmin):
         "viber_body",
         "slug",
     )
-    list_export = ("locale", "title")
+    list_export = ("title")
 
     def replies(self, obj):
         return list(obj.quick_replies.all())
@@ -273,7 +273,7 @@ class WhatsAppTemplateAdmin(ModelAdmin):
         "category",
         "body",
     )
-    list_filter = ("locale",)
+    
     search_fields = (
         "name",
         "category",

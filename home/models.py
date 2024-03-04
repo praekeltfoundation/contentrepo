@@ -1161,7 +1161,7 @@ class PageView(models.Model):
 
 
 
-class WhatsAppTemplate(models.Model):    
+class WhatsAppTemplate(DraftStateMixin, RevisionMixin, index.Indexed,models.Model):    
     class WhatsAppTemplateCategory(models.TextChoices):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
@@ -1191,7 +1191,6 @@ class WhatsAppTemplate(models.Model):
         MultiFieldPanel(
             [
                 FieldPanel("name"),
-                FieldPanel("is_whatsapp_template"),
                 FieldPanel("category"),
                 FieldPanel("body"),
             ],
