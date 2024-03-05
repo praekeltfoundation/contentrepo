@@ -1033,7 +1033,9 @@ class TestImportExport:
             ("relationship", "in_a_relationship"),
         ]
 
-    def test_import_ordered_sets_no_profile_fields_csv(self, csv_impexp: ImportExport) -> None:
+    def test_import_ordered_sets_no_profile_fields_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
         """
         Importing a CSV file with ordered content sets should not break
         """

@@ -1023,7 +1023,10 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
 
     def page(self):
         if self.pages:
-            return [(self._get_field_value(p, "contentpage", raw=True).slug) for p in self.pages]
+            return [
+                (self._get_field_value(p, "contentpage", raw=True).slug)
+                for p in self.pages
+            ]
         return ["-"]
 
     page.short_description = "Page Slugs"
