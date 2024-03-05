@@ -20,7 +20,7 @@ from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import DraftStateMixin, Page, Revision, RevisionMixin
+from wagtail.models import DraftStateMixin, Page, Revision, RevisionMixin, Locale
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
@@ -1161,11 +1161,10 @@ class PageView(models.Model):
 
 
 
-class WhatsAppTemplate(DraftStateMixin, RevisionMixin, index.Indexed,models.Model):    
+class WhatsAppTemplate(DraftStateMixin, RevisionMixin, index.Indexed,models.Model): 
     class WhatsAppTemplateCategory(models.TextChoices):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
-
 
     name = models.CharField(max_length=512, blank=True, default="")
     category = models.CharField(
@@ -1173,6 +1172,9 @@ class WhatsAppTemplate(DraftStateMixin, RevisionMixin, index.Indexed,models.Mode
         choices=WhatsAppTemplateCategory.choices,
         default=WhatsAppTemplateCategory.UTILITY,
     )
+    
+    locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default='')   
+    
     body = StreamField(
         [
             (
@@ -1197,5 +1199,12 @@ class WhatsAppTemplate(DraftStateMixin, RevisionMixin, index.Indexed,models.Mode
             heading="Whatsapp Template",
         ),
     ]
+
+    def save(self, *args, **kwargs):
+        
+        home_locale = Locale.get_default()
+
+        self.locale = home_locale
+        super().save(*args, **kwargs)
 
     
