@@ -1023,7 +1023,7 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
 
     def page(self):
         if self.pages:
-            return [(self._get_field_value(p, "contentpage")) for p in self.pages]
+            return [(self._get_field_value(p, "contentpage", raw=True).slug) for p in self.pages]
         return ["-"]
 
     page.short_description = "Page Slugs"
@@ -1061,10 +1061,10 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
 
     num_pages.short_description = "Number of Pages"
 
-    def _get_field_value(self, page: Page, field: str) -> str:
+    def _get_field_value(self, page: Page, field: str, raw: bool = False) -> any:
         try:
             if value := page.value[field]:
-                return f"{value}"
+                return value if raw else f"{value}"
             else:
                 return ""
         except (AttributeError, TypeError):

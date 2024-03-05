@@ -46,7 +46,7 @@ def import_ordered_sets(file, filetype, progress_queue, purge=False):
             ordered_set = OrderedContentSet(name=set_name)
 
         ordered_set.profile_fields = []
-        for field in [f.strip() for f in row["Profile Fields"].split(",")]:
+        for field in [f.strip() for f in (row["Profile Fields"] or "").split(",")]:
             if not field or field == "-":
                 continue
             [field_name, field_value] = field.split(":")
