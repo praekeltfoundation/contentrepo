@@ -1148,7 +1148,11 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
     num_pages.short_description = "Number of Pages"
 
     def status(self):
-        return "Live" if self.live else "Draft"
+        return (
+            "Live + Draft"
+            if self.live and self.has_unpublished_changes
+            else "Live" if self.live else "Draft"
+        )
 
     panels = [
         FieldPanel("name"),

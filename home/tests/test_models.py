@@ -12,6 +12,7 @@ from home.models import (
     GoToPageButton,
     HomePage,
     NextMessageButton,
+    OrderedContentSet,
     PageView,
     SMSBlock,
     USSDBlock,
@@ -332,6 +333,39 @@ class ContentPageTests(TestCase):
             "No changes detected",
             "There are missing migrations:\n %s" % output.getvalue(),
         )
+
+
+class OrderedContentSetTests(TestCase):
+    def test_get_gender_none(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+        self.assertIsNone(ordered_content_set.get_gender())
+
+    def test_get_gender(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.get_gender(), "female")
+
+    def test_status_draft(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save()
+        ordered_content_set.unpublish()
+        self.assertEqual(ordered_content_set.status(), "Draft")
+
+    def test_status_live(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.status(), "Live")
+
+    def test_status_live_plus_draft(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save_revision()
+        self.assertEqual(ordered_content_set.status(), "Live + Draft")
 
 
 class WhatsappBlockTests(TestCase):
