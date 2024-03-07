@@ -4,7 +4,12 @@ from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
+from django.core.files.base import File  # type: ignore
+from django.core.files.images import ImageFile  # type: ignore
 from pytest_django.asserts import assertTemplateUsed
+from wagtail.documents.models import Document  # type: ignore
+from wagtail.images.models import Image  # type: ignore
+from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content
 from home.models import (
@@ -24,15 +29,19 @@ from .page_builder import (
     UBlk,
     UBody,
     VarMsg,
+    VBlk,
+    VBody,
     WABlk,
     WABody,
 )
 from .utils import create_page
 
 
-# use this to access the admin interface
 @pytest.fixture()
 def admin_client(client, django_user_model):
+    """
+    Access admin interface
+    """
     creds = {"username": "test", "password": "test"}
     django_user_model.objects.create_superuser(**creds)
     client.login(**creds)
@@ -41,10 +50,51 @@ def admin_client(client, django_user_model):
 
 @pytest.fixture()
 def uclient(client, django_user_model):
+    """
+    Access the user interface
+    """
     creds = {"username": "test", "password": "test"}
     django_user_model.objects.create_user(**creds)
     client.login(**creds)
     return client
+
+
+def mk_test_img() -> Image:
+    """
+    make test image
+    """
+    img_path = Path("home/tests/test_static") / "test.jpeg"
+    img = Image(
+        title="default image title",
+        file=ImageFile(img_path.open("rb"), name=img_path.name),
+    )
+    img.save()
+    return img
+
+
+def mk_test_media() -> File:
+    """
+    make test media
+    """
+    media_path = Path("home/tests/test_static") / "test.txt"
+    media = Media(
+        title="default media title",
+        file=File(media_path.open("rb"), name=media_path.name),
+    )
+    media.save()
+    return media
+
+
+def mk_test_doc() -> Document:
+    """
+    make test document
+    """
+    doc_path = Path("home/tests/test_static") / "test.mp4"
+    doc = Document(
+        title="default doc title", file=File(doc_path.open("rb"), name=doc_path.name)
+    )
+    doc.save()
+    return doc
 
 
 @pytest.mark.django_db
@@ -58,6 +108,9 @@ class TestContentPageAPI:
         body_count=1,
         publish=True,
         web_body=None,
+        image=None,
+        media=None,
+        doc=None,
     ):
         """
         Helper function to create pages needed for each test.
@@ -75,7 +128,7 @@ class TestContentPageAPI:
             List of tags on the content page.
         body_type : str
             Which body type the test messages should be. It can be WhatsApp, Messenger,
-            SMS or USSD.
+            SMS, USSD or Viber.
 
             This can be set to None to have no message bodies. It defaults to WhatsApp
         body_count : int
@@ -84,6 +137,12 @@ class TestContentPageAPI:
             Should the content page be published or not.
         web_body : str
             The web body of the content page.
+        image: bool
+            attach test image to all whatsapp, viber, messenger messages or not
+        media: bool
+            attach test media to all whatsapp messages or not
+        doc: bool
+            attach test doc to all whatsapp messages or not
         """
         if not parent:
             home_page = HomePage.objects.first()
@@ -94,16 +153,41 @@ class TestContentPageAPI:
 
         bodies = []
 
+        if image and Image.objects.all().count() == 0:
+            mk_test_img()
+        if media and Media.objects.all().count() == 0:
+            mk_test_media()
+        if doc and Document.objects.all().count() == 0:
+            mk_test_doc()
+
+        image_id = Image.objects.first().id if image else None
+        media_id = Media.objects.first().id if media else None
+        doc_id = Document.objects.first().id if doc else None
+
         for i in range(body_count):
             msg_body = f"*Default {body_type} Content {i+1}* 🏥"
             if body_type == "WhatsApp":
-                bodies.append(WABody(title, [WABlk(msg_body)]))
+                bodies.append(
+                    WABody(
+                        title,
+                        [
+                            WABlk(
+                                msg_body,
+                                image=image_id,
+                                media=media_id,
+                                document=doc_id,
+                            )
+                        ],
+                    )
+                )
             elif body_type == "Messenger":
-                bodies.append(MBody(title, [MBlk(msg_body)]))
+                bodies.append(MBody(title, [MBlk(msg_body, image=image_id)]))
             elif body_type == "SMS":
                 bodies.append(SBody(title, [SBlk(msg_body)]))
             elif body_type == "USSD":
                 bodies.append(UBody(title, [UBlk(msg_body)]))
+            elif body_type == "Viber":
+                bodies.append(VBody(title, [VBlk(msg_body, image=image)]))
 
         content_page = PageBuilder.build_cp(
             parent=parent,
@@ -279,6 +363,56 @@ class TestContentPageAPI:
         page.enable_whatsapp = False
         page.save_revision().publish()
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
+        assert response.content == b""
+
+    def test_messenger_disabled(self, uclient):
+        """
+        It should not return the web body if enable_messenger=false
+        """
+        page = self.create_content_page()
+        page.enable_messenger = False
+        page.save_revision().publish()
+        response = uclient.get(f"/api/v2/pages/{page.id}/?messenger=True")
+        assert response.content == b""
+
+    def test_web_disabled(self, uclient):
+        """
+        It should not return the web body if enable_viber=false
+        """
+        page = self.create_content_page()
+        page.enable_web = False
+        page.save_revision().publish()
+        response = uclient.get(f"/api/v2/pages/{page.id}/?web=True")
+        assert response.content == b""
+
+    def test_viber_disabled(self, uclient):
+        """
+        It should not return the web body if enable_viber=false
+        """
+        page = self.create_content_page()
+        page.enable_viber = False
+        page.save_revision().publish()
+        response = uclient.get(f"/api/v2/pages/{page.id}/?viber=True")
+        assert response.content == b""
+
+    def test_sms_disabled(self, uclient):
+        """
+        It should not return the web body if enable_sms=false
+        """
+        page = self.create_content_page()
+        page.enable_sms = False
+        page.save_revision().publish()
+        response = uclient.get(f"/api/v2/pages/{page.id}/?sms=True")
+        assert response.content == b""
+
+    def test_ussd_disabled(self, uclient):
+        """
+        It should not return the web body if enable_ussd=false
+        """
+        page = self.create_content_page()
+        page.enable_ussd = False
+        page.save_revision().publish()
+        response = uclient.get(f"/api/v2/pages/{page.id}/?ussd=True")
         assert response.content == b""
 
     def test_message_number_specified(self, uclient):
@@ -460,6 +594,115 @@ class TestContentPageAPI:
         assert content == {"page": ["Page matching query does not exist."]}
         assert content.get("page") == ["Page matching query does not exist."]
 
+    def test_wa_image(self, uclient):
+        """
+        Test that API returns image ID for whatsapp
+        """
+        page = self.create_content_page(body_type="WhatsApp", image=True)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        image_id = content["body"]["text"]["value"]["image"]
+        assert image_id == 1
+
+    def test_messenger_image(self, uclient):
+        """
+        Test that API returns image ID for messenger
+        """
+        page = self.create_content_page(body_type="Messenger", image=True)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?messenger=true")
+        content = response.json()
+
+        image_id = content["body"]["text"]["image"]
+        assert image_id == 1
+
+    def test_viber_image(self, uclient):
+        """
+        Test that API returns image ID for viber
+        """
+        page = self.create_content_page(body_type="Viber", image=True)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?viber=true")
+        content = response.json()
+
+        image_id = content["body"]["text"]["image"]
+        assert image_id == 1
+
+    def test_wa_media(self, uclient):
+        """
+        Test that API returns media ID for whatsapp
+        """
+        page = self.create_content_page(media=True)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        media_id = content["body"]["text"]["value"]["media"]
+        assert media_id == 1
+
+    def test_wa_doc(self, uclient):
+        """
+        Test that API returns doc ID for whatsapp
+        """
+        page = self.create_content_page(doc=True)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        doc = content["body"]["text"]["value"]["document"]
+        assert doc == 1
+
+    def test_wa_messages_only_1_image(self, uclient):
+        """
+        Test that when many images are assigned to messages in the test, only 1 image is created in the test
+        """
+        page = self.create_content_page(image=True, body_count=5)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        total_messages = content["body"]["total_messages"]
+        image_id = content["body"]["text"]["value"]["image"]
+        total_images = Image.objects.all().count()
+        image_title = Image.objects.first().title
+
+        assert total_messages == 5
+        assert image_id == 1
+        assert total_images == 1
+        assert image_title == "default image title"
+
+    def test_wa_messages_only_1_media(self, uclient):
+        """
+        Test that when many media are assigned to messages in the test, only 1 media is created in the test
+        """
+        page = self.create_content_page(media=True, body_count=5)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        total_messages = content["body"]["total_messages"]
+        media_id = content["body"]["text"]["value"]["media"]
+        total_media = Media.objects.all().count()
+        media_title = Media.objects.first().title
+
+        assert total_messages == 5
+        assert media_id == 1
+        assert total_media == 1
+        assert media_title == "default media title"
+
+    def test_wa_messages_only_1_doc(self, uclient):
+        """
+        Test that when many doc are assigned to messages in the test, only 1 doc is created in the test
+        """
+        page = self.create_content_page(doc=True, body_count=5)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        total_messages = content["body"]["total_messages"]
+        doc_id = content["body"]["text"]["value"]["document"]
+        total_doc = Document.objects.all().count()
+        doc_title = Document.objects.first().title
+
+        assert total_messages == 5
+        assert doc_id == 1
+        assert total_doc == 1
+        assert doc_title == "default doc title"
+
 
 @pytest.mark.django_db
 class TestWhatsAppMessages:
@@ -471,9 +714,13 @@ class TestWhatsAppMessages:
     def create_content_page(
         self,
         buttons=None,
+        list_items=None,
+        next_prompt=None,
+        footer=None,
         whatsapp_template_category=None,
         whatsapp_template_name=None,
         variation_messages=None,
+        example_values=None,
     ):
         """
         Helper function to create pages needed for each test.
@@ -482,12 +729,20 @@ class TestWhatsAppMessages:
         ----------
         buttons : [NextBtn | PageBtn]
             List of buttons to add to the content page.
+        list_items : [str]
+            List of list items to add to the content page.
+        next_prompt : str
+            Next prompt string to add to the content page.
+        footer : str
+            Footer string to add to the content page.
         whatsapp_template_category : str
             Category of the WhatsApp template.
         whatsapp_template_name : str
             Name of the WhatsApp template
         variation_messages : [VarMsg]
             Variation messages added to the WhatsApp content block
+        example_values : [str]
+            example values for whatsapp templates
         """
         title = "default page"
         home_page = HomePage.objects.first()
@@ -504,7 +759,11 @@ class TestWhatsAppMessages:
                         WABlk(
                             "Test WhatsApp Message 1",
                             buttons=buttons or [],
+                            list_items=list_items or [],
+                            next_prompt=next_prompt or "",
+                            footer=footer or "",
                             variation_messages=variation_messages or [],
+                            example_values=example_values or [],
                         )
                     ],
                 )
@@ -566,6 +825,88 @@ class TestWhatsAppMessages:
         assert PageView.objects.count() == 1
         view = PageView.objects.last()
         assert view.message == 1
+
+    def test_whatsapp_template_variables(self, uclient):
+        """
+        Variables in WhatsApp templates are present in the message body.
+        """
+        page = self.create_content_page(
+            example_values=["test value 1"],
+        )
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        [example_values_content] = content["body"]["text"]["value"]["example_values"]
+        example_values_content.pop("id")
+
+        assert example_values_content == {"type": "item", "value": "test value 1"}
+
+    def test_list_items(self, uclient):
+        """
+        test that list items are present in the whatsapp message
+        """
+        page = self.create_content_page(list_items=["list item 1", "list item 2"])
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        [item_1, item_2] = content["body"]["text"]["value"]["list_items"]
+        item_1.pop("id")
+        item_2.pop("id")
+
+        assert item_1 == {"type": "item", "value": "list item 1"}
+        assert item_2 == {"type": "item", "value": "list item 2"}
+
+    def test_next_prompt(self, uclient):
+        """
+        test that next prompt is present in the whatsapp message
+        """
+        page = self.create_content_page(next_prompt="next prompt 1")
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        next_prompt = content["body"]["text"]["value"]["next_prompt"]
+
+        assert next_prompt == "next prompt 1"
+
+    def test_footer(self, uclient):
+        """
+        test that footer is present in the whatsapp message
+        """
+        page = self.create_content_page(footer="footer 1")
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        footer = content["body"]["text"]["value"]["footer"]
+
+        assert footer == "footer 1"
+
+    def test_empty_whatsapp(self, uclient):
+        """
+        All values except the message should be blank when nothing else is set on a whatsapp message
+        """
+        page = self.create_content_page()
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        whatsapp_value = content["body"]["text"]["value"]
+
+        assert whatsapp_value == {
+            "image": None,
+            "media": None,
+            "footer": "",
+            "buttons": [],
+            "message": "Test WhatsApp Message 1",
+            "document": None,
+            "list_items": [],
+            "next_prompt": "",
+            "example_values": [],
+            "variation_messages": [],
+        }
 
 
 @pytest.mark.django_db
