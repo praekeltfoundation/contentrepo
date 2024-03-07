@@ -161,8 +161,6 @@ ignore = [
     "S113",  # TODO: Request timeouts.
     "B904",  # TODO: Fix exceptions raised in exception handlers.
     "SIM102",  # It's often more convenient/readable to use nested conditionals.
-    "SIM117",  # It's often more convenient/readable to use nested context managers.
-    "SIM115",  # TODO: Fix non-context-manager open() calls.
 ]
 
 [tool.ruff.lint.per-file-ignores]
