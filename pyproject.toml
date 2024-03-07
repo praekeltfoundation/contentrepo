@@ -163,7 +163,6 @@ ignore = [
     "SIM102",  # It's often more convenient/readable to use nested conditionals.
     "SIM117",  # It's often more convenient/readable to use nested context managers.
     "SIM115",  # TODO: Fix non-context-manager open() calls.
-    "UP032",  # FIXME: New lint, easy to fix.
 ]
 
 [tool.ruff.lint.per-file-ignores]
