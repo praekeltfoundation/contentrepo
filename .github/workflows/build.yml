@@ -44,16 +44,16 @@ jobs:
       # Lints/tests should always run, even if other lints/tests have failed.
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        black --check .
+        poetry run black --check .
     - name: Lint
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        ruff check .
+        poetry run ruff check .
     - name: Check types
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        mypy
+        poetry run mypy
     - name: Run tests
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        pytest -vv
+        poetry run pytest -vv
