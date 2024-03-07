@@ -7,7 +7,7 @@ RUN poetry config virtualenvs.in-project true \
 
 ENV DJANGO_SETTINGS_MODULE contentrepo.settings.production
 
-RUN django-admin collectstatic --noinput --settings=contentrepo.settings.base
+RUN poetry run django-admin collectstatic --noinput --settings=contentrepo.settings.base
 
 CMD [\
     "contentrepo.wsgi:application",\
