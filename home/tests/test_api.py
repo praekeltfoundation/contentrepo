@@ -4,13 +4,17 @@ from pathlib import Path
 
 import pytest
 from wagtail import blocks
+from wagtail.models.sites import Site  # type: ignore
 
 from home.content_import_export import import_content
 from home.models import (
+    AnswerBlock,
+    Assessment,
     ContentPage,
     HomePage,
     OrderedContentSet,
     PageView,
+    QuestionBlock,
     VariationBlock,
 )
 
@@ -749,3 +753,289 @@ class TestContentPageAPI2:
         response = uclient.get("/api/v2/pages/?sms=true")
         content = json.loads(response.content)
         assert content["count"] == 1
+
+
+@pytest.mark.django_db
+class TestAssessmentAPI:
+    @pytest.fixture(autouse=True)
+    def create_test_data(self):
+        """
+        Create the content that all the tests in this class will use.
+        """
+        self.assessment = Assessment(title="Test Assessment", slug="test-assessment")
+        self.high_result_page = ContentPage(
+            title="high result",
+            slug="high-result",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {"type": "next_message", "value": {"title": "Tell me more"}}
+                        ],
+                    },
+                }
+            ],
+        )
+        self.medium_result_page = ContentPage(
+            title="medium result",
+            slug="medium-result",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {"type": "next_message", "value": {"title": "Tell me more"}}
+                        ],
+                    },
+                }
+            ],
+        )
+        self.low_result_page = ContentPage(
+            title="low result",
+            slug="low-result",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {"type": "next_message", "value": {"title": "Tell me more"}}
+                        ],
+                    },
+                }
+            ],
+        )
+        homepage = HomePage.objects.first()
+        homepage.add_child(instance=self.high_result_page)
+        homepage.add_child(instance=self.medium_result_page)
+        homepage.add_child(instance=self.low_result_page)
+        self.high_result_page.save_revision().publish()
+        self.medium_result_page.save_revision().publish()
+        self.low_result_page.save_revision().publish()
+        site = Site.objects.get(is_default_site=True)
+        self.assessment.locale = site.root_page.locale
+        self.assessment.high_result_page = self.high_result_page
+        self.assessment.high_inflection = 5.0
+        self.assessment.medium_result_page = self.medium_result_page
+        self.assessment.medium_inflection = 2.0
+        self.assessment.low_result_page = self.low_result_page
+        self.assessment.generic_error = "This is a generic error"
+        answers_block = blocks.ListBlock(AnswerBlock())
+        answers_block_value = answers_block.to_python(
+            [
+                {"answer": "Crunchie", "score": "5"},
+                {"answer": "Flake", "score": "3"},
+            ]
+        )
+        question_block = QuestionBlock()
+        question_block_value = question_block.to_python(
+            {
+                "question": "What is the best chocolate?",
+                "error": "Invalid answer",
+                "answers": answers_block_value,
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "question",
+                question_block_value,
+            )
+        )
+        self.assessment.save()
+
+    def test_assessment_endpoint(self, uclient):
+        response = uclient.get("/api/v2/assessment/")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        assert content["results"][0]["title"] == self.assessment.title
+        assert content["results"][0]["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+        }
+        assert content["results"][0]["high_inflection"] == 5.0
+        assert content["results"][0]["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+        }
+        assert content["results"][0]["medium_inflection"] == 2.0
+        assert content["results"][0]["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+        }
+
+    def test_assessment_detail_endpoint(self, uclient):
+        response = uclient.get(f"/api/v2/assessment/{self.assessment.id}/")
+        content = json.loads(response.content)
+        assert content["title"] == self.assessment.title
+        assert content["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+        }
+        assert content["high_inflection"] == 5.0
+        assert content["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+        }
+        assert content["medium_inflection"] == 2.0
+        assert content["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+        }
+
+    def test_assessment_endpoint_with_drafts(self, uclient):
+        """
+        Unpublished assessments are returned if the qa param is set.
+        """
+        self.assessment.unpublish()
+        url = "/api/v2/assessment/?qa=True"
+        # it should return a list of assessments with the unpublished one included
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the assessment is not live but content is returned
+        assert not self.assessment.live
+        assert content["count"] == 1
+        assert content["results"][0]["title"] == self.assessment.title
+        assert content["results"][0]["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+        }
+        assert content["results"][0]["high_inflection"] == 5.0
+        assert content["results"][0]["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+        }
+        assert content["results"][0]["medium_inflection"] == 2.0
+        assert content["results"][0]["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+        }
+
+    def test_assessment_endpoint_without_drafts(self, uclient):
+        """
+        Unpublished assessments are not returned if the qa param is not set.
+        """
+        self.assessment.unpublish()
+        url = "/api/v2/assessment/"
+        # it should return nothing
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the assessment is not live
+        assert not self.assessment.live
+        assert content["count"] == 0
+
+    def test_assessment_detail_endpoint_with_drafts(self, uclient):
+        """
+        Unpublished assessments are returned if the qa param is set.
+        """
+        self.assessment.unpublish()
+        url = f"/api/v2/assessment/{self.assessment.id}/?qa=True"
+        # it should return specific assessment that is in draft
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the assessment is not live but content is returned
+        assert not self.assessment.live
+        assert content["title"] == self.assessment.title
+        assert content["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+        }
+        assert content["high_inflection"] == 5.0
+        assert content["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+        }
+        assert content["medium_inflection"] == 2.0
+        assert content["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+        }
+
+    # TODO: Add this test in once we've merged with main - there's some code in there that makes following the redirect work
+    # def test_assessment_detail_endpoint_without_drafts(self, uclient, settings):
+    #     """
+    #     Unpublished assessments are not returned if the qa param is not set.
+    #     """
+    #     settings.STATIC_ROOT = Path("home/tests/test_static")
+    #     self.assessment.unpublish()
+    #     url = f"/api/v2/assessment/{self.assessment.id}"
+
+    #     response = uclient.get(url, follow=True)
+
+    #     assert response.status_code == 404
+
+    def test_assessment_new_draft(self, uclient):
+        """
+        New revisions are returned if the qa param is set
+        """
+        high_result_page = ContentPage(
+            title="new high result",
+            slug="new-high-result",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {"type": "next_message", "value": {"title": "Tell me more"}}
+                        ],
+                    },
+                }
+            ],
+        )
+        homepage = HomePage.objects.first()
+        homepage.add_child(instance=high_result_page)
+        high_result_page.save_revision().publish()
+        self.assessment.high_result_page = high_result_page
+        self.assessment.high_inflection = 15.0
+        self.assessment.medium_inflection = 12.0
+
+        self.assessment.save_revision()
+
+        response = uclient.get("/api/v2/assessment/")
+        content = json.loads(response.content)
+
+        assert self.assessment.live
+
+        assert content["results"][0]["title"] == self.assessment.title
+        assert content["results"][0]["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+        }
+        assert content["results"][0]["high_inflection"] == 5.0
+        assert content["results"][0]["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+        }
+        assert content["results"][0]["medium_inflection"] == 2.0
+        assert content["results"][0]["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+        }
+
+        response = uclient.get("/api/v2/assessment/?qa=True")
+        content = json.loads(response.content)
+        assert content["results"][0]["title"] == self.assessment.title
+        assert content["results"][0]["high_result_page"] == {
+            "id": high_result_page.id,
+            "title": high_result_page.title,
+        }
+        assert content["results"][0]["high_inflection"] == 15.0
+        assert content["results"][0]["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+        }
+        assert content["results"][0]["medium_inflection"] == 12.0
+        assert content["results"][0]["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+        }

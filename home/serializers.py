@@ -456,3 +456,130 @@ class OrderedContentSetSerializer(BaseSerializer):
     name = NameField(read_only=True)
     pages = OrderedPagesField(read_only=True)
     profile_fields = ProfileFieldsField(read_only=True)
+
+
+class HighResultPageField(serializers.Field):
+    """
+    Serializes the "high_result_page" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        return {
+            "id": page.high_result_page.id,
+            "title": page.high_result_page.title,
+        }
+
+
+class HighInflectionField(serializers.Field):
+    """
+    Serializes the "high_inflection_field" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        return page.high_inflection
+
+
+class MediumResultPageField(serializers.Field):
+    """
+    Serializes the "medium_result_page" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        return {
+            "id": page.medium_result_page.id,
+            "title": page.medium_result_page.title,
+        }
+
+
+class MediumInflectionField(serializers.Field):
+    """
+    Serializes the "medium_inflection_field" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        return page.medium_inflection
+
+
+class LowResultPageField(serializers.Field):
+    """
+    Serializes the "low_result_page" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        return {
+            "id": page.low_result_page.id,
+            "title": page.low_result_page.title,
+        }
+
+
+class GenericErrorField(serializers.Field):
+    """
+    Serializes the "generic_error" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        return page.generic_error
+
+
+class QuestionField(serializers.Field):
+    """
+    Serializes the "question" field.
+
+    Example:
+    "question": {
+        "question": "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
+        "error": "Unknown answer given",
+        "answers": [
+            {
+                "answer": "Yes",
+                "score": 5.0
+            }
+        ]
+    }
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        questions = []
+        for question in page.questions.raw_data:
+
+            questions.append(
+                {
+                    "id": question["id"],
+                    "question": question["value"]["question"],
+                    "error": question["value"]["error"],
+                    "answers": [x["value"] for x in question["value"]["answers"]],
+                }
+            )
+        return questions
+
+
+class AssessmentSerializer(BaseSerializer):
+    title = TitleField(read_only=True)
+    high_result_page = HighResultPageField(read_only=True)
+    high_inflection = HighInflectionField(read_only=True)
+    medium_result_page = MediumResultPageField(read_only=True)
+    medium_inflection = MediumInflectionField(read_only=True)
+    low_result_page = LowResultPageField(read_only=True)
+    generic_error = GenericErrorField(read_only=True)
+    questions = QuestionField(read_only=True)
