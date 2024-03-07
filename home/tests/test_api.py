@@ -603,7 +603,7 @@ class TestContentPageAPI:
         content = response.json()
 
         image_id = content["body"]["text"]["value"]["image"]
-        assert image_id == 1
+        assert image_id == page.whatsapp_body._raw_data[0]["value"]["image"]
 
     def test_messenger_image(self, uclient):
         """
@@ -614,7 +614,7 @@ class TestContentPageAPI:
         content = response.json()
 
         image_id = content["body"]["text"]["image"]
-        assert image_id == 1
+        assert image_id == page.messenger_body._raw_data[0]["value"]["image"]
 
     def test_viber_image(self, uclient):
         """
@@ -625,7 +625,7 @@ class TestContentPageAPI:
         content = response.json()
 
         image_id = content["body"]["text"]["image"]
-        assert image_id == 1
+        assert image_id == page.viber_body._raw_data[0]["value"]["image"]
 
     def test_wa_media(self, uclient):
         """
@@ -636,7 +636,7 @@ class TestContentPageAPI:
         content = response.json()
 
         media_id = content["body"]["text"]["value"]["media"]
-        assert media_id == 1
+        assert media_id == page.whatsapp_body._raw_data[0]["value"]["media"]
 
     def test_wa_doc(self, uclient):
         """
@@ -646,8 +646,8 @@ class TestContentPageAPI:
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
         content = response.json()
 
-        doc = content["body"]["text"]["value"]["document"]
-        assert doc == 1
+        doc_id = content["body"]["text"]["value"]["document"]
+        assert doc_id == page.whatsapp_body._raw_data[0]["value"]["document"]
 
     def test_wa_messages_only_1_image(self, uclient):
         """
@@ -663,7 +663,7 @@ class TestContentPageAPI:
         image_title = Image.objects.first().title
 
         assert total_messages == 5
-        assert image_id == 1
+        assert image_id == page.whatsapp_body._raw_data[0]["value"]["image"]
         assert total_images == 1
         assert image_title == "default image title"
 
@@ -681,7 +681,7 @@ class TestContentPageAPI:
         media_title = Media.objects.first().title
 
         assert total_messages == 5
-        assert media_id == 1
+        assert media_id == page.whatsapp_body._raw_data[0]["value"]["media"]
         assert total_media == 1
         assert media_title == "default media title"
 
@@ -699,7 +699,7 @@ class TestContentPageAPI:
         doc_title = Document.objects.first().title
 
         assert total_messages == 5
-        assert doc_id == 1
+        assert doc_id == page.whatsapp_body._raw_data[0]["value"]["document"]
         assert total_doc == 1
         assert doc_title == "default doc title"
 
