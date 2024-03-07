@@ -373,14 +373,16 @@ class MessengerBlock(blocks.StructBlock):
 
 
 class HomePage(UniqueSlugMixin, Page):
+    parent_page_types = ["wagtailcore.Page"]
     subpage_types = [
-        "ContentPageIndex",
+        "home.ContentPageIndex",
     ]
 
 
 class ContentPageIndex(UniqueSlugMixin, Page):
+    parent_page_types = ["home.HomePage"]
     subpage_types = [
-        "ContentPage",
+        "home.ContentPage",
     ]
 
     include_in_homepage = models.BooleanField(default=False)
@@ -439,9 +441,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
 
-    parent_page_type = [
-        "ContentPageIndex",
-    ]
+    parent_page_types = ["home.ContentPageIndex", "home.ContentPage"]
 
     # general page attributes
     tags = ClusterTaggableManager(through=ContentPageTag, blank=True)

@@ -7,8 +7,12 @@ from django.test import TestCase, override_settings
 from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
+from wagtail.models import Page
+from wagtail.tests.utils import WagtailPageTests
 
 from home.models import (
+    ContentPage,
+    ContentPageIndex,
     GoToPageButton,
     HomePage,
     NextMessageButton,
@@ -20,6 +24,17 @@ from home.models import (
 
 from .page_builder import PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
+
+
+class MyPageTests(WagtailPageTests):
+    def test_contentpage_structure(self):
+        """
+        A ContentPage can only be created under a ContentPageIndex or another ContentPage. A ContentIndexPage can only be created under the HomePage.
+        """
+        self.assertCanNotCreateAt(Page, ContentPage)
+        self.assertCanNotCreateAt(HomePage, ContentPage)
+        self.assertCanNotCreateAt(ContentPage, ContentPageIndex)
+        self.assertCanNotCreateAt(Page, ContentPageIndex)
 
 
 class ContentPageTests(TestCase):
