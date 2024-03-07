@@ -1,7 +1,9 @@
 FROM ghcr.io/praekeltfoundation/docker-django-bootstrap-nw:py3.10-buster
 
+RUN pip install poetry==1.7.1
 COPY . /app
-RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -e .
+RUN poetry config virtualenvs.in-project true \
+    && poetry install --no-dev --no-interaction --no-ansi --no-cache
 
 ENV DJANGO_SETTINGS_MODULE contentrepo.settings.production
 

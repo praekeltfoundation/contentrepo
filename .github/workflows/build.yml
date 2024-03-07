@@ -47,7 +47,7 @@ jobs:
     - name: Lint
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        ruff .
+        ruff check .
     - name: Check types
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
