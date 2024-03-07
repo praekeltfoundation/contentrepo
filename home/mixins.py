@@ -26,7 +26,7 @@ class SpreadsheetExportMixin:
 
     def write_csv_response(self, queryset):
         response = HttpResponse(content_type="application/CSV")
-        filename = f"{self.get_filename()}.xlsx"
+        filename = f"{self.get_filename()}.csv"
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         export_csv_content(queryset, response)
         return response
