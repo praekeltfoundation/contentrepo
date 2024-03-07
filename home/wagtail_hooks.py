@@ -7,6 +7,8 @@ from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel  # isort:skip
+
 from .models import ContentPage, OrderedContentSet, WhatsAppTemplate
 
 from .views import (  # isort:skip
@@ -104,7 +106,7 @@ class ContentPageAdmin(ModelAdmin):
         "related_pages",
         "parental",
     )
-   
+
     search_fields = (
         "title",
         "body",
@@ -115,7 +117,7 @@ class ContentPageAdmin(ModelAdmin):
         "viber_body",
         "slug",
     )
-    list_export = ("title")
+    list_export = "title"
 
     def replies(self, obj):
         return list(obj.quick_replies.all())
@@ -259,28 +261,51 @@ class OrderedContentSetViewSet(SnippetViewSet):
 
     num_pages.short_description = "Number of Pages"
 
-class WhatsAppTemplateAdmin(ModelAdmin):
-    body_truncate_size = 200
+
+class WhatsAppTemplateViewSet(SnippetViewSet):
     model = WhatsAppTemplate
-    menu_label = "WhatsAppTemplates"
-    menu_icon = "pilcrow"
+    body_truncate_size = 200
+    icon = "order"
     menu_order = 200
+    add_to_admin_menu = True
     add_to_settings_menu = False
     exclude_from_explorer = False
-    index_view_class = CustomIndexView
+    # menu_label = "WhatsAppTemplates"
+    # menu_icon = "pilcrow"
+    # menu_order = 200
+    # add_to_settings_menu = False
+    # exclude_from_explorer = False
+    # index_view_class = CustomIndexView
     list_display = (
         "name",
         "category",
         "body",
+        "locale",
+        "status",
+        "quick_replies",
     )
-    
+
+    panels = [
+        MultiFieldPanel(
+            [
+                FieldPanel("name"),
+                FieldPanel("category"),
+                FieldPanel("body"),
+                FieldPanel("quick_replies", heading="Quick Replies"),
+                FieldPanel("locale"),
+            ],
+            heading="Whatsapp Template",
+        ),
+    ]
+
     search_fields = (
         "name",
         "category",
         "body",
+        "locale",
     )
 
 
 register_snippet(OrderedContentSetViewSet)
 modeladmin_register(ContentPageAdmin)
-modeladmin_register(WhatsAppTemplateAdmin)
+register_snippet(WhatsAppTemplateViewSet)

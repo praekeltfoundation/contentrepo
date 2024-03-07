@@ -12,6 +12,7 @@ from django.forms import CheckboxSelectMultiple
 from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
+from modelcluster.models import ClusterableModel
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
 from wagtail.api import APIField
@@ -20,7 +21,7 @@ from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import DraftStateMixin, Page, Revision, RevisionMixin, Locale
+from wagtail.models import DraftStateMixin, Locale, Page, Revision, RevisionMixin
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
@@ -433,6 +434,7 @@ class QuickReplyContent(ItemBase):
         related_name="quick_reply_items",
     )
 
+
 class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     class WhatsAppTemplateCategory(models.TextChoices):
         MARKETING = "MARKETING", _("Marketing")
@@ -488,6 +490,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         null=True,
         use_json_field=True,
     )
+    # TODO: Ask Rudi about this field, I am not sure what it does
     include_in_footer = models.BooleanField(default=False)
 
     embedding = models.JSONField(blank=True, null=True)
@@ -866,6 +869,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         return revision
 
     def clean(self):
+        print("Running ContentPage Clean")
         result = super().clean()
         errors = {}
 
@@ -942,7 +946,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
 
 @receiver(pre_save, sender=ContentPage)
-def update_embedding(sender, instance, *args, **kwargs):
+def update_template_embedding(sender, instance, *args, **kwargs):
     from .word_embedding import preprocess_content_for_embedding
 
     if not model:
@@ -1159,22 +1163,51 @@ class PageView(models.Model):
     data = models.JSONField(default=dict, blank=True, null=True)
 
 
+class TemplateContentQuickReply(TagBase):
+    class Meta:
+        verbose_name = "quick reply2"
+        verbose_name_plural = "quick replie2"
 
 
-class WhatsAppTemplate(DraftStateMixin, RevisionMixin, index.Indexed,models.Model): 
-    class WhatsAppTemplateCategory(models.TextChoices):
+class TemplateQuickReplyContent(ItemBase):
+    tag = models.ForeignKey(
+        TemplateContentQuickReply,
+        related_name="template_quick_reply_content",
+        on_delete=models.CASCADE,
+    )
+    content_object = ParentalKey(
+        to="home.WhatsAppTemplate",
+        on_delete=models.CASCADE,
+        related_name="template_quick_reply_items",
+    )
+
+
+class WhatsAppTemplate(
+    DraftStateMixin, ClusterableModel, RevisionMixin, index.Indexed, models.Model
+):
+    class Category(models.TextChoices):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
 
     name = models.CharField(max_length=512, blank=True, default="")
     category = models.CharField(
         max_length=14,
-        choices=WhatsAppTemplateCategory.choices,
-        default=WhatsAppTemplateCategory.UTILITY,
+        choices=Category.choices,
+        default=Category.UTILITY,
     )
-    
-    locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default='')   
-    
+    quick_replies = ClusterTaggableManager(
+        through="home.TemplateQuickReplyContent", blank=True
+    )
+    related_pages = StreamField(
+        [
+            ("related_page", blocks.PageChooserBlock()),
+        ],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
+
+    locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
     body = StreamField(
         [
             (
@@ -1189,22 +1222,234 @@ class WhatsAppTemplate(DraftStateMixin, RevisionMixin, index.Indexed,models.Mode
         use_json_field=True,
     )
 
-    panels = [
-        MultiFieldPanel(
-            [
-                FieldPanel("name"),
-                FieldPanel("category"),
-                FieldPanel("body"),
-            ],
-            heading="Whatsapp Template",
-        ),
+    search_fields = [
+        index.SearchField("locale"),
     ]
 
+    @property
+    def image(self):
+        return self.body.raw_data[0]["value"]["image"]
+
+    @property
+    def fields(self):
+        """
+        Returns a tuple of fields that can be used to determine template equality
+        """
+        return (
+            self.body,
+            self.image,
+            self.category,
+        )
+
+    @property
+    def quick_reply_buttons(self):
+        return self.template_quick_reply_items.all().values_list("tag__name", flat=True)
+
+    @property
+    def example_values(self):
+        example_values = self.body.raw_data[0]["value"].get("example_values", [])
+        return [v["value"] for v in example_values]
+
+    @property
+    def prefix(self):
+        return self.name.lower().replace(" ", "_")
+
+    def status(self):
+        return "Live" if self.live else "Draft"
+
     def save(self, *args, **kwargs):
-        
-        home_locale = Locale.get_default()
+        if kwargs.get("update_fields"):
+            # save not called from publish
+            # do_stuff_on_save()
+            print("THIS IS A SAVE")
+        else:
+            # do_stuff_on_publish()
+            print("THIS IS A PUBLISH")
+        return super().save(*args, **kwargs)
 
-        self.locale = home_locale
-        super().save(*args, **kwargs)
+    def __str__(self):
+        """String repr of this snippet."""
+        return self.name
 
-    
+    class Meta:  # noqa
+        verbose_name = "WhatsApp Template"
+        verbose_name_plural = "WhatsApp Templates"
+
+    def save_revision(
+        self,
+        user=None,
+        submitted_for_moderation=False,
+        approved_go_live_at=None,
+        changed=True,
+        log_action=False,
+        previous_revision=None,
+        clean=True,
+    ):
+        previous_revision = self.get_latest_revision()
+        revision = super().save_revision(
+            user,
+            submitted_for_moderation,
+            approved_go_live_at,
+            changed,
+            log_action,
+            previous_revision,
+            clean,
+        )
+
+        try:
+            template_name = self.submit_whatsapp_template(previous_revision)
+        except Exception:
+            # Log the error to sentry and send error message to the user
+            logger.exception(
+                f"Failed to submit template name:  {self.whatsapp_template_name}"
+            )
+            raise ValidationError("Failed to submit template")
+
+        if template_name:
+            revision.content["whatsapp_template_name"] = template_name
+            revision.save(update_fields=["content"])
+        return revision
+
+    def clean(self):
+        print("Running WhatsAppTemplate Clean")
+        result = super().clean()
+        errors = {}
+
+        # The WA title is needed for all templates to generate a name for the template
+        if not self.name:
+            errors.setdefault("name", []).append(
+                ValidationError("All WhatsApp templates need a title.")
+            )
+        if len(self.body.raw_data) > 0:
+            whatsapp_message = self.body.raw_data[0]["value"]["message"]
+
+            right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", whatsapp_message)
+            left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", whatsapp_message)
+            mismatches = right_mismatch + left_mismatch
+
+            if mismatches:
+                errors.setdefault("body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f"Please provide variables with matching braces. You provided {mismatches}."
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+            vars_in_msg = re.findall(r"{{(.*?)}}", whatsapp_message)
+            non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
+
+            if non_digit_variables:
+                errors.setdefault("body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f"Please provide numeric variables only. You provided {non_digit_variables}."
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+            # Check variable order
+            actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
+            expected_variables = [
+                str(j + 1) for j in range(len(actual_digit_variables))
+            ]
+            if actual_digit_variables != expected_variables:
+                errors.setdefault("body", []).append(
+                    StreamBlockValidationError(
+                        {
+                            0: StreamBlockValidationError(
+                                {
+                                    "message": ValidationError(
+                                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
+                                    )
+                                }
+                            )
+                        }
+                    )
+                )
+
+        if errors:
+            raise ValidationError(errors)
+
+        return result
+
+    def create_whatsapp_template_name(self) -> str:
+        return f"{self.prefix}_{self.get_latest_revision().pk}"
+
+    def submit_whatsapp_template(self, previous_revision):
+        print("Running submit_whatsapp_template")
+        """
+        Submits a request to the WhatsApp API to create a template for this content
+
+        Only submits if the create templates is enabled
+        and if the template fields are different to the previous revision
+        """
+        if not settings.WHATSAPP_CREATE_TEMPLATES:
+            print("Shouldn't create templates. Exiting")
+            return
+
+        print("Should create template")
+
+        # If there are any missing fields in the previous revision, then carry on
+        try:
+            print("Check Previous Revisions")
+            # print("Previous Revisions = " + previous_revision)
+
+            previous_revision = previous_revision.as_object()
+            print("Got here")
+            previous_revision_fields = previous_revision.whatsapp_template_fields
+            print("Previous Revision Fields " + str(previous_revision_fields))
+        except (IndexError, AttributeError):
+            previous_revision_fields = ()
+            print("Error on revision check")
+        # If there are any missing fields in this revision, then don't submit template
+        try:
+            if self.fields == previous_revision_fields:
+                print("No change in revision")
+                return
+        except (IndexError, AttributeError):
+            return
+        print("Done Checking Previous Revisions")
+        self.whatsapp_template_name = self.create_whatsapp_template_name()
+        print("Running create_whatsapp_template")
+        create_whatsapp_template(
+            self.name,
+            self.body,
+            str(self.category),
+            sorted(self.quick_reply_buttons),
+            self.image,
+            self.example_values,
+        )
+        print("Reached end of submit_whatsapp_template")
+        return self.template_name
+
+
+@receiver(pre_save, sender=WhatsAppTemplate)
+def update_embedding(sender, instance, *args, **kwargs):
+    print("Running update_embedding")
+    from .word_embedding import preprocess_content_for_embedding
+
+    if not model:
+        return
+
+    embedding = {}
+
+    content = []
+    for block in instance.body:
+        content.append(block.value["message"])
+    body = preprocess_content_for_embedding("/n/n".join(content))
+    embedding["whatsapp"] = {"values": [float(i) for i in model.encode(body)]}
+
+    instance.embedding = embedding

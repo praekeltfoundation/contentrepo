@@ -10,6 +10,7 @@ from wagtail.images import get_image_model
 def create_whatsapp_template(
     name, body, category, quick_replies=(), image_id=None, example_values=None
 ):
+    print("Running create_whatsapp_template")
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
@@ -54,17 +55,23 @@ def create_whatsapp_template(
         "language": "en_US",
         "components": components,
     }
+    print("Create Template DATA BELOW")
+    print(data)
+
     response = requests.post(
         url,
         headers=headers,
         data=json.dumps(data, indent=4),
     )
+    print("Create Template RESPONSE BELOW")
+    print(response)
 
     # Check if an error has occurred
     response.raise_for_status()
 
 
 def get_upload_session_id(image_id):
+    print("Running get_upload_session_id")
     url = urljoin(
         settings.WHATSAPP_API_URL,
         "graph/v14.0/app/uploads",
@@ -83,17 +90,22 @@ def get_upload_session_id(image_id):
         "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         "number": settings.FB_BUSINESS_ID,
     }
+    print("GetUploadSession DATA BELOW")
+    print(json.dumps(data, indent=4))
 
     response = requests.post(
         url,
         headers=headers,
         data=json.dumps(data, indent=4),
     )
+    print("GetUploadSession Response Below")
+    print(response)
 
     upload_details = {
         "upload_session_id": response.json()["id"],
         "upload_file": img_obj.file,
     }
+    print(upload_details)
 
     response.raise_for_status()
     return upload_details

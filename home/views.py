@@ -30,7 +30,13 @@ from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
 from .import_content_pages import ImportException
 from .mixins import SpreadsheetExportMixin
-from .models import ContentPage, ContentPageRating, OrderedContentSet, PageView
+from .models import (
+    ContentPage,
+    ContentPageRating,
+    OrderedContentSet,
+    PageView,
+    WhatsAppTemplate,
+)
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
 
 logger = logging.getLogger(__name__)
@@ -373,3 +379,13 @@ class ContentPageRatingViewSet(GenericListViewset, CreateModelMixin):
                 raise ValidationError({"page": ["Page matching query does not exist."]})
 
         return super().create(request, *args, **kwargs)
+
+
+class WhatsAppTemplateViewSet(GenericListViewset):
+    # queryset = WhatsAppTemplate.objects.all()
+    model = WhatsAppTemplate
+    form_fields = ["name", "category", "locale", "status"]
+    icon = "user"
+    add_to_admin_menu = True
+    copy_view_enabled = False
+    inspect_view_enabled = True
