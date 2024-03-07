@@ -1,28 +1,84 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+# # FIXME: Translate some of these fields to poetry
+# [project]
+# name = "contentrepo"
+# version = "1.1.1-dev.0"
+# authors = [
+#   { name="Praekelt.org", email="dev@praekelt.org" },
+# ]
+# description = "A CMS for messaging systems"
+# readme = "README.md"
+# requires-python = ">=3.10"
+# dynamic = ["dependencies", "optional-dependencies"]
 
-[project]
+# [project.urls]
+# "Homepage" = "https://github.com/praekeltfoundation/contentrepo"
+# "Bug Tracker" = "https://github.com/praekeltfoundation/contentrepo/issues"
+
+# [tool.setuptools]
+# packages = ["contentrepo", "home", "menu", "search"]
+
+# [tool.setuptools.dynamic]
+# dependencies = {file = ["requirements.txt"]}
+# optional-dependencies.dev = {file = ["requirements-dev.txt"]}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
 name = "contentrepo"
 version = "1.1.1-dev.0"
-authors = [
-  { name="Praekelt.org", email="dev@praekelt.org" },
-]
 description = "A CMS for messaging systems"
+authors = ["Praekelt.org <dev@praekelt.org>"]
 readme = "README.md"
-requires-python = ">=3.10"
-dynamic = ["dependencies", "optional-dependencies"]
+homepage ="https://github.com/praekeltfoundation/contentrepo"
+repository ="https://github.com/praekeltfoundation/contentrepo"
+packages = [
+  { include = "contentrepo" },
+  { include = "home" },
+  { include = "menu" },
+  { include = "search" },
+]
 
-[project.urls]
-"Homepage" = "https://github.com/praekeltfoundation/contentrepo"
-"Bug Tracker" = "https://github.com/praekeltfoundation/contentrepo/issues"
+[tool.poetry.dependencies]
+python = "^3.10"
+wagtail = "~5.2.3"  # Latest LTS
+django = "~4.2.11"  # Latest LTS
+dj-database-url = "^2.1.0"
+psycopg2-binary = "^2.9.9"
+django-environ = "^0.11.2"
+wagtail-content-import = "^0.11.0"
+wagtailmedia = "^0.15.1"
+drf-spectacular = "^0.27.1"
+openpyxl = "^3.1.2"
+# The ML stuff is a full gig of deps that needs different versions of torch
+# depending on platform. Do we actually use it in any of our deployments?
+sentence-transformers = "^2.5.1"
+torch = [
+  {version = "^2.2.1+cpu", platform = "linux", source = "pytorch-stable-cpu"},
+  {version = "^2.2.1", platform = "darwin", source = "pypi"},
+]
+# These aren't needed in tests, but are probably used in production:
+django-storages = "^1.14.2"
+django-redis = "^5.4.0"
+sentry-sdk = "^1.40.6"
+boto3 = "^1.34.56"
 
-[tool.setuptools]
-packages = ["contentrepo", "home", "menu", "search"]
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.2"
+pytest-django = "^4.8.0"
+pytest-cov = "^4.1.0"
+pytest-xdist = "^3.5.0"
+mypy = "^1.8.0"
+ruff = "^0.3.0"
+black = "^24.2.0"
+responses = "^0.25.0"
+types-openpyxl = "^3.1.0.20240301"
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-optional-dependencies.dev = {file = ["requirements-dev.txt"]}
+[[tool.poetry.source]]
+name = "pytorch-stable-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
 
 [tool.black]
 line-length = 88
@@ -72,13 +128,20 @@ DJANGO_SETTINGS_MODULE = "contentrepo.settings.test"
 addopts = "--cov"
 filterwarnings = [
     # We can't do anything about these warnings until upstream updates.
-    "ignore::django.utils.deprecation.RemovedInDjango50Warning:modelcluster.models:28",
+    "ignore::django.utils.deprecation.RemovedInDjango51Warning:django.db.models.options:210",  # taggit.TaggedItem
     "ignore::DeprecationWarning:l18n.translation:17",
-    "ignore::DeprecationWarning:wagtail.images.views.serve:1",
-    "ignore::django.utils.deprecation.RemovedInDjango50Warning:home.tests.test_forms:13"
+    "ignore::DeprecationWarning:openpyxl",
+    # FIXME: The following warnings are from our code.
+    "ignore::django.utils.deprecation.RemovedInDjango50Warning:home.tests.test_forms:13",
+    "ignore::django.utils.deprecation.RemovedInDjango51Warning:django.conf:289",
+    "ignore::wagtail.utils.deprecation.RemovedInWagtail60Warning:wagtail.admin.menu:27",
+    "ignore::wagtail.utils.deprecation.RemovedInWagtail60Warning:wagtail.contrib.modeladmin.apps:15",
 ]
 
 [tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
 select = [
     "E", "F", "W", # pycodestyle + pyflakes == flake8 - mccabe
     "I",           # isort
@@ -93,17 +156,14 @@ select = [
     "PTH",         # flake8-use-pathlib
     # "RUF",         # ruff-specific rules
 ]
-target-version = "py310"
 ignore = [
     "E501",  # TODO: Something about these long lines.
     "S113",  # TODO: Request timeouts.
     "B904",  # TODO: Fix exceptions raised in exception handlers.
     "SIM102",  # It's often more convenient/readable to use nested conditionals.
-    "SIM117",  # It's often more convenient/readable to use nested context managers.
-    "SIM115",  # TODO: Fix non-context-manager open() calls.
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "contentrepo/settings/**" = [
     "S105",  # TODO: Get rid of default DEFAULT_SECRET_KEY.
     "F405",  # We import * in settings files.
