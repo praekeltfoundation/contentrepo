@@ -8,7 +8,7 @@ from wagtail.documents.api.v2.views import DocumentsAPIViewSet
 from wagtail.images.api.v2.views import ImagesAPIViewSet
 from wagtailmedia.api.views import MediaAPIViewSet
 
-from .models import Assessment, OrderedContentSet
+from .models import Assessment, AssessmentTag, OrderedContentSet
 from .serializers import (
     AssessmentSerializer,
     ContentPageSerializer,
@@ -216,6 +216,13 @@ class AssessmentViewSet(BaseAPIViewSet):
             queryset = Assessment.objects.filter(live=True).order_by(
                 "last_published_at"
             )
+
+        tag = self.request.query_params.get("tag")
+        if tag is not None:
+            ids = []
+            for t in AssessmentTag.objects.filter(tag__name__iexact=tag):
+                ids.append(t.content_object_id)
+            queryset = queryset.filter(id__in=ids)
         return queryset
 
 

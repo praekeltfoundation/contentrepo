@@ -3,6 +3,7 @@ import queue
 from pathlib import Path
 
 import pytest
+from taggit.models import Tag  # type: ignore
 from wagtail import blocks
 from wagtail.models.sites import Site  # type: ignore
 
@@ -819,6 +820,10 @@ class TestAssessmentAPI:
         self.medium_result_page.save_revision().publish()
         self.low_result_page.save_revision().publish()
         site = Site.objects.get(is_default_site=True)
+        tag, _ = Tag.objects.get_or_create(name="tag1")
+        self.assessment.tags.add(tag)
+        tag, _ = Tag.objects.get_or_create(name="tag2")
+        self.assessment.tags.add(tag)
         self.assessment.locale = site.root_page.locale
         self.assessment.high_result_page = self.high_result_page
         self.assessment.high_inflection = 5.0
@@ -1039,3 +1044,50 @@ class TestAssessmentAPI:
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
         }
+
+    def test_assessment_endpoint_filter_by_tag(self, uclient):
+        response = uclient.get("/api/v2/assessment/?tag=tag1")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        assert content["results"][0]["title"] == self.assessment.title
+        assert content["results"][0]["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+        }
+        assert content["results"][0]["high_inflection"] == 5.0
+        assert content["results"][0]["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+        }
+        assert content["results"][0]["medium_inflection"] == 2.0
+        assert content["results"][0]["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+        }
+
+        response = uclient.get("/api/v2/assessment/?tag=tag3")
+        content = json.loads(response.content)
+        assert content["count"] == 0
+
+    def test_assessment_detail_endpoint_filter_by_tag(self, uclient):
+        response = uclient.get(f"/api/v2/assessment/{self.assessment.id}/?tag=tag1")
+        content = json.loads(response.content)
+        assert content["title"] == self.assessment.title
+        assert content["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+        }
+        assert content["high_inflection"] == 5.0
+        assert content["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+        }
+        assert content["medium_inflection"] == 2.0
+        assert content["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+        }
+
+        response = uclient.get("/api/v2/assessment/?tag=tag3")
+        content = json.loads(response.content)
+        assert content["count"] == 0
