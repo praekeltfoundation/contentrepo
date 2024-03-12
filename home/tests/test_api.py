@@ -37,6 +37,8 @@ from .page_builder import (
 from .utils import create_page
 
 TEST_STATIC_PATH = Path("home/tests/test_static")
+ALL_PLATFORMS_EXCL_WHATSAPP = ["viber", "messenger", "ussd", "sms"]
+ALL_PLATFORMS = ALL_PLATFORMS_EXCL_WHATSAPP + ["whatsapp"]
 
 
 @pytest.fixture()
@@ -320,7 +322,7 @@ class TestContentPageAPI:
         body = content["body"]["text"]["value"]["message"]
         assert body == "*Default whatsapp Content 1* 🏥"
 
-    @pytest.mark.parametrize("platform", ["viber", "messenger", "ussd", "sms"])
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     def test_message_draft(self, uclient, platform):
         """
         Unpublished <platform> pages are returned if the qa param is set.
@@ -337,9 +339,7 @@ class TestContentPageAPI:
         body = content["body"]["text"]["message"]
         assert body == f"*Default {platform} Content 1* 🏥"
 
-    @pytest.mark.parametrize(
-        "platform", ["whatsapp", "viber", "messenger", "ussd", "sms"]
-    )
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
     def test_platform_disabled(self, uclient, platform):
         """
         It should not return the body if enable_<platform>=false
@@ -371,7 +371,7 @@ class TestContentPageAPI:
         body = content["body"]["text"]["value"]["message"]
         assert body == "*Default whatsapp Content 11* 🏥"
 
-    @pytest.mark.parametrize("platform", ["viber", "messenger", "ussd", "sms"])
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     def test_message_number_specified(self, uclient, platform):
         """
         It should only return the 11th paragraph if 11th message is requested
@@ -404,7 +404,7 @@ class TestContentPageAPI:
         body = content["body"]["text"]["value"]["message"]
         assert body == "*Default whatsapp Content 1* 🏥"
 
-    @pytest.mark.parametrize("platform", ["viber", "messenger", "ussd", "sms"])
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     def test_no_message_number_specified(self, uclient, platform):
         """
         It should only return the first paragraph if no specific message is requested
@@ -419,9 +419,7 @@ class TestContentPageAPI:
         body = content["body"]["text"]["message"]
         assert body == f"*Default {platform} Content 1* 🏥"
 
-    @pytest.mark.parametrize(
-        "platform", ["whatsapp", "viber", "messenger", "ussd", "sms"]
-    )
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
     def test_message_number_requested_out_of_range(self, uclient, platform):
         """
         It should return an appropriate error if requested message index is out of range
@@ -432,9 +430,7 @@ class TestContentPageAPI:
         assert response.status_code == 400
         assert response.json() == ["The requested message does not exist"]
 
-    @pytest.mark.parametrize(
-        "platform", ["whatsapp", "viber", "messenger", "ussd", "sms"]
-    )
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
     def test_message_number_requested_invalid(self, uclient, platform):
         """
         It should return an appropriate error if requested message is not a positive
@@ -465,9 +461,7 @@ class TestContentPageAPI:
         with django_assert_num_queries(8):
             uclient.get("/api/v2/pages/")
 
-    @pytest.mark.parametrize(
-        "platform", ["whatsapp", "viber", "messenger", "ussd", "sms"]
-    )
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
     def test_detail_view_content(self, uclient, platform):
         """
         Fetching the detail view of a page returns the page content.
@@ -563,7 +557,7 @@ class TestContentPageAPI:
         assert body["text"]["type"] == "Whatsapp_Message"
         assert body["text"]["value"]["message"] == "*Default whatsapp Content 1* 🏥"
 
-    @pytest.mark.parametrize("platform", ["viber", "messenger", "ussd", "sms"])
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     def test_detail_view_platform_message(self, uclient, platform):
         """
         Fetching a detail page and selecting the <platform> content returns the
