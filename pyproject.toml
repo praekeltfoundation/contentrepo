@@ -134,7 +134,6 @@ filterwarnings = [
     # FIXME: The following warnings are from our code.
     "ignore::django.utils.deprecation.RemovedInDjango50Warning:home.tests.test_forms:13",
     "ignore::django.utils.deprecation.RemovedInDjango51Warning:django.conf:289",
-    "ignore::wagtail.utils.deprecation.RemovedInWagtail60Warning:wagtail.admin.menu:27",
     "ignore::wagtail.utils.deprecation.RemovedInWagtail60Warning:wagtail.contrib.modeladmin.apps:15",
 ]
 

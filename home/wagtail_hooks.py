@@ -42,7 +42,7 @@ def register_stale_content_report_menu_item():
     return AdminOnlyMenuItem(
         "Stale Content",
         reverse("stale_content_report"),
-        classnames="icon icon-" + ContentPageReportView.header_icon,
+        classname="icon icon-" + ContentPageReportView.header_icon,
         order=700,
     )
 
@@ -63,7 +63,7 @@ def register_page_views_report_menu_item():
     return AdminOnlyMenuItem(
         "Page Views",
         reverse("page_view_report"),
-        classnames="icon icon-doc-empty",
+        classname="icon icon-doc-empty",
         order=700,
     )
 
