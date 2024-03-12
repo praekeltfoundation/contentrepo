@@ -128,11 +128,11 @@ DJANGO_SETTINGS_MODULE = "contentrepo.settings.test"
 addopts = "--cov"
 filterwarnings = [
     # We can't do anything about these warnings until upstream updates.
+    "ignore::django.utils.deprecation.RemovedInDjango50Warning:home.tests.test_forms:13",  # this comes from inside Django itself
     "ignore::django.utils.deprecation.RemovedInDjango51Warning:django.db.models.options:210",  # taggit.TaggedItem
     "ignore::DeprecationWarning:l18n.translation:17",
     "ignore::DeprecationWarning:openpyxl",
     # FIXME: The following warnings are from our code.
-    "ignore::django.utils.deprecation.RemovedInDjango50Warning:home.tests.test_forms:13",
     "ignore::django.utils.deprecation.RemovedInDjango51Warning:django.conf:289",
     "ignore::wagtail.utils.deprecation.RemovedInWagtail60Warning:wagtail.contrib.modeladmin.apps:15",
 ]
