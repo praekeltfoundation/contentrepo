@@ -36,6 +36,8 @@ from .page_builder import (
 )
 from .utils import create_page
 
+TEST_STATIC_PATH = Path("home/tests/test_static")
+
 
 @pytest.fixture()
 def admin_client(client, django_user_model):
@@ -60,10 +62,7 @@ def uclient(client, django_user_model):
 
 
 def mk_test_img() -> Image:
-    """
-    make test image
-    """
-    img_path = Path("home/tests/test_static") / "test.jpeg"
+    img_path = TEST_STATIC_PATH / "test.jpeg"
     img = Image(
         title="default image title",
         file=ImageFile(img_path.open("rb"), name=img_path.name),
@@ -73,10 +72,7 @@ def mk_test_img() -> Image:
 
 
 def mk_test_media() -> File:
-    """
-    make test media
-    """
-    media_path = Path("home/tests/test_static") / "test.txt"
+    media_path = TEST_STATIC_PATH / "test.mp4"
     media = Media(
         title="default media title",
         file=File(media_path.open("rb"), name=media_path.name),
@@ -86,10 +82,7 @@ def mk_test_media() -> File:
 
 
 def mk_test_doc() -> Document:
-    """
-    make test document
-    """
-    doc_path = Path("home/tests/test_static") / "test.mp4"
+    doc_path = TEST_STATIC_PATH / "test.txt"
     doc = Document(
         title="default doc title", file=File(doc_path.open("rb"), name=doc_path.name)
     )
