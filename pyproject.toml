@@ -134,7 +134,7 @@ filterwarnings = [
     "ignore::DeprecationWarning:openpyxl",
     # FIXME: The following warnings are from our code.
     "ignore::django.utils.deprecation.RemovedInDjango51Warning:django.conf:289",
-    "ignore::wagtail.utils.deprecation.RemovedInWagtail60Warning:wagtail.contrib.modeladmin.apps:15",
+    "ignore::wagtail.utils.deprecation.RemovedInWagtail60Warning:wagtail.contrib.modeladmin.apps:15",  # TODO switch from modeladmin to snippets
 ]
 
 [tool.ruff]
