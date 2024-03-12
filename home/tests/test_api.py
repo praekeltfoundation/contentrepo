@@ -92,6 +92,15 @@ def mk_test_doc() -> Document:
 
 @pytest.mark.django_db
 class TestContentPageAPI:
+    """
+    FIXME
+    ----------
+    Whatsapp body : Currently tests are split into whatsapp and not-whatsapp.
+        This is the moment the whatsapp body is different from the others such that
+        content is extracted by content["body"]["text"]["value"] for whatsapp and
+        content["body"]["text"] for other bodies. This should be changed down the line.
+    """
+
     def create_content_page(
         self,
         parent=None,
@@ -347,6 +356,7 @@ class TestContentPageAPI:
     def test_message_number_specified_whatsapp(self, uclient):
         """
         It should only return the 11th paragraph if 11th message is requested
+        Please see class doc string for why this is a separate test
         """
         page = self.create_content_page(body_count=15)
 
@@ -378,6 +388,7 @@ class TestContentPageAPI:
     def test_no_message_number_specified_whatsapp(self, uclient):
         """
         It should only return the first paragraph if no specific message is requested
+        Please see class doc string for why this is a separate test
         """
         page = self.create_content_page()
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
@@ -525,6 +536,7 @@ class TestContentPageAPI:
         """
         Fetching a detail page and selecting the WhatsApp content returns the
         first WhatsApp message in the body.
+        Please see class doc string for why this is a separate test
         """
         page = self.create_content_page()
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
@@ -599,11 +611,6 @@ class TestContentPageAPI:
     def test_wa_image(self, uclient):
         """
         Test that API returns image ID for whatsapp
-
-        FIXME:
-        at the moment the whatsapp body is different from the others such that
-        content is extracted by content["body"]["text"]["value"] for whatsapp and
-        content["body"]["text"] for other bodies. This should be changed down the line.
         """
         mk_test_img()
         image_id_expected = Image.objects.first().id
