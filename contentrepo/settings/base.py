@@ -134,9 +134,14 @@ STATICFILES_DIRS = [
 ]
 
 
-STATICFILES_STORAGE = (
-    "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"  # noqa
-)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",  # Django's default
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+    },
+}
 
 STATIC_ROOT = BASE_DIR / "static"
 STATIC_URL = "/static/"
@@ -224,7 +229,9 @@ elif "AWS_ACCESS_KEY_ID" in os.environ:
 
 if AWS_STORAGE_BUCKET_NAME and _aws_creds_found:
     MEDIA_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    }
     INSTALLED_APPS += [
         "storages",
     ]
