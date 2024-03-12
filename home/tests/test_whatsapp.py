@@ -29,7 +29,8 @@ class TestWhatsApp:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
-        create_whatsapp_template("test-template", "Test Body", "UTILITY")
+        locale = Locale.objects.get(language_code="en")
+        create_whatsapp_template("test-template", "Test Body", "UTILITY", locale=locale)
 
         request = responses.calls[0].request
 
@@ -64,11 +65,13 @@ class TestWhatsApp:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
+        locale = Locale.objects.get(language_code="en")
         create_whatsapp_template(
             "test-template",
             "Hi {{1}}. You are testing as a {{2}}",
             "UTILITY",
             example_values=["Fritz", "beta tester"],
+            locale=locale,
         )
 
         request = responses.calls[0].request
@@ -99,11 +102,13 @@ class TestWhatsApp:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
+        locale = Locale.objects.get(language_code="en")
         create_whatsapp_template(
             "test-template",
             "Test Body",
             "UTILITY",
             quick_replies=["Test button1", "test button2"],
+            locale=locale,
         )
 
         request = responses.calls[0].request
@@ -159,8 +164,13 @@ class TestWhatsApp:
         template_url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, template_url, json={})
 
+        locale = Locale.objects.get(language_code="en")
         create_whatsapp_template(
-            "test-template", "Test Body", "UTILITY", image_id=saved_image.id
+            "test-template",
+            "Test Body",
+            "UTILITY",
+            image_id=saved_image.id,
+            locale=locale,
         )
 
         mock_get_session_data = {

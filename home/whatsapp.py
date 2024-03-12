@@ -103,7 +103,7 @@ def create_whatsapp_template(
     name: str,
     body: str,
     category: str,
-    locale: Locale | None = None,
+    locale: Locale,
     quick_replies: Iterable[str] = (),
     image_id: int | None = None,
     example_values: Iterable[str] | None = None,
