@@ -862,16 +862,28 @@ class TestAssessmentAPI:
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["results"][0]["high_inflection"] == 5.0
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["results"][0]["medium_inflection"] == 2.0
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
 
     def test_assessment_detail_endpoint(self, uclient):
@@ -881,16 +893,28 @@ class TestAssessmentAPI:
         assert content["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["high_inflection"] == 5.0
         assert content["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["medium_inflection"] == 2.0
         assert content["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
 
     def test_assessment_endpoint_with_drafts(self, uclient):
@@ -910,16 +934,28 @@ class TestAssessmentAPI:
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["results"][0]["high_inflection"] == 5.0
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["results"][0]["medium_inflection"] == 2.0
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
 
     def test_assessment_endpoint_without_drafts(self, uclient):
@@ -952,16 +988,28 @@ class TestAssessmentAPI:
         assert content["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["high_inflection"] == 5.0
         assert content["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["medium_inflection"] == 2.0
         assert content["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
 
     # TODO: Add this test in once we've merged with main - there's some code in there that makes following the redirect work
@@ -1015,16 +1063,28 @@ class TestAssessmentAPI:
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["results"][0]["high_inflection"] == 5.0
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["results"][0]["medium_inflection"] == 2.0
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
 
         response = uclient.get("/api/v2/assessment/?qa=True")
@@ -1033,16 +1093,28 @@ class TestAssessmentAPI:
         assert content["results"][0]["high_result_page"] == {
             "id": high_result_page.id,
             "title": high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["results"][0]["high_inflection"] == 15.0
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["results"][0]["medium_inflection"] == 12.0
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
 
     def test_assessment_endpoint_filter_by_tag(self, uclient):
@@ -1053,16 +1125,28 @@ class TestAssessmentAPI:
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["results"][0]["high_inflection"] == 5.0
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["results"][0]["medium_inflection"] == 2.0
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
 
         response = uclient.get("/api/v2/assessment/?tag=tag3")
@@ -1076,16 +1160,28 @@ class TestAssessmentAPI:
         assert content["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["high_inflection"] == 5.0
         assert content["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
         assert content["medium_inflection"] == 2.0
         assert content["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
         }
 
         response = uclient.get("/api/v2/assessment/?tag=tag3")

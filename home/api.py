@@ -10,7 +10,7 @@ from wagtailmedia.api.views import MediaAPIViewSet
 
 from .models import Assessment, AssessmentTag, OrderedContentSet
 from .serializers import (
-    AssessmentSerializer,
+    # AssessmentSerializer,
     ContentPageSerializer,
     OrderedContentSetSerializer,
 )
@@ -165,7 +165,6 @@ class AssessmentViewSet(BaseAPIViewSet):
         ]
     )
     model = Assessment
-    base_serializer_class = AssessmentSerializer
     body_fields = BaseAPIViewSet.body_fields + [
         "title",
         "high_result_page",

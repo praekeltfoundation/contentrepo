@@ -17,22 +17,26 @@ class TitleField(serializers.Field):
 
     def to_representation(self, page):
         request = self.context["request"]
-        if "whatsapp" in request.GET and page.enable_whatsapp is True:
-            if page.whatsapp_title:
-                return page.whatsapp_title
-        if "sms" in request.GET and page.enable_sms is True:
-            if page.sms_title:
-                return page.sms_title
-        if "ussd" in request.GET and page.enable_ussd is True:
-            if page.ussd_title:
-                return page.ussd_title
-        elif "messenger" in request.GET and page.enable_messenger is True:
-            if page.messenger_title:
-                return page.messenger_title
-        elif "viber" in request.GET and page.enable_viber is True:
-            if page.viber_title:
-                return page.viber_title
-        return page.title
+        return title_field_representation(page, request)
+
+
+def title_field_representation(page, request):
+    if "whatsapp" in request.GET and page.enable_whatsapp is True:
+        if page.whatsapp_title:
+            return page.whatsapp_title
+    if "sms" in request.GET and page.enable_sms is True:
+        if page.sms_title:
+            return page.sms_title
+    if "ussd" in request.GET and page.enable_ussd is True:
+        if page.ussd_title:
+            return page.ussd_title
+    elif "messenger" in request.GET and page.enable_messenger is True:
+        if page.messenger_title:
+            return page.messenger_title
+    elif "viber" in request.GET and page.enable_viber is True:
+        if page.viber_title:
+            return page.viber_title
+    return page.title
 
 
 class SubtitleField(serializers.Field):
@@ -44,7 +48,11 @@ class SubtitleField(serializers.Field):
         return instance
 
     def to_representation(self, page):
-        return page.subtitle
+        return subtitle_field_representation(page)
+
+
+def subtitle_field_representation(page):
+    return page.subtitle
 
 
 class HasChildrenField(serializers.Field):
@@ -56,7 +64,11 @@ class HasChildrenField(serializers.Field):
         return instance
 
     def to_representation(self, page):
-        return page.has_children
+        return has_children_field_representation(page)
+
+
+def has_children_field_representation(page):
+    return page.has_children
 
 
 def has_next_message(message_index, content_page, platform):
@@ -130,184 +142,191 @@ class BodyField(serializers.Field):
 
     def to_representation(self, page):
         request = self.context["request"]
-        if "message" in request.GET:
-            try:
-                message = int(request.GET["message"]) - 1
-            except ValueError:
-                raise ValidationError(
-                    "Please insert a positive integer for message in "
-                    "the query string"
-                )
-        else:
-            message = 0
+        return body_field_representation(page, request)
 
-        if "whatsapp" in request.GET and (
-            page.enable_whatsapp is True
-            or ("qa" in request.GET and request.GET["qa"] == "True")
-        ):
-            if page.whatsapp_body != []:
-                try:
-                    return OrderedDict(
-                        [
-                            ("message", message + 1),
-                            (
-                                "next_message",
-                                has_next_message(message, page, "whatsapp"),
-                            ),
-                            (
-                                "previous_message",
-                                has_previous_message(message, page, "whatsapp"),
-                            ),
-                            ("total_messages", len(page.whatsapp_body._raw_data)),
-                            (
-                                "text",
-                                format_whatsapp_message(message, page, "whatsapp"),
-                            ),
-                            ("revision", page.get_latest_revision().id),
-                            ("is_whatsapp_template", page.is_whatsapp_template),
-                            ("whatsapp_template_name", page.whatsapp_template_name),
-                            (
-                                "whatsapp_template_category",
-                                page.whatsapp_template_category,
-                            ),
-                        ]
-                    )
-                except IndexError:
-                    raise ValidationError("The requested message does not exist")
-        elif "sms" in request.GET and (
-            page.enable_sms is True
-            or ("qa" in request.GET and request.GET["qa"] == "True")
-        ):
-            if page.sms_body != []:
-                try:
-                    return OrderedDict(
-                        [
-                            ("message", message + 1),
-                            (
-                                "next_message",
-                                has_next_message(message, page, "sms"),
-                            ),
-                            (
-                                "previous_message",
-                                has_previous_message(message, page, "sms"),
-                            ),
-                            ("total_messages", len(page.sms_body._raw_data)),
-                            ("text", page.sms_body._raw_data[message]["value"]),
-                        ]
-                    )
-                except IndexError:
-                    raise ValidationError("The requested message does not exist")
-        elif "ussd" in request.GET and (
-            page.enable_ussd is True
-            or ("qa" in request.GET and request.GET["qa"] == "True")
-        ):
-            if page.ussd_body != []:
-                try:
-                    return OrderedDict(
-                        [
-                            ("message", message + 1),
-                            (
-                                "next_message",
-                                has_next_message(message, page, "ussd"),
-                            ),
-                            (
-                                "previous_message",
-                                has_previous_message(message, page, "ussd"),
-                            ),
-                            ("total_messages", len(page.ussd_body._raw_data)),
-                            ("text", page.ussd_body._raw_data[message]["value"]),
-                        ]
-                    )
-                except IndexError:
-                    raise ValidationError("The requested message does not exist")
-        elif "messenger" in request.GET and (
-            page.enable_messenger is True
-            or ("qa" in request.GET and request.GET["qa"] == "True")
-        ):
-            if page.messenger_body != []:
-                try:
-                    return OrderedDict(
-                        [
-                            ("message", message + 1),
-                            (
-                                "next_message",
-                                has_next_message(message, page, "messenger"),
-                            ),
-                            (
-                                "previous_message",
-                                has_previous_message(message, page, "messenger"),
-                            ),
-                            ("total_messages", len(page.messenger_body._raw_data)),
-                            ("text", page.messenger_body._raw_data[message]["value"]),
-                        ]
-                    )
-                except IndexError:
-                    raise ValidationError("The requested message does not exist")
-        elif "viber" in request.GET and (
-            page.enable_viber is True
-            or ("qa" in request.GET and request.GET["qa"] == "True")
-        ):
-            if page.viber_body != []:
-                try:
-                    return OrderedDict(
-                        [
-                            ("message", message + 1),
-                            ("next_message", has_next_message(message, page, "viber")),
-                            (
-                                "previous_message",
-                                has_previous_message(message, page, "viber"),
-                            ),
-                            ("total_messages", len(page.viber_body._raw_data)),
-                            ("text", page.viber_body._raw_data[message]["value"]),
-                        ]
-                    )
-                except IndexError:
-                    raise ValidationError("The requested message does not exist")
-        return OrderedDict(
-            [
-                ("text", page.body._raw_data),
-            ]
-        )
+
+def body_field_representation(page, request):
+    if "message" in request.GET:
+        try:
+            message = int(request.GET["message"]) - 1
+        except ValueError:
+            raise ValidationError(
+                "Please insert a positive integer for message in " "the query string"
+            )
+    else:
+        message = 0
+
+    if "whatsapp" in request.GET and (
+        page.enable_whatsapp is True
+        or ("qa" in request.GET and request.GET["qa"] == "True")
+    ):
+        if page.whatsapp_body != []:
+            try:
+                return OrderedDict(
+                    [
+                        ("message", message + 1),
+                        (
+                            "next_message",
+                            has_next_message(message, page, "whatsapp"),
+                        ),
+                        (
+                            "previous_message",
+                            has_previous_message(message, page, "whatsapp"),
+                        ),
+                        ("total_messages", len(page.whatsapp_body._raw_data)),
+                        (
+                            "text",
+                            format_whatsapp_message(message, page, "whatsapp"),
+                        ),
+                        ("revision", page.get_latest_revision().id),
+                        ("is_whatsapp_template", page.is_whatsapp_template),
+                        ("whatsapp_template_name", page.whatsapp_template_name),
+                        (
+                            "whatsapp_template_category",
+                            page.whatsapp_template_category,
+                        ),
+                    ]
+                )
+            except IndexError:
+                raise ValidationError("The requested message does not exist")
+    elif "sms" in request.GET and (
+        page.enable_sms is True or ("qa" in request.GET and request.GET["qa"] == "True")
+    ):
+        if page.sms_body != []:
+            try:
+                return OrderedDict(
+                    [
+                        ("message", message + 1),
+                        (
+                            "next_message",
+                            has_next_message(message, page, "sms"),
+                        ),
+                        (
+                            "previous_message",
+                            has_previous_message(message, page, "sms"),
+                        ),
+                        ("total_messages", len(page.sms_body._raw_data)),
+                        ("text", page.sms_body._raw_data[message]["value"]),
+                    ]
+                )
+            except IndexError:
+                raise ValidationError("The requested message does not exist")
+    elif "ussd" in request.GET and (
+        page.enable_ussd is True
+        or ("qa" in request.GET and request.GET["qa"] == "True")
+    ):
+        if page.ussd_body != []:
+            try:
+                return OrderedDict(
+                    [
+                        ("message", message + 1),
+                        (
+                            "next_message",
+                            has_next_message(message, page, "ussd"),
+                        ),
+                        (
+                            "previous_message",
+                            has_previous_message(message, page, "ussd"),
+                        ),
+                        ("total_messages", len(page.ussd_body._raw_data)),
+                        ("text", page.ussd_body._raw_data[message]["value"]),
+                    ]
+                )
+            except IndexError:
+                raise ValidationError("The requested message does not exist")
+    elif "messenger" in request.GET and (
+        page.enable_messenger is True
+        or ("qa" in request.GET and request.GET["qa"] == "True")
+    ):
+        if page.messenger_body != []:
+            try:
+                return OrderedDict(
+                    [
+                        ("message", message + 1),
+                        (
+                            "next_message",
+                            has_next_message(message, page, "messenger"),
+                        ),
+                        (
+                            "previous_message",
+                            has_previous_message(message, page, "messenger"),
+                        ),
+                        ("total_messages", len(page.messenger_body._raw_data)),
+                        ("text", page.messenger_body._raw_data[message]["value"]),
+                    ]
+                )
+            except IndexError:
+                raise ValidationError("The requested message does not exist")
+    elif "viber" in request.GET and (
+        page.enable_viber is True
+        or ("qa" in request.GET and request.GET["qa"] == "True")
+    ):
+        if page.viber_body != []:
+            try:
+                return OrderedDict(
+                    [
+                        ("message", message + 1),
+                        ("next_message", has_next_message(message, page, "viber")),
+                        (
+                            "previous_message",
+                            has_previous_message(message, page, "viber"),
+                        ),
+                        ("total_messages", len(page.viber_body._raw_data)),
+                        ("text", page.viber_body._raw_data[message]["value"]),
+                    ]
+                )
+            except IndexError:
+                raise ValidationError("The requested message does not exist")
+    return OrderedDict(
+        [
+            ("text", page.body._raw_data),
+        ]
+    )
 
 
 class RelatedPagesField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
-    def get_related_page_as_content_page(self, page):
-        if page.id:
-            return ContentPage.objects.filter(id=page.id).first()
-
     def to_representation(self, page):
         request = self.context["request"]
-        related_pages = []
-        for related in page.related_pages:
-            related_page = self.get_related_page_as_content_page(related.value)
-            title = related_page.title
-            if "whatsapp" in request.GET and related_page.enable_whatsapp is True:
-                if related_page.whatsapp_title:
-                    title = related_page.whatsapp_title
-            elif "sms" in request.GET and related_page.enable_sms is True:
-                if related_page.sms_title:
-                    title = related_page.sms_title
-            elif "ussd" in request.GET and related_page.enable_ussd is True:
-                if related_page.ussd_title:
-                    title = related_page.ussd_title
-            elif "messenger" in request.GET and related_page.enable_messenger is True:
-                if related_page.messenger_title:
-                    title = related_page.messenger_title
-            elif "viber" in request.GET and related_page.enable_viber is True:
-                if related_page.viber_title:
-                    title = related_page.viber_title
+        return related_pages_field_representation(page, request)
 
-            related_pages.append(
-                {
-                    "id": related.id,
-                    "value": related_page.id,
-                    "title": title,
-                }
-            )
-        return related_pages
+
+def get_related_page_as_content_page(page):
+    if page.id:
+        return ContentPage.objects.filter(id=page.id).first()
+
+
+def related_pages_field_representation(page, request):
+    related_pages = []
+    for related in page.related_pages:
+        related_page = get_related_page_as_content_page(related.value)
+        title = related_page.title
+        if "whatsapp" in request.GET and related_page.enable_whatsapp is True:
+            if related_page.whatsapp_title:
+                title = related_page.whatsapp_title
+        elif "sms" in request.GET and related_page.enable_sms is True:
+            if related_page.sms_title:
+                title = related_page.sms_title
+        elif "ussd" in request.GET and related_page.enable_ussd is True:
+            if related_page.ussd_title:
+                title = related_page.ussd_title
+        elif "messenger" in request.GET and related_page.enable_messenger is True:
+            if related_page.messenger_title:
+                title = related_page.messenger_title
+        elif "viber" in request.GET and related_page.enable_viber is True:
+            if related_page.viber_title:
+                title = related_page.viber_title
+
+        related_pages.append(
+            {
+                "id": related.id,
+                "value": related_page.id,
+                "title": title,
+            }
+        )
+    return related_pages
 
 
 class ContentPageSerializer(PageSerializer):
@@ -316,6 +335,18 @@ class ContentPageSerializer(PageSerializer):
     body = BodyField(read_only=True)
     has_children = HasChildrenField(read_only=True)
     related_pages = RelatedPagesField(read_only=True)
+
+    def to_representation(self, page):
+        return {
+            "id": page.id,
+            "title": title_field_representation(page, self.context["request"]),
+            "subtitle": subtitle_field_representation(page),
+            "body": body_field_representation(page, self.context["request"]),
+            "has_children": has_children_field_representation(page),
+            "related_pages": related_pages_field_representation(
+                page, self.context["request"]
+            ),
+        }
 
 
 class ContentPageRatingSerializer(serializers.ModelSerializer):
@@ -456,130 +487,3 @@ class OrderedContentSetSerializer(BaseSerializer):
     name = NameField(read_only=True)
     pages = OrderedPagesField(read_only=True)
     profile_fields = ProfileFieldsField(read_only=True)
-
-
-class HighResultPageField(serializers.Field):
-    """
-    Serializes the "high_result_page" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return {
-            "id": page.high_result_page.id,
-            "title": page.high_result_page.title,
-        }
-
-
-class HighInflectionField(serializers.Field):
-    """
-    Serializes the "high_inflection_field" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return page.high_inflection
-
-
-class MediumResultPageField(serializers.Field):
-    """
-    Serializes the "medium_result_page" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return {
-            "id": page.medium_result_page.id,
-            "title": page.medium_result_page.title,
-        }
-
-
-class MediumInflectionField(serializers.Field):
-    """
-    Serializes the "medium_inflection_field" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return page.medium_inflection
-
-
-class LowResultPageField(serializers.Field):
-    """
-    Serializes the "low_result_page" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return {
-            "id": page.low_result_page.id,
-            "title": page.low_result_page.title,
-        }
-
-
-class GenericErrorField(serializers.Field):
-    """
-    Serializes the "generic_error" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return page.generic_error
-
-
-class QuestionField(serializers.Field):
-    """
-    Serializes the "question" field.
-
-    Example:
-    "question": {
-        "question": "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
-        "error": "Unknown answer given",
-        "answers": [
-            {
-                "answer": "Yes",
-                "score": 5.0
-            }
-        ]
-    }
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        questions = []
-        for question in page.questions.raw_data:
-
-            questions.append(
-                {
-                    "id": question["id"],
-                    "question": question["value"]["question"],
-                    "error": question["value"]["error"],
-                    "answers": [x["value"] for x in question["value"]["answers"]],
-                }
-            )
-        return questions
-
-
-class AssessmentSerializer(BaseSerializer):
-    title = TitleField(read_only=True)
-    high_result_page = HighResultPageField(read_only=True)
-    high_inflection = HighInflectionField(read_only=True)
-    medium_result_page = MediumResultPageField(read_only=True)
-    medium_inflection = MediumInflectionField(read_only=True)
-    low_result_page = LowResultPageField(read_only=True)
-    generic_error = GenericErrorField(read_only=True)
-    questions = QuestionField(read_only=True)
