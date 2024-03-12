@@ -166,7 +166,9 @@ class TestContentPageAPI:
                 case None:
                     pass
                 case _:
-                    raise ValueError(f"{body_type} not a valid platform, valid options include, whatsapp, messenger, sms, ussd, viber or None")
+                    raise ValueError(
+                        f"{body_type} not a valid platform, valid options include, whatsapp, messenger, sms, ussd, viber or None"
+                    )
 
         content_page = PageBuilder.build_cp(
             parent=parent,
