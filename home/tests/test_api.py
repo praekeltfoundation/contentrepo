@@ -97,13 +97,10 @@ class TestContentPageAPI:
         parent=None,
         title="default page",
         tags=None,
-        body_type="WhatsApp",
+        body_type="whatsapp",
         body_count=1,
         publish=True,
         web_body=None,
-        image=None,
-        media=None,
-        doc=None,
     ):
         """
         Helper function to create pages needed for each test.
@@ -121,7 +118,7 @@ class TestContentPageAPI:
             List of tags on the content page.
         body_type : str
             Which body type the test messages should be. It can be WhatsApp, Messenger,
-            SMS, USSD or Viber.
+            SMS, USSD or Viber. Not case sensitive.
 
             This can be set to None to have no message bodies. It defaults to WhatsApp
         body_count : int
@@ -130,12 +127,6 @@ class TestContentPageAPI:
             Should the content page be published or not.
         web_body : str
             The web body of the content page.
-        image: bool
-            attach test image to all whatsapp, viber, messenger messages or not
-        media: bool
-            attach test media to all whatsapp messages or not
-        doc: bool
-            attach test doc to all whatsapp messages or not
         """
         if not parent:
             home_page = HomePage.objects.first()
@@ -144,43 +135,24 @@ class TestContentPageAPI:
                 main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
             parent = main_menu
 
+        # Normalise body_type to remove case sensitivity
+        if body_type:
+            body_type = body_type.casefold()
+
         bodies = []
-
-        if image and Image.objects.all().count() == 0:
-            mk_test_img()
-        if media and Media.objects.all().count() == 0:
-            mk_test_media()
-        if doc and Document.objects.all().count() == 0:
-            mk_test_doc()
-
-        image_id = Image.objects.first().id if image else None
-        media_id = Media.objects.first().id if media else None
-        doc_id = Document.objects.first().id if doc else None
 
         for i in range(body_count):
             msg_body = f"*Default {body_type} Content {i+1}* 🏥"
-            if body_type == "WhatsApp":
-                bodies.append(
-                    WABody(
-                        title,
-                        [
-                            WABlk(
-                                msg_body,
-                                image=image_id,
-                                media=media_id,
-                                document=doc_id,
-                            )
-                        ],
-                    )
-                )
-            elif body_type == "Messenger":
-                bodies.append(MBody(title, [MBlk(msg_body, image=image_id)]))
-            elif body_type == "SMS":
+            if body_type == "whatsapp":
+                bodies.append(WABody(title, [WABlk(msg_body)]))
+            elif body_type == "messenger":
+                bodies.append(MBody(title, [MBlk(msg_body)]))
+            elif body_type == "sms":
                 bodies.append(SBody(title, [SBlk(msg_body)]))
-            elif body_type == "USSD":
+            elif body_type == "ussd":
                 bodies.append(UBody(title, [UBlk(msg_body)]))
-            elif body_type == "Viber":
-                bodies.append(VBody(title, [VBlk(msg_body, image=image)]))
+            elif body_type == "viber":
+                bodies.append(VBody(title, [VBlk(msg_body)]))
 
         content_page = PageBuilder.build_cp(
             parent=parent,
@@ -276,9 +248,9 @@ class TestContentPageAPI:
         """
         self.create_content_page(web_body=["Colour"], body_type=None)
         self.create_content_page(title="Health Info")
-        self.create_content_page(title="Self Help", body_type="Messenger")
-        self.create_content_page(title="Self Help SMS", body_type="SMS")
-        self.create_content_page(title="Self Help USSD", body_type="USSD")
+        self.create_content_page(title="Self Help", body_type="messenger")
+        self.create_content_page(title="Self Help SMS", body_type="sms")
+        self.create_content_page(title="Self Help USSD", body_type="ussd")
 
         # it should return only web pages if filtered
         response = uclient.get("/api/v2/pages/?web=true")
@@ -330,15 +302,16 @@ class TestContentPageAPI:
         # the page is not live but whatsapp content is returned
         assert not page.live
         body = content["body"]["text"]["value"]["message"]
-        assert body == "*Default WhatsApp Content 1* 🏥"
+        assert body == "*Default whatsapp Content 1* 🏥"
 
-    def test_messenger_draft(self, uclient):
+    @pytest.mark.parametrize("platform", ["viber", "messenger", "ussd", "sms"])
+    def test_message_draft(self, uclient, platform):
         """
-        Unpublished messenger pages are returned if the qa param is set.
+        Unpublished <platform> pages are returned if the qa param is set.
         """
-        page = self.create_content_page(publish=False, body_type="Messenger")
+        page = self.create_content_page(publish=False, body_type=platform)
 
-        url = f"/api/v2/pages/{page.id}/?messenger=True&qa=True"
+        url = f"/api/v2/pages/{page.id}/?{platform}=True&qa=True"
         # it should return specific page that is in draft
         response = uclient.get(url)
         content = response.json()
@@ -346,69 +319,27 @@ class TestContentPageAPI:
         # the page is not live but messenger content is returned
         assert not page.live
         body = content["body"]["text"]["message"]
-        assert body == "*Default Messenger Content 1* 🏥"
+        assert body == f"*Default {platform} Content 1* 🏥"
 
-    def test_whatsapp_disabled(self, uclient):
+    @pytest.mark.parametrize(
+        "platform", ["whatsapp", "viber", "messenger", "ussd", "sms"]
+    )
+    def test_platform_disabled(self, uclient, platform):
         """
-        It should not return the web body if enable_whatsapp=false
+        It should not return the body if enable_<platform>=false
         """
-        page = self.create_content_page()
-        page.enable_whatsapp = False
+        page = self.create_content_page(body_type=platform)
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=True")
+        assert response.content != b""
+
+        setattr(page, f"enable_{platform}", False)
         page.save_revision().publish()
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=True")
         assert response.content == b""
 
-    def test_messenger_disabled(self, uclient):
-        """
-        It should not return the web body if enable_messenger=false
-        """
-        page = self.create_content_page()
-        page.enable_messenger = False
-        page.save_revision().publish()
-        response = uclient.get(f"/api/v2/pages/{page.id}/?messenger=True")
-        assert response.content == b""
-
-    def test_web_disabled(self, uclient):
-        """
-        It should not return the web body if enable_viber=false
-        """
-        page = self.create_content_page()
-        page.enable_web = False
-        page.save_revision().publish()
-        response = uclient.get(f"/api/v2/pages/{page.id}/?web=True")
-        assert response.content == b""
-
-    def test_viber_disabled(self, uclient):
-        """
-        It should not return the web body if enable_viber=false
-        """
-        page = self.create_content_page()
-        page.enable_viber = False
-        page.save_revision().publish()
-        response = uclient.get(f"/api/v2/pages/{page.id}/?viber=True")
-        assert response.content == b""
-
-    def test_sms_disabled(self, uclient):
-        """
-        It should not return the web body if enable_sms=false
-        """
-        page = self.create_content_page()
-        page.enable_sms = False
-        page.save_revision().publish()
-        response = uclient.get(f"/api/v2/pages/{page.id}/?sms=True")
-        assert response.content == b""
-
-    def test_ussd_disabled(self, uclient):
-        """
-        It should not return the web body if enable_ussd=false
-        """
-        page = self.create_content_page()
-        page.enable_ussd = False
-        page.save_revision().publish()
-        response = uclient.get(f"/api/v2/pages/{page.id}/?ussd=True")
-        assert response.content == b""
-
-    def test_message_number_specified(self, uclient):
+    def test_message_number_specified_whatsapp(self, uclient):
         """
         It should only return the 11th paragraph if 11th message is requested
         """
@@ -421,9 +352,25 @@ class TestContentPageAPI:
         assert content["body"]["next_message"] == 12
         assert content["body"]["previous_message"] == 10
         body = content["body"]["text"]["value"]["message"]
-        assert body == "*Default WhatsApp Content 11* 🏥"
+        assert body == "*Default whatsapp Content 11* 🏥"
 
-    def test_no_message_number_specified(self, uclient):
+    @pytest.mark.parametrize("platform", ["viber", "messenger", "ussd", "sms"])
+    def test_message_number_specified(self, uclient, platform):
+        """
+        It should only return the 11th paragraph if 11th message is requested
+        """
+        page = self.create_content_page(body_count=15, body_type=platform)
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=True&message=11")
+        content = json.loads(response.content)
+
+        assert content["body"]["message"] == 11
+        assert content["body"]["next_message"] == 12
+        assert content["body"]["previous_message"] == 10
+        body = content["body"]["text"]["message"]
+        assert body == f"*Default {platform} Content 11* 🏥"
+
+    def test_no_message_number_specified_whatsapp(self, uclient):
         """
         It should only return the first paragraph if no specific message is requested
         """
@@ -434,27 +381,51 @@ class TestContentPageAPI:
         assert content["body"]["message"] == 1
         assert content["body"]["previous_message"] is None
         assert content["body"]["total_messages"] == 1
+        # Page revision only for whatsapp blocks
         assert content["body"]["revision"] == page.get_latest_revision().id
         body = content["body"]["text"]["value"]["message"]
-        assert body == "*Default WhatsApp Content 1* 🏥"
+        assert body == "*Default whatsapp Content 1* 🏥"
 
-    def test_message_number_requested_out_of_range(self, uclient):
+    @pytest.mark.parametrize("platform", ["viber", "messenger", "ussd", "sms"])
+    def test_no_message_number_specified(self, uclient, platform):
+        """
+        It should only return the first paragraph if no specific message is requested
+        """
+        page = self.create_content_page(body_type=platform)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=True")
+        content = response.json()
+
+        assert content["body"]["message"] == 1
+        assert content["body"]["previous_message"] is None
+        assert content["body"]["total_messages"] == 1
+        body = content["body"]["text"]["message"]
+        assert body == f"*Default {platform} Content 1* 🏥"
+
+    @pytest.mark.parametrize(
+        "platform", ["whatsapp", "viber", "messenger", "ussd", "sms"]
+    )
+    def test_message_number_requested_out_of_range(self, uclient, platform):
         """
         It should return an appropriate error if requested message index is out of range
         """
-        page = self.create_content_page()
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=3")
+        page = self.create_content_page(body_type=platform)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=True&message=3")
 
         assert response.status_code == 400
         assert response.json() == ["The requested message does not exist"]
 
-    def test_message_number_requested_invalid(self, uclient):
+    @pytest.mark.parametrize(
+        "platform", ["whatsapp", "viber", "messenger", "ussd", "sms"]
+    )
+    def test_message_number_requested_invalid(self, uclient, platform):
         """
         It should return an appropriate error if requested message is not a positive
         integer value
         """
-        page = self.create_content_page()
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=notint")
+        page = self.create_content_page(body_type=platform)
+        response = uclient.get(
+            f"/api/v2/pages/{page.id}/?{platform}=True&message=notint"
+        )
 
         assert response.status_code == 400
         assert response.json() == [
@@ -476,11 +447,14 @@ class TestContentPageAPI:
         with django_assert_num_queries(8):
             uclient.get("/api/v2/pages/")
 
-    def test_detail_view_content(self, uclient):
+    @pytest.mark.parametrize(
+        "platform", ["whatsapp", "viber", "messenger", "ussd", "sms"]
+    )
+    def test_detail_view_content(self, uclient, platform):
         """
         Fetching the detail view of a page returns the page content.
         """
-        page = self.create_content_page(tags=["self_help"])
+        page = self.create_content_page(tags=["self_help"], body_type=platform)
         response = uclient.get(f"/api/v2/pages/{page.id}/")
         content = response.json()
 
@@ -568,7 +542,37 @@ class TestContentPageAPI:
         assert body["previous_message"] is None
         assert body["total_messages"] == 1
         assert body["text"]["type"] == "Whatsapp_Message"
-        assert body["text"]["value"]["message"] == "*Default WhatsApp Content 1* 🏥"
+        assert body["text"]["value"]["message"] == "*Default whatsapp Content 1* 🏥"
+
+    @pytest.mark.parametrize("platform", ["viber", "messenger", "ussd", "sms"])
+    def test_detail_view_platform_message(self, uclient, platform):
+        """
+        Fetching a detail page and selecting the <platform> content returns the
+        first <platform> message in the body.
+        """
+        page = self.create_content_page(body_type=platform)
+        response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=true")
+        content = response.json()
+
+        # There's a lot of metadata, so only check selected fields.
+        meta = content.pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == page.slug
+        assert meta["parent"]["id"] == page.get_parent().id
+        assert meta["locale"] == "en"
+
+        assert content["id"] == page.id
+        assert content["title"] == "default page"
+
+        # There's a lot of body, so only check selected fields.
+        body = content.pop("body")
+        assert body["message"] == 1
+        assert body["next_message"] is None
+        assert body["previous_message"] is None
+        assert body["total_messages"] == 1
+        assert body["text"]["message"] == f"*Default {platform} Content 1* 🏥"
+        with pytest.raises(KeyError):
+            body["text"]["type"]
 
     def test_detail_view_no_content_page(self, uclient):
         """
@@ -590,30 +594,80 @@ class TestContentPageAPI:
     def test_wa_image(self, uclient):
         """
         Test that API returns image ID for whatsapp
+
+        FIXME:
+        at the moment the whatsapp body is different from the others such that
+        content is extracted by content["body"]["text"]["value"] for whatsapp and
+        content["body"]["text"] for other bodies. This should be changed down the line.
         """
-        page = self.create_content_page(body_type="WhatsApp", image=True)
+        mk_test_img()
+        image_id_expected = Image.objects.first().id
+        msg_body = "*Default whatsapp Content* 🏥"
+        title = "default page"
+
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = [WABody(title, [WABlk(msg_body, image=image_id_expected)])]
+
+        page = PageBuilder.build_cp(
+            parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
+        )
+
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
         content = response.json()
 
         image_id = content["body"]["text"]["value"]["image"]
-        assert image_id == page.whatsapp_body._raw_data[0]["value"]["image"]
+
+        assert image_id == image_id_expected
 
     def test_messenger_image(self, uclient):
         """
         Test that API returns image ID for messenger
         """
-        page = self.create_content_page(body_type="Messenger", image=True)
+        mk_test_img()
+        image_id_expected = Image.objects.first().id
+        msg_body = "*Default messenger Content* 🏥"
+        title = "default page"
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = [MBody(title, [MBlk(msg_body, image=image_id_expected)])]
+
+        page = PageBuilder.build_cp(
+            parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
+        )
         response = uclient.get(f"/api/v2/pages/{page.id}/?messenger=true")
         content = response.json()
 
         image_id = content["body"]["text"]["image"]
-        assert image_id == page.messenger_body._raw_data[0]["value"]["image"]
+        assert image_id == image_id_expected
 
     def test_viber_image(self, uclient):
         """
         Test that API returns image ID for viber
         """
-        page = self.create_content_page(body_type="Viber", image=True)
+        mk_test_img()
+        image_id_expected = Image.objects.first().id
+        msg_body = "*Default viber Content* 🏥"
+        title = "default page"
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = [VBody(title, [VBlk(msg_body, image=image_id_expected)])]
+
+        page = PageBuilder.build_cp(
+            parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
+        )
         response = uclient.get(f"/api/v2/pages/{page.id}/?viber=true")
         content = response.json()
 
@@ -624,7 +678,21 @@ class TestContentPageAPI:
         """
         Test that API returns media ID for whatsapp
         """
-        page = self.create_content_page(media=True)
+        mk_test_media()
+        media_id_expected = Media.objects.first().id
+        msg_body = "*Default whatsapp Content* 🏥"
+        title = "default page"
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = [WABody(title, [WABlk(msg_body, media=media_id_expected)])]
+
+        page = PageBuilder.build_cp(
+            parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
+        )
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
         content = response.json()
 
@@ -635,66 +703,26 @@ class TestContentPageAPI:
         """
         Test that API returns doc ID for whatsapp
         """
-        page = self.create_content_page(doc=True)
+        mk_test_doc()
+        doc_id_expected = Document.objects.first().id
+        msg_body = "*Default whatsapp Content* 🏥"
+        title = "default page"
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = [WABody(title, [WABlk(msg_body, document=doc_id_expected)])]
+
+        page = PageBuilder.build_cp(
+            parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
+        )
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
         content = response.json()
 
         doc_id = content["body"]["text"]["value"]["document"]
         assert doc_id == page.whatsapp_body._raw_data[0]["value"]["document"]
-
-    def test_wa_messages_only_1_image(self, uclient):
-        """
-        Test that when many images are assigned to messages in the test, only 1 image is created in the test
-        """
-        page = self.create_content_page(image=True, body_count=5)
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
-        content = response.json()
-
-        total_messages = content["body"]["total_messages"]
-        image_id = content["body"]["text"]["value"]["image"]
-        total_images = Image.objects.all().count()
-        image_title = Image.objects.first().title
-
-        assert total_messages == 5
-        assert image_id == page.whatsapp_body._raw_data[0]["value"]["image"]
-        assert total_images == 1
-        assert image_title == "default image title"
-
-    def test_wa_messages_only_1_media(self, uclient):
-        """
-        Test that when many media are assigned to messages in the test, only 1 media is created in the test
-        """
-        page = self.create_content_page(media=True, body_count=5)
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
-        content = response.json()
-
-        total_messages = content["body"]["total_messages"]
-        media_id = content["body"]["text"]["value"]["media"]
-        total_media = Media.objects.all().count()
-        media_title = Media.objects.first().title
-
-        assert total_messages == 5
-        assert media_id == page.whatsapp_body._raw_data[0]["value"]["media"]
-        assert total_media == 1
-        assert media_title == "default media title"
-
-    def test_wa_messages_only_1_doc(self, uclient):
-        """
-        Test that when many doc are assigned to messages in the test, only 1 doc is created in the test
-        """
-        page = self.create_content_page(doc=True, body_count=5)
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
-        content = response.json()
-
-        total_messages = content["body"]["total_messages"]
-        doc_id = content["body"]["text"]["value"]["document"]
-        total_doc = Document.objects.all().count()
-        doc_title = Document.objects.first().title
-
-        assert total_messages == 5
-        assert doc_id == page.whatsapp_body._raw_data[0]["value"]["document"]
-        assert total_doc == 1
-        assert doc_title == "default doc title"
 
 
 @pytest.mark.django_db
