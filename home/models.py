@@ -20,7 +20,7 @@ from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import DraftStateMixin, Page, Revision, RevisionMixin
+from wagtail.models import DraftStateMixin, LockableMixin, Page, Revision, RevisionMixin, WorkflowMixin
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
@@ -990,9 +990,16 @@ def update_embedding(sender, instance, *args, **kwargs):
     instance.embedding = embedding
 
 
-class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Model):
+class OrderedContentSet(WorkflowMixin, DraftStateMixin, LockableMixin, RevisionMixin, index.Indexed, models.Model):
     revisions = GenericRelation(
         "wagtailcore.Revision", related_query_name="orderedcontentset"
+    )
+    workflow_states = GenericRelation(
+        "wagtailcore.WorkflowState",
+        content_type_field="base_content_type",
+        object_id_field="object_id",
+        related_query_name="orderedcontentset",
+        for_concrete_model=False,
     )
     name = models.CharField(
         max_length=255, help_text="The name of the ordered content set."
