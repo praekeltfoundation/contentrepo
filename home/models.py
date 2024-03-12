@@ -373,14 +373,16 @@ class MessengerBlock(blocks.StructBlock):
 
 
 class HomePage(UniqueSlugMixin, Page):
+    parent_page_types = ["wagtailcore.Page"]
     subpage_types = [
-        "ContentPageIndex",
+        "home.ContentPageIndex",
     ]
 
 
 class ContentPageIndex(UniqueSlugMixin, Page):
+    parent_page_types = ["home.HomePage"]
     subpage_types = [
-        "ContentPage",
+        "home.ContentPage",
     ]
 
     include_in_homepage = models.BooleanField(default=False)
@@ -439,9 +441,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
 
-    parent_page_type = [
-        "ContentPageIndex",
-    ]
+    parent_page_types = ["home.ContentPageIndex", "home.ContentPage"]
 
     # general page attributes
     tags = ClusterTaggableManager(through=ContentPageTag, blank=True)
@@ -1023,7 +1023,10 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
 
     def page(self):
         if self.pages:
-            return [(self._get_field_value(p, "contentpage")) for p in self.pages]
+            return [
+                (self._get_field_value(p, "contentpage", raw=True).slug)
+                for p in self.pages
+            ]
         return ["-"]
 
     page.short_description = "Page Slugs"
@@ -1061,10 +1064,10 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
 
     num_pages.short_description = "Number of Pages"
 
-    def _get_field_value(self, page: Page, field: str) -> str:
+    def _get_field_value(self, page: Page, field: str, raw: bool = False) -> any:
         try:
             if value := page.value[field]:
-                return f"{value}"
+                return value if raw else f"{value}"
             else:
                 return ""
         except (AttributeError, TypeError):
@@ -1148,7 +1151,11 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
     num_pages.short_description = "Number of Pages"
 
     def status(self):
-        return "Live" if self.live else "Draft"
+        return (
+            "Live + Draft"
+            if self.live and self.has_unpublished_changes
+            else "Live" if self.live else "Draft"
+        )
 
     panels = [
         FieldPanel("name"),

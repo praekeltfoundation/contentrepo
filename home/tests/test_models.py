@@ -7,11 +7,16 @@ from django.test import TestCase, override_settings
 from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
+from wagtail.models import Page
+from wagtail.test.utils import WagtailPageTests
 
 from home.models import (
+    ContentPage,
+    ContentPageIndex,
     GoToPageButton,
     HomePage,
     NextMessageButton,
+    OrderedContentSet,
     PageView,
     SMSBlock,
     USSDBlock,
@@ -20,6 +25,17 @@ from home.models import (
 
 from .page_builder import PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
+
+
+class MyPageTests(WagtailPageTests):
+    def test_contentpage_structure(self):
+        """
+        A ContentPage can only be created under a ContentPageIndex or another ContentPage. A ContentIndexPage can only be created under the HomePage.
+        """
+        self.assertCanNotCreateAt(Page, ContentPage)
+        self.assertCanNotCreateAt(HomePage, ContentPage)
+        self.assertCanNotCreateAt(ContentPage, ContentPageIndex)
+        self.assertCanNotCreateAt(Page, ContentPageIndex)
 
 
 class ContentPageTests(TestCase):
@@ -332,6 +348,39 @@ class ContentPageTests(TestCase):
             "No changes detected",
             "There are missing migrations:\n %s" % output.getvalue(),
         )
+
+
+class OrderedContentSetTests(TestCase):
+    def test_get_gender_none(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+        self.assertIsNone(ordered_content_set.get_gender())
+
+    def test_get_gender(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.get_gender(), "female")
+
+    def test_status_draft(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save()
+        ordered_content_set.unpublish()
+        self.assertEqual(ordered_content_set.status(), "Draft")
+
+    def test_status_live(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.status(), "Live")
+
+    def test_status_live_plus_draft(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save_revision()
+        self.assertEqual(ordered_content_set.status(), "Live + Draft")
 
 
 class WhatsappBlockTests(TestCase):
