@@ -8,7 +8,7 @@ from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
 from wagtail.models import Page
-from wagtail.tests.utils import WagtailPageTests
+from wagtail.test.utils import WagtailPageTests
 
 from home.models import (
     ContentPage,
