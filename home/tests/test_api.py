@@ -143,16 +143,21 @@ class TestContentPageAPI:
 
         for i in range(body_count):
             msg_body = f"*Default {body_type} Content {i+1}* 🏥"
-            if body_type == "whatsapp":
-                bodies.append(WABody(title, [WABlk(msg_body)]))
-            elif body_type == "messenger":
-                bodies.append(MBody(title, [MBlk(msg_body)]))
-            elif body_type == "sms":
-                bodies.append(SBody(title, [SBlk(msg_body)]))
-            elif body_type == "ussd":
-                bodies.append(UBody(title, [UBlk(msg_body)]))
-            elif body_type == "viber":
-                bodies.append(VBody(title, [VBlk(msg_body)]))
+            match body_type:
+                case "whatsapp":
+                    bodies.append(WABody(title, [WABlk(msg_body)]))
+                case "messenger":
+                    bodies.append(MBody(title, [MBlk(msg_body)]))
+                case "sms":
+                    bodies.append(SBody(title, [SBlk(msg_body)]))
+                case "ussd":
+                    bodies.append(UBody(title, [UBlk(msg_body)]))
+                case "viber":
+                    bodies.append(VBody(title, [VBlk(msg_body)]))
+                case None:
+                    pass
+                case _:
+                    raise ValueError(f"{body_type} not a valid platform, valid options include, whatsapp, messenger, sms, ussd, viber or None")
 
         content_page = PageBuilder.build_cp(
             parent=parent,
