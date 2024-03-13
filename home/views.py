@@ -25,15 +25,20 @@ from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 from wagtail.contrib.modeladmin.views import IndexView
+from wagtail.snippets.views.snippets import IndexView as IndexViewAssessment
 
 from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
 from .import_content_pages import ImportException
-from .mixins import SpreadsheetExportMixin
+from .mixins import SpreadsheetExportMixin, SpreadsheetExportMixinAssessment
 from .models import ContentPage, ContentPageRating, OrderedContentSet, PageView
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
 
 logger = logging.getLogger(__name__)
+
+
+class CustomIndexViewAssessment(SpreadsheetExportMixinAssessment, IndexViewAssessment):
+    pass
 
 
 class CustomIndexView(SpreadsheetExportMixin, IndexView):

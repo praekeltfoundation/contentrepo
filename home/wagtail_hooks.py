@@ -3,15 +3,18 @@ from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel, TitleFieldPanel
+from wagtail.admin.widgets.slug import SlugInput
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
-from .models import ContentPage, OrderedContentSet
+from .models import ContentPage, OrderedContentSet, Assessment
 
 from .views import (  # isort:skip
     ContentPageReportView,
     CustomIndexView,
+    CustomIndexViewAssessment,
     OrderedContentSetUploadView,
     PageViewReportView,
     ContentUploadView,
@@ -193,6 +196,48 @@ class OrderedContentSetViewSet(SnippetViewSet):
     search_fields = ("name", "profile_fields")
 
 
+class AssessmentAdmin(SnippetViewSet):
+    model = Assessment
+    add_to_admin_menu = True
+    list_display = ("title", "slug", "locale")
+    search_fields = ("title", "slug")
+    list_filter = ("locale",)
+    icon = "circle-check"
+    menu_order = 300
+    list_export = "title"
+    index_view_class = CustomIndexViewAssessment
+
+    panels = [
+        MultiFieldPanel(
+            [
+                TitleFieldPanel("title"),
+                FieldPanel("slug", widget=SlugInput()),
+                FieldPanel("locale"),
+                FieldPanel("tags"),
+            ],
+            heading="Identifiers",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("high_result_page"),
+                FieldPanel("high_inflection"),
+                FieldPanel("medium_result_page"),
+                FieldPanel("medium_inflection"),
+                FieldPanel("low_result_page"),
+            ],
+            heading="Results",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("generic_error"),
+                FieldPanel("questions"),
+            ],
+            heading="Questions",
+        ),
+    ]
+
+
 register_snippet(OrderedContentSetViewSet)
+register_snippet(AssessmentAdmin)
 # Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)

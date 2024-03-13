@@ -113,3 +113,19 @@ def import_ordered_sets(file, filetype, progress_queue, purge=False):
             print(f"Ordered Content Set not created for row {index + 1}")
         # 10-100% for loading ordered content sets
         progress_queue.put_nowait(10 + index * 90 / len(lines))
+
+
+def export_xlsx_assessment(queryset: PageQuerySet, response: HttpResponse) -> None:
+    from .export_assessments import AssessmentExportWriter, AssessmentExporter
+
+    exporter = AssessmentExporter(queryset)
+    export_rows = exporter.perform_export()
+    AssessmentExportWriter(export_rows).write_xlsx(response)
+
+
+def export_csv_assessment(queryset: PageQuerySet, response: HttpResponse) -> None:
+    from .export_assessments import AssessmentExportWriter, AssessmentExporter
+
+    exporter = AssessmentExporter(queryset)
+    export_rows = exporter.perform_export()
+    AssessmentExportWriter(export_rows).write_csv(response)
