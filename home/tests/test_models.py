@@ -1,16 +1,18 @@
-import pytest
 from io import StringIO
 from unittest import mock
 
+import pytest
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
-from wagtail.models import Page
+from wagtail.models import (
+    Locale,  # type: ignore
+    Page,
+)
 from wagtail.test.utils import WagtailPageTests
-from wagtail.models import Locale  # type: ignore
 
 from home.models import (
     ContentPage,
