@@ -31,7 +31,7 @@ def retrieve_top_n_content_pieces(
         )  # Replace with your cosine similarity calculation
         documents_retrieved.append((page.pk, page.title, page.body, similarity_score))
     documents_retrieved = sorted(documents_retrieved, key=lambda x: x[3], reverse=True)
-    content_retrieved = [doc[0] for doc in documents_retrieved[0:n]]
+    content_retrieved = [doc[0] for doc in documents_retrieved[0:n] if doc[3] >= 0.25]
     return content_retrieved
 
 
@@ -70,7 +70,7 @@ def preprocess_content_for_embedding(content):
         extract = " ".join(extract)
         content = content.replace(url, extract)
     content = (
-        "".join(content.split("*", 2)[2:])
+        content
         .replace("\n\n", " ")
         .replace("\n", " ")
         .replace("  ", " ")
@@ -78,8 +78,7 @@ def preprocess_content_for_embedding(content):
     )  # Remove content piece title
     if len(content) < 2:
         return content
-    if content[0] == " ":  # Remove space trailing content title
-        content = content[1:]
+    content = content.lstrip().rstrip()  # Remove spaces leading/trailing content
     emoji_pattern = re.compile(
         "["
         "\U0001F600-\U0001F64F"  # emoticons
