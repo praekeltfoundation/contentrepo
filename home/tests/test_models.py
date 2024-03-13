@@ -1,3 +1,4 @@
+import pytest
 from io import StringIO
 from unittest import mock
 
@@ -9,6 +10,7 @@ from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
 from wagtail.models import Page
 from wagtail.test.utils import WagtailPageTests
+from wagtail.models import Locale  # type: ignore
 
 from home.models import (
     ContentPage,
@@ -79,11 +81,12 @@ class ContentPageTests(TestCase):
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_create_on_save(self, mock_create_whatsapp_template):
         page = create_page(is_whatsapp_template=True)
+        locale = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
             f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
             "UTILITY",
-            "en",
+            locale,
             [],
             None,
             [],
@@ -93,11 +96,12 @@ class ContentPageTests(TestCase):
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_create_with_buttons_on_save(self, mock_create_whatsapp_template):
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        locale = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
             f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
             "UTILITY",
-            "en",
+            locale,
             ["button 1", "button 2"],
             None,
             [],
@@ -109,11 +113,12 @@ class ContentPageTests(TestCase):
         self, mock_create_whatsapp_template
     ):
         page = create_page(is_whatsapp_template=True, add_example_values=True)
+        locale = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
             f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message with two variables, {{1}} and {{2}}",
             "UTILITY",
-            "en",
+            locale,
             [],
             None,
             [],
@@ -127,11 +132,12 @@ class ContentPageTests(TestCase):
         template name
         """
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        locale = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             f"wa_title_{page.get_latest_revision().pk}",
             "Test WhatsApp Message 1",
             "UTILITY",
-            "en",
+            locale,
             ["button 1", "button 2"],
             None,
             [],
@@ -147,7 +153,7 @@ class ContentPageTests(TestCase):
             expected_title,
             "Test WhatsApp Message 2",
             "UTILITY",
-            "en",
+            locale,
             ["button 1", "button 2"],
             None,
             [],
@@ -166,11 +172,12 @@ class ContentPageTests(TestCase):
         page.get_latest_revision().publish()
         page.refresh_from_db()
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
+        locale = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
             "UTILITY",
-            "en",
+            locale,
             ["button 1", "button 2"],
             None,
             [],
@@ -202,11 +209,12 @@ class ContentPageTests(TestCase):
         page.refresh_from_db()
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
         self.assertEqual(page.whatsapp_template_name, expected_template_name)
+        locale = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
             "UTILITY",
-            "en",
+            locale,
             ["button 1", "button 2"],
             None,
             [],
@@ -235,11 +243,12 @@ class ContentPageTests(TestCase):
         page.save_revision()
 
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
+        locale = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
             "UTILITY",
-            "en",
+            locale,
             [],
             None,
             [],
@@ -322,11 +331,12 @@ class ContentPageTests(TestCase):
         page = create_page(is_whatsapp_template=True)
         page.get_latest_revision().publish()
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
+        locale = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
             "UTILITY",
-            "en",
+            locale,
             [],
             None,
             [],
@@ -356,6 +366,25 @@ class ContentPageTests(TestCase):
             output.getvalue().strip(),
             "No changes detected",
             "There are missing migrations:\n %s" % output.getvalue(),
+        )
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    @pytest.mark.xfail(
+        reason="This fails because we can't get locale to create the page, "
+        "these tests will be changed once whatsapp templates are separated."
+    )
+    def test_template_create_with_pt_language(self, mock_create_whatsapp_template):
+        page = create_page(is_whatsapp_template=True)
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        mock_create_whatsapp_template.assert_called_with(
+            f"wa_title_{page.get_latest_revision().id}",
+            "Test WhatsApp Message 1",
+            "UTILITY",
+            pt,
+            [],
+            None,
+            [],
         )
 
 

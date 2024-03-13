@@ -824,7 +824,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             self.whatsapp_template_name,
             self.whatsapp_template_body,
             str(self.whatsapp_template_category),
-            self.locale.language_code,
+            self.locale,
             sorted(self.quick_reply_buttons),
             self.whatsapp_template_image,
             self.whatsapp_template_example_values,
