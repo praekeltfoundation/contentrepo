@@ -111,11 +111,7 @@ def create_whatsapp_template(
     """
     Create a WhatsApp template through the WhatsApp Business API.
 
-    FIXME: Do we want locale to be optional?
     """
-    if locale is None:
-        locale = Locale.objects.get(language_code="en")
-
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
