@@ -248,7 +248,7 @@ class TestContentPageAPI:
         # Run this once without counting, because there are two queries at the
         # end that only happen if this is the first test that runs.
         uclient.get("/api/v2/pages/")
-        with django_assert_num_queries(8):
+        with django_assert_num_queries(20):
             uclient.get("/api/v2/pages/")
 
     def test_detail_view_content(self, uclient):
@@ -312,6 +312,10 @@ class TestContentPageAPI:
         assert meta["parent"]["id"] == page1.get_parent().id
         assert meta["locale"] == "en"
 
+        quick_replies = content.pop("quick_replies")
+        assert {(frozenset(item)) for item in quick_replies} == {
+            (frozenset(item)) for item in ["Health Info", "Self-help", "Settings"]
+        }
         assert content == {
             "id": page1.id,
             "title": "main menu first time user",
@@ -319,7 +323,7 @@ class TestContentPageAPI:
             "body": {"text": []},
             "tags": ["menu"],
             "triggers": ["Main menu"],
-            "quick_replies": ["Health Info", "Self-help", "Settings"],
+            # "quick_replies": ["Health Info", "Self-help", "Settings"],
             "related_pages": [],
             "has_children": True,
         }

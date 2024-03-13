@@ -10,7 +10,7 @@ from wagtailmedia.api.views import MediaAPIViewSet
 
 from .models import Assessment, AssessmentTag, OrderedContentSet
 from .serializers import (
-    # AssessmentSerializer,
+    AssessmentSerializer,
     ContentPageSerializer,
     OrderedContentSetSerializer,
 )
@@ -158,6 +158,7 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
 
 
 class AssessmentViewSet(BaseAPIViewSet):
+    base_serializer_class = AssessmentSerializer
     known_query_parameters = BaseAPIViewSet.known_query_parameters.union(
         [
             "tag",
