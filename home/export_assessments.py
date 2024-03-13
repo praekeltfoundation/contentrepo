@@ -189,7 +189,10 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "low_result_page": 118,
         "low_inflection": 110,
         "generic_error": 300,
+        "question_count": 110,
         "questions": 370,
+        "answer": 110,
+        "score": 110,
     }
 
     for index, column_width in enumerate(column_widths_in_pts.values(), 2):
