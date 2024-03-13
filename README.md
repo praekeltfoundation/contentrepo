@@ -91,9 +91,7 @@ createdb contentrepo
 
 Run the following in a virtual environment
 ```bash
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+poetry install
 ./manage.py migrate
 ./manage.py createsuperuser
 ./manage.py runserver

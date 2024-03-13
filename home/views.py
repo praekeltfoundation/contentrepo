@@ -141,14 +141,14 @@ class UploadThread(threading.Thread):
         self.file_type = file_type
         self.result_queue = queue.Queue()
         self.progress_queue = queue.Queue()
-        super(UploadThread, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class ContentUploadThread(UploadThread):
     def __init__(self, purge, locale, **kwargs):
         self.purge = purge
         self.locale = locale
-        super(ContentUploadThread, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def run(self):
         try:
@@ -174,7 +174,7 @@ class ContentUploadThread(UploadThread):
 class OrderedContentSetUploadThread(UploadThread):
     def __init__(self, purge, **kwargs):
         self.purge = purge
-        super(OrderedContentSetUploadThread, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def run(self):
         try:
@@ -310,7 +310,7 @@ def CursorPaginationFactory(field):
         ordering = field
         page_size = 1000
 
-    name = "{}CursorPagination".format(field.capitalize())
+    name = f"{field.capitalize()}CursorPagination"
     CustomCursorPagination.__name__ = name
     CustomCursorPagination.__qualname__ = name
 

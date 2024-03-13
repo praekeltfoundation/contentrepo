@@ -125,8 +125,8 @@ class ExportRow:
             self.whatsapp_body = whatsapp.value["message"].strip()
             if "image" in whatsapp.value and whatsapp.value["image"] is not None:
                 self.image_link = whatsapp.value["image"].file.url
-            if "document" in whatsapp.value:
-                self.doc_link = whatsapp.value["document"]
+            if "document" in whatsapp.value and whatsapp.value["document"] is not None:
+                self.doc_link = whatsapp.value["document"].file.url
             if "media" in whatsapp.value and whatsapp.value["media"] is not None:
                 self.media_link = whatsapp.value["media"].file.url
             if "next_prompt" in whatsapp.value:

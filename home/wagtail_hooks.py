@@ -44,7 +44,7 @@ def register_stale_content_report_menu_item():
     return AdminOnlyMenuItem(
         "Stale Content",
         reverse("stale_content_report"),
-        classnames="icon icon-" + ContentPageReportView.header_icon,
+        classname="icon icon-" + ContentPageReportView.header_icon,
         order=700,
     )
 
@@ -65,7 +65,7 @@ def register_page_views_report_menu_item():
     return AdminOnlyMenuItem(
         "Page Views",
         reverse("page_view_report"),
-        classnames="icon icon-doc-empty",
+        classname="icon icon-doc-empty",
         order=700,
     )
 
@@ -193,73 +193,6 @@ class OrderedContentSetViewSet(SnippetViewSet):
         "contact_field",
     )
     search_fields = ("name", "profile_fields")
-
-    def page(self, obj):
-        if obj.pages:
-            return [
-                (
-                    p.value["contentpage"].slug
-                    if p.value and "contentpage" in p.value
-                    else ""
-                )
-                for p in obj.pages
-            ]
-        return ["-"]
-
-    page.short_description = "Page Slugs"
-
-    def time(self, obj):
-        if obj.pages:
-            return [
-                (f"{p.value['time']}" if p.value and "time" in p.value else "")
-                for p in obj.pages
-            ]
-        return ["-"]
-
-    time.short_description = "Time"
-
-    def unit(self, obj):
-        if obj.pages:
-            return [
-                (p.value["unit"] if p.value and "unit" in p.value else "")
-                for p in obj.pages
-            ]
-        return ["-"]
-
-    unit.short_description = "Unit"
-
-    def before_or_after(self, obj):
-        if obj.pages:
-            return [
-                (
-                    p.value["before_or_after"]
-                    if p.value and "before_or_after" in p.value
-                    else ""
-                )
-                for p in obj.pages
-            ]
-        return ["-"]
-
-    before_or_after.short_description = "Before Or After"
-
-    def contact_field(self, obj):
-        if obj.pages:
-            return [
-                (
-                    p.value["contact_field"]
-                    if p.value and "contact_field" in p.value
-                    else ""
-                )
-                for p in obj.pages
-            ]
-        return ["-"]
-
-    contact_field.short_description = "Contact Field"
-
-    def num_pages(self, obj):
-        return len(obj.pages)
-
-    num_pages.short_description = "Number of Pages"
 
 
 class WhatsAppTemplateViewSet(SnippetViewSet):

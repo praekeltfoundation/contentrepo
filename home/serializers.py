@@ -71,6 +71,8 @@ def has_next_message(message_index, content_page, platform):
         messages_length = len(content_page.viber_body._raw_data) - 1
     elif platform == "messenger":
         messages_length = len(content_page.messenger_body._raw_data) - 1
+    else:
+        return None
     if messages_length == message_index:
         return None
     elif messages_length > message_index:
@@ -89,6 +91,8 @@ def has_previous_message(message_index, content_page, platform):
         messages_length = len(content_page.viber_body._raw_data) - 1
     elif platform == "messenger":
         messages_length = len(content_page.messenger_body._raw_data) - 1
+    else:
+        return None
     if messages_length != 0 and message_index > 0:
         return message_index
 

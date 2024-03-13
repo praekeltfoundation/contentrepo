@@ -15,6 +15,7 @@ from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
+from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtailmedia.models import Media  # type: ignore
@@ -1032,6 +1033,29 @@ class TestImportExport:
             ("relationship", "in_a_relationship"),
         ]
 
+    def test_import_ordered_sets_no_profile_fields_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV file with ordered content sets should not break
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.read_bytes("ordered_content_no_profile_fields.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
+
+        assert ordered_set.name == "Test Set"
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 1
+        page = pages[0][1]
+        assert page["contentpage"].slug == "first_time_user"
+        assert page["time"] == "2"
+        assert page["unit"] == "days"
+        assert page["before_or_after"] == "before"
+        assert page["contact_field"] == "edd"
+        assert unwagtail(ordered_set.profile_fields) == []
+
     def test_import_ordered_sets_xlsx(
         self, xlsx_impexp: ImportExport, csv_impexp: ImportExport
     ) -> None:
@@ -1057,6 +1081,27 @@ class TestImportExport:
             ("gender", "male"),
             ("relationship", "in_a_relationship"),
         ]
+
+    def test_changed_parentpage(self, csv_impexp: ImportExport) -> None:
+        """
+        Users should not be allowed to import a file where a parent of an existing contentpage. A descriptive error should be sent back.
+        """
+        home_page = HomePage.objects.first()
+
+        _self_help = PageBuilder.build_cp(
+            parent=home_page,
+            slug="self-help",
+            title="self help",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert*")])],
+        )
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("changed_parent.csv", purge=False)
+        assert e.value.row_num == 5
+        assert (
+            e.value.message
+            == "Changing the parent from 'Home' to 'Main Menu' for the page with title 'self-help' during import is not allowed. Please use the UI"
+        )
 
 
 @pytest.mark.django_db
@@ -1140,6 +1185,39 @@ class TestExport:
         # Export should succeed
         assert content is not None
 
+    def test_export_wa_with_document(self, impexp: ImportExport) -> None:
+        doc_path = Path("home/tests/test_static") / "test.txt"
+        doc_wa = mk_doc(doc_path, "wa_document")
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome WA", document=doc_wa.id)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        # Export should succeed
+        assert content is not None
+
+    def test_export_wa_with_none_document(self, impexp: ImportExport) -> None:
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome WA", document=None)]),
+            ],
+        )
+        content = impexp.export_content(locale="en")
+        # Export should succeed
+        assert content is not None
+
 
 @pytest.fixture(params=["csv", "xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
@@ -1161,6 +1239,12 @@ def mk_media(media_path: Path, title: str) -> File:
     media = Media(title=title, file=File(media_path.open("rb"), name=media_path.name))
     media.save()
     return media
+
+
+def mk_doc(doc_path: Path, title: str) -> Document:
+    doc = Document(title=title, file=File(doc_path.open("rb"), name=doc_path.name))
+    doc.save()
+    return doc
 
 
 def add_go_to_page_button(whatsapp_block: Any, button: PageBtn) -> None:

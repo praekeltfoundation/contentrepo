@@ -374,14 +374,16 @@ class MessengerBlock(blocks.StructBlock):
 
 
 class HomePage(UniqueSlugMixin, Page):
+    parent_page_types = ["wagtailcore.Page"]
     subpage_types = [
-        "ContentPageIndex",
+        "home.ContentPageIndex",
     ]
 
 
 class ContentPageIndex(UniqueSlugMixin, Page):
+    parent_page_types = ["home.HomePage"]
     subpage_types = [
-        "ContentPage",
+        "home.ContentPage",
     ]
 
     include_in_homepage = models.BooleanField(default=False)
@@ -440,9 +442,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
 
-    parent_page_type = [
-        "ContentPageIndex",
-    ]
+    parent_page_types = ["home.ContentPageIndex", "home.ContentPage"]
 
     # general page attributes
     tags = ClusterTaggableManager(through=ContentPageTag, blank=True)
@@ -1024,6 +1024,58 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
 
     profile_field.short_description = "Profile Fields"
 
+    def page(self):
+        if self.pages:
+            return [
+                (self._get_field_value(p, "contentpage", raw=True).slug)
+                for p in self.pages
+            ]
+        return ["-"]
+
+    page.short_description = "Page Slugs"
+
+    def time(self):
+        if self.pages:
+            return [(self._get_field_value(p, "time")) for p in self.pages]
+        return ["-"]
+
+    time.short_description = "Time"
+
+    def unit(self):
+        if self.pages:
+            return [(self._get_field_value(p, "unit")) for p in self.pages]
+        return ["-"]
+
+    unit.short_description = "Unit"
+
+    def before_or_after(self):
+        if self.pages:
+            return [(self._get_field_value(p, "before_or_after")) for p in self.pages]
+        return ["-"]
+
+    before_or_after.short_description = "Before Or After"
+
+    def contact_field(self):
+        if self.pages:
+            return [(self._get_field_value(p, "contact_field")) for p in self.pages]
+        return ["-"]
+
+    contact_field.short_description = "Contact Field"
+
+    def num_pages(self):
+        return len(self.pages)
+
+    num_pages.short_description = "Number of Pages"
+
+    def _get_field_value(self, page: Page, field: str, raw: bool = False) -> any:
+        try:
+            if value := page.value[field]:
+                return value if raw else f"{value}"
+            else:
+                return ""
+        except (AttributeError, TypeError):
+            return ""
+
     def latest_draft_profile_fields(self):
         return self.get_latest_revision_as_object().profile_fields
 
@@ -1102,7 +1154,11 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
     num_pages.short_description = "Number of Pages"
 
     def status(self):
-        return "Live" if self.live else "Draft"
+        return (
+            "Live + Draft"
+            if self.live and self.has_unpublished_changes
+            else "Live" if self.live else "Draft"
+        )
 
     panels = [
         FieldPanel("name"),
