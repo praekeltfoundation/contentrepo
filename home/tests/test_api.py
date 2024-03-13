@@ -98,7 +98,7 @@ class TestContentPageAPI:
     FIXME
     ----------
     Whatsapp body : Currently tests are split into whatsapp and not-whatsapp.
-        This is the moment the whatsapp body is different from the others such that
+        This is because the whatsapp body is different from the others such that
         content is extracted by content["body"]["text"]["value"] for whatsapp and
         content["body"]["text"] for other bodies. This should be changed down the line.
     """
