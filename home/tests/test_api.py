@@ -863,6 +863,12 @@ class TestAssessmentAPI:
         content = json.loads(response.content)
         assert content["count"] == 1
         assert content["results"][0]["title"] == self.assessment.title
+
+        meta = content["results"][0]["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -870,8 +876,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["results"][0]["high_inflection"] == 5.0
+
+        meta = content["results"][0]["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -879,8 +894,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["results"][0]["medium_inflection"] == 2.0
+
+        meta = content["results"][0]["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -888,12 +912,21 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
 
     def test_assessment_detail_endpoint(self, uclient):
         response = uclient.get(f"/api/v2/assessment/{self.assessment.id}/")
         content = json.loads(response.content)
         assert content["title"] == self.assessment.title
+
+        meta = content["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -901,8 +934,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["high_inflection"] == 5.0
+
+        meta = content["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -910,8 +952,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["medium_inflection"] == 2.0
+
+        meta = content["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -919,6 +970,9 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
 
     def test_assessment_endpoint_with_drafts(self, uclient):
@@ -935,6 +989,12 @@ class TestAssessmentAPI:
         assert not self.assessment.live
         assert content["count"] == 1
         assert content["results"][0]["title"] == self.assessment.title
+
+        meta = content["results"][0]["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -942,8 +1002,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["results"][0]["high_inflection"] == 5.0
+
+        meta = content["results"][0]["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -951,8 +1020,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["results"][0]["medium_inflection"] == 2.0
+
+        meta = content["results"][0]["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -960,6 +1038,9 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
 
     def test_assessment_endpoint_without_drafts(self, uclient):
@@ -989,6 +1070,12 @@ class TestAssessmentAPI:
         # the assessment is not live but content is returned
         assert not self.assessment.live
         assert content["title"] == self.assessment.title
+
+        meta = content["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -996,8 +1083,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["high_inflection"] == 5.0
+
+        meta = content["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1005,8 +1101,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["medium_inflection"] == 2.0
+
+        meta = content["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -1014,6 +1119,9 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
 
     # TODO: Add this test in once we've merged with main - there's some code in there that makes following the redirect work
@@ -1064,6 +1172,12 @@ class TestAssessmentAPI:
         assert self.assessment.live
 
         assert content["results"][0]["title"] == self.assessment.title
+
+        meta = content["results"][0]["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -1071,8 +1185,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["results"][0]["high_inflection"] == 5.0
+
+        meta = content["results"][0]["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1080,8 +1203,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["results"][0]["medium_inflection"] == 2.0
+
+        meta = content["results"][0]["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -1089,11 +1221,20 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
 
         response = uclient.get("/api/v2/assessment/?qa=True")
         content = json.loads(response.content)
         assert content["results"][0]["title"] == self.assessment.title
+
+        meta = content["results"][0]["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == high_result_page.slug
+        assert meta["parent"]["id"] == high_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["high_result_page"] == {
             "id": high_result_page.id,
             "title": high_result_page.title,
@@ -1101,8 +1242,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["results"][0]["high_inflection"] == 15.0
+
+        meta = content["results"][0]["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1110,8 +1260,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["results"][0]["medium_inflection"] == 12.0
+
+        meta = content["results"][0]["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -1119,6 +1278,9 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
 
     def test_assessment_endpoint_filter_by_tag(self, uclient):
@@ -1126,6 +1288,12 @@ class TestAssessmentAPI:
         content = json.loads(response.content)
         assert content["count"] == 1
         assert content["results"][0]["title"] == self.assessment.title
+
+        meta = content["results"][0]["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -1133,8 +1301,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["results"][0]["high_inflection"] == 5.0
+
+        meta = content["results"][0]["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1142,8 +1319,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["results"][0]["medium_inflection"] == 2.0
+
+        meta = content["results"][0]["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -1151,6 +1337,9 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
 
         response = uclient.get("/api/v2/assessment/?tag=tag3")
@@ -1161,6 +1350,12 @@ class TestAssessmentAPI:
         response = uclient.get(f"/api/v2/assessment/{self.assessment.id}/?tag=tag1")
         content = json.loads(response.content)
         assert content["title"] == self.assessment.title
+
+        meta = content["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -1168,8 +1363,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["high_inflection"] == 5.0
+
+        meta = content["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1177,8 +1381,17 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
         assert content["medium_inflection"] == 2.0
+
+        meta = content["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
         assert content["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -1186,6 +1399,9 @@ class TestAssessmentAPI:
             "has_children": False,
             "related_pages": [],
             "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
         }
 
         response = uclient.get("/api/v2/assessment/?tag=tag3")
