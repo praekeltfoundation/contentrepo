@@ -1,6 +1,8 @@
+import json
 from io import StringIO
 from unittest import mock
 
+import responses
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -76,17 +78,20 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_not_called()
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_on_save(self, mock_create_whatsapp_template):
+    @responses.activate
+    def test_template_create_on_save(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
         page = create_page(is_whatsapp_template=True)
-        mock_create_whatsapp_template.assert_called_with(
-            f"wa_title_{page.get_latest_revision().id}",
-            "Test WhatsApp Message 1",
-            "UTILITY",
-            [],
-            None,
-            [],
-        )
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
+            "language": "en_US",
+            "name": f"wa_title_{page.get_latest_revision().id}",
+        }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")

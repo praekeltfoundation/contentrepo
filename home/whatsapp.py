@@ -11,6 +11,46 @@ def create_whatsapp_template(
     name, body, category, quick_replies=(), image_id=None, example_values=None
 ):
     print("Running create_whatsapp_template")
+    components = create_whatsapp_template_submission(
+        body, quick_replies, example_values
+    )
+    if image_id:
+        components.append(create_whatsapp_template_image(image_id))
+    submit_whatsapp_template(name, category, components)
+
+
+def create_whatsapp_template_submission(
+    body, quick_replies=(), example_values=None
+) -> list[dict]:
+    """
+    Create the body and buttons components of a WhatsApp template submission
+    request, but not the images because those need to be uploaded separately.
+    """
+    body = {"type": "BODY", "text": body}
+    if example_values:
+        body["example"] = {"body_text": [example_values]}
+
+    components = [body]
+
+    if quick_replies:
+        buttons = []
+        for button in quick_replies:
+            buttons.append({"type": "QUICK_REPLY", "text": button})
+        components.append({"type": "BUTTONS", "buttons": buttons})
+
+    return components
+
+
+def create_whatsapp_template_image(image_id) -> dict:
+    image_handle = upload_image(image_id)
+    return {
+        "type": "HEADER",
+        "format": "IMAGE",
+        "example": {"header_handle": [image_handle]},
+    }
+
+
+def submit_whatsapp_template(name, category, components):
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
@@ -19,35 +59,6 @@ def create_whatsapp_template(
         "Authorization": f"Bearer {settings.WHATSAPP_ACCESS_TOKEN}",
         "Content-Type": "application/json",
     }
-
-    if example_values:
-        components = [
-            {
-                "type": "BODY",
-                "text": body,
-                "example": {
-                    "body_text": [example_values],
-                },
-            }
-        ]
-    else:
-        components = [{"type": "BODY", "text": body}]
-
-    if quick_replies:
-        buttons = []
-        for button in quick_replies:
-            buttons.append({"type": "QUICK_REPLY", "text": button})
-        components.append({"type": "BUTTONS", "buttons": buttons})
-
-    if image_id:
-        image_handle = upload_image(image_id)
-        components.append(
-            {
-                "type": "HEADER",
-                "format": "IMAGE",
-                "example": {"header_handle": [image_handle]},
-            }
-        )
 
     data = {
         "category": category,
