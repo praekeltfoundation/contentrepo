@@ -1264,18 +1264,23 @@ class WhatsAppTemplate(
     )
 
     locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
-    body = StreamField(
-        [
-            (
-                "Whatsapp_Message",
-                WhatsappBlock(
-                    help_text="Each message will be sent with the text and media"
-                ),
-            ),
-        ],
-        blank=True,
-        null=True,
-        use_json_field=True,
+
+    image = ImageChooserBlock(required=False)
+    # document = DocumentChooserBlock(icon="document", required=False)
+    # media = MediaBlock(icon="media", required=False)
+    message = models.TextField(
+        help_text="each text message cannot exceed 4096 characters, messages with "
+        "media cannot exceed 1024 characters.",
+        max_length=4096,
+    )
+
+    example_values = blocks.ListBlock(
+        blocks.CharBlock(
+            label="Example Value",
+        ),
+        default=[],
+        label="Variable Example Values",
+        help_text="Please add example values for all variables used in a WhatsApp template",
     )
 
     search_fields = [
@@ -1283,16 +1288,12 @@ class WhatsAppTemplate(
     ]
 
     @property
-    def image(self):
-        return self.body.raw_data[0]["value"]["image"]
-
-    @property
     def fields(self):
         """
         Returns a tuple of fields that can be used to determine template equality
         """
         return (
-            self.body,
+            self.message,
             self.image,
             self.category,
         )
@@ -1300,11 +1301,6 @@ class WhatsAppTemplate(
     @property
     def quick_reply_buttons(self):
         return self.template_quick_reply_items.all().values_list("tag__name", flat=True)
-
-    @property
-    def example_values(self):
-        example_values = self.body.raw_data[0]["value"].get("example_values", [])
-        return [v["value"] for v in example_values]
 
     @property
     def prefix(self):
@@ -1341,7 +1337,9 @@ class WhatsAppTemplate(
         previous_revision=None,
         clean=True,
     ):
+        print("SAVE REVISION")
         previous_revision = self.get_latest_revision()
+        print("PREV REV:", previous_revision)
         revision = super().save_revision(
             user,
             submitted_for_moderation,
@@ -1353,22 +1351,25 @@ class WhatsAppTemplate(
         )
 
         try:
+            print("SUBMIT")
             template_name = self.submit_whatsapp_template(previous_revision)
+            print("SUBMITTED:", template_name)
         except Exception:
             # Log the error to sentry and send error message to the user
             logger.exception(
-                f"Failed to submit template name:  {self.whatsapp_template_name}"
+                f"Failed to submit template name:  {self.name}"
             )
             raise ValidationError("Failed to submit template")
 
         if template_name:
-            revision.content["whatsapp_template_name"] = template_name
+            revision.content["name"] = template_name
             revision.save(update_fields=["content"])
         return revision
 
     def clean(self):
         print("Running WhatsAppTemplate Clean")
         result = super().clean()
+        print("CLEAN:", result)
         errors = {}
 
         # The WA title is needed for all templates to generate a name for the template
@@ -1376,65 +1377,49 @@ class WhatsAppTemplate(
             errors.setdefault("name", []).append(
                 ValidationError("All WhatsApp templates need a title.")
             )
-        if len(self.body.raw_data) > 0:
-            whatsapp_message = self.body.raw_data[0]["value"]["message"]
 
-            right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", whatsapp_message)
-            left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", whatsapp_message)
-            mismatches = right_mismatch + left_mismatch
+        message = self.message
 
-            if mismatches:
-                errors.setdefault("body", []).append(
-                    StreamBlockValidationError(
-                        {
-                            0: StreamBlockValidationError(
-                                {
-                                    "message": ValidationError(
-                                        f"Please provide variables with matching braces. You provided {mismatches}."
-                                    )
-                                }
-                            )
-                        }
-                    )
+        right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
+        left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
+        mismatches = right_mismatch + left_mismatch
+
+        if mismatches:
+            errors.setdefault("message", []).append(
+                ValidationError(
+                    f"Please provide variables with matching braces. You provided {mismatches}."
                 )
+            )
 
-            vars_in_msg = re.findall(r"{{(.*?)}}", whatsapp_message)
-            non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
+        vars_in_msg = re.findall(r"{{(.*?)}}", message)
+        non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
 
-            if non_digit_variables:
-                errors.setdefault("body", []).append(
-                    StreamBlockValidationError(
-                        {
-                            0: StreamBlockValidationError(
-                                {
-                                    "message": ValidationError(
-                                        f"Please provide numeric variables only. You provided {non_digit_variables}."
-                                    )
-                                }
-                            )
-                        }
-                    )
+        if non_digit_variables:
+            errors.setdefault("message", []).append(
+                ValidationError(
+                    f"Please provide numeric variables only. You provided {non_digit_variables}."
                 )
+            )
 
-            # Check variable order
-            actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
-            expected_variables = [
-                str(j + 1) for j in range(len(actual_digit_variables))
-            ]
-            if actual_digit_variables != expected_variables:
-                errors.setdefault("body", []).append(
-                    StreamBlockValidationError(
-                        {
-                            0: StreamBlockValidationError(
-                                {
-                                    "message": ValidationError(
-                                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
-                                    )
-                                }
-                            )
-                        }
-                    )
+        # Check variable order
+        actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
+        expected_variables = [
+            str(j + 1) for j in range(len(actual_digit_variables))
+        ]
+        if actual_digit_variables != expected_variables:
+            errors.setdefault("body", []).append(
+                StreamBlockValidationError(
+                    {
+                        0: StreamBlockValidationError(
+                            {
+                                "message": ValidationError(
+                                    f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
+                                )
+                            }
+                        )
+                    }
                 )
+            )
 
         if errors:
             raise ValidationError(errors)
@@ -1459,30 +1444,40 @@ class WhatsAppTemplate(
         print("Should create template")
 
         # If there are any missing fields in the previous revision, then carry on
-        try:
+        # try:
+        if True:
             print("Check Previous Revisions")
             # print("Previous Revisions = " + previous_revision)
 
-            previous_revision = previous_revision.as_object()
+            if previous_revision:
+                previous_revision = previous_revision.as_object()
+                previous_revision_fields = previous_revision.whatsapp_template_fields
+            else:
+                previous_revision_fields = tuple()
             print("Got here")
-            previous_revision_fields = previous_revision.whatsapp_template_fields
             print("Previous Revision Fields " + str(previous_revision_fields))
-        except (IndexError, AttributeError):
-            previous_revision_fields = ()
-            print("Error on revision check")
+        # except (IndexError, AttributeError):
+        # except (SyntaxError):
+        #     previous_revision_fields = ()
+        #     print("Error on revision check")
+        #     # raise
         # If there are any missing fields in this revision, then don't submit template
-        try:
+        # try:
+        if True:
+            print("FIELDS:", self.fields, previous_revision_fields)
             if self.fields == previous_revision_fields:
                 print("No change in revision")
                 return
-        except (IndexError, AttributeError):
-            return
+        # except (IndexError, AttributeError):
+        #     return
         print("Done Checking Previous Revisions")
         self.whatsapp_template_name = self.create_whatsapp_template_name()
         print("Running create_whatsapp_template")
         create_whatsapp_template(
             self.name,
-            self.body,
+            # self.body
+            # TODO: Replace create_whatsapp_template with something that takes the message instead.
+            self.message,
             str(self.category),
             sorted(self.quick_reply_buttons),
             self.image,

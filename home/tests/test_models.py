@@ -9,7 +9,7 @@ from django.test import TestCase, override_settings
 from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
-from wagtail.models import Page
+from wagtail.models import Locale, Page
 from wagtail.test.utils import WagtailPageTests
 
 from home.models import (
@@ -23,6 +23,7 @@ from home.models import (
     SMSBlock,
     USSDBlock,
     WhatsappBlock,
+    WhatsAppTemplate,
 )
 
 from .page_builder import PageBuilder, WABlk, WABody
@@ -39,6 +40,31 @@ class MyPageTests(WagtailPageTests):
         self.assertCanNotCreateAt(ContentPage, ContentPageIndex)
         self.assertCanNotCreateAt(Page, ContentPageIndex)
 
+
+class WhatsappTemplateTests(TestCase):
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_on_save(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        # page = create_page(is_whatsapp_template=True)
+        template = WhatsAppTemplate(name="TemplateTest", category="UTILITY", locale=Locale.objects.get(language_code="en"))
+
+        template.save()
+        rev = template.save_revision()
+        print("REV:", rev)
+        # print("REV:", dir(rev))
+        print("Template data below")
+        print(repr(template))
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY2",
+            "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
+            "language": "en_US",
+            "name": "wa_title_1",
+        }
 
 class ContentPageTests(TestCase):
     def test_page_and_revision_rating(self):
