@@ -31,5 +31,5 @@ if SENTRY_DSN:
         integrations=[DjangoIntegration()],
         traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
         send_default_pii=SENTRY_SEND_DEFAULT_PII,
-        environment = SENTRY_ENVIRONMENT,
+        environment=SENTRY_ENVIRONMENT,
     )
