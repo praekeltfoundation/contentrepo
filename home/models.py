@@ -1356,9 +1356,7 @@ class WhatsAppTemplate(
             print("SUBMITTED:", template_name)
         except Exception:
             # Log the error to sentry and send error message to the user
-            logger.exception(
-                f"Failed to submit template name:  {self.name}"
-            )
+            logger.exception(f"Failed to submit template name:  {self.name}")
             raise ValidationError("Failed to submit template")
 
         if template_name:
@@ -1403,11 +1401,9 @@ class WhatsAppTemplate(
 
         # Check variable order
         actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
-        expected_variables = [
-            str(j + 1) for j in range(len(actual_digit_variables))
-        ]
+        expected_variables = [str(j + 1) for j in range(len(actual_digit_variables))]
         if actual_digit_variables != expected_variables:
-            errors.setdefault("body", []).append(
+            errors.setdefault("message", []).append(
                 StreamBlockValidationError(
                     {
                         0: StreamBlockValidationError(
@@ -1453,7 +1449,7 @@ class WhatsAppTemplate(
                 previous_revision = previous_revision.as_object()
                 previous_revision_fields = previous_revision.whatsapp_template_fields
             else:
-                previous_revision_fields = tuple()
+                previous_revision_fields = ()
             print("Got here")
             print("Previous Revision Fields " + str(previous_revision_fields))
         # except (IndexError, AttributeError):

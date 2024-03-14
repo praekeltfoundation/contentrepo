@@ -49,7 +49,12 @@ class WhatsappTemplateTests(TestCase):
         responses.add(responses.POST, url, json={})
 
         # page = create_page(is_whatsapp_template=True)
-        template = WhatsAppTemplate(name="TemplateTest", category="UTILITY", locale=Locale.objects.get(language_code="en"))
+        template = WhatsAppTemplate(
+            name="TemplateTest",
+            message="This is a test message",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
 
         template.save()
         rev = template.save_revision()
@@ -65,6 +70,7 @@ class WhatsappTemplateTests(TestCase):
             "language": "en_US",
             "name": "wa_title_1",
         }
+
 
 class ContentPageTests(TestCase):
     def test_page_and_revision_rating(self):

@@ -223,7 +223,7 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
             [
                 FieldPanel("name"),
                 FieldPanel("category"),
-                FieldPanel("body"),
+                FieldPanel("message"),
                 FieldPanel("quick_replies", heading="Quick Replies"),
                 FieldPanel("locale"),
             ],
@@ -234,7 +234,7 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
     search_fields = (
         "name",
         "category",
-        "body",
+        "message",
         "locale",
     )
 
