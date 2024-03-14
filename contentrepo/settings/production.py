@@ -18,7 +18,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
 
 SENTRY_DSN = env.str("SENTRY_DSN", "")
-SENTRY_ENVIRONMENT = env.str("SENTRY_ENVIRONMENT", "")
+SENTRY_ENVIRONMENT = env.str("SENTRY_ENVIRONMENT", "production")
 if SENTRY_DSN:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
