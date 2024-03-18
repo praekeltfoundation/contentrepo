@@ -1267,11 +1267,11 @@ class WhatsAppTemplate(
     locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
 
     image = models.ForeignKey(
-        'wagtailimages.Image',
+        "wagtailimages.Image",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='image'
+        related_name="image",
     )
     message = models.TextField(
         help_text="each text message cannot exceed 4096 characters, messages with "
