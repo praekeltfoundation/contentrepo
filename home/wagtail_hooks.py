@@ -212,7 +212,6 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
     list_display = (
         "name",
         "category",
-        "body",
         "locale",
         "status",
         "quick_replies",
@@ -223,6 +222,7 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
             [
                 FieldPanel("name"),
                 FieldPanel("category"),
+                FieldPanel("image"),
                 FieldPanel("message"),
                 FieldPanel("quick_replies", heading="Quick Replies"),
                 FieldPanel("locale"),

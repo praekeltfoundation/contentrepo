@@ -1253,20 +1253,25 @@ class WhatsAppTemplate(
     quick_replies = ClusterTaggableManager(
         through="home.TemplateQuickReplyContent", blank=True
     )
-    related_pages = StreamField(
-        [
-            ("related_page", blocks.PageChooserBlock()),
-        ],
-        blank=True,
-        null=True,
-        use_json_field=True,
-    )
+    # TODO: Do we need related pages here?
+    # related_pages = StreamField(
+    #     [
+    #         ("related_page", blocks.PageChooserBlock()),
+    #     ],
+    #     blank=True,
+    #     null=True,
+    #     use_json_field=True,
+    # )
 
     locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
 
-    image = ImageChooserBlock(required=False)
-    # document = DocumentChooserBlock(icon="document", required=False)
-    # media = MediaBlock(icon="media", required=False)
+    image = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='image'
+    )
     message = models.TextField(
         help_text="each text message cannot exceed 4096 characters, messages with "
         "media cannot exceed 1024 characters.",
@@ -1475,7 +1480,7 @@ class WhatsAppTemplate(
             self.message,
             str(self.category),
             sorted(self.quick_reply_buttons),
-            self.image,
+            self.image.id,
             self.example_values,
         )
         print("Reached end of submit_whatsapp_template")
