@@ -1254,15 +1254,15 @@ class WhatsAppTemplate(
     quick_replies = ClusterTaggableManager(
         through="home.TemplateQuickReplyContent", blank=True
     )
-    # TODO: Do we need related pages here?
-    # related_pages = StreamField(
-    #     [
-    #         ("related_page", blocks.PageChooserBlock()),
-    #     ],
-    #     blank=True,
-    #     null=True,
-    #     use_json_field=True,
-    # )
+
+    related_pages = StreamField(
+        [
+            ("related_page", blocks.PageChooserBlock()),
+        ],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
 
     locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
 
@@ -1474,6 +1474,7 @@ class WhatsAppTemplate(
         print("Done Checking Previous Revisions")
         self.whatsapp_template_name = self.create_whatsapp_template_name()
         print("Running create_whatsapp_template")
+        print("Image is = ", self.image)
         create_whatsapp_template(
             self.name,
             # self.body
@@ -1481,7 +1482,7 @@ class WhatsAppTemplate(
             self.message,
             str(self.category),
             sorted(self.quick_reply_buttons),
-            self.image.id,
+            self.image,
             self.example_values,
         )
         print("Reached end of submit_whatsapp_template")

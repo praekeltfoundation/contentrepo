@@ -104,8 +104,8 @@ def create_whatsapp_template(
     body: str,
     category: str,
     locale: Locale,
-    quick_replies: Iterable[str] = (),
     image_id: int | None = None,
+    quick_replies: Iterable[str] = (),
     example_values: Iterable[str] | None = None,
 ) -> None:
     """
@@ -136,6 +136,7 @@ def create_whatsapp_template_submission(
     components = [body]
 
     if quick_replies:
+        print("Quick Replies = ", quick_replies )
         buttons = []
         for button in quick_replies:
             buttons.append({"type": "QUICK_REPLY", "text": button})
