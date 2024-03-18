@@ -5,28 +5,15 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 from pytest_django.asserts import assertTemplateUsed
+from wagtail.models import (ContentType, Page, Workflow, WorkflowContentType,
+                            WorkflowMixin)
 
 from home.content_import_export import import_content
-from home.models import (
-    ContentPage,
-    HomePage,
-    OrderedContentSet,
-    PageView,
-)
+from home.models import (ContentPage, ContentPageIndex, HomePage,
+                         OrderedContentSet, PageView, WhatsappBlock)
 
-from .page_builder import (
-    MBlk,
-    MBody,
-    NextBtn,
-    PageBuilder,
-    SBlk,
-    SBody,
-    UBlk,
-    UBody,
-    VarMsg,
-    WABlk,
-    WABody,
-)
+from .page_builder import (MBlk, MBody, NextBtn, PageBuilder, SBlk, SBody,
+                           UBlk, UBody, VarMsg, WABlk, WABody)
 from .utils import create_page
 
 
@@ -838,3 +825,15 @@ class TestOrderedContentSetAPI:
             "before_or_after": "After",
             "contact_field": "something",
         }
+
+    def test_orderedcontent_moderation(self):
+        workflow = Workflow.objects.filter(id=1)
+
+        WorkflowContentType.objects.create(content_type_id=39, workflow_id=1)
+
+        ordered_content_set_instance = OrderedContentSet()
+        ordered_content_set_default_workflow = (
+            ordered_content_set_instance.get_default_workflow()
+        )
+
+        assert ordered_content_set_default_workflow == workflow.first()
