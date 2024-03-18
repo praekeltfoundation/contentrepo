@@ -40,9 +40,17 @@ class ImportException(Exception):
     Base exception for all import related issues.
     """
 
-    def __init__(self, message: str, row_num: int | None = None):
+    def __init__(
+        self,
+        message: str,
+        row_num: int | None = None,
+        slug: str | None = None,
+        locale: Locale | None = None,
+    ):
         self.row_num = row_num
         self.message = message
+        self.slug = slug
+        self.locale = locale
         super().__init__()
 
 
@@ -117,6 +125,8 @@ class ContentImporter:
                     self.add_message_to_shadow_content_page_from_row(row, prev_locale)
             except ImportException as e:
                 e.row_num = i
+                e.slug = row.slug
+                e.locale = row.locale
                 raise e
 
     def save_pages(self) -> None:
