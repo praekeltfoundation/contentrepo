@@ -1,21 +1,123 @@
 import json
 import mimetypes
+from collections.abc import Iterable
+from enum import Enum
+from typing import Any
 from urllib.parse import urljoin
 
 import requests
-from django.conf import settings
-from wagtail.images import get_image_model
+from django.conf import settings  # type: ignore
+from wagtail.images import get_image_model  # type: ignore
+from wagtail.models import Locale  # type: ignore
+
+from .constants import WHATSAPP_LANGUAGE_MAPPING
+
+
+class WhatsAppLanguage(Enum):
+    """
+    These are the languages supported by WhatsApp message templates as per
+    https://developers.facebook.com/docs/whatsapp/api/messages/message-templates#supported-languages
+    (Fetched 2023-11-16)
+    """
+
+    af = "af"  # Afrikaans
+    sq = "sq"  # Albanian
+    ar = "ar"  # Arabic
+    az = "az"  # Azerbaijani
+    bn = "bn"  # Bengali
+    bg = "bg"  # Bulgarian
+    ca = "ca"  # Catalan
+    zh_CN = "zh_CN"  # Chinese (CHN)
+    zh_HK = "zh_HK"  # Chinese (HKG)
+    zh_TW = "zh_TW"  # Chinese (TAI)
+    hr = "hr"  # Croatian
+    cs = "cs"  # Czech
+    da = "da"  # Danish
+    nl = "nl"  # Dutch
+    en = "en"  # English
+    en_GB = "en_GB"  # English (UK)
+    en_US = "en_US"  # English (US)
+    et = "et"  # Estonian
+    fil = "fil"  # Filipino
+    fi = "fi"  # Finnish
+    fr = "fr"  # French
+    ka = "ka"  # Georgian
+    de = "de"  # German
+    el = "el"  # Greek
+    gu = "gu"  # Gujarati
+    ha = "ha"  # Hausa
+    he = "he"  # Hebrew
+    hi = "hi"  # Hindi
+    hu = "hu"  # Hungarian
+    id = "id"  # Indonesian
+    ga = "ga"  # Irish
+    it = "it"  # Italian
+    ja = "ja"  # Japanese
+    kn = "kn"  # Kannada
+    kk = "kk"  # Kazakh
+    rw_RW = "rw_RW"  # Kinyarwanda
+    ko = "ko"  # Korean
+    ky_KG = "ky_KG"  # Kyrgyz (Kyrgyzstan)
+    lo = "lo"  # Lao
+    lv = "lv"  # Latvian
+    lt = "lt"  # Lithuanian
+    mk = "mk"  # Macedonian
+    ms = "ms"  # Malay
+    ml = "ml"  # Malayalam
+    mr = "mr"  # Marathi
+    nb = "nb"  # Norwegian
+    fa = "fa"  # Persian
+    pl = "pl"  # Polish
+    pt_BR = "pt_BR"  # Portuguese (BR)
+    pt_PT = "pt_PT"  # Portuguese (POR)
+    pa = "pa"  # Punjabi
+    ro = "ro"  # Romanian
+    ru = "ru"  # Russian
+    sr = "sr"  # Serbian
+    sk = "sk"  # Slovak
+    sl = "sl"  # Slovenian
+    es = "es"  # Spanish
+    es_AR = "es_AR"  # Spanish (ARG)
+    es_ES = "es_ES"  # Spanish (SPA)
+    es_MX = "es_MX"  # Spanish (MEX)
+    sw = "sw"  # Swahili
+    sv = "sv"  # Swedish
+    ta = "ta"  # Tamil
+    te = "te"  # Telugu
+    th = "th"  # Thai
+    tr = "tr"  # Turkish
+    uk = "uk"  # Ukrainian
+    ur = "ur"  # Urdu
+    uz = "uz"  # Uzbek
+    vi = "vi"  # Vietnamese
+    zu = "zu"  # Zulu
+
+    @classmethod
+    def from_locale(cls, locale: Locale) -> "WhatsAppLanguage":
+        lc = WHATSAPP_LANGUAGE_MAPPING.get(locale.language_code, locale.language_code)
+        # This will raise KeyError for unsupported languages.
+        return cls[lc]
 
 
 def create_whatsapp_template(
-    name, body, category, quick_replies=(), image_id=None, example_values=None
-):
+    name: str,
+    body: str,
+    category: str,
+    locale: Locale,
+    quick_replies: Iterable[str] = (),
+    image_id: int | None = None,
+    example_values: Iterable[str] | None = None,
+) -> None:
+    """
+    Create a WhatsApp template through the WhatsApp Business API.
+
+    """
     components = create_whatsapp_template_submission(
         body, quick_replies, example_values
     )
     if image_id:
         components.append(create_whatsapp_template_image(image_id))
-    submit_whatsapp_template(name, category, components)
+    submit_whatsapp_template(name, category, locale, components)
 
 
 def create_whatsapp_template_submission(
@@ -49,7 +151,7 @@ def create_whatsapp_template_image(image_id) -> dict:
     }
 
 
-def submit_whatsapp_template(name, category, components):
+def submit_whatsapp_template(name, category, locale, components):
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
@@ -62,7 +164,7 @@ def submit_whatsapp_template(name, category, components):
     data = {
         "category": category,
         "name": name,
-        "language": "en_US",
+        "language": WhatsAppLanguage.from_locale(locale).value,
         "components": components,
     }
 
@@ -76,7 +178,7 @@ def submit_whatsapp_template(name, category, components):
     response.raise_for_status()
 
 
-def get_upload_session_id(image_id):
+def get_upload_session_id(image_id: int) -> dict[str, Any]:
     url = urljoin(
         settings.WHATSAPP_API_URL,
         "graph/v14.0/app/uploads",
@@ -110,7 +212,7 @@ def get_upload_session_id(image_id):
     return upload_details
 
 
-def upload_image(image_id):
+def upload_image(image_id: int) -> str:
     upload_details = get_upload_session_id(image_id)
     url = urljoin(
         settings.WHATSAPP_API_URL,

@@ -3,9 +3,9 @@ from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
-from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
+from wagtail_modeladmin.options import ModelAdmin, modeladmin_register
 
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel  # isort:skip
 

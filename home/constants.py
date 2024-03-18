@@ -1,4 +1,6 @@
 # Define constants for use throughout the application
+from types import MappingProxyType
+
 from django.conf import settings
 
 GENDER_CHOICES = [
@@ -20,6 +22,15 @@ RELATIONSHIP_STATUS_CHOICES = [
     ("complicated", "It's Complicated"),
     ("empty", "Empty"),
 ]
+
+# MappingProxyType is read-only. (Mutable constants make me sad.)
+# FIXME: Add more language mappings here?
+WHATSAPP_LANGUAGE_MAPPING = MappingProxyType(
+    {
+        "en": "en_US",  # FIXME: Do we need to keep this for backcompat?
+        "pt": "pt_PT",  # FIXME: Should this perhaps be pt_BR instead?
+    }
+)
 
 # The model used to identify embeddings in content
 # When changing this consider running update_content_embeddings management cmd
