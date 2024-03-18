@@ -1,11 +1,26 @@
 import pytest
 
 from home.models import ContentPage, HomePage
-from home.serializers import (format_whatsapp_message, has_next_message,
-                              has_previous_message)
+from home.serializers import (
+    format_whatsapp_message,
+    has_next_message,
+    has_previous_message,
+)
 
-from .page_builder import (MBlk, MBody, PageBuilder, SBlk, SBody, UBlk, UBody,
-                           VarMsg, VBlk, VBody, WABlk, WABody)
+from .page_builder import (
+    MBlk,
+    MBody,
+    PageBuilder,
+    SBlk,
+    SBody,
+    UBlk,
+    UBody,
+    VarMsg,
+    VBlk,
+    VBody,
+    WABlk,
+    WABody,
+)
 
 
 def create_content_page(
