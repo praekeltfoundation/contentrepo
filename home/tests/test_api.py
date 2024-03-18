@@ -7,19 +7,17 @@ from bs4 import BeautifulSoup
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from pytest_django.asserts import assertTemplateUsed
-from wagtail.models import Workflow, WorkflowContentType
 from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
+from wagtail.models import Workflow, WorkflowContentType
 from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content
 from home.models import (
     ContentPage,
-    ContentPageIndex,
     HomePage,
     OrderedContentSet,
     PageView,
-    WhatsappBlock,
 )
 
 from .page_builder import (
