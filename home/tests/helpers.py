@@ -2,7 +2,8 @@ from collections.abc import Iterable
 
 from wagtail.models.sites import Site  # type: ignore
 
-from home.constants import AGE_CHOICES, GENDER_CHOICES, RELATIONSHIP_STATUS_CHOICES
+from home.constants import (AGE_CHOICES, GENDER_CHOICES,
+                            RELATIONSHIP_STATUS_CHOICES)
 from home.models import SiteSettings
 
 PFOption = tuple[str, list[str]]

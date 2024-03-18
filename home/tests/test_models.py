@@ -14,18 +14,9 @@ from wagtail.models import (
 )
 from wagtail.test.utils import WagtailPageTests
 
-from home.models import (
-    ContentPage,
-    ContentPageIndex,
-    GoToPageButton,
-    HomePage,
-    NextMessageButton,
-    OrderedContentSet,
-    PageView,
-    SMSBlock,
-    USSDBlock,
-    WhatsappBlock,
-)
+from home.models import (ContentPage, ContentPageIndex, GoToPageButton,
+                         HomePage, NextMessageButton, OrderedContentSet,
+                         PageView, SMSBlock, USSDBlock, WhatsappBlock)
 
 from .page_builder import PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
