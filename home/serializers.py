@@ -322,11 +322,6 @@ class ContentPageSerializer(PageSerializer):
     related_pages = RelatedPagesField(read_only=True)
 
 
-class WhatsAppTemplateSerializer(BaseSerializer):
-    name = TitleField(read_only=True)
-    body = BodyField(read_only=True)
-
-
 class ContentPageRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContentPageRating
@@ -465,3 +460,8 @@ class OrderedContentSetSerializer(BaseSerializer):
     name = NameField(read_only=True)
     pages = OrderedPagesField(read_only=True)
     profile_fields = ProfileFieldsField(read_only=True)
+
+
+class WhatsAppTemplateSerializer(BaseSerializer):
+    name = NameField(read_only=True)
+    body = BodyField(read_only=True)

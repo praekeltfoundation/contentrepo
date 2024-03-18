@@ -384,7 +384,7 @@ class ContentPageRatingViewSet(GenericListViewset, CreateModelMixin):
 class WhatsAppTemplateViewSet(GenericListViewset):
     # queryset = WhatsAppTemplate.objects.all()
     model = WhatsAppTemplate
-    form_fields = ["name", "category", "locale", "status"]
+    form_fields = ["name", "body", "category", "locale", "status"]
     icon = "user"
     add_to_admin_menu = True
     copy_view_enabled = False

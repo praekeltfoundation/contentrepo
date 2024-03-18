@@ -47,6 +47,7 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name="schema"),
         name="redoc",
     ),
+    path("api/whatsapptemplates/", menu_views.randommenu, name="whatsapptemplate"),
 ]
 
 
