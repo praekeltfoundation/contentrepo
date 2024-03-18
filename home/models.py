@@ -869,7 +869,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         return revision
 
     def clean(self):
-        print("Running ContentPage Clean")
         result = super().clean()
         errors = {}
 
