@@ -1207,6 +1207,9 @@ class TestOrderedContentSetAPI:
         }
 
     def test_orderedcontent_moderation(self):
+        """
+        Get default workflow for ordered content set
+        """
         workflow = Workflow.objects.filter(id=1)
 
         WorkflowContentType.objects.create(content_type_id=39, workflow_id=1)
