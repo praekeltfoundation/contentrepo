@@ -16,10 +16,16 @@ class PageRatingTestCase(APITestCase):
         self.url = reverse("contentpagerating-list")
 
     def test_homepage_redirect(self):
+        """
+        Check that we redirect to admin
+        """
         response = self.client.get("/")
         self.assertEqual("/admin/", response.url)
 
     def test_page_rating_success(self):
+        """
+        Confirm that page ratings are created correctly
+        """
         user = get_user_model().objects.create_user("test")
         self.client.force_authenticate(user)
 
@@ -54,6 +60,10 @@ class PageRatingTestCase(APITestCase):
         )
 
     def test_page_rating_required_fields(self):
+        """
+        Ensure that the helpful, page and revision fields are required
+        and rating is not created when these fields are missing
+        """
         user = get_user_model().objects.create_user("test")
         self.client.force_authenticate(user)
 
@@ -70,6 +80,9 @@ class PageRatingTestCase(APITestCase):
         )
 
     def test_page_rating_invalid_page(self):
+        """
+        Ensure that a rating cannot be made for a page that does not exist
+        """
         user = get_user_model().objects.create_user("test")
         self.client.force_authenticate(user)
 
