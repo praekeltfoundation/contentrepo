@@ -75,6 +75,7 @@ ruff = "^0.3.0"
 black = "^24.2.0"
 responses = "^0.25.0"
 types-openpyxl = "^3.1.0.20240301"
+types-requests = "^2.31.0.20240311"
 
 [[tool.poetry.source]]
 name = "pytorch-stable-cpu"
@@ -111,12 +112,12 @@ exclude = [  # Regexes.
     '^home/(management|migrations)/',
     '^home/(admin|api|constants|content_import_export|forms)\.py',
     '^home/(mappers|mixins|models|panels|serializers)\.py',
-    '^home/(views|wagtail_hooks|whatsapp|word_embedding)\.py',
+    '^home/(views|wagtail_hooks|word_embedding)\.py',
     '^home/tests/utils\.py',
     '^home/tests/test_(api|deduplicate_slugs_migration|json_import)\.py',
     '^home/tests/test_(management|management_related_tag|models)\.py',
     '^home/tests/test_(unique_slug_hook|views|wagtail_hooks)\.py',
-    '^home/tests/test_(whatsapp|whatsapp_template_name_migration)\.py',
+    '^home/tests/test_(whatsapp_template_name_migration)\.py',
     '^home/tests/test_(forms)\.py',
 ]
 files = "."
