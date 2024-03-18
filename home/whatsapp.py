@@ -115,19 +115,21 @@ def create_whatsapp_template(
     components = create_whatsapp_template_submission(
         body, quick_replies, example_values
     )
-    if image_id:
+    if image_id is not None:
         components.append(create_whatsapp_template_image(image_id))
     submit_whatsapp_template(name, category, locale, components)
 
 
 def create_whatsapp_template_submission(
-    body, quick_replies=(), example_values=None
-) -> list[dict]:
+    body_text: str,
+    quick_replies: Iterable[str] = (),
+    example_values: Iterable[str] | None = None,
+) -> list[dict[str, Any]]:
     """
     Create the body and buttons components of a WhatsApp template submission
     request, but not the images because those need to be uploaded separately.
     """
-    body = {"type": "BODY", "text": body}
+    body: dict[str, Any] = {"type": "BODY", "text": body_text}
     if example_values:
         body["example"] = {"body_text": [example_values]}
 
@@ -142,7 +144,7 @@ def create_whatsapp_template_submission(
     return components
 
 
-def create_whatsapp_template_image(image_id) -> dict:
+def create_whatsapp_template_image(image_id: int) -> dict[str, Any]:
     image_handle = upload_image(image_id)
     return {
         "type": "HEADER",
@@ -151,7 +153,12 @@ def create_whatsapp_template_image(image_id) -> dict:
     }
 
 
-def submit_whatsapp_template(name, category, locale, components):
+def submit_whatsapp_template(
+    name: str,
+    category: str,
+    locale: Locale,
+    components: list[dict[str, Any]],
+) -> None:
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
