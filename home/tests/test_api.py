@@ -4,20 +4,17 @@ from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from pytest_django.asserts import assertTemplateUsed
 from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
+from wagtail.models import Workflow, WorkflowContentType
 from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content
-from home.models import (
-    ContentPage,
-    HomePage,
-    OrderedContentSet,
-    PageView,
-)
+from home.models import ContentPage, HomePage, OrderedContentSet, PageView
 
 from .page_builder import (
     MBlk,
@@ -1208,3 +1205,21 @@ class TestOrderedContentSetAPI:
             "before_or_after": "After",
             "contact_field": "something",
         }
+
+    def test_orderedcontent_moderation(self):
+        """
+        Get default workflow for ordered content set
+        """
+        workflow = Workflow.objects.create(name="Test Workflow", active="t")
+        content_type = ContentType.objects.get_for_model(OrderedContentSet)
+
+        WorkflowContentType.objects.create(
+            content_type_id=content_type.id, workflow_id=workflow.id
+        )
+
+        ordered_content_set_instance = OrderedContentSet()
+        ordered_content_set_default_workflow = (
+            ordered_content_set_instance.get_default_workflow()
+        )
+
+        assert ordered_content_set_default_workflow == workflow
