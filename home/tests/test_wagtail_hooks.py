@@ -66,8 +66,6 @@ class TestBeforeDeletePageHook:
             slug=title.replace(" ", "-"),
             title=title,
             bodies=bodies,
-            quick_replies=[],
-            triggers=[],
         )
         return content_page
 
