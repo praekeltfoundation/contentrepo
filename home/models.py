@@ -9,6 +9,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
@@ -20,7 +21,13 @@ from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import DraftStateMixin, Page, Revision, RevisionMixin
+from wagtail.models import (
+    DraftStateMixin,
+    Page,
+    ReferenceIndex,
+    Revision,
+    RevisionMixin,
+)
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
@@ -830,6 +837,34 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         )
 
         return self.whatsapp_template_name
+
+    def get_all_links(self):
+        page_links = []
+        orderedcontentset_links = []
+
+        usage = ReferenceIndex.get_references_to(self).group_by_source_object()
+        for ref in usage:
+            for link in ref[1]:
+                if link.model_name == "content page":
+                    link_type = "Related Page"
+                    tab = "#tab-promotional"
+                    if link.related_field.name == "whatsapp_body":
+                        link_type = "WhatsApp: Go to button"
+                        tab = "#tab-whatsapp"
+
+                    page = ContentPage.objects.get(id=link.object_id)
+                    url = reverse("wagtailadmin_pages:edit", args=(link.object_id,))
+                    page_links.append((url + tab, f"{page} - {link_type}"))
+
+                elif link.model_name == "Ordered Content Set":
+                    orderedcontentset = OrderedContentSet.objects.get(id=link.object_id)
+                    url = reverse(
+                        "wagtailsnippets_home_orderedcontentset:edit",
+                        args=(link.object_id,),
+                    )
+                    orderedcontentset_links.append((url, orderedcontentset.name))
+
+        return page_links, orderedcontentset_links
 
     def save_revision(
         self,
