@@ -22,6 +22,9 @@ from .views import (  # isort:skip
 
 @hooks.register("before_delete_page")
 def before_delete_page(request, page):
+    if page.content_type.name != ContentPage._meta.verbose_name:
+        return
+
     page_links, orderedcontentset_links = page.get_all_links()
 
     if page_links or orderedcontentset_links:
