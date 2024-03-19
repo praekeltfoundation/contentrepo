@@ -407,13 +407,20 @@ class ContentPageTests(TestCase):
 
         self.assertListEqual(
             [
-                ("/admin/pages/6/edit/#tab-whatsapp", "Page2 - WhatsApp: Go to button"),
-                ("/admin/pages/6/edit/#tab-promotional", "Page2 - Related Page"),
+                (
+                    f"/admin/pages/{page_with_links.id}/edit/#tab-whatsapp",
+                    "Page2 - WhatsApp: Go to button",
+                ),
+                (
+                    f"/admin/pages/{page_with_links.id}/edit/#tab-promotional",
+                    "Page2 - Related Page",
+                ),
             ],
             page_links,
         )
         self.assertListEqual(
-            [("/admin/snippets/home/orderedcontentset/edit/1/", "Test set")], ocs_links
+            [(f"/admin/snippets/home/orderedcontentset/edit/{ocs.id}/", "Test set")],
+            ocs_links,
         )
 
     def test_get_all_links_no_links(self):
