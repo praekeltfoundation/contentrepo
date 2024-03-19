@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "drf_spectacular",
-    "wagtail.contrib.modeladmin",
+    "wagtail_modeladmin",
 ]
 
 MIDDLEWARE = [

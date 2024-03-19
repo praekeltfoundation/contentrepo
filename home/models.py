@@ -23,10 +23,12 @@ from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import (
     DraftStateMixin,
+    LockableMixin,
     Page,
     ReferenceIndex,
     Revision,
     RevisionMixin,
+    WorkflowMixin,
 )
 from wagtail.models.sites import Site
 from wagtail.search import index
@@ -831,6 +833,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             self.whatsapp_template_name,
             self.whatsapp_template_body,
             str(self.whatsapp_template_category),
+            self.locale,
             sorted(self.quick_reply_buttons),
             self.whatsapp_template_image,
             self.whatsapp_template_example_values,
@@ -1025,9 +1028,23 @@ def update_embedding(sender, instance, *args, **kwargs):
     instance.embedding = embedding
 
 
-class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Model):
+class OrderedContentSet(
+    WorkflowMixin,
+    DraftStateMixin,
+    LockableMixin,
+    RevisionMixin,
+    index.Indexed,
+    models.Model,
+):
     revisions = GenericRelation(
         "wagtailcore.Revision", related_query_name="orderedcontentset"
+    )
+    workflow_states = GenericRelation(
+        "wagtailcore.WorkflowState",
+        content_type_field="base_content_type",
+        object_id_field="object_id",
+        related_query_name="orderedcontentset",
+        for_concrete_model=False,
     )
     name = models.CharField(
         max_length=255, help_text="The name of the ordered content set."
