@@ -80,6 +80,17 @@ class TestBeforeDeletePageHook:
         messages = list(response.context["messages"])
         assert len(messages) == 0
 
+    def test_before_delete_page_home_page(self, admin_client):
+        """
+        If page being deleted is not a ContentPage it should not do the link check.
+        """
+        home_page = HomePage.objects.first()
+        self.create_content_page("Page2", wa_buttons=[PageBtn("Test", page=home_page)])
+        url = f"/admin/pages/{home_page.id}/delete/"
+        response = admin_client.get(url)
+        messages = list(response.context["messages"])
+        assert len(messages) == 0
+
     def test_before_delete_page_with_links(self, admin_client):
         """
         If there are links to the page being deleted there should be a warning message
