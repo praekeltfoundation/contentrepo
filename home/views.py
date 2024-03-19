@@ -153,7 +153,7 @@ class ContentUploadThread(UploadThread):
             self.result_queue.put(
                 (
                     messages.ERROR,
-                    f'Row "{e.row_num}" is a message for page with slug "{e.slug}" and locale "{e.locale}", but no such page exists.',
+                    f"Content import failed on row {e.row_num}: {e.message}",
                 )
             )
         except Exception:

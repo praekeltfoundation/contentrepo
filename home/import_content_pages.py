@@ -333,7 +333,7 @@ class ContentImporter:
             return self.shadow_pages[(row.slug, locale)]
         except KeyError:
             raise ImportException(
-                f"Cannot find content page with slug '{row.slug}' and locale '{locale}'"
+                f'This is a message for page with slug "{row.slug}" and locale "{row.locale}", but no such page exists'
             )
 
     def add_variation_to_shadow_content_page_from_row(
