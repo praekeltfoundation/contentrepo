@@ -817,8 +817,8 @@ class TestImportExport:
         assert e.value.row_num == 4
         assert (
             e.value.message
-            == "Cannot find content page with slug 'not-cp-import-export' and locale "
-            "'English'"
+            == "This is a message for page with slug 'not-cp-import-export' and locale "
+            "'English', but no such page exists"
         )
 
     def test_variation_for_missing_page(self, csv_impexp: ImportExport) -> None:
@@ -837,8 +837,8 @@ class TestImportExport:
         assert e.value.row_num == 4
         assert (
             e.value.message
-            == "Cannot find content page with slug 'not-cp-import-export' and locale "
-            "'English'"
+            == "This is a variation for the content page with slug 'not-cp-import-export' and locale "
+            "'English', but no such page exists"
         )
 
     def test_go_to_page_button_missing_page(self, csv_impexp: ImportExport) -> None:

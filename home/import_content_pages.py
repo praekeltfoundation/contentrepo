@@ -333,7 +333,7 @@ class ContentImporter:
             page = self.shadow_pages[(row.slug, locale)]
         except KeyError:
             raise ImportException(
-                f'This is a variation for the content page with slug "{row.slug}" and locale "{row.locale}", but no such page exists'
+                f"This is a variation for the content page with slug '{row.slug}' and locale '{locale}', but no such page exists"
             )
         whatsapp_block = page.whatsapp_body[-1]
         whatsapp_block.variation_messages.append(
@@ -349,7 +349,7 @@ class ContentImporter:
             page = self.shadow_pages[(row.slug, locale)]
         except KeyError:
             raise ImportException(
-                f'This is a message for page with slug "{row.slug}" and locale "{row.locale}", but no such page exists'
+                f"This is a message for page with slug '{row.slug}' and locale '{locale}', but no such page exists"
             )
         if row.is_whatsapp_message:
             page.enable_whatsapp = True
