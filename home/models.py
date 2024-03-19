@@ -866,6 +866,8 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                         args=(link.object_id,),
                     )
                     orderedcontentset_links.append((url, orderedcontentset.name))
+                else:
+                    raise Exception("Unknown model link")
 
         return page_links, orderedcontentset_links
 
