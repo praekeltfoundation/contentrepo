@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from pytest_django.asserts import assertTemplateUsed
@@ -13,28 +14,10 @@ from wagtail.models import Workflow, WorkflowContentType
 from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content
-from home.models import (
-    ContentPage,
-    HomePage,
-    OrderedContentSet,
-    PageView,
-)
+from home.models import ContentPage, HomePage, OrderedContentSet, PageView
 
-from .page_builder import (
-    MBlk,
-    MBody,
-    NextBtn,
-    PageBuilder,
-    SBlk,
-    SBody,
-    UBlk,
-    UBody,
-    VarMsg,
-    VBlk,
-    VBody,
-    WABlk,
-    WABody,
-)
+from .page_builder import (MBlk, MBody, NextBtn, PageBuilder, SBlk, SBody,
+                           UBlk, UBody, VarMsg, VBlk, VBody, WABlk, WABody)
 from .utils import create_page
 
 TEST_STATIC_PATH = Path("home/tests/test_static")
@@ -1214,13 +1197,16 @@ class TestOrderedContentSetAPI:
         """
         Get default workflow for ordered content set
         """
-        workflow = Workflow.objects.filter(id=1)
+        workflow = Workflow.objects.create(name="Test Workflow", active="t")
+        content_type = ContentType.objects.get_for_model(OrderedContentSet)
 
-        WorkflowContentType.objects.create(content_type_id=39, workflow_id=1)
+        WorkflowContentType.objects.create(
+            content_type_id=content_type.id, workflow_id=workflow.id
+        )
 
         ordered_content_set_instance = OrderedContentSet()
         ordered_content_set_default_workflow = (
             ordered_content_set_instance.get_default_workflow()
         )
 
-        assert ordered_content_set_default_workflow == workflow.first()
+        assert ordered_content_set_default_workflow == workflow

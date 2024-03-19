@@ -9,18 +9,8 @@ from home.models import ContentPage, ContentPageIndex, HomePage
 from home.tests.utils import unwagtail
 
 from .helpers import set_profile_field_options
-from .page_builder import (
-    MBlk,
-    MBody,
-    NextBtn,
-    PageBtn,
-    PageBuilder,
-    VarMsg,
-    VBlk,
-    VBody,
-    WABlk,
-    WABody,
-)
+from .page_builder import (MBlk, MBody, NextBtn, PageBtn, PageBuilder, VarMsg,
+                           VBlk, VBody, WABlk, WABody)
 
 
 def tagslugs(taglikes: Iterable[dict[str, str]]) -> list[str]:

@@ -9,7 +9,8 @@ from queue import Queue
 from typing import Any
 from uuid import uuid4
 
-from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
+from django.core.exceptions import (ObjectDoesNotExist,  # type: ignore
+                                    ValidationError)
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
@@ -19,18 +20,9 @@ from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
-from home.models import (
-    ContentPage,
-    ContentPageIndex,
-    ContentQuickReply,
-    ContentTrigger,
-    HomePage,
-    MessengerBlock,
-    SMSBlock,
-    USSDBlock,
-    ViberBlock,
-    WhatsappBlock,
-)
+from home.models import (ContentPage, ContentPageIndex, ContentQuickReply,
+                         ContentTrigger, HomePage, MessengerBlock, SMSBlock,
+                         USSDBlock, ViberBlock, WhatsappBlock)
 
 PageId = tuple[str, Locale]
 

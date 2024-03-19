@@ -15,19 +15,14 @@ from modelcluster.fields import ParentalKey
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
 from wagtail.api import APIField
-from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError
+from wagtail.blocks import (StreamBlockValidationError,
+                            StructBlockValidationError)
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import (
-    DraftStateMixin,
-    LockableMixin,
-    Page,
-    Revision,
-    RevisionMixin,
-    WorkflowMixin,
-)
+from wagtail.models import (DraftStateMixin, LockableMixin, Page, Revision,
+                            RevisionMixin, WorkflowMixin)
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
