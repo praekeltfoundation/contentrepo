@@ -8,13 +8,24 @@ from django.test import TestCase, override_settings
 from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
-from wagtail.models import Locale  # type: ignore
-from wagtail.models import Page
+from wagtail.models import (
+    Locale,  # type: ignore
+    Page,
+)
 from wagtail.test.utils import WagtailPageTests
 
-from home.models import (ContentPage, ContentPageIndex, GoToPageButton,
-                         HomePage, NextMessageButton, OrderedContentSet,
-                         PageView, SMSBlock, USSDBlock, WhatsappBlock)
+from home.models import (
+    ContentPage,
+    ContentPageIndex,
+    GoToPageButton,
+    HomePage,
+    NextMessageButton,
+    OrderedContentSet,
+    PageView,
+    SMSBlock,
+    USSDBlock,
+    WhatsappBlock,
+)
 
 from .page_builder import PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating

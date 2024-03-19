@@ -16,8 +16,21 @@ from wagtailmedia.models import Media  # type: ignore
 from home.content_import_export import import_content
 from home.models import ContentPage, HomePage, OrderedContentSet, PageView
 
-from .page_builder import (MBlk, MBody, NextBtn, PageBuilder, SBlk, SBody,
-                           UBlk, UBody, VarMsg, VBlk, VBody, WABlk, WABody)
+from .page_builder import (
+    MBlk,
+    MBody,
+    NextBtn,
+    PageBuilder,
+    SBlk,
+    SBody,
+    UBlk,
+    UBody,
+    VarMsg,
+    VBlk,
+    VBody,
+    WABlk,
+    WABody,
+)
 from .utils import create_page
 
 TEST_STATIC_PATH = Path("home/tests/test_static")

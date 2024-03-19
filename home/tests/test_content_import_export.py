@@ -22,14 +22,32 @@ from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content, import_ordered_sets
 from home.import_content_pages import ImportException
-from home.models import (ContentPage, ContentPageIndex, GoToPageButton,
-                         HomePage, OrderedContentSet)
+from home.models import (
+    ContentPage,
+    ContentPageIndex,
+    GoToPageButton,
+    HomePage,
+    OrderedContentSet,
+)
 from home.tests.utils import unwagtail
 
 from .helpers import set_profile_field_options
-from .page_builder import (MBlk, MBody, NextBtn, PageBtn, PageBuilder, SBlk,
-                           SBody, UBlk, UBody, VarMsg, VBlk, VBody, WABlk,
-                           WABody)
+from .page_builder import (
+    MBlk,
+    MBody,
+    NextBtn,
+    PageBtn,
+    PageBuilder,
+    SBlk,
+    SBody,
+    UBlk,
+    UBody,
+    VarMsg,
+    VBlk,
+    VBody,
+    WABlk,
+    WABody,
+)
 
 IMP_EXP_DATA_BASE = Path("home/tests/import-export-data")
 

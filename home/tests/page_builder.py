@@ -6,9 +6,17 @@ from taggit.models import Tag  # type: ignore
 from wagtail.blocks import RichTextBlock, StructBlock  # type: ignore
 from wagtail.models import Page  # type: ignore
 
-from home.models import (ContentPage, ContentPageIndex, ContentQuickReply,
-                         ContentTrigger, MessengerBlock, SMSBlock, USSDBlock,
-                         ViberBlock, WhatsappBlock)
+from home.models import (
+    ContentPage,
+    ContentPageIndex,
+    ContentQuickReply,
+    ContentTrigger,
+    MessengerBlock,
+    SMSBlock,
+    USSDBlock,
+    ViberBlock,
+    WhatsappBlock,
+)
 
 TPage = TypeVar("TPage", bound=Page)
 
