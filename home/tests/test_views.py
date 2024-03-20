@@ -1,38 +1,64 @@
 from urllib.parse import urlencode
 
-from django.contrib.auth import get_user_model
-from django.urls import reverse
+import pytest
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient
 
-from home.models import ContentPageRating
+from home.models import ContentPageRating, HomePage
 from home.serializers import ContentPageRatingSerializer, PageViewSerializer
 
-from .utils import create_page
+from .page_builder import (
+    PageBuilder,
+    WABlk,
+    WABody,
+)
 
 
-class PageRatingTestCase(APITestCase):
-    def setUp(self):
-        self.url = reverse("contentpagerating-list")
+@pytest.fixture()
+def api_client(django_user_model):
+    creds = {"username": "test", "password": "test"}
+    user = django_user_model.objects.create_user(**creds)
+    client = APIClient()
+    client.force_authenticate(user)
+    return client
 
-    def test_homepage_redirect(self):
+
+@pytest.mark.django_db
+class TestPageRatings:
+    def create_content_page(self):
+        """
+        Helper function to create pages needed for each test.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = []
+
+        bodies.append(WABody("default page", [WABlk("default body")]))
+
+        content_page = PageBuilder.build_cp(
+            parent=parent, slug="default-page", title="default page", bodies=bodies
+        )
+        return content_page
+
+    def test_homepage_redirect(self, api_client):
         """
         Check that we redirect to admin
         """
-        response = self.client.get("/")
-        self.assertEqual("/admin/", response.url)
+        response = api_client.get("/")
+        assert response.url == "/admin/"
 
-    def test_page_rating_success(self):
+    def test_page_rating_success(self, api_client):
         """
         Confirm that page ratings are created correctly
         """
-        user = get_user_model().objects.create_user("test")
-        self.client.force_authenticate(user)
+        page = self.create_content_page()
 
-        page = create_page()
-
-        response = self.client.post(
-            self.url,
+        response = api_client.post(
+            "/api/v2/custom/ratings/",
             {
                 "page": page.id,
                 "helpful": False,
@@ -42,68 +68,53 @@ class PageRatingTestCase(APITestCase):
             format="json",
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        assert response.status_code == status.HTTP_201_CREATED
 
         response_data = response.json()
         response_data.pop("timestamp")
         rating = ContentPageRating.objects.last()
-        self.assertEqual(
-            response.json(),
-            {
-                "id": rating.id,
-                "helpful": False,
-                "comment": "lekker comment",
-                "data": {"contact_uuid": "123"},
-                "page": page.id,
-                "revision": page.get_latest_revision().id,
-            },
-        )
 
-    def test_page_rating_required_fields(self):
+        assert response.json() == {
+            "id": rating.id,
+            "helpful": False,
+            "comment": "lekker comment",
+            "data": {"contact_uuid": "123"},
+            "page": page.id,
+            "revision": page.get_latest_revision().id,
+        }
+
+    def test_page_rating_required_fields(self, api_client):
         """
         Ensure that the helpful, page and revision fields are required
         and rating is not created when these fields are missing
         """
-        user = get_user_model().objects.create_user("test")
-        self.client.force_authenticate(user)
+        response = api_client.post("/api/v2/custom/ratings/", {}, format="json")
 
-        response = self.client.post(self.url, {}, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == {
+            "helpful": ["This field is required."],
+            "page": ["This field is required."],
+            "revision": ["This field is required."],
+        }
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
-            {
-                "helpful": ["This field is required."],
-                "page": ["This field is required."],
-                "revision": ["This field is required."],
-            },
-        )
-
-    def test_page_rating_invalid_page(self):
+    def test_page_rating_invalid_page(self, api_client):
         """
         Ensure that a rating cannot be made for a page that does not exist
         """
-        user = get_user_model().objects.create_user("test")
-        self.client.force_authenticate(user)
-
-        response = self.client.post(self.url, {"page": 123}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
-            {
-                "page": ["Page matching query does not exist."],
-            },
+        response = api_client.post(
+            "/api/v2/custom/ratings/", {"page": 123}, format="json"
         )
 
-    def test_get_list(self):
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == {
+            "page": ["Page matching query does not exist."],
+        }
+
+    def test_get_list(self, api_client):
         """
         Should return the data, filtered by the querystring
         """
-        user = get_user_model().objects.create_user("test")
-        self.client.force_authenticate(user)
-
-        page = create_page()
+        page = self.create_content_page()
 
         rating_old = page.ratings.create(
             revision=page.get_latest_revision(), helpful=True
@@ -112,63 +123,71 @@ class PageRatingTestCase(APITestCase):
             revision=page.get_latest_revision(), helpful=False
         )
         page.ratings.create(revision=page.get_latest_revision(), helpful=True)
-        response = self.client.get(
-            f"{self.url}?"
-            f"{urlencode({'timestamp_gt': rating_old.timestamp.isoformat()})}"
+
+        response = api_client.get(
+            f"/api/v2/custom/ratings/?{urlencode({'timestamp_gt': rating_old.timestamp.isoformat()})}"
         )
-        self.assertEqual(
-            response.json()["results"][0],
-            ContentPageRatingSerializer(instance=rating_new).data,
+
+        assert (
+            response.json()["results"][0]
+            == ContentPageRatingSerializer(instance=rating_new).data
         )
+
         [r, _] = response.json()["results"]
         r.pop("timestamp")
-        self.assertEqual(
-            r,
-            {
-                "id": rating_new.id,
-                "comment": "",
-                "page": page.id,
-                "revision": page.get_latest_revision().id,
-                "helpful": False,
-                "data": {},
-            },
+        assert r == {
+            "id": rating_new.id,
+            "comment": "",
+            "page": page.id,
+            "revision": page.get_latest_revision().id,
+            "helpful": False,
+            "data": {},
+        }
+
+
+@pytest.mark.django_db
+class TestPageViews:
+    def create_content_page(self):
+        """
+        Helper function to create pages needed for each test.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = []
+
+        bodies.append(WABody("default page", [WABlk("default body")]))
+
+        content_page = PageBuilder.build_cp(
+            parent=parent, slug="default-page", title="default page", bodies=bodies
         )
+        return content_page
 
-
-class PageViewsTestCase(APITestCase):
-    def setUp(self):
-        self.url = reverse("pageview-list")
-
-    def test_get_list(self):
-        """
-        Should return the data, filtered by the querystring
-        """
-        user = get_user_model().objects.create_user("test")
-        self.client.force_authenticate(user)
-
-        page = create_page()
-
+    def test_get_list(self, api_client):
+        page = self.create_content_page()
         pageview_old = page.views.create(revision=page.get_latest_revision())
         pageview_new = page.views.create(revision=page.get_latest_revision())
         page.views.create(revision=page.get_latest_revision())
-        response = self.client.get(
-            f"{self.url}?"
-            f"{urlencode({'timestamp_gt': pageview_old.timestamp.isoformat()})}"
+
+        response = api_client.get(
+            f"/api/v2/custom/pageviews/?{urlencode({'timestamp_gt': pageview_old.timestamp.isoformat()})}"
         )
-        self.assertEqual(
-            response.json()["results"][0],
-            PageViewSerializer(instance=pageview_new).data,
+
+        assert (
+            response.json()["results"][0]
+            == PageViewSerializer(instance=pageview_new).data
         )
+
         [r, _] = response.json()["results"]
         r.pop("timestamp")
-        self.assertEqual(
-            r,
-            {
-                "id": pageview_new.id,
-                "page": page.id,
-                "revision": page.get_latest_revision().id,
-                "data": {},
-                "platform": "web",
-                "message": None,
-            },
-        )
+        assert r == {
+            "id": pageview_new.id,
+            "page": page.id,
+            "revision": page.get_latest_revision().id,
+            "data": {},
+            "platform": "web",
+            "message": None,
+        }
