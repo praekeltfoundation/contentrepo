@@ -13,7 +13,8 @@ BASE_DIR = PROJECT_DIR.parent
 DEFAULT_SECRET_KEY = "please-change-me"
 SECRET_KEY = os.environ.get("SECRET_KEY") or DEFAULT_SECRET_KEY
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost"])
-
+WAGTAILDOCS_EXTENSIONS = ["doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf", "txt"]
+WAGTAILDOCS_DOCUMENT_MODEL = "home.CustomDocument"
 INSTALLED_APPS = [
     "home",
     "search",
