@@ -1,16 +1,21 @@
+## Type
+- [ ] Feature
+- [ ] Bug
+- [ ] Update (fix something that did not work as expected)
+- [ ] Documentation
+
 ## Purpose
-_Describe the problem or feature in addition to a link to the issues._
+_Why does this exist?_
 
-## Approach
-_How does this change address the problem?_
+## Solution
+_What changed, and does this address the problem? _
 
-#### Open Questions and Pre-Merge TODOs
-- [ ] Use github checklists. When solved, check the box and explain the answer.
+## Tests
+_Was this tested? How?_
 
-## Learning
-_Describe the research stage_
+#### Checklist
+- [ ] Ran tests successfully
+- [ ] Errors handled or acknowledged
+- [ ] Added to release notes
+- [ ] Updated readme/documentation (if necessary)
 
-_Links to blog posts, patterns, libraries or addons used to solve this problem_
-
-#### Blog Posts
-- [How to Pull Request](https://github.com/flexyford/pull-request) Github Repo with Learning focused Pull Request Template.
