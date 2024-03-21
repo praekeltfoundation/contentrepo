@@ -167,6 +167,9 @@ class TestPageViews:
         return content_page
 
     def test_get_list(self, api_client):
+        """
+        Should return the data, filtered by the querystring
+        """
         page = self.create_content_page()
         pageview_old = page.views.create(revision=page.get_latest_revision())
         pageview_new = page.views.create(revision=page.get_latest_revision())
