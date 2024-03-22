@@ -1,7 +1,7 @@
 from io import StringIO
 
-from django.core.management import call_command
-from django.test import TestCase
+from django.core.management import call_command  # type: ignore
+from django.test import TestCase  # type: ignore
 from wagtail.models import Page  # type: ignore
 
 from home.models import HomePage
@@ -16,7 +16,7 @@ from .page_builder import (
 
 
 class TestBrokenLinks(TestCase):
-    def setUp(self):
+    def setUp(self):  # type: ignore
         """
         Create a page with no related pages, the `related_page`
         """
@@ -32,7 +32,7 @@ class TestBrokenLinks(TestCase):
             bodies=[WABody("health info", [WABlk("*Health information*")])],
         )
 
-    def test_content_page_with_related_pages(self):
+    def test_content_page_with_related_pages(self):  # type: ignore
         """ """
         output = StringIO()
 
@@ -57,7 +57,7 @@ class TestBrokenLinks(TestCase):
         ]
         assert output.getvalue().strip() == "Successfully retrieve broken links"
 
-    def test_content_page_with_deleted_related_page(self):
+    def test_content_page_with_deleted_related_page(self):  # type: ignore
         """
         If related_page is deleted we still get two objects but one will be null the one that is deleted
         """
@@ -82,7 +82,7 @@ class TestBrokenLinks(TestCase):
         assert related_pages[1] is None
         assert related_pages == [self_help_rp, None]
 
-    def test_content_page_with_a_go_to_button(self):
+    def test_content_page_with_a_go_to_button(self):  # type: ignore
         """
         If page linked to button to go to page is deleted we still get two objects
         """
