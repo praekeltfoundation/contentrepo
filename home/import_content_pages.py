@@ -40,9 +40,17 @@ class ImportException(Exception):
     Base exception for all import related issues.
     """
 
-    def __init__(self, message: str, row_num: int | None = None):
+    def __init__(
+        self,
+        message: str,
+        row_num: int | None = None,
+        slug: str | None = None,
+        locale: Locale | None = None,
+    ):
         self.row_num = row_num
         self.message = message
+        self.slug = slug
+        self.locale = locale
         super().__init__()
 
 
@@ -117,6 +125,8 @@ class ContentImporter:
                     self.add_message_to_shadow_content_page_from_row(row, prev_locale)
             except ImportException as e:
                 e.row_num = i
+                e.slug = row.slug
+                e.locale = row.locale
                 raise e
 
     def save_pages(self) -> None:
@@ -316,20 +326,15 @@ class ContentImporter:
         if row.translation_tag or locale != self.default_locale():
             page.translation_key = row.translation_tag
 
-    def find_shadow_content_page(
-        self, row: "ContentRow", locale: Locale
-    ) -> "ShadowContentPage":
-        try:
-            return self.shadow_pages[(row.slug, locale)]
-        except KeyError:
-            raise ImportException(
-                f"Cannot find content page with slug '{row.slug}' and locale '{locale}'"
-            )
-
     def add_variation_to_shadow_content_page_from_row(
         self, row: "ContentRow", locale: Locale
     ) -> None:
-        page = self.find_shadow_content_page(row, locale)
+        try:
+            page = self.shadow_pages[(row.slug, locale)]
+        except KeyError:
+            raise ImportException(
+                f"This is a variation for the content page with slug '{row.slug}' and locale '{locale}', but no such page exists"
+            )
         whatsapp_block = page.whatsapp_body[-1]
         whatsapp_block.variation_messages.append(
             ShadowVariationBlock(
@@ -340,7 +345,12 @@ class ContentImporter:
     def add_message_to_shadow_content_page_from_row(
         self, row: "ContentRow", locale: Locale
     ) -> None:
-        page = self.find_shadow_content_page(row, locale)
+        try:
+            page = self.shadow_pages[(row.slug, locale)]
+        except KeyError:
+            raise ImportException(
+                f"This is a message for page with slug '{row.slug}' and locale '{locale}', but no such page exists"
+            )
         if row.is_whatsapp_message:
             page.enable_whatsapp = True
             buttons = []
