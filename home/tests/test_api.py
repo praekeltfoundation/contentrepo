@@ -1250,6 +1250,7 @@ class TestOrderedContentSetAPI:
             validation_error.value.messages[0]
             == "File extension “exe” is not allowed. Allowed extensions are: doc, docx, xls, xlsx, ppt, pptx, pdf, txt."
         )
+
     def test_get_upload(self, admin_client):
         """
         Should return the data and not throw an exception
