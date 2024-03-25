@@ -9,10 +9,7 @@ from queue import Queue
 from typing import Any
 from uuid import uuid4
 
-from django.core.exceptions import (
-    ObjectDoesNotExist,  # type: ignore
-    ValidationError,
-)
+from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
