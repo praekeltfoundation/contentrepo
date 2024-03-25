@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
+from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
@@ -1223,3 +1224,14 @@ class TestOrderedContentSetAPI:
         )
 
         assert ordered_content_set_default_workflow == workflow
+
+    def test_get_upload(self, admin_client):
+        """
+        Should return the data and not throw an exception
+        """
+        url = reverse("import_orderedcontentset")
+        # NB gotta use the admin_client here
+        response = admin_client.get(f"{url}", follow=True)
+        content_str = response.content.decode("utf-8")
+        assert "/admin/snippets/home/orderedcontentset/" in content_str
+        assert response.status_code == 200
