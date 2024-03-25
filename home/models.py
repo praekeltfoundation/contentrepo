@@ -28,7 +28,7 @@ from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
-from .whatsapp import create_whatsapp_template
+from .whatsapp import create_standalone_whatsapp_template, create_whatsapp_template
 
 from .constants import (  # isort:skip
     AGE_CHOICES,
@@ -802,20 +802,23 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         Only submits if the create templates is enabled, if the page is a whatsapp
         template, and if the template fields are different to the previous revision
         """
+        print("Running old submit_whatsapp_template")
         if not settings.WHATSAPP_CREATE_TEMPLATES:
             return
         if not self.is_whatsapp_template:
             return
-
+        print("Check 1")
         # If there are any missing fields in the previous revision, then carry on
         try:
             previous_revision = previous_revision.as_object()
             previous_revision_fields = previous_revision.whatsapp_template_fields
+            print("Check 2")
         except (IndexError, AttributeError):
             previous_revision_fields = ()
         # If there are any missing fields in this revision, then don't submit template
         try:
             if self.whatsapp_template_fields == previous_revision_fields:
+                print("Fields are the same, no need to update")
                 return
         except (IndexError, AttributeError):
             return
@@ -1220,6 +1223,7 @@ class PageView(models.Model):
 
 
 class TemplateContentQuickReply(TagBase):
+
     class Meta:
         verbose_name = "quick reply2"
         verbose_name_plural = "quick replie2"
@@ -1238,18 +1242,31 @@ class TemplateQuickReplyContent(ItemBase):
     )
 
 
+# class TemplateExampleValue(models.Model):
+#     name = models.CharField(max_length=512, blank=True, default="Test")
+#     # description = models.CharField(max_length=1024, blank=True, default="")
+
+#     def __str__(self):
+#         """String repr of this snippet."""
+#         return self.name
+#     class Meta:  # noqa
+#         verbose_name = "Example Value"
+#         verbose_name_plural = "Example Value"
+
+
 class WhatsAppTemplate(
     DraftStateMixin, ClusterableModel, RevisionMixin, index.Indexed, models.Model
 ):
+
     class Category(models.TextChoices):
-        MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
+        MARKETING = "MARKETING", _("Marketing")
 
     name = models.CharField(max_length=512, blank=True, default="")
     category = models.CharField(
         max_length=14,
         choices=Category.choices,
-        default=Category.UTILITY,
+        default=Category.MARKETING,
     )
     quick_replies = ClusterTaggableManager(
         through="home.TemplateQuickReplyContent", blank=True
@@ -1279,13 +1296,18 @@ class WhatsAppTemplate(
         max_length=4096,
     )
 
-    example_values = blocks.ListBlock(
-        blocks.CharBlock(
-            label="Example Value",
-        ),
-        default=[],
-        label="Variable Example Values",
-        help_text="Please add example values for all variables used in a WhatsApp template",
+    example_values = StreamField(
+        [
+            (
+                "example_values",
+                blocks.CharBlock(
+                    label="Example Value",
+                ),
+            )
+        ],
+        blank=True,
+        null=True,
+        use_json_field=True,
     )
 
     search_fields = [
@@ -1423,9 +1445,23 @@ class WhatsAppTemplate(
             )
 
         if errors:
+            print(errors)
             raise ValidationError(errors)
 
         return result
+
+    @property
+    def whatsapp_template_fields(self):
+        """
+        Returns a tuple of fields that can be used to determine template equality
+        """
+        return (
+            self.category,
+            self.image,
+            self.message,
+            sorted(self.quick_reply_buttons),
+            self.example_values,
+        )
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.prefix}_{self.get_latest_revision().pk}"
@@ -1472,21 +1508,26 @@ class WhatsAppTemplate(
         # except (IndexError, AttributeError):
         #     return
         print("Done Checking Previous Revisions")
-        self.whatsapp_template_name = self.create_whatsapp_template_name()
+        self.template_name = self.create_whatsapp_template_name()
+        print("Template name = ", self.template_name)
         print("Running create_whatsapp_template")
         print("Image is = ", self.image)
-        create_whatsapp_template(
-            self.name,
+        print("Standalone template EV = ", self.example_values)
+        print("Clean up to", [v["value"] for v in self.example_values.raw_data])
+        create_standalone_whatsapp_template(
+            self.template_name,
             # self.body
             # TODO: Replace create_whatsapp_template with something that takes the message instead.
             self.message,
             str(self.category),
+            self.locale,
             sorted(self.quick_reply_buttons),
+            # TODO: Have create whatsapp template accept the image instead of the ID
             self.image,
-            self.example_values,
+            [v["value"] for v in self.example_values.raw_data],
         )
         print("Reached end of submit_whatsapp_template")
-        return self.template_name
+        return self.name
 
 
 @receiver(pre_save, sender=WhatsAppTemplate)

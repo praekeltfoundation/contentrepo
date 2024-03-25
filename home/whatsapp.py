@@ -104,19 +104,46 @@ def create_whatsapp_template(
     body: str,
     category: str,
     locale: Locale,
-    image_id: int | None = None,
     quick_replies: Iterable[str] = (),
+    image_id: int | None = None,
     example_values: Iterable[str] | None = None,
 ) -> None:
     """
     Create a WhatsApp template through the WhatsApp Business API.
 
     """
+    print("Running old create_whatsapp_template")
+
     components = create_whatsapp_template_submission(
         body, quick_replies, example_values
     )
     if image_id is not None:
         components.append(create_whatsapp_template_image(image_id))
+
+    submit_whatsapp_template(name, category, locale, components)
+
+
+def create_standalone_whatsapp_template(
+    name: str,
+    body: str,
+    category: str,
+    locale: Locale,
+    quick_replies: Iterable[str] = (),
+    image_id: int | None = None,
+    example_values: Iterable[str] | None = None,
+) -> None:
+    """
+    Create a WhatsApp template through the WhatsApp Business API.
+
+    """
+    print("Running standalone (new) create_whatsapp_template")
+
+    components = create_whatsapp_template_submission(
+        body, quick_replies, example_values
+    )
+    if image_id is not None:
+        components.append(create_whatsapp_template_image(image_id.id))
+
     submit_whatsapp_template(name, category, locale, components)
 
 
@@ -129,20 +156,58 @@ def create_whatsapp_template_submission(
     Create the body and buttons components of a WhatsApp template submission
     request, but not the images because those need to be uploaded separately.
     """
-    body: dict[str, Any] = {"type": "BODY", "text": body_text}
-    if example_values:
-        body["example"] = {"body_text": [example_values]}
+    print("Running create_whatsapp_template_submission")
+    # body: dict[str, Any] = {"type": "BODY", "text": body_text}
 
-    components = [body]
+    components: list[dict[str, Any]] = []
+
+    if example_values:
+        components.append(
+            {
+                "type": "BODY",
+                "text": body_text,
+                "example": {
+                    "body_text": [example_values],
+                },
+            }
+        )
+    else:
+        components.append({"type": "BODY", "text": body_text})
 
     if quick_replies:
-        print("Quick Replies = ", quick_replies )
+        print("Quick Replies = ", quick_replies)
         buttons = []
         for button in quick_replies:
             buttons.append({"type": "QUICK_REPLY", "text": button})
         components.append({"type": "BUTTONS", "buttons": buttons})
 
     return components
+
+
+# def create_example_values_component(example_values: str):
+#     print("Working on example values component here")
+#     print(example_values)
+#     if example_values.raw_data:
+#         print(example_values.raw_data)
+#         print("--")
+#         print([v["value"] for v in example_values.raw_data])
+#         print("--")
+#         ev_values = []
+#         # for item in example_values.raw_data[0]:
+#         #     # print("Item is ", item.get("value"))
+#         #     ev_values.append(item.get("value"))
+
+
+#         # ev_body = "example": {
+#         # "body_text": [
+#         #     [
+#         #     "the end of August","25OFF","25%"
+#         #     ]
+#         # ]
+#         # }
+#         print(ev_values)
+
+#     print("END EV")
 
 
 def create_whatsapp_template_image(image_id: int) -> dict[str, Any]:
@@ -175,14 +240,17 @@ def submit_whatsapp_template(
         "language": WhatsAppLanguage.from_locale(locale).value,
         "components": components,
     }
-
+    print("Data = ", data)
     response = requests.post(
         url,
         headers=headers,
         data=json.dumps(data, indent=4),
     )
+    response_data = response.json()
+    print("Response data = ", response_data)
 
     # Check if an error has occurred
+    # TODO: Should we return more detail on the error?
     response.raise_for_status()
 
 
@@ -194,7 +262,7 @@ def get_upload_session_id(image_id: int) -> dict[str, Any]:
     headers = {
         "Content-Type": "application/json",
     }
-
+    print("ImageID = ", repr(image_id))
     img_obj = get_image_model().objects.get(id=image_id)
     mime_type = mimetypes.guess_type(img_obj.file.name)[0]
     file_size = img_obj.file.size

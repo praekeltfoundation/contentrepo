@@ -215,6 +215,7 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
         "locale",
         "status",
         "quick_replies",
+        "example_values",
     )
 
     panels = [
@@ -226,9 +227,13 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
                 FieldPanel("message"),
                 FieldPanel("quick_replies", heading="Quick Replies"),
                 FieldPanel("locale"),
+                FieldPanel("example_values"),
             ],
             heading="Whatsapp Template",
         ),
+        # FieldPanel(
+        #     FieldPanel("example_values"),
+        # ),
     ]
 
     search_fields = (
@@ -239,6 +244,40 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
     )
 
 
+# class ExampleValuesViewSet(SnippetViewSet):
+#     model = TemplateExampleValue
+#     body_truncate_size = 200
+#     icon = "order"
+#     menu_order = 200
+#     add_to_admin_menu = True
+#     add_to_settings_menu = False
+#     exclude_from_explorer = False
+#     # menu_label = "WhatsAppTemplates"
+#     # menu_icon = "pilcrow"
+#     # menu_order = 200
+#     # add_to_settings_menu = False
+#     # exclude_from_explorer = False
+#     # index_view_class = CustomIndexView
+#     list_display = (
+#         "name",
+
+#     )
+
+#     panels = [
+#         MultiFieldPanel(
+#             [
+#                 FieldPanel("name"),
+#                 # FieldPanel("category"),
+#                 # FieldPanel("image"),
+#                 # FieldPanel("message"),
+#                 # FieldPanel("quick_replies", heading="Quick Replies"),
+#                 # FieldPanel("locale"),
+#                 # FieldPanel("example_values"),
+#             ],
+#             heading="Template Example Values",
+#         ),
+#     ]
+# register_snippet(ExampleValuesViewSet)
 register_snippet(OrderedContentSetViewSet)
 modeladmin_register(ContentPageAdmin)
 register_snippet(WhatsAppTemplateViewSet)
