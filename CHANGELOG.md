@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
-
+- Increased SMS limit to 459 characters
 -->
 ## v1.1.0
 ### Fixed
