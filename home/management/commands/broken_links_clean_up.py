@@ -9,8 +9,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        # Only query live pages
-        content_pages = ContentPage.objects.live()
+        # Query all pages
+        content_pages = ContentPage.objects.all()
 
         for page in content_pages:
             if page.related_pages:
@@ -36,14 +36,16 @@ class Command(BaseCommand):
                                     f"Content Page: {page.id} with non existing button page: {pg_id}"
                                 )
 
-        # Only get live ordered content sets
-        ordered = OrderedContentSet.objects.filter(live=True)
+        # Get ordered content sets
+        ordered = OrderedContentSet.objects.all()
 
         for oc in ordered:
             if oc.pages:
                 for page in oc.pages:
                     if page.value.get("contentpage") is not None:
                         continue
-                    self.stdout.write(f"Ordered Content: {oc.id}")
+                    self.stdout.write(
+                        f"Ordered Content: {oc.id} with non existing page"
+                    )
 
         self.stdout.write(self.style.SUCCESS("Successfully retrieve broken links"))
