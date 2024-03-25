@@ -8,11 +8,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
-<<<<<<< HEAD
 from django.core.files.uploadedfile import SimpleUploadedFile
-=======
 from django.urls import reverse
->>>>>>> main
 from pytest_django.asserts import assertTemplateUsed
 from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
