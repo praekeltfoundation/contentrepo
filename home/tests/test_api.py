@@ -8,7 +8,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
+<<<<<<< HEAD
 from django.core.files.uploadedfile import SimpleUploadedFile
+=======
+from django.urls import reverse
+>>>>>>> main
 from pytest_django.asserts import assertTemplateUsed
 from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
@@ -1234,7 +1238,7 @@ class TestOrderedContentSetAPI:
 
     def test_valid_document_extension(self):
         """
-        Upload an invalid cocument type
+        Upload an invalid document type
         """
         invalid_file = SimpleUploadedFile(
             "test_exe.exe", b"content", content_type="application/x-msdos-program"
@@ -1249,3 +1253,13 @@ class TestOrderedContentSetAPI:
             validation_error.value.messages[0]
             == "File extension “exe” is not allowed. Allowed extensions are: doc, docx, xls, xlsx, ppt, pptx, pdf, txt."
         )
+    def test_get_upload(self, admin_client):
+        """
+        Should return the data and not throw an exception
+        """
+        url = reverse("import_orderedcontentset")
+        # NB gotta use the admin_client here
+        response = admin_client.get(f"{url}", follow=True)
+        content_str = response.content.decode("utf-8")
+        assert "/admin/snippets/home/orderedcontentset/" in content_str
+        assert response.status_code == 200
