@@ -637,8 +637,8 @@ class SMSBlockTests(TestCase):
 
     def test_clean_text_char_limit(self):
         """Text messages should be limited to 160 characters"""
-        SMSBlock().clean(self.create_message_value(message="a" * 160))
+        SMSBlock().clean(self.create_message_value(message="a" * 459))
 
         with self.assertRaises(StructBlockValidationError) as e:
-            SMSBlock().clean(self.create_message_value(message="a" * 161))
+            SMSBlock().clean(self.create_message_value(message="a" * 460))
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
