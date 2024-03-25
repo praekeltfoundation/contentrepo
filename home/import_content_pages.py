@@ -291,8 +291,9 @@ class ContentImporter:
         if len(row.footer) > 60:
             raise ImportException(f"footer too long: {row.footer}", row.page_id)
 
-        if len(row.list_items) > 24:
-            raise ImportException(f"list_items too long: {row.list_items}", row.page_id)
+        for list_item in row.list_items:
+            if len(list_item) > 24:
+                raise ImportException(f"list_items too long: {list_item}", row.page_id)
 
         self.shadow_pages[(row.slug, locale)] = page
 
