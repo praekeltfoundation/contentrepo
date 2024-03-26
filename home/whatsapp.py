@@ -118,18 +118,19 @@ def create_whatsapp_template(
         body, quick_replies, example_values
     )
     if image_id is not None:
-        components.append(create_whatsapp_template_image(image_id))
+        image_obj = get_image_model().objects.get(id=image_id)
+        components.append(create_whatsapp_template_image(image_obj))
 
     submit_whatsapp_template(name, category, locale, components)
 
-
+# TODO: Get correct type for below
 def create_standalone_whatsapp_template(
     name: str,
     body: str,
     category: str,
     locale: Locale,
     quick_replies: Iterable[str] = (),
-    image_id: int | None = None,
+    image_obj: Any | None = None,
     example_values: Iterable[str] | None = None,
 ) -> None:
     """
@@ -141,8 +142,8 @@ def create_standalone_whatsapp_template(
     components = create_whatsapp_template_submission(
         body, quick_replies, example_values
     )
-    if image_id is not None:
-        components.append(create_whatsapp_template_image(image_id.id))
+    if image_obj is not None:
+        components.append(create_whatsapp_template_image(image_obj))
 
     submit_whatsapp_template(name, category, locale, components)
 
@@ -209,9 +210,9 @@ def create_whatsapp_template_submission(
 
 #     print("END EV")
 
-
-def create_whatsapp_template_image(image_id: int) -> dict[str, Any]:
-    image_handle = upload_image(image_id)
+# TODO: Get correct type for below
+def create_whatsapp_template_image(image_obj: Any) -> dict[str, Any]:
+    image_handle = upload_image(image_obj)
     return {
         "type": "HEADER",
         "format": "IMAGE",
@@ -253,8 +254,8 @@ def submit_whatsapp_template(
     # TODO: Should we return more detail on the error?
     response.raise_for_status()
 
-
-def get_upload_session_id(image_id: int) -> dict[str, Any]:
+# TODO: Get the actual type of this image_obj
+def get_upload_session_id(image_obj: Any) -> dict[str, Any]:
     url = urljoin(
         settings.WHATSAPP_API_URL,
         "graph/v14.0/app/uploads",
@@ -262,10 +263,9 @@ def get_upload_session_id(image_id: int) -> dict[str, Any]:
     headers = {
         "Content-Type": "application/json",
     }
-    print("ImageID = ", repr(image_id))
-    img_obj = get_image_model().objects.get(id=image_id)
-    mime_type = mimetypes.guess_type(img_obj.file.name)[0]
-    file_size = img_obj.file.size
+    print("ImageID = ", type(image_obj))
+    mime_type = mimetypes.guess_type(image_obj.file.name)[0]
+    file_size = image_obj.file.size
 
     data = {
         "file_length": file_size,
@@ -281,15 +281,15 @@ def get_upload_session_id(image_id: int) -> dict[str, Any]:
 
     upload_details = {
         "upload_session_id": response.json()["id"],
-        "upload_file": img_obj.file,
+        "upload_file": image_obj.file,
     }
 
     response.raise_for_status()
     return upload_details
 
-
-def upload_image(image_id: int) -> str:
-    upload_details = get_upload_session_id(image_id)
+# TODO: Get correct type for below
+def upload_image(image_obj: Any) -> str:
+    upload_details = get_upload_session_id(image_obj)
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/{upload_details['upload_session_id']}",

@@ -1242,18 +1242,6 @@ class TemplateQuickReplyContent(ItemBase):
     )
 
 
-# class TemplateExampleValue(models.Model):
-#     name = models.CharField(max_length=512, blank=True, default="Test")
-#     # description = models.CharField(max_length=1024, blank=True, default="")
-
-#     def __str__(self):
-#         """String repr of this snippet."""
-#         return self.name
-#     class Meta:  # noqa
-#         verbose_name = "Example Value"
-#         verbose_name_plural = "Example Value"
-
-
 class WhatsAppTemplate(
     DraftStateMixin, ClusterableModel, RevisionMixin, index.Indexed, models.Model
 ):
