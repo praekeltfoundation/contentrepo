@@ -117,7 +117,6 @@ class TestBrokenLinks(TestCase):
             ],
         )
 
-        call_command("broken_links_clean_up", stdout=output)
         orig_self_help_btn = self_help.whatsapp_body._raw_data[0]["value"].get(
             "buttons"
         )
@@ -125,6 +124,8 @@ class TestBrokenLinks(TestCase):
 
         index.delete()
         del_self_help_btn = self_help.whatsapp_body._raw_data[0]["value"].get("buttons")
+
+        call_command("broken_links_clean_up", stdout=output)
 
         assert len(orig_self_help_btn) == 2
         assert (
@@ -135,7 +136,10 @@ class TestBrokenLinks(TestCase):
             orig_self_help_btn[1]["value"]["page"]
             == del_self_help_btn[1]["value"]["page"]
         )
-        assert output.getvalue().strip() == "Successfully retrieve broken links"
+        assert (
+            output.getvalue().strip()
+            == f"Content Page: {self_help.id} with non existing button page: {index.id}\nSuccessfully retrieve broken links"
+        )
 
     def test_ordered_content_sets(self) -> None:
         """
