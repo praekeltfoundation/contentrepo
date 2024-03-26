@@ -44,6 +44,7 @@ class MyPageTests(WagtailPageTests):
         self.assertCanNotCreateAt(Page, ContentPageIndex)
 
 
+# TODO: Do we need this part, and if so, why aren't the other tests using it?
 # class WhatsappTemplateTests(TestCase):
 # @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
 # @responses.activate

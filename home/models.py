@@ -802,23 +802,19 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         Only submits if the create templates is enabled, if the page is a whatsapp
         template, and if the template fields are different to the previous revision
         """
-        print("Running old submit_whatsapp_template")
         if not settings.WHATSAPP_CREATE_TEMPLATES:
             return
         if not self.is_whatsapp_template:
             return
-        print("Check 1")
         # If there are any missing fields in the previous revision, then carry on
         try:
             previous_revision = previous_revision.as_object()
             previous_revision_fields = previous_revision.whatsapp_template_fields
-            print("Check 2")
         except (IndexError, AttributeError):
             previous_revision_fields = ()
         # If there are any missing fields in this revision, then don't submit template
         try:
             if self.whatsapp_template_fields == previous_revision_fields:
-                print("Fields are the same, no need to update")
                 return
         except (IndexError, AttributeError):
             return
@@ -1324,6 +1320,7 @@ class WhatsAppTemplate(
     def status(self):
         return "Live" if self.live else "Draft"
 
+    # TODO: Figure out which of these needs to call the update
     def save(self, *args, **kwargs):
         if kwargs.get("update_fields"):
             # save not called from publish
@@ -1352,9 +1349,8 @@ class WhatsAppTemplate(
         previous_revision=None,
         clean=True,
     ):
-        print("SAVE REVISION")
         previous_revision = self.get_latest_revision()
-        print("PREV REV:", previous_revision)
+
         revision = super().save_revision(
             user,
             submitted_for_moderation,
@@ -1366,9 +1362,7 @@ class WhatsAppTemplate(
         )
 
         try:
-            print("SUBMIT")
             template_name = self.submit_whatsapp_template(previous_revision)
-            print("SUBMITTED:", template_name)
         except Exception:
             # Log the error to sentry and send error message to the user
             logger.exception(f"Failed to submit template name:  {self.name}")
@@ -1380,9 +1374,7 @@ class WhatsAppTemplate(
         return revision
 
     def clean(self):
-        print("Running WhatsAppTemplate Clean")
         result = super().clean()
-        print("CLEAN:", result)
         errors = {}
 
         # The WA title is needed for all templates to generate a name for the template
@@ -1433,7 +1425,6 @@ class WhatsAppTemplate(
             )
 
         if errors:
-            print(errors)
             raise ValidationError(errors)
 
         return result
@@ -1455,7 +1446,6 @@ class WhatsAppTemplate(
         return f"{self.prefix}_{self.get_latest_revision().pk}"
 
     def submit_whatsapp_template(self, previous_revision):
-        print("Running submit_whatsapp_template")
         """
         Submits a request to the WhatsApp API to create a template for this content
 
@@ -1463,45 +1453,26 @@ class WhatsAppTemplate(
         and if the template fields are different to the previous revision
         """
         if not settings.WHATSAPP_CREATE_TEMPLATES:
-            print("Shouldn't create templates. Exiting")
             return
-
-        print("Should create template")
 
         # If there are any missing fields in the previous revision, then carry on
         # try:
+        # TODO: Why are these if True's here
         if True:
-            print("Check Previous Revisions")
-            # print("Previous Revisions = " + previous_revision)
 
             if previous_revision:
                 previous_revision = previous_revision.as_object()
                 previous_revision_fields = previous_revision.whatsapp_template_fields
             else:
                 previous_revision_fields = ()
-            print("Got here")
-            print("Previous Revision Fields " + str(previous_revision_fields))
-        # except (IndexError, AttributeError):
-        # except (SyntaxError):
-        #     previous_revision_fields = ()
-        #     print("Error on revision check")
-        #     # raise
-        # If there are any missing fields in this revision, then don't submit template
-        # try:
+
         if True:
-            print("FIELDS:", self.fields, previous_revision_fields)
+
             if self.fields == previous_revision_fields:
-                print("No change in revision")
                 return
-        # except (IndexError, AttributeError):
-        #     return
-        print("Done Checking Previous Revisions")
+
         self.template_name = self.create_whatsapp_template_name()
-        print("Template name = ", self.template_name)
-        print("Running create_whatsapp_template")
-        print("Image is = ", self.image)
-        print("Standalone template EV = ", self.example_values)
-        print("Clean up to", [v["value"] for v in self.example_values.raw_data])
+
         create_standalone_whatsapp_template(
             self.template_name,
             # self.body
@@ -1514,13 +1485,13 @@ class WhatsAppTemplate(
             self.image,
             [v["value"] for v in self.example_values.raw_data],
         )
-        print("Reached end of submit_whatsapp_template")
+
         return self.name
 
 
 @receiver(pre_save, sender=WhatsAppTemplate)
 def update_embedding(sender, instance, *args, **kwargs):
-    print("Running update_embedding")
+
     from .word_embedding import preprocess_content_for_embedding
 
     if not model:

@@ -112,7 +112,6 @@ def create_whatsapp_template(
     Create a WhatsApp template through the WhatsApp Business API.
 
     """
-    print("Running old create_whatsapp_template")
 
     components = create_whatsapp_template_submission(
         body, quick_replies, example_values
@@ -122,6 +121,7 @@ def create_whatsapp_template(
         components.append(create_whatsapp_template_image(image_obj))
 
     submit_whatsapp_template(name, category, locale, components)
+
 
 # TODO: Get correct type for below
 def create_standalone_whatsapp_template(
@@ -137,7 +137,6 @@ def create_standalone_whatsapp_template(
     Create a WhatsApp template through the WhatsApp Business API.
 
     """
-    print("Running standalone (new) create_whatsapp_template")
 
     components = create_whatsapp_template_submission(
         body, quick_replies, example_values
@@ -157,7 +156,7 @@ def create_whatsapp_template_submission(
     Create the body and buttons components of a WhatsApp template submission
     request, but not the images because those need to be uploaded separately.
     """
-    print("Running create_whatsapp_template_submission")
+
     # body: dict[str, Any] = {"type": "BODY", "text": body_text}
 
     components: list[dict[str, Any]] = []
@@ -176,7 +175,7 @@ def create_whatsapp_template_submission(
         components.append({"type": "BODY", "text": body_text})
 
     if quick_replies:
-        print("Quick Replies = ", quick_replies)
+
         buttons = []
         for button in quick_replies:
             buttons.append({"type": "QUICK_REPLY", "text": button})
@@ -184,31 +183,6 @@ def create_whatsapp_template_submission(
 
     return components
 
-
-# def create_example_values_component(example_values: str):
-#     print("Working on example values component here")
-#     print(example_values)
-#     if example_values.raw_data:
-#         print(example_values.raw_data)
-#         print("--")
-#         print([v["value"] for v in example_values.raw_data])
-#         print("--")
-#         ev_values = []
-#         # for item in example_values.raw_data[0]:
-#         #     # print("Item is ", item.get("value"))
-#         #     ev_values.append(item.get("value"))
-
-
-#         # ev_body = "example": {
-#         # "body_text": [
-#         #     [
-#         #     "the end of August","25OFF","25%"
-#         #     ]
-#         # ]
-#         # }
-#         print(ev_values)
-
-#     print("END EV")
 
 # TODO: Get correct type for below
 def create_whatsapp_template_image(image_obj: Any) -> dict[str, Any]:
@@ -241,7 +215,6 @@ def submit_whatsapp_template(
         "language": WhatsAppLanguage.from_locale(locale).value,
         "components": components,
     }
-    print("Data = ", data)
     response = requests.post(
         url,
         headers=headers,
@@ -253,6 +226,7 @@ def submit_whatsapp_template(
     # Check if an error has occurred
     # TODO: Should we return more detail on the error?
     response.raise_for_status()
+
 
 # TODO: Get the actual type of this image_obj
 def get_upload_session_id(image_obj: Any) -> dict[str, Any]:
@@ -286,6 +260,7 @@ def get_upload_session_id(image_obj: Any) -> dict[str, Any]:
 
     response.raise_for_status()
     return upload_details
+
 
 # TODO: Get correct type for below
 def upload_image(image_obj: Any) -> str:
