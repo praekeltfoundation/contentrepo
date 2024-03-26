@@ -1320,16 +1320,17 @@ class WhatsAppTemplate(
     def status(self):
         return "Live" if self.live else "Draft"
 
-    # TODO: Figure out which of these needs to call the update
-    def save(self, *args, **kwargs):
-        if kwargs.get("update_fields"):
-            # save not called from publish
-            # do_stuff_on_save()
-            print("THIS IS A SAVE")
-        else:
-            # do_stuff_on_publish()
-            print("THIS IS A PUBLISH")
-        return super().save(*args, **kwargs)
+    # # TODO: Figure out which of these needs to call the update
+    # We need to relook at the states of a standalone template, its not just draft and live, theres also pending, declined etc
+    # def save(self, *args, **kwargs):
+    #     if kwargs.get("update_fields"):
+    #         # save not called from publish
+    #         # do_stuff_on_save()
+    #         print("THIS IS A SAVE")
+    #     else:
+    #         # do_stuff_on_publish()
+    #         print("THIS IS A PUBLISH")
+    #     return super().save(*args, **kwargs)
 
     def __str__(self):
         """String repr of this snippet."""
@@ -1456,32 +1457,23 @@ class WhatsAppTemplate(
             return
 
         # If there are any missing fields in the previous revision, then carry on
-        # try:
-        # TODO: Why are these if True's here
-        if True:
+        if previous_revision:
+            previous_revision = previous_revision.as_object()
+            previous_revision_fields = previous_revision.whatsapp_template_fields
+        else:
+            previous_revision_fields = ()
 
-            if previous_revision:
-                previous_revision = previous_revision.as_object()
-                previous_revision_fields = previous_revision.whatsapp_template_fields
-            else:
-                previous_revision_fields = ()
-
-        if True:
-
-            if self.fields == previous_revision_fields:
-                return
+        if self.fields == previous_revision_fields:
+            return
 
         self.template_name = self.create_whatsapp_template_name()
 
         create_standalone_whatsapp_template(
             self.template_name,
-            # self.body
-            # TODO: Replace create_whatsapp_template with something that takes the message instead.
             self.message,
             str(self.category),
             self.locale,
             sorted(self.quick_reply_buttons),
-            # TODO: Have create whatsapp template accept the image instead of the ID
             self.image,
             [v["value"] for v in self.example_values.raw_data],
         )

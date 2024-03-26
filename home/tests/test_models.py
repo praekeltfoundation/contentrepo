@@ -53,6 +53,7 @@ class MyPageTests(WagtailPageTests):
 #     responses.add(responses.POST, url, json={})
 
 #     # page = create_page(is_whatsapp_template=True)
+#     # Create instance of django model and make this work
 #     template = WhatsAppTemplate(
 #         name="TemplateTest",
 #         message="This is a test message",

@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 
 import requests
 from django.conf import settings  # type: ignore
-from wagtail.images import get_image_model  # type: ignore
+from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
 from .constants import WHATSAPP_LANGUAGE_MAPPING
@@ -117,7 +117,7 @@ def create_whatsapp_template(
         body, quick_replies, example_values
     )
     if image_id is not None:
-        image_obj = get_image_model().objects.get(id=image_id)
+        image_obj = Image.objects.get(id=image_id)
         components.append(create_whatsapp_template_image(image_obj))
 
     submit_whatsapp_template(name, category, locale, components)
@@ -130,7 +130,7 @@ def create_standalone_whatsapp_template(
     category: str,
     locale: Locale,
     quick_replies: Iterable[str] = (),
-    image_obj: Any | None = None,
+    image_obj: Image | None = None,
     example_values: Iterable[str] | None = None,
 ) -> None:
     """
@@ -184,9 +184,9 @@ def create_whatsapp_template_submission(
     return components
 
 
-# TODO: Get correct type for below
-def create_whatsapp_template_image(image_obj: Any) -> dict[str, Any]:
+def create_whatsapp_template_image(image_obj: Image) -> dict[str, Any]:
     image_handle = upload_image(image_obj)
+
     return {
         "type": "HEADER",
         "format": "IMAGE",
@@ -220,16 +220,13 @@ def submit_whatsapp_template(
         headers=headers,
         data=json.dumps(data, indent=4),
     )
-    response_data = response.json()
-    print("Response data = ", response_data)
 
     # Check if an error has occurred
     # TODO: Should we return more detail on the error?
     response.raise_for_status()
 
 
-# TODO: Get the actual type of this image_obj
-def get_upload_session_id(image_obj: Any) -> dict[str, Any]:
+def get_upload_session_id(image_obj: Image) -> dict[str, Any]:
     url = urljoin(
         settings.WHATSAPP_API_URL,
         "graph/v14.0/app/uploads",
@@ -237,7 +234,6 @@ def get_upload_session_id(image_obj: Any) -> dict[str, Any]:
     headers = {
         "Content-Type": "application/json",
     }
-    print("ImageID = ", type(image_obj))
     mime_type = mimetypes.guess_type(image_obj.file.name)[0]
     file_size = image_obj.file.size
 
@@ -262,8 +258,7 @@ def get_upload_session_id(image_obj: Any) -> dict[str, Any]:
     return upload_details
 
 
-# TODO: Get correct type for below
-def upload_image(image_obj: Any) -> str:
+def upload_image(image_obj: Image) -> str:
     upload_details = get_upload_session_id(image_obj)
     url = urljoin(
         settings.WHATSAPP_API_URL,
