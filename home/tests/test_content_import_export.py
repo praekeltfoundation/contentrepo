@@ -999,15 +999,26 @@ class TestImportExport:
 
         assert src == dst
 
-    def test_field_maximum_characters(self, csv_impexp: ImportExport) -> None:
+    def test_footer_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with list_items and and footer chsaracters exceeding maximum charactercount
+        Importing an CSV file with list_items and and footer characters exceeding maximum charactercount
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp_footer_max_characters.csv")
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
+
+    def test_list_items_maximum_characters(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with list_items and and list items characters exceeding maximum charactercount
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp_list_items_max_characters.csv")
+
+        assert isinstance(e.value, ImportException)
+        assert e.value.row_num == 4
+        assert e.value.message == "list_items too long: Item 123456789101234567890"
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
