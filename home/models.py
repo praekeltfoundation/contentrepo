@@ -1258,15 +1258,6 @@ class WhatsAppTemplate(
     quick_replies = ClusterTaggableManager(
         through="home.TemplateQuickReplyContent", blank=True
     )
-    # TODO: Check with Rudi whether we want Related Pages here, or whether it should be on the page that links to the template
-    related_pages = StreamField(
-        [
-            ("related_page", blocks.PageChooserBlock()),
-        ],
-        blank=True,
-        null=True,
-        use_json_field=True,
-    )
 
     locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
 
@@ -1284,14 +1275,7 @@ class WhatsAppTemplate(
     )
 
     example_values = StreamField(
-        [
-            (
-                "example_values",
-                blocks.CharBlock(
-                    label="Example Value",
-                ),
-            )
-        ],
+        [("example_values", blocks.CharBlock(label="Example Value"))],
         blank=True,
         null=True,
         use_json_field=True,
@@ -1300,7 +1284,6 @@ class WhatsAppTemplate(
     search_fields = [
         index.SearchField("locale"),
     ]
-
 
     @property
     def quick_reply_buttons(self):
@@ -1374,7 +1357,7 @@ class WhatsAppTemplate(
             )
 
         message = self.message
-
+        # TODO: Explain what this does, or find a cleaner implementation
         right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
         left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
         mismatches = right_mismatch + left_mismatch
