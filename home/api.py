@@ -112,24 +112,6 @@ class ContentPagesViewSet(PagesAPIViewSet):
             for t in TriggeredContent.objects.filter(tag__name__iexact=trigger.strip()):
                 ids.append(t.content_object_id)
             queryset = queryset.filter(id__in=ids)
-        s = self.request.query_params.get("s")
-        if s is not None:
-            from .word_embedding import retrieve_top_n_content_pieces
-
-            platform = "web"
-            if "whatsapp" in self.request.query_params:
-                platform = "whatsapp"
-            if "sms" in self.request.query_params:
-                platform = "sms"
-            if "ussd" in self.request.query_params:
-                platform = "ussd"
-            elif "messenger" in self.request.query_params:
-                platform = "messenger"
-            elif "viber" in self.request.query_params:
-                platform = "viber"
-
-            ids = retrieve_top_n_content_pieces(s, queryset, platform=platform)
-            queryset = queryset.filter(id__in=ids)
         return queryset
 
 
