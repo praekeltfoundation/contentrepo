@@ -462,7 +462,7 @@ class OrderedContentSetSerializer(BaseSerializer):
     profile_fields = ProfileFieldsField(read_only=True)
 
 
-# TODO: Figure out what fields tomake part of this serialiser
+# TODO: Figure out what fields to make part of this serialiser
 class WhatsAppTemplateSerializer(BaseSerializer):
     name = NameField(read_only=True)
     body = BodyField(read_only=True)

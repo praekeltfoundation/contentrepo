@@ -500,7 +500,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         null=True,
         use_json_field=True,
     )
-    # TODO: Ask Rudi about this field, I am not sure what it does
     include_in_footer = models.BooleanField(default=False)
 
     embedding = models.JSONField(blank=True, null=True)
