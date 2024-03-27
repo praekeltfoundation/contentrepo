@@ -1301,16 +1301,6 @@ class WhatsAppTemplate(
         index.SearchField("locale"),
     ]
 
-    @property
-    def fields(self):
-        """
-        Returns a tuple of fields that can be used to determine template equality
-        """
-        return (
-            self.message,
-            self.image,
-            self.category,
-        )
 
     @property
     def quick_reply_buttons(self):
