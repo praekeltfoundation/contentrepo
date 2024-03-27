@@ -12,7 +12,6 @@ from .models import OrderedContentSet
 from .serializers import (
     ContentPageSerializer,
     OrderedContentSetSerializer,
-    WhatsAppTemplateSerializer,
 )
 
 from .models import (  # isort:skip
@@ -181,7 +180,6 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
 
 class WhatsAppTemplateViewset(BaseAPIViewSet):
     model = WhatsAppTemplate
-    base_serializer_class = WhatsAppTemplateSerializer
     listing_default_fields = BaseAPIViewSet.listing_default_fields + [
         "name",
         "body",
