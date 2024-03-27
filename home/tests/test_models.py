@@ -740,14 +740,10 @@ class TestWhatsAppTemplate:
             "name": f"wa_title_{wat.get_latest_revision().id}",
         }
 
-    # TODO: translate all these
-
     # TODO: Find a better way to test quick replies
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
     def test_template_create_with_buttons(self):
-        # page = create_page(is_whatsapp_template=True, has_quick_replies=True)
-
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
