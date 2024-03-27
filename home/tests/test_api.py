@@ -5,10 +5,8 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 from wagtail.documents.models import Document  # type: ignore
@@ -19,7 +17,6 @@ from wagtailmedia.models import Media  # type: ignore
 from home.content_import_export import import_content
 from home.models import (
     ContentPage,
-    CustomDocument,
     HomePage,
     OrderedContentSet,
     PageView,
@@ -1232,24 +1229,6 @@ class TestOrderedContentSetAPI:
         )
 
         assert ordered_content_set_default_workflow == workflow
-
-    def test_valid_document_extension(self):
-        """
-        Upload an invalid document type
-        """
-        invalid_file = SimpleUploadedFile(
-            "test_exe.exe", b"content", content_type="application/x-msdos-program"
-        )
-
-        custom_doc = CustomDocument(file=invalid_file)
-
-        with pytest.raises(ValidationError) as validation_error:
-            custom_doc.clean()
-
-        assert (
-            validation_error.value.messages[0]
-            == "File extension “exe” is not allowed. Allowed extensions are: doc, docx, xls, xlsx, ppt, pptx, pdf, txt."
-        )
 
     def test_get_upload(self, admin_client):
         """

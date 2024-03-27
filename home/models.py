@@ -4,7 +4,7 @@ import re
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator, MaxLengthValidator
+from django.core.validators import MaxLengthValidator
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
@@ -19,7 +19,6 @@ from wagtail.api import APIField
 from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
-from wagtail.documents.models import AbstractDocument, Document
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import (
@@ -1269,14 +1268,3 @@ class PageView(models.Model):
     )
     message = models.IntegerField(blank=True, default=None, null=True)
     data = models.JSONField(default=dict, blank=True, null=True)
-
-
-class CustomDocument(AbstractDocument):
-    allowed_extensions = getattr(settings, "WAGTAILDOCS_EXTENSIONS", None)
-    file = models.FileField(
-        null=True,
-        blank=True,
-        validators=[FileExtensionValidator(allowed_extensions=allowed_extensions)],
-    )
-
-    admin_form_fields = Document.admin_form_fields + ("file",)
