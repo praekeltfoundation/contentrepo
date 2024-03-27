@@ -329,8 +329,8 @@ class WhatsappBlock(blocks.StructBlock):
 
 class SMSBlock(blocks.StructBlock):
     message = blocks.TextBlock(
-        help_text="each message cannot exceed 160 characters.",
-        validators=(MaxLengthValidator(160),),
+        help_text="each message cannot exceed 459 characters (3 messages).",
+        validators=(MaxLengthValidator(459),),
     )
 
     class Meta:
