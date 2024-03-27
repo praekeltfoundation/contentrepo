@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Increased SMS limit to 459 characters
 - Validate character limit fir footer and list items when importing 
+- Removed word embeddings search (`s` query parameter in API)
 
 -->
 ## v1.1.0
