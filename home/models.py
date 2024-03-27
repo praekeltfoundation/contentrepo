@@ -1439,7 +1439,7 @@ class WhatsAppTemplate(
             errors.setdefault("message", []).append(
                 {
                     "message": ValidationError(
-                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
+                        f'Variables must be sequential, starting with "{{1}}". You provided "{actual_digit_variables}"'
                     )
                 }
             )
@@ -1450,7 +1450,7 @@ class WhatsAppTemplate(
         return result
 
     @property
-    def whatsapp_template_fields(self):
+    def fields(self):
         """
         Returns a tuple of fields that can be used to determine template equality
         """
