@@ -186,7 +186,7 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         "name",
         "body",
     ]
-    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["page", "qa"])
+    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["qa"])
     pagination_class = PageNumberPagination
     search_fields = ["name", "body"]
     filter_backends = (SearchFilter,)
