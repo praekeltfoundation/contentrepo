@@ -945,7 +945,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
 
 @receiver(pre_save, sender=ContentPage)
-def update_template_embedding(sender, instance, *args, **kwargs):
+def update_contentpage_embedding(sender, instance, *args, **kwargs):
     from .word_embedding import preprocess_content_for_embedding
 
     if not model:
@@ -1241,6 +1241,9 @@ class TemplateQuickReplyContent(ItemBase):
 class WhatsAppTemplate(
     DraftStateMixin, ClusterableModel, RevisionMixin, index.Indexed, models.Model
 ):
+    class Meta:  # noqa
+        verbose_name = "WhatsApp Template"
+        verbose_name_plural = "WhatsApp Templates"
 
     class Category(models.TextChoices):
         UTILITY = "UTILITY", _("Utility")
@@ -1255,7 +1258,7 @@ class WhatsAppTemplate(
     quick_replies = ClusterTaggableManager(
         through="home.TemplateQuickReplyContent", blank=True
     )
-
+    # TODO: Check with Rudi whether we want Related Pages here, or whether it should be on the page that links to the template
     related_pages = StreamField(
         [
             ("related_page", blocks.PageChooserBlock()),
@@ -1336,10 +1339,6 @@ class WhatsAppTemplate(
         """String repr of this snippet."""
         return self.name
 
-    class Meta:  # noqa
-        verbose_name = "WhatsApp Template"
-        verbose_name_plural = "WhatsApp Templates"
-
     def save_revision(
         self,
         user=None,
@@ -1378,10 +1377,10 @@ class WhatsAppTemplate(
         result = super().clean()
         errors = {}
 
-        # The WA title is needed for all templates to generate a name for the template
+        # The name is needed for all templates to generate a name for the template
         if not self.name:
             errors.setdefault("name", []).append(
-                ValidationError("All WhatsApp templates need a title.")
+                ValidationError("All WhatsApp templates need a name.")
             )
 
         message = self.message
@@ -1406,23 +1405,17 @@ class WhatsAppTemplate(
                     f"Please provide numeric variables only. You provided {non_digit_variables}."
                 )
             )
-
+        # TODO: Add tests for these checks
         # Check variable order
         actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
         expected_variables = [str(j + 1) for j in range(len(actual_digit_variables))]
         if actual_digit_variables != expected_variables:
             errors.setdefault("message", []).append(
-                StreamBlockValidationError(
-                    {
-                        0: StreamBlockValidationError(
-                            {
-                                "message": ValidationError(
-                                    f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
-                                )
-                            }
-                        )
-                    }
-                )
+                {
+                    "message": ValidationError(
+                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
+                    )
+                }
             )
 
         if errors:
@@ -1482,7 +1475,7 @@ class WhatsAppTemplate(
 
 
 @receiver(pre_save, sender=WhatsAppTemplate)
-def update_embedding(sender, instance, *args, **kwargs):
+def update_whatsapp_template_embedding(sender, instance, *args, **kwargs):
 
     from .word_embedding import preprocess_content_for_embedding
 

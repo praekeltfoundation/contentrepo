@@ -195,7 +195,7 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         qa = self.request.query_params.get("qa")
 
         if qa:
-            # return the latest revision for each OrderedContentSet
+            # return the latest revision for each WhatsApp Template
             queryset = WhatsAppTemplate.objects.all().order_by("latest_revision_id")
             for wat in queryset:
                 latest_revision = wat.revisions.order_by("-created_at").first()

@@ -106,6 +106,7 @@ class ContentPageAdmin(ModelAdmin):
         "related_pages",
         "parental",
     )
+    list_filter = ("locale",)
 
     search_fields = (
         "title",
@@ -117,7 +118,7 @@ class ContentPageAdmin(ModelAdmin):
         "viber_body",
         "slug",
     )
-    list_export = "title"
+    list_export = ("locale", "title")
 
     def replies(self, obj):
         return list(obj.quick_replies.all())

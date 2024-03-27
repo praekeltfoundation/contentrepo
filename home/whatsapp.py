@@ -123,7 +123,6 @@ def create_whatsapp_template(
     submit_whatsapp_template(name, category, locale, components)
 
 
-# TODO: Get correct type for below
 def create_standalone_whatsapp_template(
     name: str,
     body: str,
