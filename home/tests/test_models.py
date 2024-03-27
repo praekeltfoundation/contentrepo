@@ -25,6 +25,7 @@ from home.models import (
     OrderedContentSet,
     PageView,
     SMSBlock,
+    TemplateContentQuickReply,
     USSDBlock,
     WhatsappBlock,
     WhatsAppTemplate,
@@ -741,34 +742,78 @@ class TestWhatsAppTemplate:
 
     # TODO: translate all these
 
-    # @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    # @mock.patch("home.models.create_whatsapp_template")
-    # def test_template_create_with_buttons_on_save(self, mock_create_whatsapp_template):
-    #     page = create_page(is_whatsapp_template=True, has_quick_replies=True)
-    #     en = Locale.objects.get(language_code="en")
-    #     mock_create_whatsapp_template.assert_called_with(
-    #         f"wa_title_{page.get_latest_revision().id}",
-    #         "Test WhatsApp Message 1",
-    #         "UTILITY",
-    #         en,
-    #         ["button 1", "button 2"],
-    #         None,
-    #         [],
-    #     )
+    # TODO: Find a better way to test quick replies
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_with_buttons(self):
+        # page = create_page(is_whatsapp_template=True, has_quick_replies=True)
 
-    # @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    # @mock.patch("home.models.create_whatsapp_template")
-    # def test_template_create_with_example_values_on_save(
-    #     self, mock_create_whatsapp_template
-    # ):
-    #     page = create_page(is_whatsapp_template=True, add_example_values=True)
-    #     en = Locale.objects.get(language_code="en")
-    #     mock_create_whatsapp_template.assert_called_with(
-    #         f"wa_title_{page.get_latest_revision().id}",
-    #         "Test WhatsApp Message with two variables, {{1}} and {{2}}",
-    #         "UTILITY",
-    #         en,
-    #         [],
-    #         None,
-    #         [],
-    #     )
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button1")
+        wat.quick_replies.add(created_qr)
+        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button2")
+        wat.quick_replies.add(created_qr)
+        wat.save()
+        wat.save_revision()
+        wat.submit_whatsapp_template(None)
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {"text": "Test WhatsApp Message 1", "type": "BODY"},
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"text": "Button1", "type": "QUICK_REPLY"},
+                        {"text": "Button2", "type": "QUICK_REPLY"},
+                    ],
+                },
+            ],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_with_example_values(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[
+                ("example_values", "Ev1"),
+                ("example_values", "Ev2"),
+            ],
+        )
+        wat.save()
+        wat.save_revision()
+        wat.submit_whatsapp_template(None)
+
+        request = responses.calls[0].request
+
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {
+                    "text": "Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+                    "type": "BODY",
+                    "example": {"body_text": [["Ev1", "Ev2"]]},
+                },
+            ],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }

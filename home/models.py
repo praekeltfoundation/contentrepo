@@ -1486,7 +1486,8 @@ class WhatsAppTemplate(
             return
 
         self.template_name = self.create_whatsapp_template_name()
-
+        print("MODELS")
+        print(self.example_values)
         create_standalone_whatsapp_template(
             self.template_name,
             self.message,
