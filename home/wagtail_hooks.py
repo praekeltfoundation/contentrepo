@@ -1,3 +1,5 @@
+from django.contrib import messages
+from django.http import HttpResponseRedirect
 from django.template.defaultfilters import truncatechars
 from django.urls import path, reverse
 from wagtail import hooks
@@ -18,6 +20,30 @@ from .views import (  # isort:skip
     PageViewReportView,
     ContentUploadView,
 )
+
+
+@hooks.register("before_delete_page")
+def before_delete_page(request, page):
+    if page.content_type.name != ContentPage._meta.verbose_name:
+        return
+
+    page_links, orderedcontentset_links = page.get_all_links()
+
+    if page_links or orderedcontentset_links:
+        msg_parts = ["You can't delete this page while it is linked."]
+
+        if page_links:
+            msg_parts.append("<br>Content Pages:")
+            for link in page_links:
+                msg_parts.append(f'<a href="{link[0]}">{link[1]}</a>')
+
+        if orderedcontentset_links:
+            msg_parts.append("<br>Ordered Content Sets:")
+            for link in orderedcontentset_links:
+                msg_parts.append(f'<a href="{link[0]}">{link[1]}</a>')
+
+        messages.warning(request, "<br>".join(msg_parts))
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/admin/"))
 
 
 @hooks.register("register_admin_urls")

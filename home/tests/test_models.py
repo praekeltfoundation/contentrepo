@@ -29,7 +29,7 @@ from home.models import (
     WhatsappBlock,
 )
 
-from .page_builder import PageBuilder, WABlk, WABody
+from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
 
 
@@ -406,6 +406,74 @@ class ContentPageTests(TestCase):
             "There are missing migrations:\n %s" % output.getvalue(),
         )
 
+    def test_get_all_links(self):
+        """
+        ContentPage.get_all_links() should return two lists with all ContentPage and
+        OrderedContentSet links.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        test_page = PageBuilder.build_cp(
+            parent=main_menu, slug="page1", title="Page1", bodies=[]
+        )
+        page_with_links = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="page2",
+            title="Page2",
+            bodies=[
+                WABody(
+                    "Page2",
+                    [
+                        WABlk(
+                            "Page2 WA Body",
+                            buttons=[PageBtn("Import Export", page=test_page)],
+                        )
+                    ],
+                )
+            ],
+        )
+        page_with_links = PageBuilder.link_related(page_with_links, [test_page])
+
+        ocs = OrderedContentSet(name="Test set")
+        ocs.pages.append(("pages", {"contentpage": test_page}))
+        ocs.save()
+        ocs.save_revision().publish()
+
+        page_links, ocs_links = test_page.get_all_links()
+
+        self.assertListEqual(
+            [
+                (
+                    f"/admin/pages/{page_with_links.id}/edit/#tab-whatsapp",
+                    "Page2 - WhatsApp: Go to button",
+                ),
+                (
+                    f"/admin/pages/{page_with_links.id}/edit/#tab-promotional",
+                    "Page2 - Related Page",
+                ),
+            ],
+            page_links,
+        )
+        self.assertListEqual(
+            [(f"/admin/snippets/home/orderedcontentset/edit/{ocs.id}/", "Test set")],
+            ocs_links,
+        )
+
+    def test_get_all_links_no_links(self):
+        """
+        ContentPage.get_all_links() should return two empty lists if there are no links
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        test_page = PageBuilder.build_cp(
+            parent=main_menu, slug="page1", title="Page1", bodies=[]
+        )
+
+        page_links, ocs_links = test_page.get_all_links()
+
+        self.assertListEqual([], page_links)
+        self.assertListEqual([], ocs_links)
+
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     @pytest.mark.xfail(
@@ -605,8 +673,8 @@ class SMSBlockTests(TestCase):
 
     def test_clean_text_char_limit(self):
         """Text messages should be limited to 160 characters"""
-        SMSBlock().clean(self.create_message_value(message="a" * 160))
+        SMSBlock().clean(self.create_message_value(message="a" * 459))
 
         with self.assertRaises(StructBlockValidationError) as e:
-            SMSBlock().clean(self.create_message_value(message="a" * 161))
+            SMSBlock().clean(self.create_message_value(message="a" * 460))
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
