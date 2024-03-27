@@ -13,6 +13,10 @@ from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Workflow, WorkflowContentType
 from wagtailmedia.models import Media  # type: ignore
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.exceptions import ValidationError
+
+
 
 from home.content_import_export import import_content
 from home.models import (
@@ -1240,3 +1244,18 @@ class TestOrderedContentSetAPI:
         content_str = response.content.decode("utf-8")
         assert "/admin/snippets/home/orderedcontentset/" in content_str
         assert response.status_code == 200
+
+
+    def test_valid_document_extension(self):
+        """
+        Upload an invalid document type
+        """
+        document = Document.objects.create(title="Example Document", file="invalid_file.exe")
+
+        with pytest.raises(ValidationError) as validation_error:
+            document.full_clean()
+
+        assert (
+                    validation_error.value.messages[0]
+                    == "File extension “exe” is not allowed. Allowed extensions are: doc, docx, xls, xlsx, ppt, pptx, pdf, txt."
+                )
