@@ -1274,8 +1274,8 @@ class PageView(models.Model):
 class TemplateContentQuickReply(TagBase):
 
     class Meta:
-        verbose_name = "quick reply2"
-        verbose_name_plural = "quick replie2"
+        verbose_name = "quick reply"
+        verbose_name_plural = "quick replies"
 
 
 class TemplateQuickReplyContent(ItemBase):
