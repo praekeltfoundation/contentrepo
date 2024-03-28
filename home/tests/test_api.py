@@ -357,7 +357,7 @@ class TestContentPageAPI:
         page.save_revision().publish()
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=True")
-        assert response.content == b""
+        assert response.status_code == 404
 
     def test_message_number_specified_whatsapp(self, uclient):
         """
@@ -594,15 +594,10 @@ class TestContentPageAPI:
     def test_detail_view_no_content_page(self, uclient):
         """
         We get a validation error if we request a page that doesn't exist.
-
-        FIXME:
-         * Is 400 (ValidationError) really an appropriate response code for
-           this? 404 seems like a better fit for failing to find a page we're
-           looking up by id.
         """
         # it should return the validation error for content page that doesn't exist
         response = uclient.get("/api/v2/pages/1/")
-        assert response.status_code == 400
+        assert response.status_code == 404
 
         content = response.json()
         assert content == {"page": ["Page matching query does not exist."]}
