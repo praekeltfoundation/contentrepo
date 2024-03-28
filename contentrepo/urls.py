@@ -69,8 +69,3 @@ urlpatterns = urlpatterns + [
     # of your site, rather than the site root:
     #    path("pages/", include(wagtail_urls)),
 ]
-
-# urlpatterns += i18n_patterns(
-#     path("search/", search_views.search, name="search"),
-#     path("", include(wagtail_urls)),
-# )
