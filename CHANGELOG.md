@@ -7,18 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--
 ## Unreleased
-
 ### Fixed
--Page not found api status change to 404 from 400.
+- Ordered content set import link (PR 299, ticket omega 117)
+- Import for WhatsApp list items with comma in (PR 257, ticket omega 48)
+- Exporting to XLSX when pages have media (PR 251 & 266, ticket omega 63)
+- Import breaking when row in import file referenced a content page in a different locale (PR 261, ticket omega 61)
+- Go to page buttons where target page has been deleted breaks export (PR 264, ticket 51)
+- Validate max character for WhatsApp list items during import (PR 256 & 304, ticket omega 11)
+- Page not found api status change to 404 from 400. (PR 306, ticket omega 136) (QA incomplete)
+
+### Added
+- Additional fields to Ordered Content Set export (PR 259 & 268, ticket omega 33)
+- Moderation to ordered content sets (PR 294, ticket omega 100) (QA incomplete)
+- Draft status for Ordered Content Sets (PR 250 & 276 & 279 & 280, ticket omega 10)
+- Diagrams for documentation (PR 258, ticket omega 15)
+- Tests for serialisers (PR 273, ticket omega 74)
+- Environment variable config for sentry environment (PR 291, ticket omega 103)
+- WhatsApp template language support (PR 215, ticket omega 36)
+- Script to list all of the links that are broken due to pages being deleted (PR 298, ticket omega 113)
+
+### Changed
+- Test improvements for ContentPage API (PR 263 & 265 & 269 & 270 & 283, ticket omega 75)
+- Stop pages being deleted if they're linked to in other pages (PR 296 & 297, ticket omega 113)
+- More informative error message when import file contains messages for a page that doesn't exist (PR 295, ticket omega 93)
+- Increased SMS limit to 459 characters (PR 301, ticket omega 142) (QA incomplete)
+- Validate character limit fir footer and list items when importing
+- Updated pull request template (PR 300, ticket omega 123)
+- Upgraded Django from 4.2.9 to 4.2.10, security patch (PR 248)
+- Removed partail_match parameter from field search, deprecated (PR 262, ticket omega 91)
+- Disallow imports being able to change content page parent/child structure, was causing errors in import (PR 278, ticket omega 32)
+- Ensure that Content Pages can only be created as children of Content Index Pages (PR 281, ticket omega 30)
+- Change from wagtail modeladmin to external modeladmin package, wagtail modeladmin deprecated (PR 292, ticket omega 105)
+- Limit the extensions that are allowed to be uploaded for documents (PR 303, ticket omega 139) (QA incomplete)
+- Seperate templates from contentpage (PR 277, ticket omega 27) (QA incomplete)
+-->
+
+## v1.2.0
+### Fixed
 
 ### Added
 
 ### Changed
-- Increased SMS limit to 459 characters
-- Validate character limit fir footer and list items when importing
-- Add Document upload extension validation
 
--->
 ## v1.1.0
 ### Fixed
 - Autofill for empty slug
