@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.template.defaultfilters import truncatechars
@@ -264,4 +265,6 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
 
 register_snippet(OrderedContentSetViewSet)
 modeladmin_register(ContentPageAdmin)
-register_snippet(WhatsAppTemplateViewSet)
+# Flag for turning on Standalone Whatsapp Templates, still in development
+if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
+    register_snippet(WhatsAppTemplateViewSet)
