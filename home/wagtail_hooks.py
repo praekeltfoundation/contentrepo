@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.template.defaultfilters import truncatechars
@@ -9,7 +10,9 @@ from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 from wagtail_modeladmin.options import ModelAdmin, modeladmin_register
 
-from .models import ContentPage, OrderedContentSet
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel  # isort:skip
+
+from .models import ContentPage, OrderedContentSet, WhatsAppTemplate
 
 from .views import (  # isort:skip
     ContentPageReportView,
@@ -131,6 +134,7 @@ class ContentPageAdmin(ModelAdmin):
         "parental",
     )
     list_filter = ("locale",)
+
     search_fields = (
         "title",
         "body",
@@ -219,6 +223,48 @@ class OrderedContentSetViewSet(SnippetViewSet):
     search_fields = ("name", "profile_fields")
 
 
+class WhatsAppTemplateViewSet(SnippetViewSet):
+    model = WhatsAppTemplate
+    body_truncate_size = 200
+    icon = "order"
+    menu_order = 200
+    add_to_admin_menu = True
+    add_to_settings_menu = False
+    exclude_from_explorer = False
+    list_display = (
+        "name",
+        "category",
+        "locale",
+        "status",
+        "quick_replies",
+        "example_values",
+    )
+
+    panels = [
+        MultiFieldPanel(
+            [
+                FieldPanel("name"),
+                FieldPanel("category"),
+                FieldPanel("image"),
+                FieldPanel("message"),
+                FieldPanel("quick_replies", heading="Quick Replies"),
+                FieldPanel("locale"),
+                FieldPanel("example_values"),
+            ],
+            heading="Whatsapp Template",
+        ),
+    ]
+
+    search_fields = (
+        "name",
+        "category",
+        "message",
+        "locale",
+    )
+
+
 register_snippet(OrderedContentSetViewSet)
-# Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
+# Flag for turning on Standalone Whatsapp Templates, still in development
+if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
+    register_snippet(WhatsAppTemplateViewSet)

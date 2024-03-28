@@ -1,7 +1,9 @@
+import json
 from io import StringIO
 from unittest import mock
 
 import pytest
+import responses
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -23,8 +25,10 @@ from home.models import (
     OrderedContentSet,
     PageView,
     SMSBlock,
+    TemplateContentQuickReply,
     USSDBlock,
     WhatsappBlock,
+    WhatsAppTemplate,
 )
 
 from .page_builder import PageBtn, PageBuilder, WABlk, WABody
@@ -80,19 +84,20 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_not_called()
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_on_save(self, mock_create_whatsapp_template):
+    @responses.activate
+    def test_template_create_on_save(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
         page = create_page(is_whatsapp_template=True)
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_with(
-            f"wa_title_{page.get_latest_revision().id}",
-            "Test WhatsApp Message 1",
-            "UTILITY",
-            en,
-            [],
-            None,
-            [],
-        )
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
+            "language": "en_US",
+            "name": f"wa_title_{page.get_latest_revision().id}",
+        }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
@@ -642,3 +647,169 @@ class SMSBlockTests(TestCase):
         with self.assertRaises(StructBlockValidationError) as e:
             SMSBlock().clean(self.create_message_value(message="a" * 460))
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
+
+
+@pytest.mark.django_db
+class TestWhatsAppTemplate:
+
+    def test_variables_are_numeric(self) -> None:
+        """
+        Template variables are numeric.
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="non-numeric-variable",
+                message="{{foo}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": ["Please provide numeric variables only. You provided ['foo']."],
+        }
+
+    def test_variables_are_ordered(self) -> None:
+        """
+        Template variables are ordered.
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="misordered-variables",
+                message="{{2}} {{1}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Variables must be sequential, starting with \"{1}\". You provided \"['2', '1']\""
+            ],
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=False)
+    @responses.activate
+    def test_template_is_not_submitted_if_template_creation_is_disabled(self) -> None:
+        """
+        Submitting a template does nothing if WHATSAPP_CREATE_TEMPLATES is set
+        to False.
+
+        TODO: Should this be an error when template submission is its own
+            separate action?
+        """
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        wat.save_revision()
+
+        wat.submit_whatsapp_template(None)
+
+        assert len(responses.calls) == 0
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_simple_template_submission(self) -> None:
+        """
+        A simple template with no variables, media, etc. is successfully submitted.
+        """
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        wat.save_revision()
+
+        wat.submit_whatsapp_template(None)
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    # TODO: Find a better way to test quick replies
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_with_buttons(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button1")
+        wat.quick_replies.add(created_qr)
+        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button2")
+        wat.quick_replies.add(created_qr)
+        wat.save()
+        wat.save_revision()
+        wat.submit_whatsapp_template(None)
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {"text": "Test WhatsApp Message 1", "type": "BODY"},
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"text": "Button1", "type": "QUICK_REPLY"},
+                        {"text": "Button2", "type": "QUICK_REPLY"},
+                    ],
+                },
+            ],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_with_example_values(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[
+                ("example_values", "Ev1"),
+                ("example_values", "Ev2"),
+            ],
+        )
+        wat.save()
+        wat.save_revision()
+        wat.submit_whatsapp_template(None)
+
+        request = responses.calls[0].request
+
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {
+                    "text": "Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+                    "type": "BODY",
+                    "example": {"body_text": [["Ev1", "Ev2"]]},
+                },
+            ],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
