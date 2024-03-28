@@ -9,12 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Fixed
+-Page not found api status change to 404 from 400.
 
 ### Added
 
 ### Changed
 - Increased SMS limit to 459 characters
-- Validate character limit fir footer and list items when importing 
+- Validate character limit fir footer and list items when importing
+- Add Document upload extension validation
 
 -->
 ## v1.1.0

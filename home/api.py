@@ -1,4 +1,4 @@
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -53,7 +53,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
             else:
                 ContentPage.objects.get(id=pk).save_page_view(request.query_params)
         except ContentPage.DoesNotExist:
-            raise ValidationError({"page": ["Page matching query does not exist."]})
+            raise NotFound({"page": ["Page matching query does not exist."]})
 
         return super().detail_view(request, pk)
 

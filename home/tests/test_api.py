@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from django.urls import reverse
@@ -15,7 +16,12 @@ from wagtail.models import Workflow, WorkflowContentType
 from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content
-from home.models import ContentPage, HomePage, OrderedContentSet, PageView
+from home.models import (
+    ContentPage,
+    HomePage,
+    OrderedContentSet,
+    PageView,
+)
 
 from .page_builder import (
     MBlk,
@@ -351,7 +357,7 @@ class TestContentPageAPI:
         page.save_revision().publish()
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=True")
-        assert response.content == b""
+        assert response.status_code == 404
 
     def test_message_number_specified_whatsapp(self, uclient):
         """
@@ -588,15 +594,10 @@ class TestContentPageAPI:
     def test_detail_view_no_content_page(self, uclient):
         """
         We get a validation error if we request a page that doesn't exist.
-
-        FIXME:
-         * Is 400 (ValidationError) really an appropriate response code for
-           this? 404 seems like a better fit for failing to find a page we're
-           looking up by id.
         """
         # it should return the validation error for content page that doesn't exist
         response = uclient.get("/api/v2/pages/1/")
-        assert response.status_code == 400
+        assert response.status_code == 404
 
         content = response.json()
         assert content == {"page": ["Page matching query does not exist."]}
@@ -1235,3 +1236,19 @@ class TestOrderedContentSetAPI:
         content_str = response.content.decode("utf-8")
         assert "/admin/snippets/home/orderedcontentset/" in content_str
         assert response.status_code == 200
+
+    def test_valid_document_extension(self):
+        """
+        Upload an invalid document type
+        """
+        document = Document.objects.create(
+            title="Example Document", file="invalid_file.exe"
+        )
+
+        with pytest.raises(ValidationError) as validation_error:
+            document.full_clean()
+
+        assert (
+            validation_error.value.messages[0]
+            == "File extension “exe” is not allowed. Allowed extensions are: doc, docx, xls, xlsx, ppt, pptx, pdf, txt."
+        )
