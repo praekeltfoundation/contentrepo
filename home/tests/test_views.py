@@ -194,3 +194,34 @@ class TestPageViews:
             "platform": "web",
             "message": None,
         }
+
+
+@pytest.mark.django_db
+class TestEditPage:
+    def create_content_page(self):
+        """
+        Helper function to create pages needed for each test.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = []
+
+        bodies.append(WABody("default page", [WABlk("default body")]))
+
+        content_page = PageBuilder.build_cp(
+            parent=parent, slug="default-page", title="default page", bodies=bodies
+        )
+        return content_page
+
+    def test_page_can_be_edited(self, admin_client):
+        """
+        Check that the edit page can be accessed on a page that exists
+        """
+        page = self.create_content_page()
+        response = admin_client.get(f"/admin/pages/{page.id}/edit/")
+
+        assert response.status_code == status.HTTP_200_OK
