@@ -238,6 +238,7 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
         "status",
         "quick_replies",
         "example_values",
+        "submission_status",
     )
 
     panels = [
@@ -250,6 +251,8 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
                 FieldPanel("quick_replies", heading="Quick Replies"),
                 FieldPanel("locale"),
                 FieldPanel("example_values"),
+                FieldPanel("submission_status"),
+                FieldPanel("submission_result"),
             ],
             heading="Whatsapp Template",
         ),

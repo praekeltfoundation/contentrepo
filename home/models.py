@@ -1302,6 +1302,23 @@ class WhatsAppTemplate(
         UTILITY = "UTILITY", _("Utility")
         MARKETING = "MARKETING", _("Marketing")
 
+    class SubmissionStatus(models.TextChoices):
+        NOT_SUBMITTED_YET = "NOT_SUBMITTED_YET", _("Not Submitted Yet")
+        SUBMITTED = "SUBMITTED", _("Submitted")
+        FAILED = "FAILED", _("Failed")
+
+    submission_status = models.CharField(
+        max_length=30,
+        choices=SubmissionStatus.choices,
+        default=SubmissionStatus.NOT_SUBMITTED_YET,
+    )
+
+    submission_result = models.TextField(
+        help_text="The result of submitting the template",
+        null=True,
+        max_length=4096,
+    )
+
     name = models.CharField(max_length=512, blank=True, default="")
     category = models.CharField(
         max_length=14,
