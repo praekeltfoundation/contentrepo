@@ -92,9 +92,9 @@ createdb contentrepo
 Run the following in a virtual environment
 ```bash
 poetry install
-./manage.py migrate
-./manage.py createsuperuser
-./manage.py runserver
+poetry run ./manage.py migrate
+poetry run ./manage.py createsuperuser
+poetry run ./manage.py runserver
 ```
 
 ### Automated tests
