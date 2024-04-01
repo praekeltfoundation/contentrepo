@@ -46,14 +46,14 @@ class TestPageRatings:
 
     def test_homepage_redirect(self, api_client):
         """
-        Check that we redirect to admin
+        Check that we redirect to admin from the base url, as admin is the homepage of the CMS.
         """
         response = api_client.get("/")
         assert response.url == "/admin/"
 
     def test_page_rating_success(self, api_client):
         """
-        Confirm that page ratings are created correctly
+        Confirm that page ratings are created successfully when a comment is posted via the API
         """
         page = self.create_content_page()
 
@@ -112,7 +112,7 @@ class TestPageRatings:
 
     def test_get_list(self, api_client):
         """
-        Should return the data, filtered by the querystring
+        The list endpoint returns all ratings that match the query filter
         """
         page = self.create_content_page()
 
@@ -168,7 +168,7 @@ class TestPageViews:
 
     def test_get_list(self, api_client):
         """
-        Should return the data, filtered by the querystring
+        The list endpoint returns all page views that match the query filter
         """
         page = self.create_content_page()
         pageview_old = page.views.create(revision=page.get_latest_revision())
