@@ -426,6 +426,26 @@ class ImportExport:
             print("-^-CONTENT-^-")
         return content
 
+    def export_assessment(self, locale: str | None = None) -> bytes:
+        """
+        Export all (or filtered) content in the configured format.
+
+        """
+        url = f"/admin/snippets/home/assessment/?export={self.format}"
+        if locale:
+            loc = Locale.objects.get(language_code=locale)
+            locale = str(loc)
+            url = f"{url}&locale__id__exact={loc.id}"
+        content = self.admin_client.get(url).content
+        # Hopefully we can get rid of this at some point.
+        if locale:
+            content = self._filter_export(content, locale=locale)
+        if self.format == "csv":
+            print("-v-CONTENT-v-")
+            print(content.decode())
+            print("-^-CONTENT-^-")
+        return content
+
     def import_content(self, content_bytes: bytes, **kw: Any) -> None:
         """
         Import given content in the configured format with the configured importer.
@@ -511,6 +531,28 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("content2.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+        
+    def test_assessment_simple(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a simple CSV file and then exporting it produces a duplicate
+        of the original file.
+
+        (This uses content2.csv from test_api.py.)
+
+        FIXME:
+         * This should probably be in a separate test for importing old exports.
+         * Do we need page.id to be exported? At the moment nothing in the
+           import reads that.
+         * Do we expect imported content to have leading spaces removed?
+         * Should we set enable_web and friends based on body, title, or an
+           enable field that we'll need to add to the export?
+        """
+        csv_bytes = csv_impexp.import_file("assessmentpage_multiple_questions.csv")
+        content = csv_impexp.export_assessment()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        print(src)
+        print(dst)
         assert dst == src
 
     def test_less_simple(self, csv_impexp: ImportExport) -> None:

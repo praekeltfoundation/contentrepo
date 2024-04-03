@@ -27,7 +27,8 @@ class ExportRow:
     generic_error: str = ""
     question_count: int = 0
     questions: str = ""
-    answer: str = ""
+    error: str = ""
+    answers: str = ""
     score: str = ""
 
     @classmethod
@@ -85,8 +86,9 @@ class AssessmentExporter:
                 scores.append(str(answer["score"]))
             question_data.append(
                 {
-                    "questions": question.value["question"],
-                    "answer": ", ".join(answers),
+                    "questions": (question.value["question"]).replace("\n", ","),
+                    "error": (question.value["error"]),
+                    "answers": ", ".join(answers),
                     "score": ", ".join(scores),
                 }
             )
@@ -128,7 +130,8 @@ class AssessmentExportWriter:
                 row["generic_error"],
                 row["question_count"],
                 row["questions"],
-                row["answer"],
+                row["error"],
+                row["answers"],
                 row["score"],
             ]
             worksheet.append(row_values)
@@ -161,7 +164,8 @@ class AssessmentExportWriter:
                 row["generic_error"],
                 row["question_count"],
                 row["questions"],
-                row["answer"],
+                row["error"],
+                row["answers"],
                 row["score"],
             ]
             csv_response.writerow(row_values)
@@ -191,6 +195,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "generic_error": 300,
         "question_count": 110,
         "questions": 370,
+        "error": 400,
         "answer": 110,
         "score": 110,
     }

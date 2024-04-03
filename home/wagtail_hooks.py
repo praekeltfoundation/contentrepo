@@ -9,7 +9,7 @@ from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
-from .models import ContentPage, OrderedContentSet, Assessment
+from .models import Assessment, ContentPage, OrderedContentSet
 
 from .views import (  # isort:skip
     ContentPageReportView,
@@ -18,6 +18,7 @@ from .views import (  # isort:skip
     OrderedContentSetUploadView,
     PageViewReportView,
     ContentUploadView,
+    AssessmentUploadView,
 )
 
 
@@ -29,6 +30,11 @@ def register_import_urls():
             "import_orderedcontentset/",
             OrderedContentSetUploadView.as_view(),
             name="import_orderedcontentset",
+        ),
+        path(
+            "import_assessment/",
+            AssessmentUploadView.as_view(),
+            name="import_assessment",
         ),
     ]
 
