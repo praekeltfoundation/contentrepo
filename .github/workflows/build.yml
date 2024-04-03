@@ -33,26 +33,27 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+    - uses: abatilo/actions-poetry@v2.0.0
+      with:
+        poetry-version: "1.7.1"
     - name: Install dependencies
       id: install-deps
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install -r requirements-dev.txt
+        poetry install
     - name: Check formatting
       # Lints/tests should always run, even if other lints/tests have failed.
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        black --check .
+        poetry run black --check .
     - name: Lint
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        ruff .
+        poetry run ruff check .
     - name: Check types
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        mypy
+        poetry run mypy
     - name: Run tests
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        pytest -vv
+        poetry run pytest -vv

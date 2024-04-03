@@ -1,4 +1,4 @@
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -9,13 +9,17 @@ from wagtail.images.api.v2.views import ImagesAPIViewSet
 from wagtailmedia.api.views import MediaAPIViewSet
 
 from .models import OrderedContentSet
-from .serializers import ContentPageSerializer, OrderedContentSetSerializer
+from .serializers import (
+    ContentPageSerializer,
+    OrderedContentSetSerializer,
+)
 
 from .models import (  # isort:skip
     ContentPage,
     ContentPageIndex,
     ContentPageTag,
     TriggeredContent,
+    WhatsAppTemplate,
 )
 
 
@@ -49,7 +53,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
             else:
                 ContentPage.objects.get(id=pk).save_page_view(request.query_params)
         except ContentPage.DoesNotExist:
-            raise ValidationError({"page": ["Page matching query does not exist."]})
+            raise NotFound({"page": ["Page matching query does not exist."]})
 
         return super().detail_view(request, pk)
 
@@ -174,6 +178,38 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
         return queryset
 
 
+class WhatsAppTemplateViewset(BaseAPIViewSet):
+    model = WhatsAppTemplate
+    listing_default_fields = BaseAPIViewSet.listing_default_fields + [
+        "name",
+        "body",
+    ]
+    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["qa"])
+    pagination_class = PageNumberPagination
+    search_fields = ["name", "body"]
+    filter_backends = (SearchFilter,)
+
+    def get_queryset(self):
+        qa = self.request.query_params.get("qa")
+
+        if qa:
+            # return the latest revision for each WhatsApp Template
+            queryset = WhatsAppTemplate.objects.all().order_by("latest_revision_id")
+            for wat in queryset:
+                latest_revision = wat.revisions.order_by("-created_at").first()
+                if latest_revision:
+                    latest_revision = latest_revision.as_object()
+                    wat.name = latest_revision.name
+                    wat.pages = latest_revision.pages
+                    wat.profile_fields = latest_revision.profile_fields
+
+        else:
+            queryset = WhatsAppTemplate.objects.filter(live=True).order_by(
+                "last_published_at"
+            )
+        return queryset
+
+
 api_router = WagtailAPIRouter("wagtailapi")
 
 api_router.register_endpoint("pages", ContentPagesViewSet)
@@ -181,5 +217,6 @@ api_router.register_endpoint("indexes", ContentPageIndexViewSet)
 api_router.register_endpoint("images", ImagesAPIViewSet)
 api_router.register_endpoint("documents", DocumentsAPIViewSet)
 api_router.register_endpoint("media", MediaAPIViewSet)
+api_router.register_endpoint("whatsapptemplates", WhatsAppTemplateViewset)
 
 api_router.register_endpoint("orderedcontent", OrderedContentSetViewSet)

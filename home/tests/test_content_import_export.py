@@ -859,8 +859,8 @@ class TestImportExport:
         assert e.value.row_num == 4
         assert (
             e.value.message
-            == "Cannot find content page with slug 'not-cp-import-export' and locale "
-            "'English'"
+            == "This is a message for page with slug 'not-cp-import-export' and locale "
+            "'English', but no such page exists"
         )
 
     def test_variation_for_missing_page(self, csv_impexp: ImportExport) -> None:
@@ -879,8 +879,8 @@ class TestImportExport:
         assert e.value.row_num == 4
         assert (
             e.value.message
-            == "Cannot find content page with slug 'not-cp-import-export' and locale "
-            "'English'"
+            == "This is a variation for the content page with slug 'not-cp-import-export' and locale "
+            "'English', but no such page exists"
         )
 
     def test_go_to_page_button_missing_page(self, csv_impexp: ImportExport) -> None:
@@ -1041,15 +1041,26 @@ class TestImportExport:
 
         assert src == dst
 
-    def test_field_maximum_characters(self, csv_impexp: ImportExport) -> None:
+    def test_footer_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with list_items and and footer chsaracters exceeding maximum charactercount
+        Importing an CSV file with list_items and and footer characters exceeding maximum charactercount
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp_footer_max_characters.csv")
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
+
+    def test_list_items_maximum_characters(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with list_items and and list items characters exceeding maximum charactercount
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp_list_items_max_characters.csv")
+
+        assert isinstance(e.value, ImportException)
+        assert e.value.row_num == 4
+        assert e.value.message == "list_items too long: Item 123456789101234567890"
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
@@ -1074,6 +1085,29 @@ class TestImportExport:
             ("gender", "male"),
             ("relationship", "in_a_relationship"),
         ]
+
+    def test_import_ordered_sets_no_profile_fields_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV file with ordered content sets should not break
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.read_bytes("ordered_content_no_profile_fields.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
+
+        assert ordered_set.name == "Test Set"
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 1
+        page = pages[0][1]
+        assert page["contentpage"].slug == "first_time_user"
+        assert page["time"] == "2"
+        assert page["unit"] == "days"
+        assert page["before_or_after"] == "before"
+        assert page["contact_field"] == "edd"
+        assert unwagtail(ordered_set.profile_fields) == []
 
     def test_import_ordered_sets_xlsx(
         self, xlsx_impexp: ImportExport, csv_impexp: ImportExport
@@ -1260,7 +1294,7 @@ def mk_media(media_path: Path, title: str) -> File:
     return media
 
 
-def mk_doc(doc_path: Path, title: str) -> Image:
+def mk_doc(doc_path: Path, title: str) -> Document:
     doc = Document(title=title, file=File(doc_path.open("rb"), name=doc_path.name))
     doc.save()
     return doc

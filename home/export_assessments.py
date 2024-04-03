@@ -51,7 +51,7 @@ class AssessmentExporter:
         self.queryset = queryset
 
     def perform_export(self) -> list[dict]:
-        self.queryset[0].locale
+        #self.queryset[0].locale
         for item in self.queryset:
             questions_data = self.get_questions(item.questions)
             for i, question_data in enumerate(questions_data):

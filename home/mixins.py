@@ -18,22 +18,18 @@ class SpreadsheetExportMixin:
         return f'exported_content_{datetime.now().strftime("%Y%m%d")}'
 
     def write_xlsx_response(self, queryset):
-        response = HttpResponse(
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-        response["Content-Disposition"] = 'attachment; filename="{}.xlsx"'.format(
-            self.get_filename()
-        )
+        ctype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        response = HttpResponse(content_type=ctype)
+        filename = f"{self.get_filename()}.xlsx"
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
         export_xlsx_content(queryset, response)
         return response
 
     def write_csv_response(self, queryset):
         response = HttpResponse(content_type="application/CSV")
-        response["Content-Disposition"] = 'attachment; filename="{}.csv"'.format(
-            self.get_filename()
-        )
+        filename = f"{self.get_filename()}.csv"
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
         export_csv_content(queryset, response)
-
         return response
 
     def as_spreadsheet(self, queryset, spreadsheet_format):

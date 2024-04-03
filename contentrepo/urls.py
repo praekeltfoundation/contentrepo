@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.urls import include, path, reverse_lazy
 from django.views.generic.base import RedirectView
@@ -47,6 +46,7 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name="schema"),
         name="redoc",
     ),
+    path("api/whatsapptemplates/", menu_views.randommenu, name="whatsapptemplate"),
 ]
 
 
@@ -70,8 +70,3 @@ urlpatterns = urlpatterns + [
     # of your site, rather than the site root:
     #    path("pages/", include(wagtail_urls)),
 ]
-
-urlpatterns += i18n_patterns(
-    path("search/", search_views.search, name="search"),
-    path("", include(wagtail_urls)),
-)

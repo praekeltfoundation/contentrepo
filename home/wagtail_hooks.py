@@ -1,3 +1,6 @@
+from django.conf import settings
+from django.contrib import messages
+from django.http import HttpResponseRedirect
 from django.template.defaultfilters import truncatechars
 from django.urls import path, reverse
 from wagtail import hooks
@@ -5,11 +8,12 @@ from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, TitleFieldPanel
 from wagtail.admin.widgets.slug import SlugInput
-from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
+
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
+from wagtail_modeladmin.options import ModelAdmin, modeladmin_register
 
-from .models import Assessment, ContentPage, OrderedContentSet
+from .models import Assessment, ContentPage, OrderedContentSet, WhatsAppTemplate
 
 from .views import (  # isort:skip
     ContentPageReportView,
@@ -20,6 +24,30 @@ from .views import (  # isort:skip
     ContentUploadView,
     AssessmentUploadView,
 )
+
+
+@hooks.register("before_delete_page")
+def before_delete_page(request, page):
+    if page.content_type.name != ContentPage._meta.verbose_name:
+        return
+
+    page_links, orderedcontentset_links = page.get_all_links()
+
+    if page_links or orderedcontentset_links:
+        msg_parts = ["You can't delete this page while it is linked."]
+
+        if page_links:
+            msg_parts.append("<br>Content Pages:")
+            for link in page_links:
+                msg_parts.append(f'<a href="{link[0]}">{link[1]}</a>')
+
+        if orderedcontentset_links:
+            msg_parts.append("<br>Ordered Content Sets:")
+            for link in orderedcontentset_links:
+                msg_parts.append(f'<a href="{link[0]}">{link[1]}</a>')
+
+        messages.warning(request, "<br>".join(msg_parts))
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/admin/"))
 
 
 @hooks.register("register_admin_urls")
@@ -51,7 +79,7 @@ def register_stale_content_report_menu_item():
     return AdminOnlyMenuItem(
         "Stale Content",
         reverse("stale_content_report"),
-        classnames="icon icon-" + ContentPageReportView.header_icon,
+        classname="icon icon-" + ContentPageReportView.header_icon,
         order=700,
     )
 
@@ -72,7 +100,7 @@ def register_page_views_report_menu_item():
     return AdminOnlyMenuItem(
         "Page Views",
         reverse("page_view_report"),
-        classnames="icon icon-doc-empty",
+        classname="icon icon-doc-empty",
         order=700,
     )
 
@@ -114,6 +142,7 @@ class ContentPageAdmin(ModelAdmin):
         "parental",
     )
     list_filter = ("locale",)
+
     search_fields = (
         "title",
         "body",
@@ -213,6 +242,24 @@ class AssessmentAdmin(SnippetViewSet):
     list_export = "title"
     index_view_class = CustomIndexViewAssessment
 
+
+class WhatsAppTemplateViewSet(SnippetViewSet):
+    model = WhatsAppTemplate
+    body_truncate_size = 200
+    icon = "order"
+    menu_order = 200
+    add_to_admin_menu = True
+    add_to_settings_menu = False
+    exclude_from_explorer = False
+    list_display = (
+        "name",
+        "category",
+        "locale",
+        "status",
+        "quick_replies",
+        "example_values",
+    )
+
     panels = [
         MultiFieldPanel(
             [
@@ -240,10 +287,31 @@ class AssessmentAdmin(SnippetViewSet):
             ],
             heading="Questions",
         ),
+        MultiFieldPanel(
+            [
+                FieldPanel("name"),
+                FieldPanel("category"),
+                FieldPanel("image"),
+                FieldPanel("message"),
+                FieldPanel("quick_replies", heading="Quick Replies"),
+                FieldPanel("locale"),
+                FieldPanel("example_values"),
+            ],
+            heading="Whatsapp Template",
+        ),
     ]
+
+    search_fields = (
+        "name",
+        "category",
+        "message",
+        "locale",
+    )
 
 
 register_snippet(OrderedContentSetViewSet)
 register_snippet(AssessmentAdmin)
-# Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
+# Flag for turning on Standalone Whatsapp Templates, still in development
+if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
+    register_snippet(WhatsAppTemplateViewSet)

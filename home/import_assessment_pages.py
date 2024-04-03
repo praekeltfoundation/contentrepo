@@ -304,7 +304,6 @@ def group_rows_by_page_id(rows: list[ContentRow]) -> list[ContentRow]:
                     ],  # Strip whitespace
                     "error": error,
                 }
-                print(question_entry)
                 questions.append(question_entry)
 
         output_rows.append(

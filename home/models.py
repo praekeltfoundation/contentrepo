@@ -9,6 +9,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
@@ -21,14 +22,23 @@ from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import DraftStateMixin, Locale, Page, Revision, RevisionMixin
+from wagtail.models import (
+    DraftStateMixin,
+    Locale,
+    LockableMixin,
+    Page,
+    ReferenceIndex,
+    Revision,
+    RevisionMixin,
+    WorkflowMixin,
+)
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
-from .whatsapp import create_whatsapp_template
+from .whatsapp import create_standalone_whatsapp_template, create_whatsapp_template
 
 from .constants import (  # isort:skip
     AGE_CHOICES,
@@ -321,8 +331,8 @@ class WhatsappBlock(blocks.StructBlock):
 
 class SMSBlock(blocks.StructBlock):
     message = blocks.TextBlock(
-        help_text="each message cannot exceed 160 characters.",
-        validators=(MaxLengthValidator(160),),
+        help_text="each message cannot exceed 459 characters (3 messages).",
+        validators=(MaxLengthValidator(459),),
     )
 
     class Meta:
@@ -374,14 +384,16 @@ class MessengerBlock(blocks.StructBlock):
 
 
 class HomePage(UniqueSlugMixin, Page):
+    parent_page_types = ["wagtailcore.Page"]
     subpage_types = [
-        "ContentPageIndex",
+        "home.ContentPageIndex",
     ]
 
 
 class ContentPageIndex(UniqueSlugMixin, Page):
+    parent_page_types = ["home.HomePage"]
     subpage_types = [
-        "ContentPage",
+        "home.ContentPage",
     ]
 
     include_in_homepage = models.BooleanField(default=False)
@@ -440,9 +452,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
 
-    parent_page_type = [
-        "ContentPageIndex",
-    ]
+    parent_page_types = ["home.ContentPageIndex", "home.ContentPage"]
 
     # general page attributes
     tags = ClusterTaggableManager(through=ContentPageTag, blank=True)
@@ -805,7 +815,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             return
         if not self.is_whatsapp_template:
             return
-
         # If there are any missing fields in the previous revision, then carry on
         try:
             previous_revision = previous_revision.as_object()
@@ -825,12 +834,43 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             self.whatsapp_template_name,
             self.whatsapp_template_body,
             str(self.whatsapp_template_category),
+            self.locale,
             sorted(self.quick_reply_buttons),
             self.whatsapp_template_image,
             self.whatsapp_template_example_values,
         )
 
         return self.whatsapp_template_name
+
+    def get_all_links(self):
+        page_links = []
+        orderedcontentset_links = []
+
+        usage = ReferenceIndex.get_references_to(self).group_by_source_object()
+        for ref in usage:
+            for link in ref[1]:
+                if link.model_name == "content page":
+                    link_type = "Related Page"
+                    tab = "#tab-promotional"
+                    if link.related_field.name == "whatsapp_body":
+                        link_type = "WhatsApp: Go to button"
+                        tab = "#tab-whatsapp"
+
+                    page = ContentPage.objects.get(id=link.object_id)
+                    url = reverse("wagtailadmin_pages:edit", args=(link.object_id,))
+                    page_links.append((url + tab, f"{page} - {link_type}"))
+
+                elif link.model_name == "Ordered Content Set":
+                    orderedcontentset = OrderedContentSet.objects.get(id=link.object_id)
+                    url = reverse(
+                        "wagtailsnippets_home_orderedcontentset:edit",
+                        args=(link.object_id,),
+                    )
+                    orderedcontentset_links.append((url, orderedcontentset.name))
+                else:
+                    raise Exception("Unknown model link")
+
+        return page_links, orderedcontentset_links
 
     def save_revision(
         self,
@@ -944,7 +984,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
 
 @receiver(pre_save, sender=ContentPage)
-def update_embedding(sender, instance, *args, **kwargs):
+def update_contentpage_embedding(sender, instance, *args, **kwargs):
     from .word_embedding import preprocess_content_for_embedding
 
     if not model:
@@ -991,9 +1031,23 @@ def update_embedding(sender, instance, *args, **kwargs):
     instance.embedding = embedding
 
 
-class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Model):
+class OrderedContentSet(
+    WorkflowMixin,
+    DraftStateMixin,
+    LockableMixin,
+    RevisionMixin,
+    index.Indexed,
+    models.Model,
+):
     revisions = GenericRelation(
         "wagtailcore.Revision", related_query_name="orderedcontentset"
+    )
+    workflow_states = GenericRelation(
+        "wagtailcore.WorkflowState",
+        content_type_field="base_content_type",
+        object_id_field="object_id",
+        related_query_name="orderedcontentset",
+        for_concrete_model=False,
     )
     name = models.CharField(
         max_length=255, help_text="The name of the ordered content set."
@@ -1024,7 +1078,10 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
 
     def page(self):
         if self.pages:
-            return [(self._get_field_value(p, "contentpage")) for p in self.pages]
+            return [
+                (self._get_field_value(p, "contentpage", raw=True).slug)
+                for p in self.pages
+            ]
         return ["-"]
 
     page.short_description = "Page Slugs"
@@ -1062,10 +1119,10 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
 
     num_pages.short_description = "Number of Pages"
 
-    def _get_field_value(self, page: Page, field: str) -> str:
+    def _get_field_value(self, page: Page, field: str, raw: bool = False) -> any:
         try:
             if value := page.value[field]:
-                return f"{value}"
+                return value if raw else f"{value}"
             else:
                 return ""
         except (AttributeError, TypeError):
@@ -1149,7 +1206,11 @@ class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Mo
     num_pages.short_description = "Number of Pages"
 
     def status(self):
-        return "Live" if self.live else "Draft"
+        return (
+            "Live + Draft"
+            if self.live and self.has_unpublished_changes
+            else "Live" if self.live else "Draft"
+        )
 
     panels = [
         FieldPanel("name"),
@@ -1284,3 +1345,248 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
 
     def __str__(self):
         return self.title
+class TemplateContentQuickReply(TagBase):
+
+    class Meta:
+        verbose_name = "quick reply"
+        verbose_name_plural = "quick replies"
+
+
+class TemplateQuickReplyContent(ItemBase):
+    tag = models.ForeignKey(
+        TemplateContentQuickReply,
+        related_name="template_quick_reply_content",
+        on_delete=models.CASCADE,
+    )
+    content_object = ParentalKey(
+        to="home.WhatsAppTemplate",
+        on_delete=models.CASCADE,
+        related_name="template_quick_reply_items",
+    )
+
+
+class WhatsAppTemplate(
+    DraftStateMixin, ClusterableModel, RevisionMixin, index.Indexed, models.Model
+):
+    class Meta:  # noqa
+        verbose_name = "WhatsApp Template"
+        verbose_name_plural = "WhatsApp Templates"
+
+    class Category(models.TextChoices):
+        UTILITY = "UTILITY", _("Utility")
+        MARKETING = "MARKETING", _("Marketing")
+
+    name = models.CharField(max_length=512, blank=True, default="")
+    category = models.CharField(
+        max_length=14,
+        choices=Category.choices,
+        default=Category.MARKETING,
+    )
+    quick_replies = ClusterTaggableManager(
+        through="home.TemplateQuickReplyContent", blank=True
+    )
+
+    locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
+
+    image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="image",
+    )
+    message = models.TextField(
+        help_text="each text message cannot exceed 4096 characters, messages with "
+        "media cannot exceed 1024 characters.",
+        max_length=4096,
+    )
+
+    example_values = StreamField(
+        [("example_values", blocks.CharBlock(label="Example Value"))],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
+
+    search_fields = [
+        index.SearchField("locale"),
+    ]
+
+    @property
+    def quick_reply_buttons(self):
+        return self.template_quick_reply_items.all().values_list("tag__name", flat=True)
+
+    @property
+    def prefix(self):
+        return self.name.lower().replace(" ", "_")
+
+    def status(self):
+        return "Live" if self.live else "Draft"
+
+    # # TODO: Figure out which of these needs to call the update
+    # We need to relook at the states of a standalone template, its not just draft and live, theres also pending, declined etc
+    # def save(self, *args, **kwargs):
+    #     if kwargs.get("update_fields"):
+    #         # save not called from publish
+    #         # do_stuff_on_save()
+    #         print("THIS IS A SAVE")
+    #     else:
+    #         # do_stuff_on_publish()
+    #         print("THIS IS A PUBLISH")
+    #     return super().save(*args, **kwargs)
+
+    def __str__(self):
+        """String repr of this snippet."""
+        return self.name
+
+    def save_revision(
+        self,
+        user=None,
+        submitted_for_moderation=False,
+        approved_go_live_at=None,
+        changed=True,
+        log_action=False,
+        previous_revision=None,
+        clean=True,
+    ):
+        previous_revision = self.get_latest_revision()
+
+        revision = super().save_revision(
+            user,
+            submitted_for_moderation,
+            approved_go_live_at,
+            changed,
+            log_action,
+            previous_revision,
+            clean,
+        )
+
+        try:
+            template_name = self.submit_whatsapp_template(previous_revision)
+        except Exception:
+            # Log the error to sentry and send error message to the user
+            logger.exception(f"Failed to submit template name:  {self.name}")
+            raise ValidationError("Failed to submit template")
+
+        if template_name:
+            revision.content["name"] = template_name
+            revision.save(update_fields=["content"])
+        return revision
+
+    def clean(self):
+        result = super().clean()
+        errors = {}
+
+        # The name is needed for all templates to generate a name for the template
+        if not self.name:
+            errors.setdefault("name", []).append(
+                ValidationError("All WhatsApp templates need a name.")
+            )
+
+        message = self.message
+        # TODO: Explain what this does, or find a cleaner implementation
+        right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
+        left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
+        mismatches = right_mismatch + left_mismatch
+
+        if mismatches:
+            errors.setdefault("message", []).append(
+                ValidationError(
+                    f"Please provide variables with matching braces. You provided {mismatches}."
+                )
+            )
+
+        vars_in_msg = re.findall(r"{{(.*?)}}", message)
+        non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
+
+        if non_digit_variables:
+            errors.setdefault("message", []).append(
+                ValidationError(
+                    f"Please provide numeric variables only. You provided {non_digit_variables}."
+                )
+            )
+        # TODO: Add tests for these checks
+        # Check variable order
+        actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
+        expected_variables = [str(j + 1) for j in range(len(actual_digit_variables))]
+        if actual_digit_variables != expected_variables:
+            errors.setdefault("message", []).append(
+                {
+                    "message": ValidationError(
+                        f'Variables must be sequential, starting with "{{1}}". You provided "{actual_digit_variables}"'
+                    )
+                }
+            )
+
+        if errors:
+            raise ValidationError(errors)
+
+        return result
+
+    @property
+    def fields(self):
+        """
+        Returns a tuple of fields that can be used to determine template equality
+        """
+        return (
+            self.category,
+            self.image,
+            self.message,
+            sorted(self.quick_reply_buttons),
+            self.example_values,
+        )
+
+    def create_whatsapp_template_name(self) -> str:
+        return f"{self.prefix}_{self.get_latest_revision().pk}"
+
+    def submit_whatsapp_template(self, previous_revision):
+        """
+        Submits a request to the WhatsApp API to create a template for this content
+
+        Only submits if the create templates is enabled
+        and if the template fields are different to the previous revision
+        """
+        if not settings.WHATSAPP_CREATE_TEMPLATES:
+            return
+
+        # If there are any missing fields in the previous revision, then carry on
+        if previous_revision:
+            previous_revision = previous_revision.as_object()
+            previous_revision_fields = previous_revision.whatsapp_template_fields
+        else:
+            previous_revision_fields = ()
+
+        if self.fields == previous_revision_fields:
+            return
+
+        self.template_name = self.create_whatsapp_template_name()
+        create_standalone_whatsapp_template(
+            self.template_name,
+            self.message,
+            str(self.category),
+            self.locale,
+            sorted(self.quick_reply_buttons),
+            self.image,
+            [v["value"] for v in self.example_values.raw_data],
+        )
+
+        return self.name
+
+
+@receiver(pre_save, sender=WhatsAppTemplate)
+def update_whatsapp_template_embedding(sender, instance, *args, **kwargs):
+
+    from .word_embedding import preprocess_content_for_embedding
+
+    if not model:
+        return
+
+    embedding = {}
+
+    content = []
+    for block in instance.body:
+        content.append(block.value["message"])
+    body = preprocess_content_for_embedding("/n/n".join(content))
+    embedding["whatsapp"] = {"values": [float(i) for i in model.encode(body)]}
+
+    instance.embedding = embedding

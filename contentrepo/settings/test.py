@@ -1,6 +1,5 @@
 from .dev import *  # noqa
 
-
 DATABASES = {"default": env.db("CONTENTREPO_DATABASE", default="sqlite://:memory:")}
 PASSWORD_HASHERS = ("django.contrib.auth.hashers.MD5PasswordHasher",)
 
@@ -10,4 +9,7 @@ FB_BUSINESS_ID = "27121231234"
 
 WHATSAPP_CREATE_TEMPLATES = False
 
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+# Switch back from ManifestStaticFilesStorage so we don't need collectstatic in tests.
+STORAGES["staticfiles"] = {
+    "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+}
