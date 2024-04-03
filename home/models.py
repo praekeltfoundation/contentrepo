@@ -893,18 +893,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             clean,
         )
 
-        try:
-            template_name = self.submit_whatsapp_template(previous_revision)
-        except Exception:
-            # Log the error to sentry and send error message to the user
-            logger.exception(
-                f"Failed to submit template name:  {self.whatsapp_template_name}"
-            )
-            raise ValidationError("Failed to submit template")
-
-        if template_name:
-            revision.content["whatsapp_template_name"] = template_name
-            revision.save(update_fields=["content"])
         return revision
 
     def clean(self):
@@ -1310,12 +1298,14 @@ class WhatsAppTemplate(
     submission_status = models.CharField(
         max_length=30,
         choices=SubmissionStatus.choices,
+        blank=True,
         default=SubmissionStatus.NOT_SUBMITTED_YET,
     )
 
     submission_result = models.TextField(
         help_text="The result of submitting the template",
         null=True,
+        blank=True,
         max_length=4096,
     )
 
@@ -1428,8 +1418,13 @@ class WhatsAppTemplate(
 
         message = self.message
         # TODO: Explain what this does, or find a cleaner implementation
+        print("Going into regex")
+        # Checks for mismatches in the number of opening and closing brackets.  First from right to left, then from left to right
+        # TODO: Currently "{1}" is allowed to pass and throws an error.  Add a check for this, or redo this section in a cleaner way
         right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
         left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
+        print("Right mismatch = ", right_mismatch)
+        print("Left mismatch = ", left_mismatch)
         mismatches = right_mismatch + left_mismatch
 
         if mismatches:

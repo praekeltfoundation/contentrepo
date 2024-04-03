@@ -22,7 +22,6 @@ from .views import (  # isort:skip
     ContentUploadView,
 )
 
-
 @hooks.register("before_delete_page")
 def before_delete_page(request, page):
     if page.content_type.name != ContentPage._meta.verbose_name:
@@ -251,8 +250,9 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
                 FieldPanel("quick_replies", heading="Quick Replies"),
                 FieldPanel("locale"),
                 FieldPanel("example_values"),
-                FieldPanel("submission_status"),
-                FieldPanel("submission_result"),
+                FieldPanel("submission_status", read_only=True),
+                FieldPanel("submission_result", read_only=True),
+
             ],
             heading="Whatsapp Template",
         ),
@@ -264,6 +264,7 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
         "message",
         "locale",
     )
+
 
 
 register_snippet(OrderedContentSetViewSet)
