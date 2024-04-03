@@ -532,7 +532,7 @@ class TestImportExportRoundtrip:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
-        
+
     def test_assessment_simple(self, csv_impexp: ImportExport) -> None:
         """
         Importing a simple CSV file and then exporting it produces a duplicate

@@ -286,15 +286,12 @@ def group_rows_by_page_id(rows: list[ContentRow]) -> list[ContentRow]:
     grouped_rows = defaultdict(list)
 
     for row in rows:
-
         grouped_rows[row.page_id].append(row)
-
     output_rows = []
     for page_id, grouped_rows_list in grouped_rows.items():
-
         questions = []
         for grouped_row in grouped_rows_list:
-            for i, question in enumerate(grouped_row.questions):
+            for _, question in enumerate(grouped_row.questions):
 
                 answers = grouped_row.answers if grouped_row.answers else []
                 scores = grouped_row.score if grouped_row.score else []
@@ -303,10 +300,11 @@ def group_rows_by_page_id(rows: list[ContentRow]) -> list[ContentRow]:
                     "question": question,
                     "answers": [
                         {"answer": ans.strip(), "score": sc.strip()}
-                        for ans, sc in zip(answers, scores)
+                        for ans, sc in zip(answers, scores, strict=False)
                     ],  # Strip whitespace
                     "error": error,
                 }
+                print(question_entry)
                 questions.append(question_entry)
 
         output_rows.append(

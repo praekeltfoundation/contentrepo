@@ -1,5 +1,4 @@
 import csv
-import json
 import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -9,41 +8,21 @@ from pathlib import Path
 from queue import Queue
 from typing import Any
 
-import pytest, sqlite3
-from django.core import serializers  # type: ignore
-from django.core.files.base import File  # type: ignore
-from django.core.files.images import ImageFile  # type: ignore
+import pytest
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
-from wagtail.documents.models import Document  # type: ignore
-from wagtail.images.models import Image  # type: ignore
-from wagtail.models import Locale, Page  # type: ignore
-from wagtailmedia.models import Media  # type: ignore
+from wagtail.models import Locale  # type: ignore
 
 from home.assessment_import_export import import_assessment
 from home.import_assessment_pages import ImportAssessmentException
 from home.models import (
-    ContentPage,
-    ContentPageIndex,
     HomePage,
-    Assessment,
 )
-from home.tests.utils import unwagtail
 
-from .helpers import set_profile_field_options
 from .page_builder import (
     MBlk,
     MBody,
-    NextBtn,
-    PageBtn,
     PageBuilder,
-    SBlk,
-    SBody,
-    UBlk,
-    UBody,
-    VarMsg,
-    VBlk,
-    VBody,
     WABlk,
     WABody,
 )
@@ -259,7 +238,7 @@ class TestImportExportRoundtrip:
 
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        high_inflection = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="high-inflection",
             title="High Inflection",
@@ -268,7 +247,7 @@ class TestImportExportRoundtrip:
                 MBody("High inflection", [MBlk("High Inflection Page")]),
             ],
         )
-        medium_score = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="medium-score",
             title="Medium Score",
@@ -278,7 +257,7 @@ class TestImportExportRoundtrip:
             ],
         )
 
-        low_score = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="low-score",
             title="Low Score",
@@ -304,7 +283,7 @@ class TestImportExportRoundtrip:
 
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        high_inflection = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="high-inflection",
             title="High Inflection",
@@ -313,7 +292,7 @@ class TestImportExportRoundtrip:
                 MBody("High inflection", [MBlk("High Inflection Page")]),
             ],
         )
-        medium_score = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="medium-score",
             title="Medium Score",
@@ -323,7 +302,7 @@ class TestImportExportRoundtrip:
             ],
         )
 
-        low_score = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="low-score",
             title="Low Score",
@@ -349,7 +328,7 @@ class TestImportExportRoundtrip:
 
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        high_inflection = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="high-inflection",
             title="High Inflection",
@@ -358,7 +337,7 @@ class TestImportExportRoundtrip:
                 MBody("High inflection", [MBlk("High Inflection Page")]),
             ],
         )
-        medium_score = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="medium-score",
             title="Medium Score",
@@ -368,7 +347,7 @@ class TestImportExportRoundtrip:
             ],
         )
 
-        low_score = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="low-score",
             title="Low Score",
@@ -394,7 +373,7 @@ class TestImportExportRoundtrip:
 
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        high_inflection = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="high-inflection",
             title="High Inflection",
@@ -403,7 +382,7 @@ class TestImportExportRoundtrip:
                 MBody("High inflection", [MBlk("High Inflection Page")]),
             ],
         )
-        medium_score = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="medium-score",
             title="Medium Score",
@@ -413,7 +392,7 @@ class TestImportExportRoundtrip:
             ],
         )
 
-        low_score = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="low-score",
             title="Low Score",
@@ -457,7 +436,7 @@ class TestImportExport:
 
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        high_inflection = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="high-inflection",
             title="High Inflection",
@@ -466,7 +445,7 @@ class TestImportExport:
                 MBody("High inflection", [MBlk("High Inflection Page")]),
             ],
         )
-        medium_score = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="medium-score",
             title="Medium Score",
@@ -476,7 +455,7 @@ class TestImportExport:
             ],
         )
 
-        low_score = PageBuilder.build_cp(
+        PageBuilder.build_cp(
             parent=main_menu,
             slug="low-score",
             title="Low Score",
