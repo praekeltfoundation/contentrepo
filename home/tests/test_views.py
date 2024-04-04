@@ -453,7 +453,7 @@ class TestEditPageView:
         assert show_in_menus_check_box
 
     @pytest.mark.parametrize("heading", OTHER_HEADINGS_IN_PROMOTIONAL)
-    def test_promotional_form__other_headings(self, admin_client, heading):
+    def test_promotional_form_other_headings(self, admin_client, heading):
         """
         Check that all titles are present in the promotional section of the HTML form
         """
