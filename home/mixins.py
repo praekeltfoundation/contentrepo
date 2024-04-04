@@ -69,16 +69,16 @@ class SpreadsheetExportMixinAssessment:
         response = HttpResponse(
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        response["Content-Disposition"] = 'attachment; filename="{}.xlsx"'.format(
-            self.get_filename()
+        response["Content-Disposition"] = (
+            f'attachment; filename="{self.get_filename()}.xlsx"'
         )
         export_xlsx_assessment(queryset, response)
         return response
 
     def write_csv_response(self, queryset):
         response = HttpResponse(content_type="application/CSV")
-        response["Content-Disposition"] = 'attachment; filename="{}.csv"'.format(
-            self.get_filename()
+        response["Content-Disposition"] = (
+            f'attachment; filename="{self.get_filename()}.csv"'
         )
         export_csv_assessment(queryset, response)
 
