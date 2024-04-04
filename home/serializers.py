@@ -83,6 +83,8 @@ def has_next_message(message_index, content_page, platform):
         messages_length = len(content_page.viber_body._raw_data) - 1
     elif platform == "messenger":
         messages_length = len(content_page.messenger_body._raw_data) - 1
+    else:
+        return None
     if messages_length == message_index:
         return None
     elif messages_length > message_index:
@@ -101,6 +103,8 @@ def has_previous_message(message_index, content_page, platform):
         messages_length = len(content_page.viber_body._raw_data) - 1
     elif platform == "messenger":
         messages_length = len(content_page.messenger_body._raw_data) - 1
+    else:
+        return None
     if messages_length != 0 and message_index > 0:
         return message_index
 
@@ -469,7 +473,7 @@ class OrderedPagesField(serializers.Field):
         pages = []
         for member in instance.pages:
             page = self.get_page_as_content_page(member.value.get("contentpage"))
-            title = page.title
+            title = page.title if page else ""
             if "whatsapp" in request.GET and page.enable_whatsapp is True:
                 if page.whatsapp_title:
                     title = page.whatsapp_title
@@ -486,7 +490,7 @@ class OrderedPagesField(serializers.Field):
                 if page.viber_title:
                     title = page.viber_title
             page_data = {
-                "id": page.id,
+                "id": page.id if page else "",
                 "title": title,
                 "time": member.value.get("time"),
                 "unit": member.value.get("unit"),

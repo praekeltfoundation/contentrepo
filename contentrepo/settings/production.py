@@ -1,4 +1,4 @@
-from os.path import abspath, dirname, join
+from pathlib import Path
 
 import dj_database_url
 
@@ -6,10 +6,10 @@ from .base import *  # noqa
 
 DEBUG = env.bool("DEBUG", False)
 
-PROJECT_ROOT = os.environ.get("PROJECT_ROOT") or dirname(dirname(abspath(__file__)))
+PROJECT_ROOT = os.environ.get("PROJECT_ROOT") or Path(__file__).resolve().parent
 DATABASES = {
     "default": dj_database_url.config(
-        default="sqlite:///%s" % (join(PROJECT_ROOT, "contentrepo.db"),)
+        default=f"sqlite:///{PROJECT_ROOT / 'contentrepo.db'}"
     )
 }
 
@@ -18,6 +18,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
 
 SENTRY_DSN = env.str("SENTRY_DSN", "")
+SENTRY_ENVIRONMENT = env.str("SENTRY_ENVIRONMENT", "production")
 if SENTRY_DSN:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
@@ -30,4 +31,5 @@ if SENTRY_DSN:
         integrations=[DjangoIntegration()],
         traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
         send_default_pii=SENTRY_SEND_DEFAULT_PII,
+        environment=SENTRY_ENVIRONMENT,
     )

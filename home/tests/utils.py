@@ -1,7 +1,10 @@
 from taggit.models import Tag
 from wagtail import blocks
+from wagtail.blocks import StreamValue, StructValue  # type: ignore
+from wagtail.blocks.list_block import ListValue  # type: ignore
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.images.blocks import ImageChooserBlock
+from wagtail.rich_text import RichText  # type: ignore
 
 from home.models import (  # isort:skip
     ContentPage,
@@ -93,3 +96,21 @@ def create_page_rating(page, helpful=True, comment=""):
         helpful=helpful,
         comment=comment,
     )
+
+
+def unwagtail(val):  # type: ignore[no-untyped-def] # No type info
+    """
+    Recursively convert values from the various Wagtail StreamField types to
+    something we can more easily assert on.
+    """
+    match val:
+        case StreamValue():  # type: ignore[misc] # No type info
+            return [(b.block_type, unwagtail(b.value)) for b in val]
+        case StructValue():  # type: ignore[misc] # No type info
+            return {k: unwagtail(v) for k, v in val.items()}
+        case ListValue():  # type: ignore[misc] # No type info
+            return [unwagtail(v) for v in val]
+        case RichText():  # type: ignore[misc] # No type info
+            return val.source
+        case _:
+            return val

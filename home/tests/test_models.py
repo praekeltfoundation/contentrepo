@@ -1,25 +1,49 @@
+import json
 from io import StringIO
 from unittest import mock
 
+import pytest
+import responses
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
+from wagtail.models import (
+    Locale,  # type: ignore
+    Page,
+)
+from wagtail.test.utils import WagtailPageTests
 
 from home.models import (
+    ContentPage,
+    ContentPageIndex,
     GoToPageButton,
     HomePage,
     NextMessageButton,
+    OrderedContentSet,
     PageView,
     SMSBlock,
+    TemplateContentQuickReply,
     USSDBlock,
     WhatsappBlock,
+    WhatsAppTemplate,
 )
 
-from .page_builder import PageBuilder, WABlk, WABody
+from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
+
+
+class MyPageTests(WagtailPageTests):
+    def test_contentpage_structure(self):
+        """
+        A ContentPage can only be created under a ContentPageIndex or another ContentPage. A ContentIndexPage can only be created under the HomePage.
+        """
+        self.assertCanNotCreateAt(Page, ContentPage)
+        self.assertCanNotCreateAt(HomePage, ContentPage)
+        self.assertCanNotCreateAt(ContentPage, ContentPageIndex)
+        self.assertCanNotCreateAt(Page, ContentPageIndex)
 
 
 class ContentPageTests(TestCase):
@@ -60,26 +84,31 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_not_called()
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_on_save(self, mock_create_whatsapp_template):
+    @responses.activate
+    def test_template_create_on_save(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
         page = create_page(is_whatsapp_template=True)
-        mock_create_whatsapp_template.assert_called_with(
-            f"wa_title_{page.get_latest_revision().id}",
-            "Test WhatsApp Message 1",
-            "UTILITY",
-            [],
-            None,
-            [],
-        )
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
+            "language": "en_US",
+            "name": f"wa_title_{page.get_latest_revision().id}",
+        }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_create_with_buttons_on_save(self, mock_create_whatsapp_template):
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
             f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
             "UTILITY",
+            en,
             ["button 1", "button 2"],
             None,
             [],
@@ -91,10 +120,12 @@ class ContentPageTests(TestCase):
         self, mock_create_whatsapp_template
     ):
         page = create_page(is_whatsapp_template=True, add_example_values=True)
+        en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
             f"wa_title_{page.get_latest_revision().id}",
             "Test WhatsApp Message with two variables, {{1}} and {{2}}",
             "UTILITY",
+            en,
             [],
             None,
             [],
@@ -108,10 +139,12 @@ class ContentPageTests(TestCase):
         template name
         """
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             f"wa_title_{page.get_latest_revision().pk}",
             "Test WhatsApp Message 1",
             "UTILITY",
+            en,
             ["button 1", "button 2"],
             None,
             [],
@@ -127,6 +160,7 @@ class ContentPageTests(TestCase):
             expected_title,
             "Test WhatsApp Message 2",
             "UTILITY",
+            en,
             ["button 1", "button 2"],
             None,
             [],
@@ -145,10 +179,12 @@ class ContentPageTests(TestCase):
         page.get_latest_revision().publish()
         page.refresh_from_db()
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
+        en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
             "UTILITY",
+            en,
             ["button 1", "button 2"],
             None,
             [],
@@ -180,10 +216,12 @@ class ContentPageTests(TestCase):
         page.refresh_from_db()
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
         self.assertEqual(page.whatsapp_template_name, expected_template_name)
+        en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
             "UTILITY",
+            en,
             ["button 1", "button 2"],
             None,
             [],
@@ -212,10 +250,12 @@ class ContentPageTests(TestCase):
         page.save_revision()
 
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
+        en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
             "UTILITY",
+            en,
             [],
             None,
             [],
@@ -298,10 +338,12 @@ class ContentPageTests(TestCase):
         page = create_page(is_whatsapp_template=True)
         page.get_latest_revision().publish()
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
+        en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             expected_template_name,
             "Test WhatsApp Message 1",
             "UTILITY",
+            en,
             [],
             None,
             [],
@@ -332,6 +374,126 @@ class ContentPageTests(TestCase):
             "No changes detected",
             "There are missing migrations:\n %s" % output.getvalue(),
         )
+
+    def test_get_all_links(self):
+        """
+        ContentPage.get_all_links() should return two lists with all ContentPage and
+        OrderedContentSet links.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        test_page = PageBuilder.build_cp(
+            parent=main_menu, slug="page1", title="Page1", bodies=[]
+        )
+        page_with_links = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="page2",
+            title="Page2",
+            bodies=[
+                WABody(
+                    "Page2",
+                    [
+                        WABlk(
+                            "Page2 WA Body",
+                            buttons=[PageBtn("Import Export", page=test_page)],
+                        )
+                    ],
+                )
+            ],
+        )
+        page_with_links = PageBuilder.link_related(page_with_links, [test_page])
+
+        ocs = OrderedContentSet(name="Test set")
+        ocs.pages.append(("pages", {"contentpage": test_page}))
+        ocs.save()
+        ocs.save_revision().publish()
+
+        page_links, ocs_links = test_page.get_all_links()
+
+        self.assertListEqual(
+            [
+                (
+                    f"/admin/pages/{page_with_links.id}/edit/#tab-whatsapp",
+                    "Page2 - WhatsApp: Go to button",
+                ),
+                (
+                    f"/admin/pages/{page_with_links.id}/edit/#tab-promotional",
+                    "Page2 - Related Page",
+                ),
+            ],
+            page_links,
+        )
+        self.assertListEqual(
+            [(f"/admin/snippets/home/orderedcontentset/edit/{ocs.id}/", "Test set")],
+            ocs_links,
+        )
+
+    def test_get_all_links_no_links(self):
+        """
+        ContentPage.get_all_links() should return two empty lists if there are no links
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        test_page = PageBuilder.build_cp(
+            parent=main_menu, slug="page1", title="Page1", bodies=[]
+        )
+
+        page_links, ocs_links = test_page.get_all_links()
+
+        self.assertListEqual([], page_links)
+        self.assertListEqual([], ocs_links)
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    @pytest.mark.xfail(
+        reason="This fails because we can't get locale to create the page, "
+        "these tests will be changed once whatsapp templates are separated."
+    )
+    def test_template_create_with_pt_language(self, mock_create_whatsapp_template):
+        page = create_page(is_whatsapp_template=True)
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        mock_create_whatsapp_template.assert_called_with(
+            f"wa_title_{page.get_latest_revision().id}",
+            "Test WhatsApp Message 1",
+            "UTILITY",
+            pt,
+            [],
+            None,
+            [],
+        )
+
+
+class OrderedContentSetTests(TestCase):
+    def test_get_gender_none(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+        self.assertIsNone(ordered_content_set.get_gender())
+
+    def test_get_gender(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.get_gender(), "female")
+
+    def test_status_draft(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save()
+        ordered_content_set.unpublish()
+        self.assertEqual(ordered_content_set.status(), "Draft")
+
+    def test_status_live(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.status(), "Live")
+
+    def test_status_live_plus_draft(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+        ordered_content_set.profile_fields.append(("gender", "female"))
+        ordered_content_set.save_revision()
+        self.assertEqual(ordered_content_set.status(), "Live + Draft")
 
 
 class WhatsappBlockTests(TestCase):
@@ -480,8 +642,174 @@ class SMSBlockTests(TestCase):
 
     def test_clean_text_char_limit(self):
         """Text messages should be limited to 160 characters"""
-        SMSBlock().clean(self.create_message_value(message="a" * 160))
+        SMSBlock().clean(self.create_message_value(message="a" * 459))
 
         with self.assertRaises(StructBlockValidationError) as e:
-            SMSBlock().clean(self.create_message_value(message="a" * 161))
+            SMSBlock().clean(self.create_message_value(message="a" * 460))
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
+
+
+@pytest.mark.django_db
+class TestWhatsAppTemplate:
+
+    def test_variables_are_numeric(self) -> None:
+        """
+        Template variables are numeric.
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="non-numeric-variable",
+                message="{{foo}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": ["Please provide numeric variables only. You provided ['foo']."],
+        }
+
+    def test_variables_are_ordered(self) -> None:
+        """
+        Template variables are ordered.
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="misordered-variables",
+                message="{{2}} {{1}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Variables must be sequential, starting with \"{1}\". You provided \"['2', '1']\""
+            ],
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=False)
+    @responses.activate
+    def test_template_is_not_submitted_if_template_creation_is_disabled(self) -> None:
+        """
+        Submitting a template does nothing if WHATSAPP_CREATE_TEMPLATES is set
+        to False.
+
+        TODO: Should this be an error when template submission is its own
+            separate action?
+        """
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        wat.save_revision()
+
+        wat.submit_whatsapp_template(None)
+
+        assert len(responses.calls) == 0
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_simple_template_submission(self) -> None:
+        """
+        A simple template with no variables, media, etc. is successfully submitted.
+        """
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        wat.save_revision()
+
+        wat.submit_whatsapp_template(None)
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    # TODO: Find a better way to test quick replies
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_with_buttons(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button1")
+        wat.quick_replies.add(created_qr)
+        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button2")
+        wat.quick_replies.add(created_qr)
+        wat.save()
+        wat.save_revision()
+        wat.submit_whatsapp_template(None)
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {"text": "Test WhatsApp Message 1", "type": "BODY"},
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"text": "Button1", "type": "QUICK_REPLY"},
+                        {"text": "Button2", "type": "QUICK_REPLY"},
+                    ],
+                },
+            ],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_with_example_values(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[
+                ("example_values", "Ev1"),
+                ("example_values", "Ev2"),
+            ],
+        )
+        wat.save()
+        wat.save_revision()
+        wat.submit_whatsapp_template(None)
+
+        request = responses.calls[0].request
+
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {
+                    "text": "Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+                    "type": "BODY",
+                    "example": {"body_text": [["Ev1", "Ev2"]]},
+                },
+            ],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }

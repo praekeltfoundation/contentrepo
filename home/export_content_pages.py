@@ -1,5 +1,6 @@
 import copy
 import csv
+import io
 from dataclasses import asdict, astuple, dataclass, fields
 from itertools import zip_longest
 from json import dumps
@@ -110,24 +111,24 @@ class ExportRow:
         # exporter if there's more than one.
         if viber:
             self.viber_body = viber.value["message"].strip()
-            if "image" in viber.value:
-                self.image_link = viber.value["image"]
+            if "image" in viber.value and viber.value["image"] is not None:
+                self.image_link = viber.value["image"].file.url
         if messenger:
             self.messenger_body = messenger.value["message"].strip()
-            if "image" in messenger.value:
-                self.image_link = messenger.value["image"]
+            if "image" in messenger.value and messenger.value["image"] is not None:
+                self.image_link = messenger.value["image"].file.url
         if sms:
             self.sms_body = sms.value["message"].strip()
         if ussd:
             self.ussd_body = ussd.value["message"].strip()
         if whatsapp:
             self.whatsapp_body = whatsapp.value["message"].strip()
-            if "image" in whatsapp.value:
-                self.image_link = whatsapp.value["image"]
-            if "document" in whatsapp.value:
-                self.doc_link = whatsapp.value["document"]
-            if "media" in whatsapp.value:
-                self.media_link = whatsapp.value["media"]
+            if "image" in whatsapp.value and whatsapp.value["image"] is not None:
+                self.image_link = whatsapp.value["image"].file.url
+            if "document" in whatsapp.value and whatsapp.value["document"] is not None:
+                self.doc_link = whatsapp.value["document"].file.url
+            if "media" in whatsapp.value and whatsapp.value["media"] is not None:
+                self.media_link = whatsapp.value["media"].file.url
             if "next_prompt" in whatsapp.value:
                 self.next_prompt = whatsapp.value["next_prompt"]
             if "buttons" in whatsapp.value:
@@ -137,15 +138,24 @@ class ExportRow:
             if "footer" in whatsapp.value:
                 self.footer = whatsapp.value["footer"]
             if "list_items" in whatsapp.value:
-                self.list_items = ", ".join(whatsapp.value["list_items"])
+                output = io.StringIO()
+                writer = csv.writer(output)
+                writer.writerow(whatsapp.value["list_items"])
+                self.list_items = output.getvalue().strip()
+                output.close()
 
     @staticmethod
     def serialise_buttons(buttons: blocks.StreamValue.StreamChild) -> str:
         button_dicts = []
+
         for button in buttons:
             button_dict = {"type": button.block_type, "title": button.value["title"]}
             if button.block_type == "go_to_page":
+                # Exclude buttons that has deleted pages that they are linked to it
+                if button.value.get("page") is None:
+                    continue
                 button_dict["slug"] = button.value["page"].slug
+
             button_dicts.append(button_dict)
         return dumps(button_dicts)
 
@@ -271,7 +281,7 @@ class ContentExporter:
         return parent.title
 
     @staticmethod
-    def _related_pages(page: Page) -> list[str]:
+    def _related_pages(page: ContentPage) -> list[str]:
         # Ideally, all related page links would be removed when the page they
         # link to is deleted. We don't currently do that, so for now we just
         # make sure that we skip such links during export.

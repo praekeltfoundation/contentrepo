@@ -9,7 +9,7 @@ from queue import Queue
 from typing import Any
 from uuid import uuid4
 
-from django.core.exceptions import ValidationError  # type: ignore
+from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
@@ -40,9 +40,17 @@ class ImportException(Exception):
     Base exception for all import related issues.
     """
 
-    def __init__(self, message: str, row_num: int | None = None):
+    def __init__(
+        self,
+        message: str,
+        row_num: int | None = None,
+        slug: str | None = None,
+        locale: Locale | None = None,
+    ):
         self.row_num = row_num
         self.message = message
+        self.slug = slug
+        self.locale = locale
         super().__init__()
 
 
@@ -117,6 +125,8 @@ class ContentImporter:
                     self.add_message_to_shadow_content_page_from_row(row, prev_locale)
             except ImportException as e:
                 e.row_num = i
+                e.slug = row.slug
+                e.locale = row.locale
                 raise e
 
     def save_pages(self) -> None:
@@ -143,6 +153,20 @@ class ContentImporter:
                         f"'{page.locale}' for parent page: {list(parents)}",
                         page.row_num,
                     )
+
+                try:
+                    child = Page.objects.get(slug=page.slug, locale=page.locale)
+                except Page.DoesNotExist:
+                    # Nothing to check if the child doesn't exist yet.
+                    pass
+                else:
+                    if child.get_parent().title != page.parent:
+                        raise ImportException(
+                            f"Changing the parent from '{child.get_parent()}' to '{page.parent}' "
+                            f"for the page with title '{page.title}' during import is not allowed. Please use the UI",
+                            page.row_num,
+                        )
+
             else:
                 parent = self.home_page(page.locale)
             page.save(parent)
@@ -214,7 +238,12 @@ class ContentImporter:
         ContentPageIndex.objects.all().delete()
 
     def home_page(self, locale: Locale) -> HomePage:
-        return HomePage.objects.get(locale=locale)
+        try:
+            return HomePage.objects.get(locale=locale)
+        except ObjectDoesNotExist:
+            raise ImportException(
+                f"You are trying to add a child page to a '{locale}' HomePage that does not exist. Please create the '{locale}' HomePage first"
+            )
 
     def default_locale(self) -> Locale:
         site = Site.objects.get(is_default_site=True)
@@ -258,6 +287,14 @@ class ContentImporter:
             parent=row.parent,
             related_pages=row.related_pages,
         )
+
+        if len(row.footer) > 60:
+            raise ImportException(f"footer too long: {row.footer}", row.page_id)
+
+        for list_item in row.list_items:
+            if len(list_item) > 24:
+                raise ImportException(f"list_items too long: {list_item}", row.page_id)
+
         self.shadow_pages[(row.slug, locale)] = page
 
         self.add_message_to_shadow_content_page_from_row(row, locale)
@@ -293,7 +330,12 @@ class ContentImporter:
     def add_variation_to_shadow_content_page_from_row(
         self, row: "ContentRow", locale: Locale
     ) -> None:
-        page = self.shadow_pages[(row.slug, locale)]
+        try:
+            page = self.shadow_pages[(row.slug, locale)]
+        except KeyError:
+            raise ImportException(
+                f"This is a variation for the content page with slug '{row.slug}' and locale '{locale}', but no such page exists"
+            )
         whatsapp_block = page.whatsapp_body[-1]
         whatsapp_block.variation_messages.append(
             ShadowVariationBlock(
@@ -304,7 +346,12 @@ class ContentImporter:
     def add_message_to_shadow_content_page_from_row(
         self, row: "ContentRow", locale: Locale
     ) -> None:
-        page = self.shadow_pages[(row.slug, locale)]
+        try:
+            page = self.shadow_pages[(row.slug, locale)]
+        except KeyError:
+            raise ImportException(
+                f"This is a message for page with slug '{row.slug}' and locale '{locale}', but no such page exists"
+            )
         if row.is_whatsapp_message:
             page.enable_whatsapp = True
             buttons = []
@@ -719,4 +766,6 @@ def deserialise_dict(value: str) -> dict[str, str]:
 def deserialise_list(value: str) -> list[str]:
     if not value:
         return []
-    return [item.strip() for item in value.strip().split(",")]
+
+    items = list(csv.reader([value]))[0]
+    return [item.strip() for item in items]

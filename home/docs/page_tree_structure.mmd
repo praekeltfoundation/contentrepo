@@ -1,0 +1,18 @@
+flowchart TD;
+   ContentPageIndex2["ContentPageIndex"]
+   ContentPage2["ContentPage"]
+   
+   ContentPageChild2["ContentPage"]
+   ContentPageChild3["ContentPage"]
+   Pages -- "1 or more, 1 per language" --> Homepage
+     
+   Homepage  --> ContentPageIndex2
+   Homepage  --> ContentPageIndex
+   
+   ContentPageIndex --> ContentPage2
+     
+   ContentPage2 --> ContentPageChild2
+   ContentPage2 --> ContentPageChild3
+
+   ContentPageChild2 --> ContentPageChild2
+   ContentPageChild3 --> ContentPageChild3
