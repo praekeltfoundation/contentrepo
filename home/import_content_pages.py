@@ -412,7 +412,7 @@ def wagtail_to_formdata(val: Any) -> Any:
             # Wagtail doesn't have an equivalent of streamfield() for
             # listvalue, so we have to do it by hand.
             list_val: dict[str, Any] = {
-                str(i): {"deleted": False, "order": str(i), "value": wagtail_to_formdata(v)}
+                str(i): {"deleted": "", "order": str(i), "value": wagtail_to_formdata(v)}
                 for i, v in enumerate(val)
             }
             list_val["count"] = str(len(val))
@@ -470,10 +470,10 @@ class ShadowContentPage:
         form_data = nested_form_data(
             {k: wagtail_to_formdata(v) for k, v in model_to_dict(page).items()}
         )
-        print("FORM_DATA:")
-        for k, v in form_data.items():
-            print(f"  {k}: {v}")
-        # print("FORM_DATA:", form_data)
+        # print("FORM_DATA:")
+        # for k, v in form_data.items():
+        #     print(f"  {k}: {v}")
+        print("FORM_DATA:", form_data)
         form = form_class(form_data)
         if not form.is_valid():
             errs = form.errors.as_data()
