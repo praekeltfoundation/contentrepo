@@ -1,4 +1,3 @@
-# type: ignore
 from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponseRedirect
@@ -7,17 +6,12 @@ from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
-from wagtail.admin.panels import (
-    FieldPanel,
-    MultiFieldPanel,
-    TitleFieldPanel,
-)
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel, TitleFieldPanel
 from wagtail.admin.widgets.slug import SlugInput
+from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
-from wagtail_modeladmin.options import ModelAdmin, modeladmin_register
 
-# isort:skip
 from .models import Assessment, ContentPage, OrderedContentSet, WhatsAppTemplate
 
 from .views import (  # isort:skip
@@ -236,18 +230,6 @@ class OrderedContentSetViewSet(SnippetViewSet):
     search_fields = ("name", "profile_fields")
 
 
-class AssessmentAdmin(SnippetViewSet):
-    model = Assessment
-    add_to_admin_menu = True
-    list_display = ("title", "slug", "locale")
-    search_fields = ("title", "slug")
-    list_filter = ("locale",)
-    icon = "circle-check"
-    menu_order = 300
-    list_export = "title"
-    index_view_class = CustomIndexViewAssessment
-
-
 class WhatsAppTemplateViewSet(SnippetViewSet):
     model = WhatsAppTemplate
     body_truncate_size = 200
@@ -278,6 +260,28 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
             ],
             heading="Whatsapp Template",
         ),
+    ]
+
+    search_fields = (
+        "name",
+        "category",
+        "message",
+        "locale",
+    )
+
+
+class AssessmentAdmin(SnippetViewSet):
+    model = Assessment
+    add_to_admin_menu = True
+    list_display = ("title", "slug", "locale")
+    search_fields = ("title", "slug")
+    list_filter = ("locale",)
+    icon = "circle-check"
+    menu_order = 300
+    list_export = "title"
+    index_view_class = CustomIndexViewAssessment
+
+    panels = [
         MultiFieldPanel(
             [
                 TitleFieldPanel("title"),
@@ -304,31 +308,14 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
             ],
             heading="Questions",
         ),
-        MultiFieldPanel(
-            [
-                FieldPanel("name"),
-                FieldPanel("category"),
-                FieldPanel("image"),
-                FieldPanel("message"),
-                FieldPanel("quick_replies", heading="Quick Replies"),
-                FieldPanel("locale"),
-                FieldPanel("example_values"),
-            ],
-            heading="Whatsapp Template",
-        ),
     ]
 
-    search_fields = (
-        "name",
-        "category",
-        "message",
-        "locale",
-    )
 
-
-register_snippet(OrderedContentSetViewSet)
+# Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
 register_snippet(AssessmentAdmin)
+register_snippet(OrderedContentSetViewSet)
+modeladmin_register(ContentPageAdmin)
 # Flag for turning on Standalone Whatsapp Templates, still in development
 if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
     register_snippet(WhatsAppTemplateViewSet)
