@@ -1591,22 +1591,6 @@ class WhatsAppTemplate(
         return self.name
 
 
-class AnswerBlock(blocks.StructBlock):
-    answer = blocks.TextBlock(help_text="The choice shown to the user for this option")
-    score = blocks.FloatBlock(
-        help_text="How much to add to the total score if this answer is chosen"
-    )
-
-
-class QuestionBlock(blocks.StructBlock):
-    question = blocks.TextBlock(help_text="The question to ask the user")
-    error = blocks.TextBlock(
-        required=False,
-        help_text="Error message for this question if we don't understand the input",
-    )
-    answers = blocks.ListBlock(AnswerBlock())
-
-
 @receiver(pre_save, sender=WhatsAppTemplate)
 def update_whatsapp_template_embedding(sender, instance, *args, **kwargs):
 
