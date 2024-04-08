@@ -21,6 +21,7 @@ from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 from wagtail.test.utils.form_data import nested_form_data, streamfield  # type: ignore
+from wagtail.admin.rich_text.converters.contentstate import ContentstateConverter  # type: ignore
 
 from home.models import (
     ContentPage,
@@ -411,11 +412,16 @@ def wagtail_to_formdata(val: Any) -> Any:
             # Wagtail doesn't have an equivalent of streamfield() for
             # listvalue, so we have to do it by hand.
             list_val: dict[str, Any] = {
-                str(i): {"deleted": False, "order": str(i), "value": wagtail_to_formdata(v)}
+                str(i): {"deleted": "", "order": str(i), "value": wagtail_to_formdata(v)}
                 for i, v in enumerate(val)
             }
             list_val["count"] = str(len(val))
             return list_val
+        case RichText():  # type: ignore[misc] # No type info
+            # FIXME: The only RichTextBlock() we currently have is in the web
+            #        body and we don't appear to do any validation on it.
+            #        There's probably a better way to convert and/or ignore these.
+            return ContentstateConverter([]).from_database_format(val.source)
         case _:
             return val
 
@@ -464,6 +470,10 @@ class ShadowContentPage:
         form_data = nested_form_data(
             {k: wagtail_to_formdata(v) for k, v in model_to_dict(page).items()}
         )
+        # print("FORM_DATA:")
+        # for k, v in form_data.items():
+        #     print(f"  {k}: {v}")
+        print("FORM_DATA:", form_data)
         form = form_class(form_data)
         if not form.is_valid():
             errs = form.errors.as_data()
