@@ -1607,12 +1607,6 @@ class QuestionBlock(blocks.StructBlock):
     answers = blocks.ListBlock(AnswerBlock())
 
 
-class AssessmentTag(TaggedItemBase):
-    content_object = ParentalKey(
-        "Assessment", on_delete=models.CASCADE, related_name="tagged_items"
-    )
-
-
 @receiver(pre_save, sender=WhatsAppTemplate)
 def update_whatsapp_template_embedding(sender, instance, *args, **kwargs):
 
