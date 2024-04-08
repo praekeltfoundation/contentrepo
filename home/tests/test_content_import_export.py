@@ -29,7 +29,7 @@ from home.models import (
     HomePage,
     OrderedContentSet,
 )
-from home.tests.utils import unwagtail
+from home.xlsx_helpers import get_active_sheet
 
 from .helpers import set_profile_field_options
 from .page_builder import (
@@ -48,6 +48,7 @@ from .page_builder import (
     WABlk,
     WABody,
 )
+from .utils import unwagtail
 
 IMP_EXP_DATA_BASE = Path("home/tests/import-export-data")
 
@@ -387,7 +388,7 @@ class ImportExport:
 
     def _filter_export_XLSX(self, content: bytes, locale: str | None) -> bytes:
         workbook = load_workbook(BytesIO(content))
-        worksheet = workbook.worksheets[0]
+        worksheet = get_active_sheet(workbook)
         header = next(worksheet.iter_rows(max_row=1, values_only=True))
 
         rows_to_remove: list[int] = []
