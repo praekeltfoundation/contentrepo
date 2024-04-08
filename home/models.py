@@ -1308,6 +1308,12 @@ class WhatsAppTemplate(
         blank=True,
         max_length=4096,
     )
+    submission_name = models.TextField(
+        help_text="The name of the template that was submitted",
+        null=True,
+        blank=True,
+        max_length=1024,
+    )
 
     name = models.CharField(max_length=512, blank=True, default="")
     category = models.CharField(
@@ -1393,17 +1399,17 @@ class WhatsAppTemplate(
             previous_revision,
             clean,
         )
+        # TODO: Delete
+        # try:
+        #     template_name = self.submit_whatsapp_template(previous_revision)
+        # except Exception:
+        #     # Log the error to sentry and send error message to the user
+        #     logger.exception(f"Failed to submit template name:  {self.name}")
+        #     raise ValidationError("Failed to submit template")
 
-        try:
-            template_name = self.submit_whatsapp_template(previous_revision)
-        except Exception:
-            # Log the error to sentry and send error message to the user
-            logger.exception(f"Failed to submit template name:  {self.name}")
-            raise ValidationError("Failed to submit template")
-
-        if template_name:
-            revision.content["name"] = template_name
-            revision.save(update_fields=["content"])
+        # if template_name:
+        #     revision.content["name"] = template_name
+        #     revision.save(update_fields=["content"])
         return revision
 
     def clean(self):
@@ -1490,7 +1496,7 @@ class WhatsAppTemplate(
         # If there are any missing fields in the previous revision, then carry on
         if previous_revision:
             previous_revision = previous_revision.as_object()
-            previous_revision_fields = previous_revision.whatsapp_template_fields
+            previous_revision_fields = previous_revision.fields
         else:
             previous_revision_fields = ()
 
