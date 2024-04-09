@@ -269,6 +269,32 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
+    def test_standalone_template_name(self) -> None:
+        """
+        Creating a WhatsApp template results in a single HTTP call to the
+        WhatsApp API containing the template data.
+        """
+        data = {
+            "category": "UTILITY",
+            "name": "Test template 1",
+            "language": "en_US",
+            "components": [{"type": "BODY", "text": "Test Body"}],
+        }
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        locale = Locale.objects.get(language_code="en")
+        create_standalone_whatsapp_template(
+            "Test template 1", "Test Body", "UTILITY", locale=locale
+        )
+        print("UTH")
+        request = responses.calls[0].request
+        print("REQUEST HERE = ", request.body)
+        assert request.headers["Authorization"] == "Bearer fake-access-token"
+        assert json.loads(request.body) == data
+        assert False
+
+    @responses.activate
     def test_create_standalone_whatsapp_template_with_example_values(self) -> None:
         """
         When we create a WhatsApp template with example values, the examples

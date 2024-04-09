@@ -99,6 +99,115 @@ class WhatsAppLanguage(Enum):
         return cls[lc]
 
 
+def get_upload_session_id(image_obj: Image) -> dict[str, Any]:
+    """
+    Gets a session ID from the Turn API, to use with an image upload
+    """
+    url = urljoin(
+        settings.WHATSAPP_API_URL,
+        "graph/v14.0/app/uploads",
+    )
+    headers = {
+        "Content-Type": "application/json",
+    }
+    mime_type = mimetypes.guess_type(image_obj.file.name)[0]
+    file_size = image_obj.file.size
+
+    data = {
+        "file_length": file_size,
+        "file_type": mime_type,
+        "access_token": settings.WHATSAPP_ACCESS_TOKEN,
+        "number": settings.FB_BUSINESS_ID,
+    }
+    response = requests.post(
+        url,
+        headers=headers,
+        data=json.dumps(data, indent=4),
+    )
+
+    upload_details = {
+        "upload_session_id": response.json()["id"],
+        "upload_file": image_obj.file,
+    }
+
+    response.raise_for_status()
+    return upload_details
+
+
+def upload_image(image_obj: Image) -> str:
+    """
+    Uploads an image to the Turn API, and returns an image handle reference to use in the template
+    """
+    upload_details = get_upload_session_id(image_obj)
+    url = urljoin(
+        settings.WHATSAPP_API_URL,
+        f"graph/{upload_details['upload_session_id']}",
+    )
+
+    headers = {
+        "file_offset": "0",
+    }
+    files_data = {
+        "file": (upload_details["upload_file"]).open("rb"),
+    }
+    form_data = {
+        "number": settings.FB_BUSINESS_ID,
+        "access_token": settings.WHATSAPP_ACCESS_TOKEN,
+    }
+    response = requests.post(url=url, headers=headers, files=files_data, data=form_data)
+    response.raise_for_status()
+    return response.json()["h"]
+
+
+def create_whatsapp_template_image(image_obj: Image) -> dict[str, Any]:
+    image_handle = upload_image(image_obj)
+
+    return {
+        "type": "HEADER",
+        "format": "IMAGE",
+        "example": {"header_handle": [image_handle]},
+    }
+
+
+def submit_whatsapp_template(
+    name: str,
+    category: str,
+    locale: Locale,
+    components: list[dict[str, Any]],
+) -> None:
+    url = urljoin(
+        settings.WHATSAPP_API_URL,
+        f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
+    )
+    headers = {
+        "Authorization": f"Bearer {settings.WHATSAPP_ACCESS_TOKEN}",
+        "Content-Type": "application/json",
+    }
+
+    data = {
+        "category": category,
+        "name": name,
+        "language": WhatsAppLanguage.from_locale(locale).value,
+        "components": components,
+    }
+    print("POST DATA = ", json.dumps(data, indent=4))
+    # response = requests.post(
+    #     url,
+    #     headers=headers,
+    #     data=json.dumps(data, indent=4),
+    # )
+
+    # Check if an error has occurred
+    # TODO: Should we return more detail on the error?
+    # response.raise_for_status()
+    return "TEST - Template name already exists"
+
+
+###### ALL CODE ABOVE THIS LINE IS SHARED BY THE OLD CONTENTPAGE EMBEDDED TEMPLATES, AS WELL AS THE NEW STANDALONE TEMPLATES ######
+
+###### OLD CONTENTPAGE EMBEDDED TEMPLATE CODE BELOW ######
+
+
 def create_whatsapp_template(
     name: str,
     body: str,
@@ -118,29 +227,6 @@ def create_whatsapp_template(
     )
     if image_id is not None:
         image_obj = Image.objects.get(id=image_id)
-        components.append(create_whatsapp_template_image(image_obj))
-
-    submit_whatsapp_template(name, category, locale, components)
-
-
-def create_standalone_whatsapp_template(
-    name: str,
-    body: str,
-    category: str,
-    locale: Locale,
-    quick_replies: Iterable[str] = (),
-    image_obj: Image | None = None,
-    example_values: Iterable[str] | None = None,
-) -> None:
-    """
-    Create a WhatsApp template through the WhatsApp Business API.
-
-    """
-
-    components = create_whatsapp_template_submission(
-        body, quick_replies, example_values
-    )
-    if image_obj is not None:
         components.append(create_whatsapp_template_image(image_obj))
 
     submit_whatsapp_template(name, category, locale, components)
@@ -183,97 +269,74 @@ def create_whatsapp_template_submission(
     return components
 
 
-def create_whatsapp_template_image(image_obj: Image) -> dict[str, Any]:
-    image_handle = upload_image(image_obj)
+###### OLD CONTENTPAGE EMBEDDED TEMPLATE CODE ABOVE ######
+
+
+def create_standalone_template_body_components(
+    body_text: str,
+    quick_replies: Iterable[str] = (),
+    example_values: Iterable[str] | None = None,
+) -> list[dict[str, Any]]:
+    """
+    Create the body and buttons components of a WhatsApp template submission
+    request, but not the images because those need to be uploaded separately.
+    """
+
+    # body: dict[str, Any] = {"type": "BODY", "text": body_text}
+
+    components: list[dict[str, Any]] = []
+
+    if example_values:
+        components.append(
+            {
+                "type": "BODY",
+                "text": body_text,
+                "example": {
+                    "body_text": [example_values],
+                },
+            }
+        )
+    else:
+        components.append({"type": "BODY", "text": body_text})
+
+    if quick_replies:
+
+        buttons = []
+        for button in quick_replies:
+            buttons.append({"type": "QUICK_REPLY", "text": button})
+        components.append({"type": "BUTTONS", "buttons": buttons})
+
+    return components
+
+
+def create_standalone_template_header_components():
 
     return {
         "type": "HEADER",
         "format": "IMAGE",
-        "example": {"header_handle": [image_handle]},
+        "example": {"header_handle": "[image_handle_here]"},
     }
 
 
-def submit_whatsapp_template(
+def create_standalone_whatsapp_template(
     name: str,
+    body: str,
     category: str,
     locale: Locale,
-    components: list[dict[str, Any]],
+    quick_replies: Iterable[str] = (),
+    image_obj: Image | None = None,
+    example_values: Iterable[str] | None = None,
 ) -> None:
-    url = urljoin(
-        settings.WHATSAPP_API_URL,
-        f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
+    """
+    Create a WhatsApp template through the WhatsApp Business API.
+
+    """
+
+    components = create_standalone_template_body_components(
+        body, quick_replies, example_values
     )
-    headers = {
-        "Authorization": f"Bearer {settings.WHATSAPP_ACCESS_TOKEN}",
-        "Content-Type": "application/json",
-    }
+    if image_obj is not None:
+        components.append(create_whatsapp_template_image(image_obj))
 
-    data = {
-        "category": category,
-        "name": name,
-        "language": WhatsAppLanguage.from_locale(locale).value,
-        "components": components,
-    }
-    response = requests.post(
-        url,
-        headers=headers,
-        data=json.dumps(data, indent=4),
-    )
-
-    # Check if an error has occurred
-    # TODO: Should we return more detail on the error?
-    response.raise_for_status()
-
-
-def get_upload_session_id(image_obj: Image) -> dict[str, Any]:
-    url = urljoin(
-        settings.WHATSAPP_API_URL,
-        "graph/v14.0/app/uploads",
-    )
-    headers = {
-        "Content-Type": "application/json",
-    }
-    mime_type = mimetypes.guess_type(image_obj.file.name)[0]
-    file_size = image_obj.file.size
-
-    data = {
-        "file_length": file_size,
-        "file_type": mime_type,
-        "access_token": settings.WHATSAPP_ACCESS_TOKEN,
-        "number": settings.FB_BUSINESS_ID,
-    }
-    response = requests.post(
-        url,
-        headers=headers,
-        data=json.dumps(data, indent=4),
-    )
-
-    upload_details = {
-        "upload_session_id": response.json()["id"],
-        "upload_file": image_obj.file,
-    }
-
-    response.raise_for_status()
-    return upload_details
-
-
-def upload_image(image_obj: Image) -> str:
-    upload_details = get_upload_session_id(image_obj)
-    url = urljoin(
-        settings.WHATSAPP_API_URL,
-        f"graph/{upload_details['upload_session_id']}",
-    )
-
-    headers = {
-        "file_offset": "0",
-    }
-    files_data = {
-        "file": (upload_details["upload_file"]).open("rb"),
-    }
-    form_data = {
-        "number": settings.FB_BUSINESS_ID,
-        "access_token": settings.WHATSAPP_ACCESS_TOKEN,
-    }
-    response = requests.post(url=url, headers=headers, files=files_data, data=form_data)
-    response.raise_for_status()
-    return response.json()["h"]
+    submission_result = submit_whatsapp_template(name, category, locale, components)
+    print("SR = ", submission_result)
