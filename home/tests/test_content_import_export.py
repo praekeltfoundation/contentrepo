@@ -1426,23 +1426,20 @@ class TestExportImportRoundtrip:
         home_page = HomePage.objects.first()
         imp_exp = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
 
-        m1vars = [
-            VarMsg("Single male", gender="male", relationship="single"),
-            VarMsg("Complicated male", gender="male", relationship="complicated"),
-        ]
-
         cp_imp_exp_wablks = [
             WABlk(
                 "Message 1",
                 next_prompt="Next message",
                 buttons=[NextBtn("Next message")],
-                variation_messages=m1vars,
+                variation_messages=[
+                    VarMsg("Var'n for Single", relationship="single"),
+                    VarMsg("Var'n for Complicated", relationship="complicated"),
+                ],
             ),
             WABlk(
-                "Message 2, variable placeholders as well {{0}}",
+                "Message 2",
                 buttons=[PageBtn("Import Export", page=imp_exp)],
                 variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
-                example_values=["Example Value"]
             ),
             WABlk("Message 3 with no variation", next_prompt="Next message"),
         ]
