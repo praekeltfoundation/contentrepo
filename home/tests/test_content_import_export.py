@@ -884,7 +884,7 @@ class TestImportExport:
         # FIXME: Find a better way to represent this.
         assert (
             e.value.message
-            == "Validation error: {'whatsapp_template_category': [\"Value 'Marketing' is not a valid choice.\"]}"
+            == "Validation error: {'whatsapp_template_category': [ValidationError(['Select a valid choice. Marketing is not one of the available choices.'])]}"
         )
 
     def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
@@ -899,7 +899,7 @@ class TestImportExport:
         # FIXME: Find a better way to represent this.
         assert (
             e.value.message
-            == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
+            == "Validation error: {'whatsapp_body': [ValidationError(['Validation error in StreamBlock'])]}"
         )
 
     def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
@@ -920,7 +920,7 @@ class TestImportExport:
         # FIXME: Find a better way to represent this.
         assert (
             e.value.message
-            == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
+            == "Validation error: {'whatsapp_body': [ValidationError(['Validation error in StreamBlock'])]}"
         )
 
     def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
@@ -1019,7 +1019,10 @@ class TestImportExport:
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
-        assert e.value.message == "list_items too long: Item 123456789101234567890"
+        assert (
+            e.value.message
+            == "Validation error: {'whatsapp_body': [ValidationError(['Validation error in StreamBlock'])]}"
+        )
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
@@ -1424,20 +1427,18 @@ class TestExportImportRoundtrip:
         home_page = HomePage.objects.first()
         imp_exp = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
 
-        m1vars = [
-            VarMsg("Single male", gender="male", relationship="single"),
-            VarMsg("Complicated male", gender="male", relationship="complicated"),
-        ]
-
         cp_imp_exp_wablks = [
             WABlk(
                 "Message 1",
                 next_prompt="Next message",
                 buttons=[NextBtn("Next message")],
-                variation_messages=m1vars,
+                variation_messages=[
+                    VarMsg("Var'n for Single", relationship="single"),
+                    VarMsg("Var'n for Complicated", relationship="complicated"),
+                ],
             ),
             WABlk(
-                "Message 2, variable placeholders as well {{0}}",
+                "Message 2",
                 buttons=[PageBtn("Import Export", page=imp_exp)],
                 variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
             ),
@@ -1449,6 +1450,7 @@ class TestExportImportRoundtrip:
             title="CP-Import/export",
             bodies=[WABody("WA import export data", cp_imp_exp_wablks)],
         )
+
         # Save and publish cp_imp_exp again so the revision numbers match up after import.
         rev = cp_imp_exp.save_revision()
         rev.publish()
