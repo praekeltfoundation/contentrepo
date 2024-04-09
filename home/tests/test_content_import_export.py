@@ -1023,10 +1023,7 @@ class TestImportExport:
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
-        assert (
-            e.value.message
-            == "list_items too long: Item 123456789101234567890"
-        )
+        assert e.value.message == "list_items too long: Item 123456789101234567890"
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
