@@ -9,6 +9,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
@@ -20,7 +21,15 @@ from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import DraftStateMixin, Page, Revision, RevisionMixin
+from wagtail.models import (
+    DraftStateMixin,
+    LockableMixin,
+    Page,
+    ReferenceIndex,
+    Revision,
+    RevisionMixin,
+    WorkflowMixin,
+)
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
@@ -320,8 +329,8 @@ class WhatsappBlock(blocks.StructBlock):
 
 class SMSBlock(blocks.StructBlock):
     message = blocks.TextBlock(
-        help_text="each message cannot exceed 160 characters.",
-        validators=(MaxLengthValidator(160),),
+        help_text="each message cannot exceed 459 characters (3 messages).",
+        validators=(MaxLengthValidator(459),),
     )
 
     class Meta:
@@ -824,12 +833,43 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             self.whatsapp_template_name,
             self.whatsapp_template_body,
             str(self.whatsapp_template_category),
+            self.locale,
             sorted(self.quick_reply_buttons),
             self.whatsapp_template_image,
             self.whatsapp_template_example_values,
         )
 
         return self.whatsapp_template_name
+
+    def get_all_links(self):
+        page_links = []
+        orderedcontentset_links = []
+
+        usage = ReferenceIndex.get_references_to(self).group_by_source_object()
+        for ref in usage:
+            for link in ref[1]:
+                if link.model_name == "content page":
+                    link_type = "Related Page"
+                    tab = "#tab-promotional"
+                    if link.related_field.name == "whatsapp_body":
+                        link_type = "WhatsApp: Go to button"
+                        tab = "#tab-whatsapp"
+
+                    page = ContentPage.objects.get(id=link.object_id)
+                    url = reverse("wagtailadmin_pages:edit", args=(link.object_id,))
+                    page_links.append((url + tab, f"{page} - {link_type}"))
+
+                elif link.model_name == "Ordered Content Set":
+                    orderedcontentset = OrderedContentSet.objects.get(id=link.object_id)
+                    url = reverse(
+                        "wagtailsnippets_home_orderedcontentset:edit",
+                        args=(link.object_id,),
+                    )
+                    orderedcontentset_links.append((url, orderedcontentset.name))
+                else:
+                    raise Exception("Unknown model link")
+
+        return page_links, orderedcontentset_links
 
     def save_revision(
         self,
@@ -990,9 +1030,23 @@ def update_embedding(sender, instance, *args, **kwargs):
     instance.embedding = embedding
 
 
-class OrderedContentSet(DraftStateMixin, RevisionMixin, index.Indexed, models.Model):
+class OrderedContentSet(
+    WorkflowMixin,
+    DraftStateMixin,
+    LockableMixin,
+    RevisionMixin,
+    index.Indexed,
+    models.Model,
+):
     revisions = GenericRelation(
         "wagtailcore.Revision", related_query_name="orderedcontentset"
+    )
+    workflow_states = GenericRelation(
+        "wagtailcore.WorkflowState",
+        content_type_field="base_content_type",
+        object_id_field="object_id",
+        related_query_name="orderedcontentset",
+        for_concrete_model=False,
     )
     name = models.CharField(
         max_length=255, help_text="The name of the ordered content set."

@@ -1,11 +1,13 @@
+from django.contrib import messages
+from django.http import HttpResponseRedirect
 from django.template.defaultfilters import truncatechars
 from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
-from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
+from wagtail_modeladmin.options import ModelAdmin, modeladmin_register
 
 from .models import ContentPage, OrderedContentSet
 
@@ -16,6 +18,30 @@ from .views import (  # isort:skip
     PageViewReportView,
     ContentUploadView,
 )
+
+
+@hooks.register("before_delete_page")
+def before_delete_page(request, page):
+    if page.content_type.name != ContentPage._meta.verbose_name:
+        return
+
+    page_links, orderedcontentset_links = page.get_all_links()
+
+    if page_links or orderedcontentset_links:
+        msg_parts = ["You can't delete this page while it is linked."]
+
+        if page_links:
+            msg_parts.append("<br>Content Pages:")
+            for link in page_links:
+                msg_parts.append(f'<a href="{link[0]}">{link[1]}</a>')
+
+        if orderedcontentset_links:
+            msg_parts.append("<br>Ordered Content Sets:")
+            for link in orderedcontentset_links:
+                msg_parts.append(f'<a href="{link[0]}">{link[1]}</a>')
+
+        messages.warning(request, "<br>".join(msg_parts))
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/admin/"))
 
 
 @hooks.register("register_admin_urls")

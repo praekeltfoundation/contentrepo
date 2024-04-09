@@ -4,11 +4,15 @@ from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
+from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
+from wagtail.models import Workflow, WorkflowContentType
 from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content
@@ -1208,3 +1212,48 @@ class TestOrderedContentSetAPI:
             "before_or_after": "After",
             "contact_field": "something",
         }
+
+    def test_orderedcontent_moderation(self):
+        """
+        Get default workflow for ordered content set
+        """
+        workflow = Workflow.objects.create(name="Test Workflow", active="t")
+        content_type = ContentType.objects.get_for_model(OrderedContentSet)
+
+        WorkflowContentType.objects.create(
+            content_type_id=content_type.id, workflow_id=workflow.id
+        )
+
+        ordered_content_set_instance = OrderedContentSet()
+        ordered_content_set_default_workflow = (
+            ordered_content_set_instance.get_default_workflow()
+        )
+
+        assert ordered_content_set_default_workflow == workflow
+
+    def test_get_upload(self, admin_client):
+        """
+        Should return the data and not throw an exception
+        """
+        url = reverse("import_orderedcontentset")
+        # NB gotta use the admin_client here
+        response = admin_client.get(f"{url}", follow=True)
+        content_str = response.content.decode("utf-8")
+        assert "/admin/snippets/home/orderedcontentset/" in content_str
+        assert response.status_code == 200
+
+    def test_valid_document_extension(self):
+        """
+        Upload an invalid document type
+        """
+        document = Document.objects.create(
+            title="Example Document", file="invalid_file.exe"
+        )
+
+        with pytest.raises(ValidationError) as validation_error:
+            document.full_clean()
+
+        assert (
+            validation_error.value.messages[0]
+            == "File extension “exe” is not allowed. Allowed extensions are: doc, docx, xls, xlsx, ppt, pptx, pdf, txt."
+        )

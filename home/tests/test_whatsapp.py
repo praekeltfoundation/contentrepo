@@ -3,9 +3,11 @@ from pathlib import Path
 
 import pytest
 import responses
-from django.core.files.images import ImageFile
+from django.core.files.images import ImageFile  # type: ignore
+from pytest_django.fixtures import SettingsWrapper
 from responses.matchers import multipart_matcher
-from wagtail.images.models import Image
+from wagtail.images.models import Image  # type: ignore
+from wagtail.models import Locale  # type: ignore
 
 from home.whatsapp import create_whatsapp_template
 
@@ -13,7 +15,11 @@ from home.whatsapp import create_whatsapp_template
 @pytest.mark.django_db
 class TestWhatsApp:
     @responses.activate
-    def test_create_whatsapp_template(self):
+    def test_create_whatsapp_template(self) -> None:
+        """
+        Creating a WhatsApp template results in a single HTTP call to the
+        WhatsApp API containing the template data.
+        """
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -23,15 +29,20 @@ class TestWhatsApp:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
-        create_whatsapp_template("test-template", "Test Body", "UTILITY")
+        locale = Locale.objects.get(language_code="en")
+        create_whatsapp_template("test-template", "Test Body", "UTILITY", locale=locale)
 
         request = responses.calls[0].request
 
         assert request.headers["Authorization"] == "Bearer fake-access-token"
-        assert request.body == json.dumps(data, indent=4)
+        assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_example_values(self):
+    def test_create_whatsapp_template_with_example_values(self) -> None:
+        """
+        When we create a WhatsApp template with example values, the examples
+        are included in the HTTP request's template body component.
+        """
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -54,21 +65,25 @@ class TestWhatsApp:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
+        locale = Locale.objects.get(language_code="en")
         create_whatsapp_template(
             "test-template",
             "Hi {{1}}. You are testing as a {{2}}",
             "UTILITY",
-            [],
-            None,
-            ["Fritz", "beta tester"],
+            example_values=["Fritz", "beta tester"],
+            locale=locale,
         )
 
         request = responses.calls[0].request
         assert request.headers["Authorization"] == "Bearer fake-access-token"
-        assert request.body == json.dumps(data, indent=4)
+        assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_buttons(self):
+    def test_create_whatsapp_template_with_buttons(self) -> None:
+        """
+        When we create a WhatsApp template with quick-reply buttons, the
+        template data includes a buttons component that contains the buttons.
+        """
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -87,20 +102,33 @@ class TestWhatsApp:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
+        locale = Locale.objects.get(language_code="en")
         create_whatsapp_template(
             "test-template",
             "Test Body",
             "UTILITY",
-            ["Test button1", "test button2"],
+            quick_replies=["Test button1", "test button2"],
+            locale=locale,
         )
 
         request = responses.calls[0].request
 
         assert request.headers["Authorization"] == "Bearer fake-access-token"
-        assert request.body == json.dumps(data, indent=4)
+        assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_image(self, tmp_path, settings):
+    def test_create_whatsapp_template_with_image(
+        self, tmp_path: Path, settings: SettingsWrapper
+    ) -> None:
+        """
+        When we create a WhatsApp template with an image, the image must be
+        uploaded separately:
+         * A POST containing image metadata that returns a sesson id.
+         * A POST containing the session id and the image data that returns an
+           image handle.
+         * A POST containing the template data, with the image handle in a
+           header/image component.
+        """
         settings.MEDIA_ROOT = tmp_path
         img_name = "test.jpeg"
         img_path = Path("home/tests/test_static") / img_name
@@ -136,8 +164,13 @@ class TestWhatsApp:
         template_url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, template_url, json={})
 
+        locale = Locale.objects.get(language_code="en")
         create_whatsapp_template(
-            "test-template", "Test Body", "UTILITY", [], saved_image.id
+            "test-template",
+            "Test Body",
+            "UTILITY",
+            image_id=saved_image.id,
+            locale=locale,
         )
 
         mock_get_session_data = {
@@ -146,12 +179,10 @@ class TestWhatsApp:
             "access_token": "fake-access-token",
             "number": "27121231234",
         }
-        get_session_id_request = responses.calls[0].request
-        assert get_session_id_request.body == json.dumps(
-            mock_get_session_data, indent=4
-        )
+        gsid_req = responses.calls[0].request
+        assert json.loads(gsid_req.body) == mock_get_session_data
 
-        create_template_request = responses.calls[2].request
+        ct_req = responses.calls[2].request
         mock_create_template_data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -166,10 +197,47 @@ class TestWhatsApp:
             ],
         }
 
-        assert (
-            create_template_request.headers["Authorization"]
-            == "Bearer fake-access-token"
-        )
-        assert create_template_request.body == json.dumps(
-            mock_create_template_data, indent=4
-        )
+        assert ct_req.headers["Authorization"] == "Bearer fake-access-token"
+        assert json.loads(ct_req.body) == mock_create_template_data
+
+    @responses.activate
+    def test_create_whatsapp_template_with_language(self) -> None:
+        """
+        When we create a WhatsApp template, the language is converted to the
+        appropriate WhatsApp language code.
+        """
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        # The default English locale gives us a language of "en_US".
+        # FIXME: Should this be "en" instead?
+        en = Locale.objects.get(language_code="en")
+        create_whatsapp_template("test-template", "Test Body", "UTILITY", locale=en)
+        assert json.loads(responses.calls[-1].request.body) == {
+            "category": "UTILITY",
+            "name": "test-template",
+            "language": "en_US",
+            "components": [{"type": "BODY", "text": "Test Body"}],
+        }
+
+        # WhatsApp doesn't support Portuguese without a country code, so we
+        # pick "pt_PT" rather than "pt_BR".
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        create_whatsapp_template("test-pt", "Corpo de Teste", "UTILITY", locale=pt)
+        assert json.loads(responses.calls[-1].request.body) == {
+            "category": "UTILITY",
+            "name": "test-pt",
+            "language": "pt_PT",
+            "components": [{"type": "BODY", "text": "Corpo de Teste"}],
+        }
+
+        # If we specifically want Brazillian Portuguese, we can use a locale
+        # specifically for that.
+        ptbr, _created = Locale.objects.get_or_create(language_code="pt_BR")
+        create_whatsapp_template("test-pt-br", "Corpo de Teste", "UTILITY", locale=ptbr)
+        assert json.loads(responses.calls[-1].request.body) == {
+            "category": "UTILITY",
+            "name": "test-pt-br",
+            "language": "pt_BR",
+            "components": [{"type": "BODY", "text": "Corpo de Teste"}],
+        }
