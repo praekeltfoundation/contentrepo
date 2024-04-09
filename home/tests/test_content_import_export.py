@@ -884,7 +884,7 @@ class TestImportExport:
         # FIXME: Find a better way to represent this.
         assert (
             e.value.message
-            == "Validation error: {'whatsapp_template_category': [ValidationError(['Select a valid choice. Marketing is not one of the available choices.'])]}"
+            == "Validation error: {'whatsapp_template_category': [\"Value 'Marketing' is not a valid choice.\"]}"
         )
 
     def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
@@ -899,7 +899,7 @@ class TestImportExport:
         # FIXME: Find a better way to represent this.
         assert (
             e.value.message
-            == "Validation error: {'whatsapp_body': [ValidationError(['Validation error in StreamBlock'])]}"
+            == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
         )
 
     def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
@@ -920,7 +920,7 @@ class TestImportExport:
         # FIXME: Find a better way to represent this.
         assert (
             e.value.message
-            == "Validation error: {'whatsapp_body': [ValidationError(['Validation error in StreamBlock'])]}"
+            == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
         )
 
     def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
@@ -1002,13 +1002,17 @@ class TestImportExport:
 
     def test_footer_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with list_items and and footer characters exceeding maximum charactercount
+        Importing an CSV file with footer and and footer characters exceeding maximum charactercount
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp_footer_max_characters.csv")
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
+        assert (
+            e.value.message
+            == "footer too long: This is a test footer with a very long footer. This footer has reach maximum characters allowed in the footer."
+        )
 
     def test_list_items_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
@@ -1021,7 +1025,7 @@ class TestImportExport:
         assert e.value.row_num == 4
         assert (
             e.value.message
-            == "Validation error: {'whatsapp_body': [ValidationError(['Validation error in StreamBlock'])]}"
+            == "list_items too long: Item 123456789101234567890"
         )
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
