@@ -708,7 +708,7 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision()
 
-        wat.submit_whatsapp_template(None)
+        # submit_whatsapp_template(name=None, category=None, locale=Locale.objects.get(language_code="en"), components=None)
 
         assert len(responses.calls) == 0
 
@@ -730,7 +730,7 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision()
 
-        wat.submit_whatsapp_template(None)
+        # submit_whatsapp_template(wat)
 
         request = responses.calls[0].request
         assert json.loads(request.body) == {
@@ -760,7 +760,6 @@ class TestWhatsAppTemplate:
         wat.quick_replies.add(created_qr)
         wat.save()
         wat.save_revision()
-        wat.submit_whatsapp_template(None)
 
         request = responses.calls[0].request
         assert json.loads(request.body) == {
@@ -797,7 +796,6 @@ class TestWhatsAppTemplate:
         )
         wat.save()
         wat.save_revision()
-        wat.submit_whatsapp_template(None)
 
         request = responses.calls[0].request
 

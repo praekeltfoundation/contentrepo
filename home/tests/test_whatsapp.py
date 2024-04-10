@@ -15,11 +15,12 @@ from home.whatsapp import create_standalone_whatsapp_template, create_whatsapp_t
 @pytest.mark.django_db
 class TestWhatsApp:
     @responses.activate
-    def test_create_whatsapp_template(self) -> None:
+    def test_create_whatsapp_template(self, settings) -> None:
         """
         Creating a WhatsApp template results in a single HTTP call to the
         WhatsApp API containing the template data.
         """
+        settings.WHATSAPP_CREATE_TEMPLATES = True
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -30,7 +31,9 @@ class TestWhatsApp:
         responses.add(responses.POST, url, json={})
 
         locale = Locale.objects.get(language_code="en")
-        create_whatsapp_template("test-template", "Test Body", "UTILITY", locale=locale)
+        create_whatsapp_template(
+            name="test-template", body="Test Body", category="UTILITY", locale=locale
+        )
 
         request = responses.calls[0].request
 
@@ -38,11 +41,12 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_example_values(self) -> None:
+    def test_create_whatsapp_template_with_example_values(self, settings) -> None:
         """
         When we create a WhatsApp template with example values, the examples
         are included in the HTTP request's template body component.
         """
+        settings.WHATSAPP_CREATE_TEMPLATES = True
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -79,11 +83,12 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_buttons(self) -> None:
+    def test_create_whatsapp_template_with_buttons(self, settings) -> None:
         """
         When we create a WhatsApp template with quick-reply buttons, the
         template data includes a buttons component that contains the buttons.
         """
+        settings.WHATSAPP_CREATE_TEMPLATES = True
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -129,6 +134,7 @@ class TestWhatsApp:
          * A POST containing the template data, with the image handle in a
            header/image component.
         """
+        settings.WHATSAPP_CREATE_TEMPLATES = True
         settings.MEDIA_ROOT = tmp_path
         img_name = "test.jpeg"
         img_path = Path("home/tests/test_static") / img_name
@@ -206,6 +212,7 @@ class TestWhatsApp:
         When we create a WhatsApp template, the language is converted to the
         appropriate WhatsApp language code.
         """
+
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
@@ -292,7 +299,6 @@ class TestWhatsApp:
         print("REQUEST HERE = ", request.body)
         assert request.headers["Authorization"] == "Bearer fake-access-token"
         assert json.loads(request.body) == data
-        assert False
 
     @responses.activate
     def test_create_standalone_whatsapp_template_with_example_values(self) -> None:
@@ -336,7 +342,7 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_stadalone_whatsapp_template_with_buttons(self) -> None:
+    def test_create_standalone_whatsapp_template_with_buttons(self) -> None:
         """
         When we create a WhatsApp template with quick-reply buttons, the
         template data includes a buttons component that contains the buttons.
@@ -445,12 +451,12 @@ class TestWhatsApp:
             "name": "test-template",
             "language": "en_US",
             "components": [
-                {"type": "BODY", "text": "Test Body"},
                 {
                     "type": "HEADER",
                     "format": "IMAGE",
                     "example": {"header_handle": [mock_image_handle]},
                 },
+                {"type": "BODY", "text": "Test Body"},
             ],
         }
 

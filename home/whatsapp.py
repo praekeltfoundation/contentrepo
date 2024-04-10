@@ -197,15 +197,18 @@ def submit_whatsapp_template(
         headers=headers,
         data=json.dumps(data, indent=4),
     )
-    print("Response content = ", response.content)
+    json_response_content = json.loads(response.content)
+    print("Response content = ", json_response_content)
     result_string = ""
     # check response code
     if response.ok:
+
         print("All good")
-        print("Parsed response = ", json.loads(response.content)["id"])
-        result_string = (
-            f"Template Submission OK. ID = {json.loads(response.content)['id']}"
-        )
+        if json_response_content.get("id") is not None:
+            print("Parsed response = ", json_response_content.get("id"))
+            result_string = f"Template Submission OK. Template ID = {json_response_content.get('id')}"
+        else:
+            print("Something else is happening here")
         # print("Template ID = ", response.json()[id])
         return result_string
 
@@ -242,11 +245,14 @@ def create_whatsapp_template(
     components = create_whatsapp_template_submission(
         body, quick_replies, example_values
     )
+    print("Here = ", components)
     if image_id is not None:
         image_obj = Image.objects.get(id=image_id)
         components.append(create_whatsapp_template_image(image_obj))
-
-    submit_whatsapp_template(name, category, locale, components)
+    print("Components before submit = ", components)
+    submit_whatsapp_template(
+        name=name, category=category, locale=locale, components=components
+    )
 
 
 def create_whatsapp_template_submission(
