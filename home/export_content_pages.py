@@ -15,7 +15,7 @@ from wagtail import blocks  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.query import PageQuerySet  # type: ignore
 
-from home.models import (
+from .models import (
     ContentPage,
     ContentPageIndex,
     HomePage,
@@ -26,6 +26,7 @@ from home.models import (
     ViberBlock,
     WhatsappBlock,
 )
+from .xlsx_helpers import get_active_sheet
 
 HP_CTYPE = HomePage._meta.verbose_name
 CP_CTYPE = ContentPage._meta.verbose_name
@@ -304,8 +305,7 @@ class ExportWriter:
 
     def write_xlsx(self, response: HttpResponse) -> None:
         workbook = Workbook()
-        # We can't use workbook.active because the types don't match.
-        worksheet = workbook.worksheets[0]
+        worksheet = get_active_sheet(workbook)
 
         worksheet.append(ExportRow.headings())
         for row in self.rows:

@@ -19,7 +19,7 @@ from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
-from home.models import (
+from .models import (
     ContentPage,
     ContentPageIndex,
     ContentQuickReply,
@@ -31,6 +31,7 @@ from home.models import (
     ViberBlock,
     WhatsappBlock,
 )
+from .xlsx_helpers import get_active_sheet
 
 PageId = tuple[str, Locale]
 
@@ -210,7 +211,7 @@ class ContentImporter:
 
     def parse_excel(self) -> list["ContentRow"]:
         workbook = load_workbook(BytesIO(self.file_content), read_only=True)
-        worksheet = workbook.worksheets[0]
+        worksheet = get_active_sheet(workbook)
 
         def clean_excel_cell(cell_value: str | float | datetime | None) -> str:
             return str(cell_value).replace("_x000D", "")

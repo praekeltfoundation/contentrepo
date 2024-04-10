@@ -42,7 +42,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-wagtail = "~5.2.3"  # Latest LTS
+wagtail = "~5.2.4"  # Latest LTS
 django = "~4.2.11"  # Latest LTS
 dj-database-url = "^2.1.0"
 psycopg2-binary = "^2.9.9"
@@ -72,7 +72,7 @@ pytest-cov = "^4.1.0"
 pytest-xdist = "^3.5.0"
 mypy = "^1.8.0"
 ruff = "^0.3.0"
-black = "^24.2.0"
+black = "^24.3.0"
 responses = "^0.25.0"
 types-openpyxl = "^3.1.0.20240301"
 types-requests = "^2.31.0.20240311"
@@ -171,5 +171,6 @@ ignore = [
 ]
 "**/migrations/**" = [
     "E501",  # Long lines are okay in generated code.
+    "I001",  # We don't care about import sorting in generated code.
     "UP",  # We don't care about new syntax in generated code.
 ]
