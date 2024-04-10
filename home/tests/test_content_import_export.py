@@ -1002,13 +1002,17 @@ class TestImportExport:
 
     def test_footer_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with list_items and and footer characters exceeding maximum charactercount
+        Importing an CSV file with footer and and footer characters exceeding maximum charactercount
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp_footer_max_characters.csv")
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
+        assert (
+            e.value.message
+            == "footer too long: This is a test footer with a very long footer. This footer has reach maximum characters allowed in the footer."
+        )
 
     def test_list_items_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
@@ -1424,20 +1428,18 @@ class TestExportImportRoundtrip:
         home_page = HomePage.objects.first()
         imp_exp = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
 
-        m1vars = [
-            VarMsg("Single male", gender="male", relationship="single"),
-            VarMsg("Complicated male", gender="male", relationship="complicated"),
-        ]
-
         cp_imp_exp_wablks = [
             WABlk(
                 "Message 1",
                 next_prompt="Next message",
                 buttons=[NextBtn("Next message")],
-                variation_messages=m1vars,
+                variation_messages=[
+                    VarMsg("Var'n for Single", relationship="single"),
+                    VarMsg("Var'n for Complicated", relationship="complicated"),
+                ],
             ),
             WABlk(
-                "Message 2, variable placeholders as well {{0}}",
+                "Message 2",
                 buttons=[PageBtn("Import Export", page=imp_exp)],
                 variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
             ),
@@ -1449,6 +1451,7 @@ class TestExportImportRoundtrip:
             title="CP-Import/export",
             bodies=[WABody("WA import export data", cp_imp_exp_wablks)],
         )
+
         # Save and publish cp_imp_exp again so the revision numbers match up after import.
         rev = cp_imp_exp.save_revision()
         rev.publish()
