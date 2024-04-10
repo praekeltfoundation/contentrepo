@@ -39,8 +39,7 @@ from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
 from .whatsapp import (
-    create_standalone_template_header_components,
-    create_standalone_template_body_components,
+    create_standalone_whatsapp_template,
     create_whatsapp_template,
 )
 
@@ -57,7 +56,6 @@ from wagtail.admin.panels import (  # isort:skip
     TabbedInterface,
     TitleFieldPanel,
 )
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -1418,17 +1416,43 @@ class WhatsAppTemplate(
         )
 
         try:
-            template_name = self.prepare_standalone_whatsapp_template(previous_revision)
+            if not settings.WHATSAPP_CREATE_TEMPLATES:
+                return
+
+            # If there are any missing fields in the previous revision, then carry on
+            if previous_revision:
+                previous_revision = previous_revision.as_object()
+                previous_revision_fields = previous_revision.fields
+            else:
+                previous_revision_fields = ()
+
+            if self.fields == previous_revision_fields:
+                return
+
+            self.template_name = self.create_whatsapp_template_name()
+
+            result_str = create_standalone_whatsapp_template(
+                name=self.template_name,
+                message=self.message,
+                category=self.category,
+                locale=self.locale,
+                quick_replies=sorted(self.quick_reply_buttons),
+                image_obj=self.image,
+                example_values=[v["value"] for v in self.example_values.raw_data],
+            )
+
+            print("Result str from models = ", result_str)
+            print(type(result_str))
         except Exception:
             # Log the error to sentry and send error message to the user
             logger.exception(f"Failed to submit template name:  {self.name}")
             raise ValidationError("Failed to submit template")
 
-        if template_name:
+        if result_str:
             revision.content["name"] = self.name
-            revision.content["submission_name"] = template_name
+            revision.content["submission_name"] = self.template_name
             revision.content["submission_status"] = self.SubmissionStatus.SUBMITTED
-            revision.content["submission_result"] = "Houston we have a problem"
+            revision.content["submission_result"] = result_str
             revision.save(update_fields=["content"])
         return revision
 
@@ -1491,66 +1515,17 @@ class WhatsAppTemplate(
         Returns a tuple of fields that can be used to determine template equality
         """
         return (
-            self.category,
-            self.image,
+            self.name,
             self.message,
+            self.category,
+            self.locale,
             sorted(self.quick_reply_buttons),
+            self.image,
             self.example_values,
         )
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.prefix}_{self.get_latest_revision().pk}"
-
-    def prepare_standalone_whatsapp_template(self, previous_revision):
-        """
-        Submits a request to the WhatsApp API to create a template for this content
-
-        Only submits if the create templates is enabled
-        and if the template fields are different to the previous revision
-        """
-        if not settings.WHATSAPP_CREATE_TEMPLATES:
-            return
-
-        # If there are any missing fields in the previous revision, then carry on
-        if previous_revision:
-            previous_revision = previous_revision.as_object()
-            previous_revision_fields = previous_revision.fields
-        else:
-            previous_revision_fields = ()
-
-        if self.fields == previous_revision_fields:
-            return
-
-        # TODO: Where is this template_name defined? Doesn't appear to be part of the model
-        self.template_name = self.create_whatsapp_template_name()
-
-        components: list[dict[str, Any]] = []
-
-        if self.image:
-            components.append(create_standalone_template_header_components())
-
-        print("Components = ", components)
-
-        components.append(
-            create_standalone_template_body_components(
-                self.message,
-                sorted(self.quick_reply_buttons),
-                [v["value"] for v in self.example_values.raw_data],
-            )
-        )
-        print("Components = ", components)
-
-        # create_standalone_whatsapp_template(
-        #     self.template_name,
-        #     self.message,
-        #     str(self.category),
-        #     self.locale,
-        #     sorted(self.quick_reply_buttons),
-        #     self.image,
-        #     [v["value"] for v in self.example_values.raw_data],
-        # )
-
-        return self.template_name
 
 
 @receiver(pre_save, sender=WhatsAppTemplate)

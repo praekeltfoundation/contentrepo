@@ -174,7 +174,8 @@ def submit_whatsapp_template(
     category: str,
     locale: Locale,
     components: list[dict[str, Any]],
-) -> None:
+) -> str:
+
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
@@ -191,16 +192,32 @@ def submit_whatsapp_template(
         "components": components,
     }
     print("POST DATA = ", json.dumps(data, indent=4))
-    # response = requests.post(
-    #     url,
-    #     headers=headers,
-    #     data=json.dumps(data, indent=4),
-    # )
+    response = requests.post(
+        url,
+        headers=headers,
+        data=json.dumps(data, indent=4),
+    )
+    print("Response content = ", response.content)
+    result_string = ""
+    # check response code
+    if response.ok:
+        print("All good")
+        print("Parsed response = ", json.loads(response.content)["id"])
+        result_string = (
+            f"Template Submission OK. ID = {json.loads(response.content)['id']}"
+        )
+        # print("Template ID = ", response.json()[id])
+        return result_string
 
-    # Check if an error has occurred
+    print("ERROR")
+
+    print("Response error = ", response.json()["error"]["error_user_msg"])
+    result_string = (
+        f"Template Submission ERROR. {response.json()['error']['error_user_msg']} "
+    )
     # TODO: Should we return more detail on the error?
     # response.raise_for_status()
-    return "TEST - Template name already exists"
+    return result_string
 
 
 ###### ALL CODE ABOVE THIS LINE IS SHARED BY THE OLD CONTENTPAGE EMBEDDED TEMPLATES, AS WELL AS THE NEW STANDALONE TEMPLATES ######
@@ -270,10 +287,11 @@ def create_whatsapp_template_submission(
 
 
 ###### OLD CONTENTPAGE EMBEDDED TEMPLATE CODE ABOVE ######
+###### NEW STANDALONE TEMPLATE CODE BELOW ######
 
 
 def create_standalone_template_body_components(
-    body_text: str,
+    message: str,
     quick_replies: Iterable[str] = (),
     example_values: Iterable[str] | None = None,
 ) -> list[dict[str, Any]]:
@@ -290,14 +308,14 @@ def create_standalone_template_body_components(
         components.append(
             {
                 "type": "BODY",
-                "text": body_text,
+                "text": message,
                 "example": {
                     "body_text": [example_values],
                 },
             }
         )
     else:
-        components.append({"type": "BODY", "text": body_text})
+        components.append({"type": "BODY", "text": message})
 
     if quick_replies:
 
@@ -309,34 +327,48 @@ def create_standalone_template_body_components(
     return components
 
 
-def create_standalone_template_header_components():
-
+def create_standalone_template_header_components(
+    image_obj: Image | None = None,
+):
+    image_handle = upload_image(image_obj)
     return {
         "type": "HEADER",
         "format": "IMAGE",
-        "example": {"header_handle": "[image_handle_here]"},
+        "example": {"header_handle": [image_handle]},
     }
 
 
 def create_standalone_whatsapp_template(
     name: str,
-    body: str,
+    message: str,
     category: str,
     locale: Locale,
     quick_replies: Iterable[str] = (),
     image_obj: Image | None = None,
     example_values: Iterable[str] | None = None,
-) -> None:
+) -> str:
     """
     Create a WhatsApp template through the WhatsApp Business API.
 
     """
 
-    components = create_standalone_template_body_components(
-        body, quick_replies, example_values
-    )
-    if image_obj is not None:
-        components.append(create_whatsapp_template_image(image_obj))
+    components: list[dict[str, Any]] = []
 
-    submission_result = submit_whatsapp_template(name, category, locale, components)
-    print("SR = ", submission_result)
+    if image_obj:
+        components.append(
+            create_standalone_template_header_components(image_obj=image_obj)
+        )
+
+    components.extend(
+        create_standalone_template_body_components(
+            message=message,
+            quick_replies=quick_replies,
+            example_values=example_values,
+        )
+    )
+
+    return_str = submit_whatsapp_template(name, category, locale, components)
+
+    print(type(return_str))
+    print("create_standalone_whatsapp_template gets return  STR = ", return_str)
+    return return_str
