@@ -225,8 +225,7 @@ class TestEditPageView:
         """
         response = admin_client.get("/admin/pages/10000/edit/")
 
-        # TODO: a page ID that doesn't exist returns a 302, should this not return a 404?
-        assert response.status_code != status.HTTP_200_OK
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_contains_options_for_submission(self, admin_client):
         """
@@ -452,7 +451,6 @@ class TestEditPageView:
         assert enable_platform_checkbox
 
 
-# @pytest.mark.django_db
 class TestUploadViews:
     # TODO: flesh out more tests for upload views
     def test_import_content_form_loads(self, admin_client):
@@ -496,7 +494,8 @@ class TestUploadViews:
             self.find_options(soup, "locale") == ["Import all languages"] + all_locales
         )
 
-    def find_options(self, soup, element_id):
+    @staticmethod
+    def find_options(soup, element_id):
         return [
             option.text.strip()
             for option in soup.find("select", id=f"id_{element_id}").find_all("option")
