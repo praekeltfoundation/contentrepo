@@ -30,9 +30,6 @@ PLATFORMS_EXCL_WHATSAPP = ["Viber", "Messenger", "USSD", "SMS"]
 ALL_PLATFORMS_EXCL_WEB = PLATFORMS_EXCL_WHATSAPP + ["Whatsapp"]
 ALL_PLATFORMS = ALL_PLATFORMS_EXCL_WEB + ["Web"]
 
-# TODO:
-# - edit pages with content in them tests (tests for platform blocks)
-
 
 @pytest.fixture()
 def api_client(django_user_model):
@@ -41,6 +38,13 @@ def api_client(django_user_model):
     client = APIClient()
     client.force_authenticate(user)
     return client
+
+
+def find_options(soup, element_id):
+    return [
+        option.text.strip()
+        for option in soup.find("select", id=f"id_{element_id}").find_all("option")
+    ]
 
 
 def test_homepage_redirect(api_client):
@@ -270,8 +274,7 @@ class TestEditPageView:
         """
         response = admin_client.get("/admin/pages/10000/edit/")
 
-        # TODO: a page ID that doesn't exist returns a 302, should this not return a 404?
-        assert response.status_code != status.HTTP_200_OK
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_contains_options_for_submission(self, admin_client):
         """
@@ -539,8 +542,6 @@ class TestEditPageView:
         assert len(platform_block) == 1
         assert platform_block[0]["value"]["message"] == "Default body"
 
-
-# @pytest.mark.django_db
 class TestUploadViews:
     # TODO: flesh out more tests for upload views
     def test_import_content_form_loads(self, admin_client):
@@ -571,25 +572,13 @@ class TestUploadViews:
         file_upload = form.find("input", type="file", id="id_file")
         assert file_upload
 
-        file_types = [
-            file_type.text.strip()
-            for file_type in form.find("select", id="id_file_type").find_all("option")
-        ]
-        assert file_types == ["CSV file", "Excel File"]
+        assert find_options(form, "file_type") == ["CSV file", "Excel File"]
         # TODO: consistency in the labeling, either both "file" or both "File"
 
-        assert self.find_options(form, "purge") == ["No", "Yes"]
+        assert find_options(soup, "purge") == ["No", "Yes"]
 
         all_locales = [locale.language_name for locale in Locale.objects.all()]
-        assert (
-            self.find_options(form, "locale") == ["Import all languages"] + all_locales
-        )
-
-    def find_options(self, soup, element_id):
-        return [
-            option.text.strip()
-            for option in soup.find("select", id=f"id_{element_id}").find_all("option")
-        ]
+        assert find_options(form, "locale") == ["Import all languages"] + all_locales
 
 
 class TestOrderedContentSetViews:
