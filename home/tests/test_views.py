@@ -28,11 +28,13 @@ def api_client(django_user_model):
     client.force_authenticate(user)
     return client
 
+
 def find_options(soup, element_id):
     return [
         option.text.strip()
         for option in soup.find("select", id=f"id_{element_id}").find_all("option")
     ]
+
 
 def test_homepage_redirect(api_client):
     """
@@ -492,6 +494,4 @@ class TestUploadViews:
         assert find_options(soup, "purge") == ["No", "Yes"]
 
         all_locales = [locale.language_name for locale in Locale.objects.all()]
-        assert (
-            find_options(soup, "locale") == ["Import all languages"] + all_locales
-        )
+        assert find_options(soup, "locale") == ["Import all languages"] + all_locales
