@@ -28,6 +28,11 @@ def api_client(django_user_model):
     client.force_authenticate(user)
     return client
 
+def find_options(soup, element_id):
+    return [
+        option.text.strip()
+        for option in soup.find("select", id=f"id_{element_id}").find_all("option")
+    ]
 
 def test_homepage_redirect(api_client):
     """
@@ -480,23 +485,13 @@ class TestUploadViews:
         file_upload = soup.find("input", type="file", id="id_file")
         assert file_upload
 
-        file_types = [
-            file_type.text.strip()
-            for file_type in soup.find("select", id="id_file_type").find_all("option")
-        ]
+        file_types = find_options(soup, "file_type")
         assert file_types == ["CSV file", "Excel File"]
         # TODO: consistency in the labeling, either both "file" or both "File"
 
-        assert self.find_options(soup, "purge") == ["No", "Yes"]
+        assert find_options(soup, "purge") == ["No", "Yes"]
 
         all_locales = [locale.language_name for locale in Locale.objects.all()]
         assert (
-            self.find_options(soup, "locale") == ["Import all languages"] + all_locales
+            find_options(soup, "locale") == ["Import all languages"] + all_locales
         )
-
-    @staticmethod
-    def find_options(soup, element_id):
-        return [
-            option.text.strip()
-            for option in soup.find("select", id=f"id_{element_id}").find_all("option")
-        ]
