@@ -542,6 +542,7 @@ class TestEditPageView:
         assert len(platform_block) == 1
         assert platform_block[0]["value"]["message"] == "Default body"
 
+
 class TestUploadViews:
     # TODO: flesh out more tests for upload views
     def test_import_content_form_loads(self, admin_client):
