@@ -18,7 +18,6 @@ from wagtail.query import PageQuerySet  # type: ignore
 @dataclass
 class ExportRow:
     title: str = ""
-    page_id: int = 0
     tags: str = ""
     slug: str = ""
     locale: str = ""
@@ -30,10 +29,10 @@ class ExportRow:
     low_inflection: str = ""
     generic_error: str = ""
     question_count: int = 0
-    questions: str = ""
+    question: str = ""
     error: str = ""
     answers: str = ""
-    score: str = ""
+    scores: str = ""
 
     @classmethod
     def headings(cls) -> list[str]:
@@ -62,10 +61,10 @@ class AssessmentExporter:
                 self.rows.append(
                     {
                         "title": item.title,
-                        "page_id": item.id,
+                        # "page_id": item.id,
                         "tags": self._comma_sep_qs(item.tags.all()),
                         "slug": item.slug,
-                        "locale": str(item.locale),
+                        "locale": str(item.locale.language_code),
                         "high_result_page": str(item.high_result_page.slug),
                         "high_inflection": item.high_inflection,
                         "medium_result_page": str(item.medium_result_page.slug),
@@ -79,6 +78,12 @@ class AssessmentExporter:
                 )
         return self.rows
 
+    def format_answers(self, answers) -> str:
+        escaped_answer = [answer.replace(",", "</>") for answer in answers]
+        joined_string = ",".join(escaped_answer).split(",")
+        return_value = [answer.replace("</>", ",") for answer in joined_string]
+        return str(return_value)[1:-1]
+
     def get_questions(self, questions: StreamValue) -> list[StructValue]:
         question_data = []
         for question in questions:
@@ -89,10 +94,10 @@ class AssessmentExporter:
                 scores.append(str(answer["score"]))
             question_data.append(
                 {
-                    "questions": (question.value["question"]).replace("\n", ","),
+                    "question": (question.value["question"]).replace("\n", ","),
                     "error": (question.value["error"]),
-                    "answers": ", ".join(answers),
-                    "score": ", ".join(scores),
+                    "answers": self.format_answers(answers),
+                    "scores": ", ".join(scores),
                 }
             )
         return question_data
@@ -120,7 +125,7 @@ class AssessmentExportWriter:
         for row in self.rows:
             row_values = [
                 row["title"],
-                row["page_id"],
+                # row["page_id"],
                 row["tags"],
                 row["slug"],
                 row["locale"],
@@ -132,10 +137,10 @@ class AssessmentExportWriter:
                 row["low_inflection"],
                 row["generic_error"],
                 row["question_count"],
-                row["questions"],
+                row["question"],
                 row["error"],
                 row["answers"],
-                row["score"],
+                row["scores"],
             ]
             worksheet.append(row_values)  # type: ignore
         _set_xlsx_styles(workbook, worksheet)  # type: ignore
@@ -149,7 +154,7 @@ class AssessmentExportWriter:
         for row in self.rows:
             row_values = [
                 row["title"],
-                row["page_id"],
+                # row["page_id"],
                 row["tags"],
                 row["slug"],
                 row["locale"],
@@ -161,10 +166,10 @@ class AssessmentExportWriter:
                 row["low_inflection"],
                 row["generic_error"],
                 row["question_count"],
-                row["questions"],
+                row["question"],
                 row["error"],
                 row["answers"],
-                row["score"],
+                row["scores"],
             ]
             csv_response.writerow(row_values)
 
@@ -180,7 +185,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
 
     column_widths_in_pts = {
         "title": 110,
-        "page_id": 110,
+        # "page_id": 110,
         "tags": 110,
         "slug": 110,
         "locale": 118,
@@ -192,10 +197,10 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "low_inflection": 110,
         "generic_error": 300,
         "question_count": 110,
-        "questions": 370,
+        "question": 370,
         "error": 400,
         "answer": 110,
-        "score": 110,
+        "scores": 110,
     }
 
     for index, column_width in enumerate(column_widths_in_pts.values(), 2):
@@ -230,12 +235,6 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
     wb.add_named_style(menu_style)
 
     # column widths
-
-    # Set menu style for any "Menu" row
-    for row in sheet.iter_rows():
-        if isinstance(row[1].value, str) and "Menu" in row[1].value:
-            for cell in row:
-                cell.style = menu_style
 
     # Set header style for row 1 and 2
     for row in sheet["1:2"]:

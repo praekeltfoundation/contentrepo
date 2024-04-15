@@ -46,20 +46,6 @@ def filter_both(
 
 
 @filter_both
-def ignore_certain_fields(entry: ExpDict) -> ExpDict:
-    # FIXME: Do we need page.id to be imported? At the moment nothing in the
-    #        import reads that.
-    # FIXME: Implement import/export for doc_link, image_link, media_link.
-    ignored_fields = {
-        "page_id",
-        "doc_link",
-        "image_link",
-        "media_link",
-    }
-    return {k: v for k, v in entry.items() if k not in ignored_fields}
-
-
-@filter_both
 def strip_leading_whitespace(entry: ExpDict) -> ExpDict:
     # FIXME: Do we expect imported content to have leading spaces removed?
     bodies = {k: v.lstrip(" ") for k, v in entry.items() if k.endswith("_body")}
@@ -68,7 +54,7 @@ def strip_leading_whitespace(entry: ExpDict) -> ExpDict:
 
 EXPORT_FILTER_FUNCS = [
     # add_new_fields,
-    ignore_certain_fields,
+    # ignore_certain_fields,
     strip_leading_whitespace,
 ]
 
@@ -179,10 +165,7 @@ class ImportExport:
         Import given content file in the configured format with the configured importer.
         """
         content = self.read_bytes(path_str, path_base)
-        print("Import method content is")
-        print(content)
         self.import_assessment(content, **kw)
-        print(content)
         return content
 
     def export_reimport(self) -> None:
@@ -407,6 +390,51 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
+    def test_comma_separated_answers(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file with multiple assessments. Some with comma
+        separated answers and some without commas.
+
+        (This uses comma_sep_assessments.csv.)
+
+        """
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="high-inflection",
+            title="High Inflection",
+            bodies=[
+                WABody("High Inflection", [WABlk("*High Inflection Page")]),
+                MBody("High inflection", [MBlk("High Inflection Page")]),
+            ],
+        )
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="medium-score",
+            title="Medium Score",
+            bodies=[
+                WABody("Medium Score", [WABlk("*Medium Inflection Page")]),
+                MBody("Medium Score", [MBlk("Medium Inflection Page")]),
+            ],
+        )
+
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="low-score",
+            title="Low Score",
+            bodies=[
+                WABody("Low Score", [WABlk("*Low Inflection Page")]),
+                MBody("Low Score", [MBlk("Low Inflection Page")]),
+            ],
+        )
+
+        csv_bytes = csv_impexp.import_file("comma_separated_answers.csv")
+        content = csv_impexp.export_assessment()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
 
 @pytest.mark.django_db()
 class TestImportExport:
@@ -471,3 +499,14 @@ class TestImportExport:
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
+
+    def test_invalid_locale_code(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing assessments with invalid locale code should raise an error that results
+        in an error message that gets sent back to the user
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("invalid-assessment-locale-name.csv")
+
+        assert e.value.row_num == 2
+        assert e.value.message == "Language code not found: fakecode"

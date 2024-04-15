@@ -1,0 +1,2 @@
+title,tags,slug,locale,high_result_page,high_inflection,medium_result_page,medium_inflection,low_result_page,low_inflection,generic_error,question_count,question,error,answers,scores
+Health Assessment Simple,checker,Health-assessment-simple,fakecode,high-inflection,4,medium-score,2,low-score,0,"Sorry, we didn't quite get that.",1,How often do you check your blood pressure,Sorry we don't under stand.,"'Once a week', 'Twice a week', 'Thrice a week'","1.0, 3.5, 4.5"

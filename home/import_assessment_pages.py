@@ -19,7 +19,7 @@ from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 
-from home.models import Assessment, ContentPage, HomePage
+from home.models import Assessment, ContentPage, HomePage  # type: ignore
 
 PageId = tuple[str, Locale]
 
@@ -54,20 +54,26 @@ class ContentImporter:
         self.locale_map: dict[str, Locale] = {}
         self.shadow_pages: dict[PageId, ShadowAssessmentPage] = {}
 
-    def locale_from_display_name(self, langname: str) -> Locale:
-        if langname not in self.locale_map:
+    def locale_from_language_code(self, lang_code_entry: str) -> Locale:
+        if lang_code_entry not in self.locale_map:
             codes = []
+            lang_name = ""
             for lang_code, lang_dn in get_content_languages().items():
-                if lang_dn == langname:
+                if lang_code == lang_code_entry:
+                    lang_name = lang_dn
                     codes.append(lang_code)
             if not codes:
-                raise ImportAssessmentException(f"Language not found: {langname}")
+                raise ImportAssessmentException(
+                    f"Language code not found: {lang_code_entry}"
+                )
             if len(codes) > 1:
                 raise ImportAssessmentException(
-                    f"Multiple codes for language: {langname} -> {codes}"
+                    f"Multiple codes for language: {lang_name} -> {codes}"
                 )
-            self.locale_map[langname] = Locale.objects.get(language_code=codes[0])
-        return self.locale_map[langname]
+            self.locale_map[lang_code_entry] = Locale.objects.get(
+                language_code=codes[0]
+            )
+        return self.locale_map[lang_code_entry]
 
     def perform_import(self) -> None:
         rows = self.parse_file()
@@ -145,7 +151,7 @@ class ContentImporter:
     def create_shadow_assessment_page_from_row(
         self, row: "ContentRow", row_num: int
     ) -> None:
-        locale = self.locale_from_display_name(row.locale)
+        locale = self.locale_from_language_code(row.locale)
         page = ShadowAssessmentPage(
             row_num=row_num,
             slug=row.slug,
@@ -158,8 +164,8 @@ class ContentImporter:
             medium_inflection=row.medium_inflection,
             low_inflection=row.low_inflection,
             answers=row.answers,
-            score=row.score,
-            questions=row.questions,
+            scores=row.scores,
+            questions=row.question,
             generic_error=row.generic_error,
             error=row.error,
             tags=row.tags,
@@ -185,10 +191,10 @@ class ShadowAssessmentPage:
     medium_inflection: str = ""
     low_inflection: str = ""
     generic_error: str = ""
-    questions: list[str] | list[dict[str, Any]] = field(default_factory=list)
+    questions: list[str] | list[dict[str, Any]] | str = field(default_factory=list)
     error: str = ""
     answers: list[str] = field(default_factory=list)
-    score: list[str] = field(default_factory=list)
+    scores: list[str] = field(default_factory=list)
 
     def save(self, parent: Page) -> None:
         try:
@@ -241,10 +247,10 @@ class ContentRow:
     low_inflection: str = ""
     generic_error: str = ""
     question_count: str = ""
-    questions: list[str] | list[dict[str, Any]] = field(default_factory=list)
+    question: list[str] | list[dict[str, Any]] | str = field(default_factory=list)
     error: str = ""
     answers: list[str] = field(default_factory=list)
-    score: list[str] = field(default_factory=list)
+    scores: list[str] = field(default_factory=list)
 
     @classmethod
     def from_flat(cls, row: dict[str, str]) -> "ContentRow":
@@ -256,11 +262,10 @@ class ContentRow:
         }
         try:
             return cls(
-                page_id=int(row.pop("page_id")) if row.get("page_id") else None,
                 tags=deserialise_list(row.pop("tags", "")),
-                questions=deserialise_list(row.pop("questions", "")),
+                question=[row.pop("question")] if row.get("question") else "",
                 answers=deserialise_list(row.pop("answers", "")),
-                score=deserialise_list(row.pop("score", "")),
+                scores=deserialise_list(row.pop("scores", "")),
                 **row,  # type: ignore
             )
         except TypeError:
@@ -268,24 +273,19 @@ class ContentRow:
                 "The import file is missing some required fields."
             )
 
-    @property
-    def is_assessment_page(self) -> bool:
-        return bool(self.high_result_page)
-
 
 def group_rows_by_page_id(rows: list[ContentRow]) -> list[ContentRow]:
     grouped_rows = defaultdict(list)
 
     for row in rows:
-        grouped_rows[row.page_id].append(row)
+        grouped_rows[row.slug].append(row)
     output_rows = []
-    for page_id, grouped_rows_list in grouped_rows.items():
+    for _slug, grouped_rows_list in grouped_rows.items():
         questions = []
         for grouped_row in grouped_rows_list:
-            for _, question in enumerate(grouped_row.questions):
-
+            for _, question in enumerate(grouped_row.question):
                 answers = grouped_row.answers if grouped_row.answers else []
-                scores = grouped_row.score if grouped_row.score else []
+                scores = grouped_row.scores if grouped_row.scores else []
                 error = grouped_row.error if grouped_row.error else []
                 question_entry = {
                     "question": question,
@@ -301,7 +301,6 @@ def group_rows_by_page_id(rows: list[ContentRow]) -> list[ContentRow]:
             ContentRow(
                 slug=grouped_rows_list[0].slug,
                 title=grouped_rows_list[0].title,
-                page_id=page_id,
                 tags=grouped_rows_list[0].tags,
                 locale=grouped_rows_list[0].locale,
                 high_result_page=grouped_rows_list[0].high_result_page,
@@ -312,9 +311,9 @@ def group_rows_by_page_id(rows: list[ContentRow]) -> list[ContentRow]:
                 low_inflection=grouped_rows_list[0].low_inflection,
                 generic_error=grouped_rows_list[0].generic_error,
                 question_count=str(len(questions)),
-                questions=questions,
+                question=questions,
                 answers=[],
-                score=[],
+                scores=[],
                 error="",
             )
         )
@@ -356,5 +355,7 @@ def create_question_streamfield(questions: StreamValue) -> list[StructValue]:
 def deserialise_list(value: str) -> list[str]:
     if not value:
         return []
-    items = list(csv.reader([value]))[0]
+    items = list(
+        csv.reader([value], delimiter=",", quotechar="'", skipinitialspace=True)
+    )[0]
     return [item.strip() for item in items]
