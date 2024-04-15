@@ -78,7 +78,7 @@ class AssessmentExporter:
                 )
         return self.rows
 
-    def format_answers(self, answers) -> str:
+    def format_answers(self, answers: list[str]) -> str:
         escaped_answer = [answer.replace(",", "</>") for answer in answers]
         joined_string = ",".join(escaped_answer).split(",")
         return_value = [answer.replace("</>", ",") for answer in joined_string]
