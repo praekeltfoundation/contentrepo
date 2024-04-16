@@ -1429,8 +1429,6 @@ class WhatsAppTemplate(
                 example_values=[v["value"] for v in self.example_values.raw_data],
             )
 
-            print("Result str from models = ", result_str)
-            print(type(result_str))
         except Exception:
             # Log the error to sentry and send error message to the user
             logger.exception(f"Failed to submit template name:  {self.name}")

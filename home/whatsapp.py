@@ -191,35 +191,24 @@ def submit_whatsapp_template(
         "language": WhatsAppLanguage.from_locale(locale).value,
         "components": components,
     }
-    print("POST DATA = ", json.dumps(data, indent=4))
     response = requests.post(
         url,
         headers=headers,
         data=json.dumps(data, indent=4),
     )
     json_response_content = json.loads(response.content)
-    print("Response content = ", json_response_content)
+
     result_string = ""
     # check response code
     if response.ok:
-
-        print("All good")
         if json_response_content.get("id") is not None:
-            print("Parsed response = ", json_response_content.get("id"))
             result_string = f"Template Submission OK. Template ID = {json_response_content.get('id')}"
-        else:
-            print("Something else is happening here")
-        # print("Template ID = ", response.json()[id])
         return result_string
 
-    print("ERROR")
-
-    print("Response error = ", response.json()["error"]["error_user_msg"])
     result_string = (
         f"Template Submission ERROR. {response.json()['error']['error_user_msg']} "
     )
-    # TODO: Should we return more detail on the error?
-    # response.raise_for_status()
+
     return result_string
 
 
@@ -245,11 +234,9 @@ def create_whatsapp_template(
     components = create_whatsapp_template_submission(
         body, quick_replies, example_values
     )
-    print("Here = ", components)
     if image_id is not None:
         image_obj = Image.objects.get(id=image_id)
         components.append(create_whatsapp_template_image(image_obj))
-    print("Components before submit = ", components)
     submit_whatsapp_template(
         name=name, category=category, locale=locale, components=components
     )
@@ -374,7 +361,4 @@ def create_standalone_whatsapp_template(
     )
 
     return_str = submit_whatsapp_template(name, category, locale, components)
-
-    print(type(return_str))
-    print("create_standalone_whatsapp_template gets return  STR = ", return_str)
     return return_str

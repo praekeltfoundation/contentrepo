@@ -294,9 +294,8 @@ class TestWhatsApp:
         create_standalone_whatsapp_template(
             "Test template 1", "Test Body", "UTILITY", locale=locale
         )
-        print("UTH")
+
         request = responses.calls[0].request
-        print("REQUEST HERE = ", request.body)
         assert request.headers["Authorization"] == "Bearer fake-access-token"
         assert json.loads(request.body) == data
 
