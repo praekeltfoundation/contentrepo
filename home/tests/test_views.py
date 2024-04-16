@@ -1,3 +1,4 @@
+import json
 from urllib.parse import urlencode
 
 import pytest
@@ -10,14 +11,24 @@ from wagtail.models import Locale
 from home.models import ContentPageRating, HomePage
 from home.serializers import ContentPageRatingSerializer, PageViewSerializer
 
-from .page_builder import PageBuilder, WABlk, WABody
+from .page_builder import (
+    MBlk,
+    MBody,
+    PageBuilder,
+    SBlk,
+    SBody,
+    UBlk,
+    UBody,
+    VarMsg,
+    VBlk,
+    VBody,
+    WABlk,
+    WABody,
+)
 
 PLATFORMS_EXCL_WHATSAPP = ["Viber", "Messenger", "USSD", "SMS"]
 ALL_PLATFORMS_EXCL_WEB = PLATFORMS_EXCL_WHATSAPP + ["Whatsapp"]
 ALL_PLATFORMS = ALL_PLATFORMS_EXCL_WEB + ["Web"]
-
-# TODO:
-# - edit pages with content in them tests (tests for platform blocks)
 
 
 @pytest.fixture()
@@ -206,14 +217,45 @@ class TestPageViews:
 
 @pytest.mark.django_db
 class TestEditPageView:
-    def create_content_page(self):
+    def create_content_page(self, body_type=None):
         """
         Helper function to create pages needed for each test.
         """
         home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = []
+        title = "Default title"
+        msg_body = "Default body"
+        var_body = "Default var body"
+
+        if body_type == "Whatsapp":
+            variation_messages = [VarMsg(var_body, gender="female")]
+            bodies.append(
+                WABody(
+                    title,
+                    [
+                        WABlk(
+                            msg_body,
+                            variation_messages=variation_messages,
+                        )
+                    ],
+                )
+            )
+        if body_type == "Messenger":
+            bodies.append(MBody(title, [MBlk(msg_body)]))
+        if body_type == "SMS":
+            bodies.append(SBody(title, [SBlk(msg_body)]))
+        if body_type == "USSD":
+            bodies.append(UBody(title, [UBlk(msg_body)]))
+        if body_type == "Viber":
+            bodies.append(VBody(title, [VBlk(msg_body)]))
+
         content_page = PageBuilder.build_cp(
-            parent=main_menu, slug="default-page", title="default page", bodies=[]
+            parent=parent, slug="default-page", title="default page", bodies=bodies
         )
         return content_page
 
@@ -457,6 +499,49 @@ class TestEditPageView:
         assert enable_platform_label == f"Enable {platform.lower()}"
         assert enable_platform_checkbox
 
+    def test_whatsapp_block_with_variations(self, admin_client):
+        page = self.create_content_page(body_type="Whatsapp")
+
+        response = admin_client.get(f"/admin/pages/{page.id}/edit/")
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        section = soup.find("section", class_="w-tabs__panel", id="tab-whatsapp")
+
+        whatsapp_title = section.find("input", id="id_whatsapp_title")
+
+        assert whatsapp_title.get("value") == "Default title"
+        whatsapp_body = section.find("div", id="whatsapp_body")
+
+        whatsapp_block = json.loads(whatsapp_body.get("data-value"))
+        variations = whatsapp_block[0]["value"]["variation_messages"][0]["value"]
+
+        assert len(whatsapp_block) == 1
+        assert whatsapp_block[0]["value"]["message"] == "Default body"
+
+        assert len(whatsapp_block[0]["value"]["variation_messages"]) == 1
+        assert variations["message"] == "Default var body"
+        assert variations["variation_restrictions"][0]["value"] == ["female"]
+
+    @pytest.mark.parametrize("platform", PLATFORMS_EXCL_WHATSAPP)
+    def test_platform_blocks_content(self, admin_client, platform):
+        page = self.create_content_page(body_type=platform)
+
+        response = admin_client.get(f"/admin/pages/{page.id}/edit/")
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        section = soup.find(
+            "section", class_="w-tabs__panel", id=f"tab-{platform.lower()}"
+        )
+
+        title = section.find("input", id=f"id_{platform.lower()}_title")
+        assert title.get("value") == "Default title"
+
+        platform_body = section.find("div", id=f"{platform.lower()}_body")
+
+        platform_block = json.loads(platform_body.get("data-value"))
+        assert len(platform_block) == 1
+        assert platform_block[0]["value"]["message"] == "Default body"
+
 
 class TestUploadViews:
     # TODO: flesh out more tests for upload views
@@ -484,14 +569,70 @@ class TestUploadViews:
         heading = soup.find("h1").text.strip()
         assert heading == "Upload Content"
 
-        file_upload = soup.find("input", type="file", id="id_file")
+        form = soup.find("form")
+        file_upload = form.find("input", type="file", id="id_file")
         assert file_upload
 
-        file_types = find_options(soup, "file_type")
-        assert file_types == ["CSV file", "Excel File"]
+        assert find_options(form, "file_type") == ["CSV file", "Excel File"]
         # TODO: consistency in the labeling, either both "file" or both "File"
 
         assert find_options(soup, "purge") == ["No", "Yes"]
 
         all_locales = [locale.language_name for locale in Locale.objects.all()]
-        assert find_options(soup, "locale") == ["Import all languages"] + all_locales
+        assert find_options(form, "locale") == ["Import all languages"] + all_locales
+
+
+class TestOrderedContentSetViews:
+    def test_response_success(self, admin_client):
+        response = admin_client.get("/admin/snippets/home/orderedcontentset/")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_buttons_present_in_view(self, admin_client):
+        """
+        The buttons are present in the view of the ordered content set.
+        """
+        response = admin_client.get("/admin/snippets/home/orderedcontentset/")
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        add_ordred_content_set = soup.find(
+            "a", href="/admin/snippets/home/orderedcontentset/add/"
+        )
+        assert add_ordred_content_set
+        assert (
+            add_ordred_content_set.text.replace("\n", "") == "Add Ordered Content Set"
+        )
+
+        download_xls = soup.find(
+            "a", href="/admin/snippets/home/orderedcontentset/?export=xlsx"
+        )
+        assert download_xls
+        assert download_xls.text.replace("\n", "") == "Download XLSX"
+
+        download_csv = soup.find(
+            "a", href="/admin/snippets/home/orderedcontentset/?export=csv"
+        )
+        assert download_csv
+        assert download_csv.text.replace("\n", "") == "Download CSV"
+
+        import_button = soup.find("a", href="/admin/import_orderedcontentset/")
+        assert import_button
+        assert import_button.text.replace("\n", "") == "Import"
+
+    def test_add_form_content_loads(self, admin_client):
+        """
+        The buttons are present in the view of the ordered content set.
+        """
+        response = admin_client.get("/admin/snippets/home/orderedcontentset/add/")
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        assert soup.find("h1").text.strip() == "New Ordered Content Set"
+
+        form = soup.find("form")
+        assert [heading.text.strip() for heading in form.find_all("h2")] == [
+            "Name*",
+            "Profile fields",
+            "Pages",
+        ]
+
+        name_field = form.find("input", type="text")
+        assert name_field
