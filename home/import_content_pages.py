@@ -210,7 +210,9 @@ class ContentImporter:
         return self.parse_csv()
 
     def parse_excel(self) -> list["ContentRow"]:
-        workbook = load_workbook(BytesIO(self.file_content), read_only=True)
+        workbook = load_workbook(
+            BytesIO(self.file_content), read_only=True, data_only=True
+        )
         worksheet = get_active_sheet(workbook)
 
         def clean_excel_cell(cell_value: str | float | datetime | None) -> str:
@@ -224,7 +226,8 @@ class ContentImporter:
             for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
                 if name and cell:
                     r[name] = clean_excel_cell(cell)
-            rows.append(ContentRow.from_flat(r))
+            if r:
+                rows.append(ContentRow.from_flat(r))
         return rows
 
     def parse_csv(self) -> list["ContentRow"]:
@@ -692,7 +695,6 @@ class ContentRow:
             for key, value in row.items()
             if value and key in class_fields
         }
-
         return cls(
             page_id=int(row.pop("page_id")) if row.get("page_id") else None,
             variation_title=deserialise_dict(row.pop("variation_title", "")),
