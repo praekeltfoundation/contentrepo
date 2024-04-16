@@ -15,7 +15,7 @@ from home.whatsapp import create_standalone_whatsapp_template, create_whatsapp_t
 @pytest.mark.django_db
 class TestWhatsApp:
     @responses.activate
-    def test_create_whatsapp_template(self, settings) -> None:
+    def test_create_whatsapp_template(self, settings: SettingsWrapper) -> None:
         """
         Creating a WhatsApp template results in a single HTTP call to the
         WhatsApp API containing the template data.
@@ -41,7 +41,9 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_example_values(self, settings) -> None:
+    def test_create_whatsapp_template_with_example_values(
+        self, settings: SettingsWrapper
+    ) -> None:
         """
         When we create a WhatsApp template with example values, the examples
         are included in the HTTP request's template body component.
@@ -83,7 +85,9 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_buttons(self, settings) -> None:
+    def test_create_whatsapp_template_with_buttons(
+        self, settings: SettingsWrapper
+    ) -> None:
         """
         When we create a WhatsApp template with quick-reply buttons, the
         template data includes a buttons component that contains the buttons.

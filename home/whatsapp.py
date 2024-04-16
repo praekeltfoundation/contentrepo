@@ -322,7 +322,7 @@ def create_standalone_template_body_components(
 
 def create_standalone_template_header_components(
     image_obj: Image | None = None,
-):
+) -> dict[str, Any]:
     image_handle = upload_image(image_obj)
     return {
         "type": "HEADER",
