@@ -1377,18 +1377,6 @@ class WhatsAppTemplate(
     def status(self):
         return "Live" if self.live else "Draft"
 
-    # # TODO: Figure out which of these needs to call the update
-    # We need to relook at the states of a standalone template, its not just draft and live, theres also pending, declined etc
-    # def save(self, *args, **kwargs):
-    #     if kwargs.get("update_fields"):
-    #         # save not called from publish
-    #         # do_stuff_on_save()
-    #         print("THIS IS A SAVE")
-    #     else:
-    #         # do_stuff_on_publish()
-    #         print("THIS IS A PUBLISH")
-    #     return super().save(*args, **kwargs)
-
     def __str__(self):
         """String repr of this snippet."""
         return self.name
