@@ -1119,6 +1119,14 @@ class TestImportExport:
             == "Changing the parent from 'Home' to 'Main Menu' for the page with title 'self-help' during import is not allowed. Please use the UI"
         )
 
+    def test_import_pages_xlsx(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing an XLSX file with content pages should not break
+        """
+        xlsx_impexp.import_file("content_pages.xlsx", purge=False)
+        content_pages = ContentPage.objects.all()
+        assert len(content_pages) > 0
+
 
 @pytest.mark.django_db
 class TestExport:
