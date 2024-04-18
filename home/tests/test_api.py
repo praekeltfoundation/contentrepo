@@ -1363,6 +1363,12 @@ class TestAssessmentAPI:
         content = json.loads(response.content)
         assert content["count"] == 1
         assert content["results"][0]["title"] == self.assessment.title
+        assert content["results"][0]["locale"] == self.assessment.locale.language_code
+        assert content["results"][0]["slug"] == self.assessment.slug
+        assert sorted(content["results"][0]["tags"]) == sorted(
+            [tag.name for tag in self.assessment.tags.all()]
+        )
+        assert content["results"][0]["generic_error"] == self.assessment.generic_error
 
         meta = content["results"][0]["high_result_page"].pop("meta")
         assert meta["type"] == "home.ContentPage"
@@ -1421,6 +1427,12 @@ class TestAssessmentAPI:
         response = uclient.get(f"/api/v2/assessment/{self.assessment.id}/")
         content = json.loads(response.content)
         assert content["title"] == self.assessment.title
+        assert content["locale"] == self.assessment.locale.language_code
+        assert content["slug"] == self.assessment.slug
+        assert sorted(content["tags"]) == sorted(
+            [tag.name for tag in self.assessment.tags.all()]
+        )
+        assert content["generic_error"] == self.assessment.generic_error
 
         meta = content["high_result_page"].pop("meta")
         assert meta["type"] == "home.ContentPage"

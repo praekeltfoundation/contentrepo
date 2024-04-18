@@ -222,21 +222,29 @@ class AssessmentViewSet(BaseAPIViewSet):
     model = Assessment
     body_fields = BaseAPIViewSet.body_fields + [
         "title",
+        "slug",
+        "locale",
+        "tags",
         "high_result_page",
         "high_inflection",
         "medium_result_page",
         "medium_inflection",
         "low_result_page",
+        "generic_error",
         "questions",
     ]
     listing_default_fields = BaseAPIViewSet.listing_default_fields + [
         "title",
+        "slug",
+        "locale",
+        "tags",
         "high_result_page",
         "high_inflection",
         "medium_result_page",
         "medium_inflection",
         "low_result_page",
         "low_inflection",
+        "generic_error",
         "questions",
     ]
     pagination_class = PageNumberPagination
