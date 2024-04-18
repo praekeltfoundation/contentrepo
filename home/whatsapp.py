@@ -204,9 +204,11 @@ def submit_whatsapp_template(
 
 
 class TemplateSubmissionException(Exception):
-    def __init__(self, response_json):
+    def __init__(self, response_json, **kwargs):
         self.response_json = response_json
-        super().__init__(f"Error. {response_json['error']['error_user_msg']} ")
+        super().__init__(
+            f"Error. {response_json['error']['error_user_msg']} ", **kwargs
+        )
 
 
 ###### ALL CODE ABOVE THIS LINE IS SHARED BY THE OLD CONTENTPAGE EMBEDDED TEMPLATES, AS WELL AS THE NEW STANDALONE TEMPLATES ######
