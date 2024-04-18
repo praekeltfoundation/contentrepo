@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from wagtail.api.v2.serializers import BaseSerializer, PageSerializer
+from wagtail.api.v2.serializers import BaseSerializer, PageLocaleField, PageSerializer
 
 from home.models import ContentPage, ContentPageRating, PageView
 
@@ -532,87 +532,6 @@ class OrderedContentSetSerializer(BaseSerializer):
     profile_fields = ProfileFieldsField(read_only=True)
 
 
-class HighResultPageField(serializers.Field):
-    """
-    Serializes the "high_result_page" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return {
-            "id": page.high_result_page.id,
-            "title": page.high_result_page.title,
-        }
-
-
-class HighInflectionField(serializers.Field):
-    """
-    Serializes the "high_inflection_field" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return page.high_inflection
-
-
-class MediumResultPageField(serializers.Field):
-    """
-    Serializes the "medium_result_page" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return {
-            "id": page.medium_result_page.id,
-            "title": page.medium_result_page.title,
-        }
-
-
-class MediumInflectionField(serializers.Field):
-    """
-    Serializes the "medium_inflection_field" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return page.medium_inflection
-
-
-class LowResultPageField(serializers.Field):
-    """
-    Serializes the "low_result_page" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return {
-            "id": page.low_result_page.id,
-            "title": page.low_result_page.title,
-        }
-
-
-class GenericErrorField(serializers.Field):
-    """
-    Serializes the "generic_error" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        return page.generic_error
-
-
 class QuestionField(serializers.Field):
     """
     Serializes the "question" field.
@@ -649,11 +568,5 @@ class QuestionField(serializers.Field):
 
 
 class AssessmentSerializer(BaseSerializer):
-    title = TitleField(read_only=True)
-    high_result_page = HighResultPageField(read_only=True)
-    high_inflection = HighInflectionField(read_only=True)
-    medium_result_page = MediumResultPageField(read_only=True)
-    medium_inflection = MediumInflectionField(read_only=True)
-    low_result_page = LowResultPageField(read_only=True)
-    generic_error = GenericErrorField(read_only=True)
+    locale = PageLocaleField(read_only=True)
     questions = QuestionField(read_only=True)
