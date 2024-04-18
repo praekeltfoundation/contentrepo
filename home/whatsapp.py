@@ -124,13 +124,12 @@ def get_upload_session_id(image_obj: Image) -> dict[str, Any]:
         headers=headers,
         data=json.dumps(data, indent=4),
     )
-
+    response.raise_for_status()
     upload_details = {
         "upload_session_id": response.json()["id"],
         "upload_file": image_obj.file,
     }
 
-    response.raise_for_status()
     return upload_details
 
 
@@ -174,7 +173,7 @@ def submit_whatsapp_template(
     category: str,
     locale: Locale,
     components: list[dict[str, Any]],
-) -> str:
+) -> dict[str, str]:
 
     url = urljoin(
         settings.WHATSAPP_API_URL,
@@ -196,20 +195,18 @@ def submit_whatsapp_template(
         headers=headers,
         data=json.dumps(data, indent=4),
     )
-    json_response_content = json.loads(response.content)
 
-    result_string = ""
-    # check response code
     if response.ok:
-        if json_response_content.get("id") is not None:
-            result_string = f"Template Submission OK. Template ID = {json_response_content.get('id')}"
-        return result_string
+        return response.json()
+    else:
+        # TODO: Add better error handling to differentiate between user error or server error
+        raise TemplateSubmissionException(response.json())
 
-    result_string = (
-        f"Template Submission ERROR. {response.json()['error']['error_user_msg']} "
-    )
 
-    return result_string
+class TemplateSubmissionException(Exception):
+    def __init__(self, response_json):
+        self.response_json = response_json
+        super().__init__(f"Error. {response_json['error']['error_user_msg']} ")
 
 
 ###### ALL CODE ABOVE THIS LINE IS SHARED BY THE OLD CONTENTPAGE EMBEDDED TEMPLATES, AS WELL AS THE NEW STANDALONE TEMPLATES ######
@@ -322,13 +319,17 @@ def create_standalone_template_body_components(
 
 def create_standalone_template_header_components(
     image_obj: Image | None = None,
-) -> dict[str, Any]:
+) -> list[dict[str, Any]]:
+    components: list[dict[str, Any]] = []
     image_handle = upload_image(image_obj)
-    return {
-        "type": "HEADER",
-        "format": "IMAGE",
-        "example": {"header_handle": [image_handle]},
-    }
+    components.append(
+        {
+            "type": "HEADER",
+            "format": "IMAGE",
+            "example": {"header_handle": [image_handle]},
+        }
+    )
+    return components
 
 
 def create_standalone_whatsapp_template(
@@ -339,7 +340,7 @@ def create_standalone_whatsapp_template(
     quick_replies: Iterable[str] = (),
     image_obj: Image | None = None,
     example_values: Iterable[str] | None = None,
-) -> str:
+) -> dict[str, str]:
     """
     Create a WhatsApp template through the WhatsApp Business API.
 
@@ -348,7 +349,7 @@ def create_standalone_whatsapp_template(
     components: list[dict[str, Any]] = []
 
     if image_obj:
-        components.append(
+        components.extend(
             create_standalone_template_header_components(image_obj=image_obj)
         )
 
@@ -360,5 +361,4 @@ def create_standalone_whatsapp_template(
         )
     )
 
-    return_str = submit_whatsapp_template(name, category, locale, components)
-    return return_str
+    return submit_whatsapp_template(name, category, locale, components)

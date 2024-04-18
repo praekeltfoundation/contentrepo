@@ -28,7 +28,7 @@ class TestWhatsApp:
             "components": [{"type": "BODY", "text": "Test Body"}],
         }
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={})
+        responses.add(responses.POST, url, json={"id": "123456789"})
 
         locale = Locale.objects.get(language_code="en")
         create_whatsapp_template(
@@ -69,7 +69,7 @@ class TestWhatsApp:
             ],
         }
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={})
+        responses.add(responses.POST, url, json={"id": "123456789"})
 
         locale = Locale.objects.get(language_code="en")
         create_whatsapp_template(
@@ -109,7 +109,7 @@ class TestWhatsApp:
             ],
         }
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={})
+        responses.add(responses.POST, url, json={"id": "123456789"})
 
         locale = Locale.objects.get(language_code="en")
         create_whatsapp_template(
@@ -292,13 +292,14 @@ class TestWhatsApp:
             "components": [{"type": "BODY", "text": "Test Body"}],
         }
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={})
+        responses.add(responses.POST, url, json={"id": "123456789"})
 
         locale = Locale.objects.get(language_code="en")
-        create_standalone_whatsapp_template(
+        result_json = create_standalone_whatsapp_template(
             "Test template 1", "Test Body", "UTILITY", locale=locale
         )
 
+        assert result_json == {"id": "123456789"}
         request = responses.calls[0].request
         assert request.headers["Authorization"] == "Bearer fake-access-token"
         assert json.loads(request.body) == data
@@ -329,7 +330,7 @@ class TestWhatsApp:
             ],
         }
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={})
+        responses.add(responses.POST, url, json={"id": "123456789"})
 
         locale = Locale.objects.get(language_code="en")
         create_standalone_whatsapp_template(

@@ -39,6 +39,7 @@ from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
 from .whatsapp import (
+    TemplateSubmissionException,
     create_standalone_whatsapp_template,
     create_whatsapp_template,
 )
@@ -1403,23 +1404,22 @@ class WhatsAppTemplate(
             clean,
         )
 
+        if not settings.WHATSAPP_CREATE_TEMPLATES:
+            return
+
+        # If there are any missing fields in the previous revision, then carry on
+        if previous_revision:
+            previous_revision = previous_revision.as_object()
+            previous_revision_fields = previous_revision.fields
+        else:
+            previous_revision_fields = ()
+
+        if self.fields == previous_revision_fields:
+            return
+
+        self.template_name = self.create_whatsapp_template_name()
         try:
-            if not settings.WHATSAPP_CREATE_TEMPLATES:
-                return
-
-            # If there are any missing fields in the previous revision, then carry on
-            if previous_revision:
-                previous_revision = previous_revision.as_object()
-                previous_revision_fields = previous_revision.fields
-            else:
-                previous_revision_fields = ()
-
-            if self.fields == previous_revision_fields:
-                return
-
-            self.template_name = self.create_whatsapp_template_name()
-
-            result_str = create_standalone_whatsapp_template(
+            response_json = create_standalone_whatsapp_template(
                 name=self.template_name,
                 message=self.message,
                 category=self.category,
@@ -1428,18 +1428,23 @@ class WhatsAppTemplate(
                 image_obj=self.image,
                 example_values=[v["value"] for v in self.example_values.raw_data],
             )
-
-        except Exception:
-            # Log the error to sentry and send error message to the user
-            logger.exception(f"Failed to submit template name:  {self.name}")
-            raise ValidationError("Failed to submit template")
-
-        if result_str:
             revision.content["name"] = self.name
             revision.content["submission_name"] = self.template_name
             revision.content["submission_status"] = self.SubmissionStatus.SUBMITTED
-            revision.content["submission_result"] = result_str
-            revision.save(update_fields=["content"])
+            revision.content["submission_result"] = (
+                f"Success! Template ID = {response_json['id']}"
+            )
+        except TemplateSubmissionException as e:
+            # The submission failed
+            revision.content["name"] = self.name
+            revision.content["submission_name"] = self.template_name
+            revision.content["submission_status"] = self.SubmissionStatus.FAILED
+            revision.content["submission_result"] = (
+                f"Error! {e.response_json['error']['error_user_msg']} "
+            )
+
+        revision.save(update_fields=["content"])
+
         return revision
 
     def clean(self):
