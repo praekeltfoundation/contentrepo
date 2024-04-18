@@ -204,10 +204,10 @@ def submit_whatsapp_template(
 
 
 class TemplateSubmissionException(Exception):
-    def __init__(self, response_json, **kwargs):
+    def __init__(self, response_json: dict[str, Any] ):
         self.response_json = response_json
         super().__init__(
-            f"Error. {response_json['error']['error_user_msg']} ", **kwargs
+            f"Error. {response_json['error']['error_user_msg']}"
         )
 
 
