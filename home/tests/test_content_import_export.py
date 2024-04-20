@@ -1020,7 +1020,6 @@ class TestImportExport:
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp_list_items_max_characters.csv")
-
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
         assert e.value.message == "list_items too long: Item 123456789101234567890"
