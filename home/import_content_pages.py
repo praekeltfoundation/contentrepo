@@ -10,14 +10,24 @@ from typing import Any
 from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
+from django.forms import model_to_dict  # type: ignore
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
-from wagtail.blocks import StructValue  # type: ignore
+from wagtail.admin.rich_text.converters.contentstate import (  # type: ignore
+    ContentstateConverter,  # type: ignore
+)
+from wagtail.blocks import (  # type: ignore
+    StreamBlockValidationError,  # type: ignore
+    StreamValue,  # type: ignore
+    StructValue,  # type: ignore
+)
+from wagtail.blocks.list_block import ListValue  # type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
+from wagtail.test.utils.form_data import nested_form_data, streamfield  # type: ignore
 
 from .models import (
     ContentPage,
@@ -292,13 +302,6 @@ class ContentImporter:
             related_pages=row.related_pages,
         )
 
-        if len(row.footer) > 60:
-            raise ImportException(f"footer too long: {row.footer}", row.page_id)
-
-        for list_item in row.list_items:
-            if len(list_item) > 24:
-                raise ImportException(f"list_items too long: {list_item}", row.page_id)
-
         self.shadow_pages[(row.slug, locale)] = page
 
         self.add_message_to_shadow_content_page_from_row(row, locale)
@@ -398,6 +401,40 @@ class ContentImporter:
             page.viber_body.append(ShadowViberBlock(message=row.viber_body))
 
 
+def wagtail_to_formdata(val: Any) -> Any:
+    """
+    Convert a model dict field that may be a nested streamfield (or associated
+    type) into something we can turn into form data.
+    """
+    match val:
+        case StreamValue():  # type: ignore[misc] # No type info
+            return streamfield(
+                [(b.block_type, wagtail_to_formdata(b.value)) for b in val]
+            )
+        case StructValue():  # type: ignore[misc] # No type info
+            return {k: wagtail_to_formdata(v) for k, v in val.items()}
+        case ListValue():  # type: ignore[misc] # No type info
+            # Wagtail doesn't have an equivalent of streamfield() for
+            # listvalue, so we have to do it by hand.
+            list_val: dict[str, Any] = {
+                str(i): {
+                    "deleted": "",
+                    "order": str(i),
+                    "value": wagtail_to_formdata(v),
+                }
+                for i, v in enumerate(val)
+            }
+            list_val["count"] = str(len(val))
+            return list_val
+        case RichText():  # type: ignore[misc] # No type info
+            # FIXME: The only RichTextBlock() we currently have is in the web
+            #        body and we don't appear to do any validation on it.
+            #        There's probably a better way to convert and/or ignore these.
+            return ContentstateConverter([]).from_database_format(val.source)
+        case _:
+            return val
+
+
 # Since wagtail page models are so difficult to create and modify programatically,
 # we instead store all the pages as these shadow objects, which we can then at the end
 # do a single write to the database from, and encapsulate all that complexity
@@ -435,6 +472,48 @@ class ShadowContentPage:
     triggers: list[str] = field(default_factory=list)
     related_pages: list[str] = field(default_factory=list)
 
+    def validate_page_using_form(self, page: Page) -> None:
+        edit_handler = page.edit_handler.bind_to_model(ContentPage)
+        form_class = edit_handler.get_form_class()
+
+        form_data = nested_form_data(
+            {k: wagtail_to_formdata(v) for k, v in model_to_dict(page).items()}
+        )
+
+        print("FORM_DATA:", form_data)
+        form = form_class(form_data)
+        if not form.is_valid():
+            errs = form.errors.as_data()
+            if "slug" in errs:
+                errs["slug"] = [
+                    err for err in errs["slug"] if err.code != "slug-in-use"
+                ]
+                if not errs["slug"]:
+                    del errs["slug"]
+            # TODO: better error stuff
+            if errs:
+                error_messsage = self.errors_to_strings(errs)
+                raise ImportException(
+                    f"Validation error: {error_messsage}", self.row_num
+                )
+
+    def errors_to_strings(self, errs):
+        errors = errs[next(iter(errs))][0]
+
+        if isinstance(errors, dict):
+            return {key: self.errors_to_strings(value) for key, value in errs.items()}
+        elif isinstance(errors, list):
+            return [self.errors_to_strings(value) for value in errs]
+        elif isinstance(errors, StreamBlockValidationError):
+            json_data_errors = errors.as_json_data()
+            error_messages = []
+            for value in json_data_errors["blockErrors"][0]["blockErrors"].values():
+                if isinstance(value, dict) and "messages" in value:
+                    error_messages.extend(value["messages"])
+            return error_messages[0]
+        elif isinstance(errors, ValidationError):
+            return errors.message
+
     def save(self, parent: Page) -> None:
         try:
             page = ContentPage.objects.get(slug=self.slug, locale=self.locale)
@@ -450,6 +529,7 @@ class ShadowContentPage:
         self.add_tags_to_page(page)
         self.add_quick_replies_to_page(page)
         self.add_triggers_to_page(page)
+        self.validate_page_using_form(page)
 
         try:
             with contextlib.suppress(NodeAlreadySaved):
