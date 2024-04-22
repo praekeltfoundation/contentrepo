@@ -26,7 +26,6 @@ class ExportRow:
     medium_result_page: str = ""
     medium_inflection: str = ""
     low_result_page: str = ""
-    low_inflection: str = ""
     generic_error: str = ""
     question_count: int = 0
     question: str = ""
@@ -70,7 +69,6 @@ class AssessmentExporter:
                         "medium_result_page": str(item.medium_result_page.slug),
                         "medium_inflection": item.medium_inflection,
                         "low_result_page": str(item.low_result_page.slug),
-                        "low_inflection": 0,
                         "generic_error": item.generic_error,
                         "question_count": i + 1,
                         **question_data,
@@ -134,7 +132,6 @@ class AssessmentExportWriter:
                 row["medium_result_page"],
                 row["medium_inflection"],
                 row["low_result_page"],
-                row["low_inflection"],
                 row["generic_error"],
                 row["question_count"],
                 row["question"],
@@ -163,7 +160,6 @@ class AssessmentExportWriter:
                 row["medium_result_page"],
                 row["medium_inflection"],
                 row["low_result_page"],
-                row["low_inflection"],
                 row["generic_error"],
                 row["question_count"],
                 row["question"],
@@ -194,7 +190,6 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "medium_result_page": 110,
         "medium_inflection": 110,
         "low_result_page": 118,
-        "low_inflection": 110,
         "generic_error": 300,
         "question_count": 110,
         "question": 370,
