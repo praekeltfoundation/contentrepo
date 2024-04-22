@@ -18,9 +18,9 @@ from wagtail.admin.rich_text.converters.contentstate import (
     ContentstateConverter,  # type: ignore
 )
 from wagtail.blocks import (  # type: ignore
-    StreamBlockValidationError, # type: ignore
-    StreamValue, # type: ignore
-    StructValue, # type: ignore
+    StreamBlockValidationError,  # type: ignore
+    StreamValue,  # type: ignore
+    StructValue,  # type: ignore
 )
 from wagtail.blocks.list_block import ListValue  # type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
