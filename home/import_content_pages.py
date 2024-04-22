@@ -6,7 +6,7 @@ from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
 from queue import Queue
-from typing import Any, Dict, Union, List
+from typing import Any
 from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
@@ -497,7 +497,7 @@ class ShadowContentPage:
                     f"Validation error: {error_messsage}", self.row_num
                 )
 
-    def errors_to_strings(self, elf, errs: Dict[str, Any]) -> Union[str, List[str]]):
+    def errors_to_strings(self, errs: dict[str, Any]) -> str:
         errors = errs[next(iter(errs))][0]
 
         if isinstance(errors, dict):
