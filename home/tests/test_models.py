@@ -708,8 +708,6 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision()
 
-        wat.submit_whatsapp_template(None)
-
         assert len(responses.calls) == 0
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -719,7 +717,7 @@ class TestWhatsAppTemplate:
         A simple template with no variables, media, etc. is successfully submitted.
         """
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={})
+        responses.add(responses.POST, url, json={"id": "123456789"})
 
         wat = WhatsAppTemplate(
             name="wa_title",
@@ -729,8 +727,6 @@ class TestWhatsAppTemplate:
         )
         wat.save()
         wat.save_revision()
-
-        wat.submit_whatsapp_template(None)
 
         request = responses.calls[0].request
         assert json.loads(request.body) == {
@@ -745,7 +741,7 @@ class TestWhatsAppTemplate:
     @responses.activate
     def test_template_create_with_buttons(self):
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={})
+        responses.add(responses.POST, url, json={"id": "123456789"})
 
         wat = WhatsAppTemplate(
             name="wa_title",
@@ -759,9 +755,12 @@ class TestWhatsAppTemplate:
         created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button2")
         wat.quick_replies.add(created_qr)
         wat.save()
-        wat.save_revision()
-        wat.submit_whatsapp_template(None)
+        wat.save_revision().publish()
 
+        wat_from_db = WhatsAppTemplate.objects.last()
+
+        assert wat_from_db.submission_status == "SUBMITTED"
+        assert "Success! Template ID " in wat_from_db.submission_result
         request = responses.calls[0].request
         assert json.loads(request.body) == {
             "category": "UTILITY",
@@ -783,7 +782,7 @@ class TestWhatsAppTemplate:
     @responses.activate
     def test_template_create_with_example_values(self):
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={})
+        responses.add(responses.POST, url, json={"id": "123456789"})
 
         wat = WhatsAppTemplate(
             name="wa_title",
@@ -797,7 +796,6 @@ class TestWhatsAppTemplate:
         )
         wat.save()
         wat.save_revision()
-        wat.submit_whatsapp_template(None)
 
         request = responses.calls[0].request
 
@@ -813,3 +811,31 @@ class TestWhatsAppTemplate:
             "language": "en_US",
             "name": f"wa_title_{wat.get_latest_revision().id}",
         }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_failed(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        error_response = {
+            "error": {
+                "code": 100,
+                "message": "Invalid parameter",
+                "type": "OAuthException",
+                "error_user_msg": "There is already English (US) content for this template. You can create a new template and try again.",
+                "error_user_title": "Content in This Language Already Exists",
+            }
+        }
+        responses.add(responses.POST, url, json=error_response, status=400)
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        wat.save_revision().publish()
+
+        wat_from_db = WhatsAppTemplate.objects.last()
+        assert wat_from_db.submission_status == "FAILED"
+        assert "Error" in wat_from_db.submission_result
