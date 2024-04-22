@@ -37,6 +37,7 @@ from home.models import (
     ViberBlock,
     WhatsappBlock,
 )
+from home.xlsx_helpers import get_active_sheet
 
 PageId = tuple[str, Locale]
 
@@ -215,8 +216,10 @@ class ContentImporter:
         return self.parse_csv()
 
     def parse_excel(self) -> list["ContentRow"]:
-        workbook = load_workbook(BytesIO(self.file_content), read_only=True)
-        worksheet = workbook.worksheets[0]
+        workbook = load_workbook(
+            BytesIO(self.file_content), read_only=True, data_only=True
+        )
+        worksheet = get_active_sheet(workbook)
 
         def clean_excel_cell(cell_value: str | float | datetime | None) -> str:
             return str(cell_value).replace("_x000D", "")
@@ -229,7 +232,8 @@ class ContentImporter:
             for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
                 if name and cell:
                     r[name] = clean_excel_cell(cell)
-            rows.append(ContentRow.from_flat(r))
+            if r:
+                rows.append(ContentRow.from_flat(r))
         return rows
 
     def parse_csv(self) -> list["ContentRow"]:
