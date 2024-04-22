@@ -497,7 +497,7 @@ class ShadowContentPage:
                     f"Validation error: {error_message}", self.row_num
                 )
 
-    def errors_to_strings(self, errs: dict[str, list[str]]) -> list[str]:
+    def errors_to_strings(self, errs: dict[str, list[str]]) -> str | list[str]:
         errors = errs[next(iter(errs))][0]
 
         if isinstance(errors, dict):
@@ -514,8 +514,7 @@ class ShadowContentPage:
                     error_messages.extend(value["messages"])
             error_messages = error_messages[0]
         elif isinstance(errors, ValidationError):
-            error_messages = []
-            error_messages.extend(str(errors.messages[0]))
+            error_messages = errors.messages[0]
         else:
             pass
 
