@@ -87,13 +87,17 @@ class UniqueSlugMixin:
 
         if not self.is_slug_available(self.slug):
             page = Page.objects.get(locale=self.locale, slug=self.slug)
-            raise ValidationError({
-                "slug": ValidationError(
-                    _("The slug '%(page_slug)s' is already in use at '%(page_url)s'"),
-                    params={"page_slug": self.slug, "page_url": page.url},
-                    code="slug-in-use",
-                )
-            })
+            raise ValidationError(
+                {
+                    "slug": ValidationError(
+                        _(
+                            "The slug '%(page_slug)s' is already in use at '%(page_url)s'"
+                        ),
+                        params={"page_slug": self.slug, "page_url": page.url},
+                        code="slug-in-use",
+                    )
+                }
+            )
 
 
 @register_setting
@@ -323,7 +327,7 @@ class WhatsappBlock(blocks.StructBlock):
                 errors["list_items"] = ValidationError(
                     "List item title maximum character is 24 "
                 )
-    
+
         if errors:
             raise StructBlockValidationError(errors)
         return result

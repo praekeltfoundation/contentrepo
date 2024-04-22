@@ -14,16 +14,20 @@ from django.forms import model_to_dict  # type: ignore
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
-from wagtail.blocks import StreamValue, StructValue, StreamBlockValidationError  # type: ignore
+from wagtail.admin.rich_text.converters.contentstate import (
+    ContentstateConverter,  # type: ignore
+)
+from wagtail.blocks import (  # type: ignore
+    StreamBlockValidationError, # type: ignore
+    StreamValue, # type: ignore
+    StructValue, # type: ignore
+)
 from wagtail.blocks.list_block import ListValue  # type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 from wagtail.test.utils.form_data import nested_form_data, streamfield  # type: ignore
-from wagtail.admin.rich_text.converters.contentstate import ContentstateConverter  # type: ignore
-from wagtail import blocks
-
 
 from home.models import (
     ContentPage,
@@ -404,14 +408,20 @@ def wagtail_to_formdata(val: Any) -> Any:
     """
     match val:
         case StreamValue():  # type: ignore[misc] # No type info
-            return streamfield([(b.block_type, wagtail_to_formdata(b.value)) for b in val])
+            return streamfield(
+                [(b.block_type, wagtail_to_formdata(b.value)) for b in val]
+            )
         case StructValue():  # type: ignore[misc] # No type info
             return {k: wagtail_to_formdata(v) for k, v in val.items()}
         case ListValue():  # type: ignore[misc] # No type info
             # Wagtail doesn't have an equivalent of streamfield() for
             # listvalue, so we have to do it by hand.
             list_val: dict[str, Any] = {
-                str(i): {"deleted": "", "order": str(i), "value": wagtail_to_formdata(v)}
+                str(i): {
+                    "deleted": "",
+                    "order": str(i),
+                    "value": wagtail_to_formdata(v),
+                }
                 for i, v in enumerate(val)
             }
             list_val["count"] = str(len(val))
@@ -475,15 +485,20 @@ class ShadowContentPage:
         if not form.is_valid():
             errs = form.errors.as_data()
             if "slug" in errs:
-                errs["slug"] = [err for err in errs["slug"] if err.code != "slug-in-use"]
+                errs["slug"] = [
+                    err for err in errs["slug"] if err.code != "slug-in-use"
+                ]
                 if not errs["slug"]:
                     del errs["slug"]
             # TODO: better error stuff
             if errs:
                 error_messsage = self.errors_to_strings(errs)
+                breakpoint()
 
-                raise ImportException(f"Validation error: {error_messsage}", self.row_num)
-            
+                raise ImportException(
+                    f"Validation error: {error_messsage}", self.row_num
+                )
+
     def errors_to_strings(self, errs):
         errors = errs[next(iter(errs))][0]
 
@@ -494,10 +509,10 @@ class ShadowContentPage:
         elif isinstance(errors, StreamBlockValidationError):
             json_data_errors = errors.as_json_data()
             error_messages = []
-            for value in json_data_errors['blockErrors'][0]['blockErrors'].values():
-                if isinstance(value, dict) and 'messages' in value:
-                    error_messages.extend(value['messages'])
-            return error_messages[0]          
+            for value in json_data_errors["blockErrors"][0]["blockErrors"].values():
+                if isinstance(value, dict) and "messages" in value:
+                    error_messages.extend(value["messages"])
+            return error_messages[0]
         elif isinstance(errors, ValidationError):
             return errors.message
 
