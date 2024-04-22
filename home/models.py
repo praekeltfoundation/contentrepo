@@ -38,7 +38,11 @@ from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
-from .whatsapp import create_standalone_whatsapp_template, create_whatsapp_template
+from .whatsapp import (
+    TemplateSubmissionException,
+    create_standalone_whatsapp_template,
+    create_whatsapp_template,
+)
 
 from .constants import (  # isort:skip
     AGE_CHOICES,
@@ -1299,6 +1303,31 @@ class WhatsAppTemplate(
         UTILITY = "UTILITY", _("Utility")
         MARKETING = "MARKETING", _("Marketing")
 
+    class SubmissionStatus(models.TextChoices):
+        NOT_SUBMITTED_YET = "NOT_SUBMITTED_YET", _("Not Submitted Yet")
+        SUBMITTED = "SUBMITTED", _("Submitted")
+        FAILED = "FAILED", _("Failed")
+
+    submission_status = models.CharField(
+        max_length=30,
+        choices=SubmissionStatus.choices,
+        blank=True,
+        default=SubmissionStatus.NOT_SUBMITTED_YET,
+    )
+
+    submission_result = models.TextField(
+        help_text="The result of submitting the template",
+        null=True,
+        blank=True,
+        max_length=4096,
+    )
+    submission_name = models.TextField(
+        help_text="The name of the template that was submitted",
+        null=True,
+        blank=True,
+        max_length=1024,
+    )
+
     name = models.CharField(max_length=512, blank=True, default="")
     category = models.CharField(
         max_length=14,
@@ -1346,18 +1375,6 @@ class WhatsAppTemplate(
     def status(self):
         return "Live" if self.live else "Draft"
 
-    # # TODO: Figure out which of these needs to call the update
-    # We need to relook at the states of a standalone template, its not just draft and live, theres also pending, declined etc
-    # def save(self, *args, **kwargs):
-    #     if kwargs.get("update_fields"):
-    #         # save not called from publish
-    #         # do_stuff_on_save()
-    #         print("THIS IS A SAVE")
-    #     else:
-    #         # do_stuff_on_publish()
-    #         print("THIS IS A PUBLISH")
-    #     return super().save(*args, **kwargs)
-
     def __str__(self):
         """String repr of this snippet."""
         return self.name
@@ -1384,16 +1401,47 @@ class WhatsAppTemplate(
             clean,
         )
 
-        try:
-            template_name = self.submit_whatsapp_template(previous_revision)
-        except Exception:
-            # Log the error to sentry and send error message to the user
-            logger.exception(f"Failed to submit template name:  {self.name}")
-            raise ValidationError("Failed to submit template")
+        if not settings.WHATSAPP_CREATE_TEMPLATES:
+            return
 
-        if template_name:
-            revision.content["name"] = template_name
-            revision.save(update_fields=["content"])
+        # If there are any missing fields in the previous revision, then carry on
+        if previous_revision:
+            previous_revision = previous_revision.as_object()
+            previous_revision_fields = previous_revision.fields
+        else:
+            previous_revision_fields = ()
+
+        if self.fields == previous_revision_fields:
+            return
+
+        self.template_name = self.create_whatsapp_template_name()
+        try:
+            response_json = create_standalone_whatsapp_template(
+                name=self.template_name,
+                message=self.message,
+                category=self.category,
+                locale=self.locale,
+                quick_replies=sorted(self.quick_reply_buttons),
+                image_obj=self.image,
+                example_values=[v["value"] for v in self.example_values.raw_data],
+            )
+            revision.content["name"] = self.name
+            revision.content["submission_name"] = self.template_name
+            revision.content["submission_status"] = self.SubmissionStatus.SUBMITTED
+            revision.content["submission_result"] = (
+                f"Success! Template ID = {response_json['id']}"
+            )
+        except TemplateSubmissionException as e:
+            # The submission failed
+            revision.content["name"] = self.name
+            revision.content["submission_name"] = self.template_name
+            revision.content["submission_status"] = self.SubmissionStatus.FAILED
+            revision.content["submission_result"] = (
+                f"Error! {e.response_json['error']['error_user_msg']} "
+            )
+
+        revision.save(update_fields=["content"])
+
         return revision
 
     def clean(self):
@@ -1408,6 +1456,9 @@ class WhatsAppTemplate(
 
         message = self.message
         # TODO: Explain what this does, or find a cleaner implementation
+
+        # Checks for mismatches in the number of opening and closing brackets.  First from right to left, then from left to right
+        # TODO: Currently "{1}" is allowed to pass and throws an error.  Add a check for this, or redo this section in a cleaner way
         right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
         left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
         mismatches = right_mismatch + left_mismatch
@@ -1452,48 +1503,17 @@ class WhatsAppTemplate(
         Returns a tuple of fields that can be used to determine template equality
         """
         return (
-            self.category,
-            self.image,
+            self.name,
             self.message,
+            self.category,
+            self.locale,
             sorted(self.quick_reply_buttons),
+            self.image,
             self.example_values,
         )
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.prefix}_{self.get_latest_revision().pk}"
-
-    def submit_whatsapp_template(self, previous_revision):
-        """
-        Submits a request to the WhatsApp API to create a template for this content
-
-        Only submits if the create templates is enabled
-        and if the template fields are different to the previous revision
-        """
-        if not settings.WHATSAPP_CREATE_TEMPLATES:
-            return
-
-        # If there are any missing fields in the previous revision, then carry on
-        if previous_revision:
-            previous_revision = previous_revision.as_object()
-            previous_revision_fields = previous_revision.whatsapp_template_fields
-        else:
-            previous_revision_fields = ()
-
-        if self.fields == previous_revision_fields:
-            return
-
-        self.template_name = self.create_whatsapp_template_name()
-        create_standalone_whatsapp_template(
-            self.template_name,
-            self.message,
-            str(self.category),
-            self.locale,
-            sorted(self.quick_reply_buttons),
-            self.image,
-            [v["value"] for v in self.example_values.raw_data],
-        )
-
-        return self.name
 
 
 @receiver(pre_save, sender=WhatsAppTemplate)
