@@ -493,8 +493,6 @@ class ShadowContentPage:
             # TODO: better error stuff
             if errs:
                 error_messsage = self.errors_to_strings(errs)
-                breakpoint()
-
                 raise ImportException(
                     f"Validation error: {error_messsage}", self.row_num
                 )
