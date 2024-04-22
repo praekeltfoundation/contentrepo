@@ -6,7 +6,7 @@ from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
 from queue import Queue
-from typing import Any, Dict, Union, List
+from typing import Any, Dict, List, Union
 from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
@@ -497,22 +497,26 @@ class ShadowContentPage:
                     f"Validation error: {error_messsage}", self.row_num
                 )
 
-    def errors_to_strings(self, errs: Dict[str, Any]) -> Union[str]:
+    def errors_to_strings(self, errs: Dict[str, List[str]]) -> List[str]:
         errors = errs[next(iter(errs))][0]
 
         if isinstance(errors, dict):
-            return {key: self.errors_to_strings(value) for key, value in errs.items()}
+            error_messages = {key: self.errors_to_strings(value) for key, value in errs.items()}
         elif isinstance(errors, list):
-            return [self.errors_to_strings(value) for value in errs]
+            error_messages = [self.errors_to_strings(value) for value in errs]
         elif isinstance(errors, StreamBlockValidationError):
             json_data_errors = errors.as_json_data()
             error_messages = []
             for value in json_data_errors["blockErrors"][0]["blockErrors"].values():
                 if isinstance(value, dict) and "messages" in value:
                     error_messages.extend(value["messages"])
-            return error_messages[0]
+            error_messages = error_messages[0]
         elif isinstance(errors, ValidationError):
-            return errors.message
+            error_messages = errors.message
+        else:
+            pass
+    
+        return error_messages
 
     def save(self, parent: Page) -> None:
         try:
