@@ -92,7 +92,7 @@ class AssessmentExporter:
                 scores.append(str(answer["score"]))
             question_data.append(
                 {
-                    "question": (question.value["question"]).replace("\n", ","),
+                    "question": (question.value["question"]),
                     "error": (question.value["error"]),
                     "answers": self.format_answers(answers),
                     "scores": ", ".join(scores),
