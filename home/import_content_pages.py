@@ -6,7 +6,7 @@ from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
 from queue import Queue
-from typing import Any, Dict, List, Union
+from typing import Any
 from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
@@ -497,11 +497,13 @@ class ShadowContentPage:
                     f"Validation error: {error_messsage}", self.row_num
                 )
 
-    def errors_to_strings(self, errs: Dict[str, List[str]]) -> List[str]:
+    def errors_to_strings(self, errs: dict[str, list[str]]) -> list[str]:
         errors = errs[next(iter(errs))][0]
 
         if isinstance(errors, dict):
-            error_messages = {key: self.errors_to_strings(value) for key, value in errs.items()}
+            error_messages = {
+                key: self.errors_to_strings(value) for key, value in errs.items()
+            }
         elif isinstance(errors, list):
             error_messages = [self.errors_to_strings(value) for value in errs]
         elif isinstance(errors, StreamBlockValidationError):
@@ -515,7 +517,7 @@ class ShadowContentPage:
             error_messages = errors.message
         else:
             pass
-    
+
         return error_messages
 
     def save(self, parent: Page) -> None:
