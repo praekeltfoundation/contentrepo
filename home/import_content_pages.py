@@ -14,7 +14,7 @@ from django.forms import model_to_dict  # type: ignore
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
-from wagtail.admin.rich_text.converters.contentstate import (
+from wagtail.admin.rich_text.converters.contentstate import ( # type: ignore
     ContentstateConverter,  # type: ignore
 )
 from wagtail.blocks import (  # type: ignore
