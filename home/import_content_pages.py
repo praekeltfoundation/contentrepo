@@ -476,12 +476,6 @@ class ShadowContentPage:
                     del errs["slug"]
             # TODO: better error stuff
             if errs:
-                print("ERRS:", errs)
-                print("XX:", errs["whatsapp_body"][0])
-                print("XY:", type(errs["whatsapp_body"][0]))
-                print("XZ:", errs["whatsapp_body"][0].as_json_data())
-                print("XZr:", repr(errs["whatsapp_body"][0].as_json_data()))
-
                 error_messsage = self.errors_to_strings(errs)
 
                 raise ImportException(f"Validation error: {error_messsage}", self.row_num)

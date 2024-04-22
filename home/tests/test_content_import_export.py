@@ -884,7 +884,7 @@ class TestImportExport:
         # FIXME: Find a better way to represent this.
         assert (
             e.value.message
-            == "Validation error: {'whatsapp_template_category': [\"Value 'Marketing' is not a valid choice.\"]}"
+            == "Validation error: Select a valid choice. %(value)s is not one of the available choices."
         )
 
     def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
@@ -899,7 +899,7 @@ class TestImportExport:
         # FIXME: Find a better way to represent this.
         assert (
             e.value.message
-            == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
+            == "Validation error: The number of example values provided (1) does not match the number of variables used in the template (3)"
         )
 
     def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
@@ -920,7 +920,7 @@ class TestImportExport:
         # FIXME: Find a better way to represent this.
         assert (
             e.value.message
-            == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
+            == "Validation error: The number of example values provided (1) does not match the number of variables used in the template (3)"
         )
 
     def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
@@ -1011,7 +1011,7 @@ class TestImportExport:
         assert e.value.row_num == 4
         assert (
             e.value.message
-            == "footer too long: This is a test footer with a very long footer. This footer has reach maximum characters allowed in the footer."
+            == "Validation error: Ensure this value has at most 60 characters (it has 110)."
         )
 
     def test_list_items_maximum_characters(self, csv_impexp: ImportExport) -> None:
@@ -1022,7 +1022,7 @@ class TestImportExport:
             csv_impexp.import_file("whatsapp_list_items_max_characters.csv")
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
-        assert e.value.message == "list_items too long: Item 123456789101234567890"
+        assert e.value.message == "Validation error: The maximum number of items is 10"
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
