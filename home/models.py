@@ -325,7 +325,7 @@ class WhatsappBlock(blocks.StructBlock):
         for item in list_items:
             if len(item) > 24:
                 errors["list_items"] = ValidationError(
-                    "List item title maximum character is 24"
+                    f"List item ({item}) has exceeded maximum character limit of 24"
                 )
 
         if errors:

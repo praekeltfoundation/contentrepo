@@ -492,9 +492,9 @@ class ShadowContentPage:
                     del errs["slug"]
             # TODO: better error stuff
             if errs:
-                error_messsage = self.errors_to_strings(errs)
+                error_message = self.errors_to_strings(errs)
                 raise ImportException(
-                    f"Validation error: {error_messsage}", self.row_num
+                    f"Validation error: {error_message}", self.row_num
                 )
 
     def errors_to_strings(self, errs: dict[str, list[str]]) -> list[str]:
@@ -514,7 +514,8 @@ class ShadowContentPage:
                     error_messages.extend(value["messages"])
             error_messages = error_messages[0]
         elif isinstance(errors, ValidationError):
-            error_messages = errors.message
+            error_messages = []
+            error_messages.extend(str(errors.messages[0]))
         else:
             pass
 
