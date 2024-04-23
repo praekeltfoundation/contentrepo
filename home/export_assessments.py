@@ -29,7 +29,6 @@ class ExportRow:
     medium_inflection: str = ""
     low_result_page: str = ""
     generic_error: str = ""
-    question_count: int = 0
     question: str = ""
     error: str = ""
     answers: str = ""
@@ -56,8 +55,7 @@ class AssessmentExporter:
 
     def perform_export(self) -> list[dict[str | int, str | int]]:
         for item in self.queryset:
-            questions_data = self.get_questions(item.questions)
-            for i, question_data in enumerate(questions_data):
+            for question_data in self.get_questions(item.questions):
                 self.rows.append(
                     {
                         "title": item.title,
@@ -72,7 +70,6 @@ class AssessmentExporter:
                         "medium_inflection": item.medium_inflection,
                         "low_result_page": str(item.low_result_page.slug),
                         "generic_error": item.generic_error,
-                        "question_count": i + 1,
                         **question_data,
                     }
                 )
@@ -136,7 +133,6 @@ class AssessmentExportWriter:
                 row["medium_inflection"],
                 row["low_result_page"],
                 row["generic_error"],
-                row["question_count"],
                 row["question"],
                 row["error"],
                 row["answers"],
@@ -164,7 +160,6 @@ class AssessmentExportWriter:
                 row["medium_inflection"],
                 row["low_result_page"],
                 row["generic_error"],
-                row["question_count"],
                 row["question"],
                 row["error"],
                 row["answers"],
@@ -194,7 +189,6 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "medium_inflection": 110,
         "low_result_page": 118,
         "generic_error": 300,
-        "question_count": 110,
         "question": 370,
         "error": 400,
         "answer": 110,
