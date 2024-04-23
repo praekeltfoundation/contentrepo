@@ -353,9 +353,5 @@ def create_question_streamfield(questions: StreamValue) -> list[StructValue]:
 
 
 def deserialise_list(value: str) -> list[str]:
-    if not value:
-        return []
-    items = list(
-        csv.reader([value], delimiter=",", quotechar="'", skipinitialspace=True)
-    )[0]
+    items = next(csv.reader([value]))
     return [item.strip() for item in items]

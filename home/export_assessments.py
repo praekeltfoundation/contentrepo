@@ -1,5 +1,7 @@
 import copy
 import csv
+import io
+from collections.abc import Iterable, Iterator
 from dataclasses import asdict, astuple, dataclass, fields
 from math import ceil
 
@@ -56,12 +58,12 @@ class AssessmentExporter:
         for item in self.queryset:
             questions_data = self.get_questions(item.questions)
             for i, question_data in enumerate(questions_data):
-
                 self.rows.append(
                     {
                         "title": item.title,
-                        # "page_id": item.id,
-                        "tags": self._comma_sep_qs(item.tags.all()),
+                        "tags": serialize_list(
+                            filter_non_empty(t.name for t in item.tags.all())
+                        ),
                         "slug": item.slug,
                         "locale": str(item.locale.language_code),
                         "high_result_page": str(item.high_result_page.slug),
@@ -76,12 +78,6 @@ class AssessmentExporter:
                 )
         return self.rows
 
-    def format_answers(self, answers: list[str]) -> str:
-        escaped_answer = [answer.replace(",", "</>") for answer in answers]
-        joined_string = ",".join(escaped_answer).split(",")
-        return_value = [answer.replace("</>", ",") for answer in joined_string]
-        return str(return_value)[1:-1]
-
     def get_questions(self, questions: StreamValue) -> list[StructValue]:
         question_data = []
         for question in questions:
@@ -94,20 +90,27 @@ class AssessmentExporter:
                 {
                     "question": (question.value["question"]),
                     "error": (question.value["error"]),
-                    "answers": self.format_answers(answers),
-                    "scores": ", ".join(scores),
+                    "answers": serialize_list(answers),
+                    "scores": serialize_list(scores),
                 }
             )
         return question_data
 
-    @staticmethod
-    def _comma_sep_qs(unformatted_query: PageQuerySet) -> str:
-        return ", ".join(str(x) for x in unformatted_query if str(x) != "")
+
+def filter_non_empty(items: Iterable[str]) -> Iterator[str]:
+    for item in items:
+        if item:
+            yield item
 
 
-"""
-Definining ExportWriter class for assessments
-"""
+def serialize_list(items: Iterable[str]) -> str:
+    """
+    Uses CSV formatting to seralize a list of strings, handling escaping
+    """
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(items)
+    return output.getvalue().rstrip("\r\n")
 
 
 class AssessmentExportWriter:
