@@ -499,26 +499,31 @@ class ShadowContentPage:
 
     def errors_to_strings(self, errs: dict[str, list[str]]) -> str | list[str]:
         errors = errs[next(iter(errs))][0]
-
         if isinstance(errors, dict):
-            error_messages = {
+            error_message = {
                 key: self.errors_to_strings(value) for key, value in errs.items()
             }
         elif isinstance(errors, list):
-            error_messages = [self.errors_to_strings(value) for value in errs]
+            error_message = [self.errors_to_strings(value) for value in errs]
         elif isinstance(errors, StreamBlockValidationError):
             json_data_errors = errors.as_json_data()
+            field_name = list(json_data_errors["blockErrors"][0]["blockErrors"].keys())[
+                0
+            ]
             error_messages = []
             for value in json_data_errors["blockErrors"][0]["blockErrors"].values():
                 if isinstance(value, dict) and "messages" in value:
                     error_messages.extend(value["messages"])
             error_messages = error_messages[0]
+            error_message = f"{field_name} - {error_messages}"
         elif isinstance(errors, ValidationError):
+            field_name = list(errs.keys())[0]
             error_messages = errors.messages[0]
+            error_message = f"{field_name} - {error_messages}"
         else:
             pass
 
-        return error_messages
+        return error_message
 
     def save(self, parent: Page) -> None:
         try:
