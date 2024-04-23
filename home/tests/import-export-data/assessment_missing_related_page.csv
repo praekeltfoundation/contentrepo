@@ -1,0 +1,4 @@
+title,page_id,tags,slug,locale,high_result_page,high_inflection,medium_result_page,medium_inflection,low_result_page,low_inflection,generic_error,question_count,questions,error,answers,score
+Fake Test,59,"Random, selection",fake-test,English,fake-page,4,fake-page,3,fake-page,0,We did not quite get that,1,Select a number for the first question,Please retry,"A, B","4.0, 1.0"
+Fake Test,59,"Random, selection",fake-test,English,fake-page,4,fake-page,3,fake-page,0,We did not quite get that,2,Select a number for the second question,We did not quite get that,"A, B, C","1.0, 3.0, 4.0"
+Fake Test,59,"Random, selection",fake-test,English,fake-page,4,fake-page,3,fake-page,0,We did not quite get that,3,Select a number for the third question,Sorry we did not quite get that,"A, B, C","2.0, 1.0, 2.0"
