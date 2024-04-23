@@ -38,7 +38,8 @@ from .utils import create_page, create_page_rating
 class MyPageTests(WagtailPageTests):
     def test_contentpage_structure(self):
         """
-        A ContentPage can only be created under a ContentPageIndex or another ContentPage. A ContentIndexPage can only be created under the HomePage.
+        A ContentPage can only be created under a ContentPageIndex or another ContentPage.
+        A ContentIndexPage can only be created under the HomePage.
         """
         self.assertCanNotCreateAt(Page, ContentPage)
         self.assertCanNotCreateAt(HomePage, ContentPage)
@@ -494,6 +495,35 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save_revision()
         self.assertEqual(ordered_content_set.status(), "Live + Draft")
+
+    def test_get_relationship(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("relationship", "single"))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.get_relationship(), "single")
+
+    def test_get_age(self):
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("age", "15-18"))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.get_age(), "15-18")
+
+    def test_get_page(self):
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[],
+        )
+        page.save_revision()
+
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.pages.append(("pages", {"contentpage": page}))
+        ordered_content_set.save()
+        print(ordered_content_set.page())
+        self.assertEqual(ordered_content_set.page()[0], "ha-menu")
 
 
 class WhatsappBlockTests(TestCase):
