@@ -537,7 +537,7 @@ class OrderedContentSetTests(TestCase):
         self.assertEqual(ordered_content_set.get_age(), "15-18")
 
     """
-    Ordered Content Sets with an page selected should return the choosen page. We compare 
+    Ordered Content Sets with an page selected should return the choosen page. We compare
     the unique slug of a page
     """
 
