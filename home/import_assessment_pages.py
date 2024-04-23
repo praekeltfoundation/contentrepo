@@ -326,7 +326,9 @@ def result_page_get_id_from_slug(slug: list[str]) -> int:
         page = ContentPage.objects.get(slug=slug)
     except ObjectDoesNotExist:
         raise ImportAssessmentException(
-            f"You are trying to add an assessment with slug {slug} that does not exist. Please create the {slug} page first."
+            f"You are trying to add an assessment, where one of the result pages "
+            f"references the content page with slug {slug} which does not exist. "
+            "Please create the content page first."
         )
     return page.id
 

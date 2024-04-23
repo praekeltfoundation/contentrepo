@@ -454,7 +454,9 @@ class TestImportExport:
             csv_impexp.import_file("assessment_missing_related_page.csv")
         assert (
             e.value.message
-            == "You are trying to add an assessment with slug fake-page that does not exist. Please create the fake-page page first."
+            == "You are trying to add an assessment, where one of the result pages "
+            "references the content page with slug fake-page which does not exist. "
+            "Please create the content page first."
         )
 
     def test_import_error(elf, csv_impexp: ImportExport) -> None:
