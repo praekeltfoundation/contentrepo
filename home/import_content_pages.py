@@ -480,7 +480,6 @@ class ShadowContentPage:
             {k: wagtail_to_formdata(v) for k, v in model_to_dict(page).items()}
         )
 
-        print("FORM_DATA:", form_data)
         form = form_class(form_data)
         if not form.is_valid():
             errs = form.errors.as_data()
