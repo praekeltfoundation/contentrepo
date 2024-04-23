@@ -1033,7 +1033,7 @@ class TestImportExport:
         Importing an CSV file with list_items and and list items characters exceeding maximum charactercount
         """
         with pytest.raises(ImportException) as e:
-            csv_impexp.import_file("whatsapp_list_items_max_character.csv")
+            csv_impexp.import_file("whatsapp_list_items_max_characters.csv")
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
