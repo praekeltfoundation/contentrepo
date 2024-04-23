@@ -5,16 +5,20 @@ from collections.abc import Iterable, Iterator
 from dataclasses import asdict, astuple, dataclass, fields
 from math import ceil
 
-from django.http import HttpResponse  # type: ignore
+from django.http import HttpResponse  # type: ignore  # No typing available
 from openpyxl.styles import Border, Font, NamedStyle, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from wagtail.query import PageQuerySet  # type: ignore
+from wagtail.query import PageQuerySet  # type: ignore  # No typing available
 
 
 @dataclass
 class ExportRow:
+    """
+    All the data for a single row of an assessment export
+    """
+
     title: str
     tags: str
     slug: str
@@ -32,6 +36,9 @@ class ExportRow:
 
     @classmethod
     def headings(cls) -> list[str]:
+        """
+        The field names, used to write the header rows in exports
+        """
         return [f.name for f in fields(cls)]
 
     def to_dict(self) -> dict[str, str]:
@@ -41,43 +48,42 @@ class ExportRow:
         return astuple(self)
 
 
-# Define your AssessmentExporter class
 class AssessmentExporter:
-    rows: list[ExportRow]
-
     def __init__(self, queryset: PageQuerySet):
-        self.rows = []
         self.queryset = queryset
 
-    def perform_export(self) -> list[ExportRow]:
+    def perform_export(self) -> Iterable[ExportRow]:
+        """
+        Converts the queryset into an iterable of ExportRows, ready to be written
+        """
         for item in self.queryset:
             for question in item.questions:
                 answers = [a["answer"] for a in question.value["answers"]]
                 scores = [a["score"] for a in question.value["answers"]]
-                self.rows.append(
-                    ExportRow(
-                        title=item.title,
-                        tags=serialize_list(
-                            filter_non_empty(t.name for t in item.tags.all())
-                        ),
-                        slug=item.slug,
-                        locale=item.locale.language_code,
-                        high_result_page=item.high_result_page.slug,
-                        high_inflection=str(item.high_inflection),
-                        medium_result_page=item.medium_result_page.slug,
-                        medium_inflection=str(item.medium_inflection),
-                        low_result_page=item.low_result_page.slug,
-                        generic_error=item.generic_error,
-                        question=question.value["question"],
-                        error=question.value["error"],
-                        answers=serialize_list(answers),
-                        scores=serialize_list(scores),
-                    )
+                yield ExportRow(
+                    title=item.title,
+                    tags=serialize_list(
+                        filter_non_empty(t.name for t in item.tags.all())
+                    ),
+                    slug=item.slug,
+                    locale=item.locale.language_code,
+                    high_result_page=item.high_result_page.slug,
+                    high_inflection=str(item.high_inflection),
+                    medium_result_page=item.medium_result_page.slug,
+                    medium_inflection=str(item.medium_inflection),
+                    low_result_page=item.low_result_page.slug,
+                    generic_error=item.generic_error,
+                    question=question.value["question"],
+                    error=question.value["error"],
+                    answers=serialize_list(answers),
+                    scores=serialize_list(scores),
                 )
-        return self.rows
 
 
 def filter_non_empty(items: Iterable[str]) -> Iterator[str]:
+    """
+    Ensures only truthy values are present in the iterable
+    """
     for item in items:
         if item:
             yield item
@@ -94,14 +100,17 @@ def serialize_list(items: Iterable[str]) -> str:
 
 
 class AssessmentExportWriter:
-    rows: list[ExportRow]
+    """
+    Responsible for taking an in-memory representation of export rows, and writing it
+    out in our required export format
+    """
 
-    def __init__(self, rows: list[ExportRow]):
+    def __init__(self, rows: Iterable[ExportRow]):
         self.rows = rows
 
     def write_xlsx(self, response: HttpResponse) -> None:
         workbook = Workbook()
-        worksheet: Worksheet = workbook.active  # type: ignore
+        worksheet: Worksheet = workbook.active  # type: ignore  # This is not a write or read only workbook
         worksheet.append(ExportRow.headings())
         for row in self.rows:
             worksheet.append(row.to_tuple())
@@ -117,7 +126,10 @@ class AssessmentExportWriter:
 
 
 def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
-    """Sets the style for the workbook adding any formatting that will make the sheet more aesthetically pleasing"""
+    """
+    Sets the style for the workbook adding any formatting that will make the sheet more
+    aesthetically pleasing
+    """
     # Adjustment is because the size in openxlsx and google sheets are not equivalent
     adjustment = 7
 
