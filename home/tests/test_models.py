@@ -465,16 +465,28 @@ class ContentPageTests(TestCase):
 
 
 class OrderedContentSetTests(TestCase):
+    """
+    Ordered Content Sets without a gender selected should return None
+    """
+
     def test_get_gender_none(self):
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.save()
         self.assertIsNone(ordered_content_set.get_gender())
+
+    """
+    Ordered Content Sets with a gender selected should return the appropriate gender
+    """
 
     def test_get_gender(self):
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.get_gender(), "female")
+
+    """
+    Draft Ordered Content Sets should return a draft status
+    """
 
     def test_status_draft(self):
         ordered_content_set = OrderedContentSet(name="Test Title")
@@ -483,11 +495,19 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.unpublish()
         self.assertEqual(ordered_content_set.status(), "Draft")
 
+    """
+    Live Ordered Content Sets should return a live status
+    """
+
     def test_status_live(self):
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.status(), "Live")
+
+    """
+    An Ordered Content Sets that is published and being drafted should return a live and draft status
+    """
 
     def test_status_live_plus_draft(self):
         ordered_content_set = OrderedContentSet(name="Test Title")
@@ -496,17 +516,30 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save_revision()
         self.assertEqual(ordered_content_set.status(), "Live + Draft")
 
+    """
+    Ordered Content Sets with a relationship selected should return the appropriate relationship
+    """
+
     def test_get_relationship(self):
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.profile_fields.append(("relationship", "single"))
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.get_relationship(), "single")
 
+    """
+    Ordered Content Sets with an age selected should return the choosen age
+    """
+
     def test_get_age(self):
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.profile_fields.append(("age", "15-18"))
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.get_age(), "15-18")
+
+    """
+    Ordered Content Sets with an page selected should return the choosen page. We compare 
+    the unique slug of a page
+    """
 
     def test_get_page(self):
         home_page = HomePage.objects.first()
