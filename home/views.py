@@ -30,7 +30,7 @@ from wagtail.snippets.views.snippets import IndexView as IndexViewAssessment
 from .assessment_import_export import import_assessment
 from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
-from .import_assessment_pages import ImportAssessmentException
+from .import_assessments import ImportAssessmentException
 from .import_content_pages import ImportException
 from .mixins import SpreadsheetExportMixin, SpreadsheetExportMixinAssessment
 from .models import (

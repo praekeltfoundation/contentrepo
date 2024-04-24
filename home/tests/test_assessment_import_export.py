@@ -14,7 +14,7 @@ from pytest_django.fixtures import SettingsWrapper
 from wagtail.models import Locale  # type: ignore
 
 from home.assessment_import_export import import_assessment
-from home.import_assessment_pages import ImportAssessmentException
+from home.import_assessments import ImportAssessmentException
 from home.models import (
     HomePage,
 )
