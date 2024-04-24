@@ -1209,12 +1209,24 @@ class OrderedContentSet(
 
     num_pages.short_description = "Number of Pages"
 
-    def status(self):
-        return (
-            "Live + Draft"
-            if self.live and self.has_unpublished_changes
-            else "Live" if self.live else "Draft"
-        )
+    def status(self) -> str:
+        workflow_state = self.workflow_states.last()
+        workflow_state_status = workflow_state.status if workflow_state else None
+
+        if self.live:
+            if workflow_state_status == "in_progress":
+                status = "Live + In Moderation"
+            elif self.has_unpublished_changes:
+                status = "Live + Draft"
+            else:
+                status = "Live"
+        else:
+            if workflow_state_status == "in_progress":
+                status = "In Moderation"
+            else:
+                status = "Draft"
+
+        return status
 
     panels = [
         FieldPanel("name"),
