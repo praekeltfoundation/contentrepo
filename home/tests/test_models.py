@@ -4,8 +4,6 @@ from unittest import mock
 
 import pytest
 import responses
-from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -15,9 +13,10 @@ from wagtail.images import get_image_model
 from wagtail.models import (
     Locale,  # type: ignore
     Page,
-    # Workflow,
-    # WorkflowState,
 )
+
+# Workflow,
+# WorkflowState,
 from wagtail.test.utils import WagtailPageTests
 
 from home.models import (
@@ -37,7 +36,6 @@ from home.models import (
 
 from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
-
 
 # @pytest.fixture(scope="session")
 # def create_user():
