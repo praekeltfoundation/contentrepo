@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -Page not found api status change to 404 from 400.
 
 ### Added
+- content page import validation using the model
 
 ### Changed
 - Increased SMS limit to 459 characters
