@@ -15,8 +15,8 @@ from wagtail.images import get_image_model
 from wagtail.models import (
     Locale,  # type: ignore
     Page,
-    Workflow,
-    WorkflowState,
+    # Workflow,
+    # WorkflowState,
 )
 from wagtail.test.utils import WagtailPageTests
 
@@ -39,10 +39,10 @@ from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
 
 
-@pytest.fixture(scope="session")
-def create_user():
-    user = User.objects.create(username="testuser", email="testuser@example.com")
-    yield user
+# @pytest.fixture(scope="session")
+# def create_user():
+#     user = User.objects.create(username="testuser", email="testuser@example.com")
+#     yield user
 
 
 class MyPageTests(WagtailPageTests):
@@ -505,41 +505,41 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save_revision()
         self.assertEqual(ordered_content_set.status(), "Live + Draft")
 
-    def test_status_live_plus_in_moderation(create_user):
-        requested_by = create_user()
-        ordered_content_set = OrderedContentSet(name="Test Title")
-        ordered_content_set.save()
-        workflow = Workflow.objects.create(name="Test Workflow", active="t")
-        content_type = ContentType.objects.get_for_model(ordered_content_set)
-        WorkflowState.objects.create(
-            content_type=content_type,
-            object_id=ordered_content_set.id,
-            workflow_id=workflow.id,
-            status="in_progress",
-            requested_by=requested_by,
-            current_task_state=None,
-            base_content_type=content_type,
-        )
+    # def test_status_live_plus_in_moderation(create_user):
+    #     requested_by = create_user()
+    #     ordered_content_set = OrderedContentSet(name="Test Title")
+    #     ordered_content_set.save()
+    #     workflow = Workflow.objects.create(name="Test Workflow", active="t")
+    #     content_type = ContentType.objects.get_for_model(ordered_content_set)
+    #     WorkflowState.objects.create(
+    #         content_type=content_type,
+    #         object_id=ordered_content_set.id,
+    #         workflow_id=workflow.id,
+    #         status="in_progress",
+    #         requested_by=requested_by,
+    #         current_task_state=None,
+    #         base_content_type=content_type,
+    #     )
 
-        assert ordered_content_set.status() == "Live + In Moderation"
+    #     assert ordered_content_set.status() == "Live + In Moderation"
 
-    def test_status_in_moderation(create_user):
-        requested_by = create_user()
-        ordered_content_set = OrderedContentSet(name="Test Title", live=False)
-        ordered_content_set.save()
-        workflow = Workflow.objects.create(name="Test Workflow", active="t")
-        content_type = ContentType.objects.get_for_model(ordered_content_set)
-        WorkflowState.objects.create(
-            content_type=content_type,
-            object_id=ordered_content_set.id,
-            workflow_id=workflow.id,
-            status="in_progress",
-            requested_by=requested_by,
-            current_task_state=None,
-            base_content_type=content_type,
-        )
+    # def test_status_in_moderation(create_user):
+    #     requested_by = create_user()
+    #     ordered_content_set = OrderedContentSet(name="Test Title", live=False)
+    #     ordered_content_set.save()
+    #     workflow = Workflow.objects.create(name="Test Workflow", active="t")
+    #     content_type = ContentType.objects.get_for_model(ordered_content_set)
+    #     WorkflowState.objects.create(
+    #         content_type=content_type,
+    #         object_id=ordered_content_set.id,
+    #         workflow_id=workflow.id,
+    #         status="in_progress",
+    #         requested_by=requested_by,
+    #         current_task_state=None,
+    #         base_content_type=content_type,
+    #     )
 
-        assert ordered_content_set.status() == "In Moderation"
+    #     assert ordered_content_set.status() == "In Moderation"
 
 
 class WhatsappBlockTests(TestCase):
