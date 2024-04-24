@@ -849,6 +849,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     def get_all_links(self):
         page_links = []
         orderedcontentset_links = []
+        whatsapp_template_links = []
 
         usage = ReferenceIndex.get_references_to(self).group_by_source_object()
         for ref in usage:
@@ -871,10 +872,17 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                         args=(link.object_id,),
                     )
                     orderedcontentset_links.append((url, orderedcontentset.name))
+                elif link.model_name == "WhatsApp Template":
+                    whatsapp_template = WhatsAppTemplate.objects.get(id=link.object_id)
+                    url = reverse(
+                        "wagtailsnippets_home_whatsapptemplate:edit",
+                        args=(link.object_id,),
+                    )
+                    whatsapp_template_links.append((url, whatsapp_template.name))
                 else:
                     raise Exception("Unknown model link")
 
-        return page_links, orderedcontentset_links
+        return page_links, orderedcontentset_links, whatsapp_template_links
 
     def save_revision(
         self,
@@ -1311,26 +1319,6 @@ class WhatsAppTemplate(
         SUBMITTED = "SUBMITTED", _("Submitted")
         FAILED = "FAILED", _("Failed")
 
-    submission_status = models.CharField(
-        max_length=30,
-        choices=SubmissionStatus.choices,
-        blank=True,
-        default=SubmissionStatus.NOT_SUBMITTED_YET,
-    )
-
-    submission_result = models.TextField(
-        help_text="The result of submitting the template",
-        null=True,
-        blank=True,
-        max_length=4096,
-    )
-    submission_name = models.TextField(
-        help_text="The name of the template that was submitted",
-        null=True,
-        blank=True,
-        max_length=1024,
-    )
-
     name = models.CharField(max_length=512, blank=True, default="")
     category = models.CharField(
         max_length=14,
@@ -1361,6 +1349,26 @@ class WhatsAppTemplate(
         blank=True,
         null=True,
         use_json_field=True,
+    )
+
+    submission_status = models.CharField(
+        max_length=30,
+        choices=SubmissionStatus.choices,
+        blank=True,
+        default=SubmissionStatus.NOT_SUBMITTED_YET,
+    )
+
+    submission_result = models.TextField(
+        help_text="The result of submitting the template",
+        null=True,
+        blank=True,
+        max_length=4096,
+    )
+    submission_name = models.TextField(
+        help_text="The name of the template that was submitted",
+        null=True,
+        blank=True,
+        max_length=1024,
     )
 
     search_fields = [

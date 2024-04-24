@@ -20,6 +20,8 @@ from .views import (  # isort:skip
     OrderedContentSetUploadView,
     PageViewReportView,
     ContentUploadView,
+    CustomIndexViewWhatsAppTemplate,
+    WhatsAppTemplateUploadView,
 )
 
 
@@ -55,6 +57,11 @@ def register_import_urls():
             "import_orderedcontentset/",
             OrderedContentSetUploadView.as_view(),
             name="import_orderedcontentset",
+        ),
+        path(
+            "import_whatsapptemplate/",
+            WhatsAppTemplateUploadView.as_view(),
+            name="import_whatsapptemplate",
         ),
     ]
 
@@ -223,7 +230,7 @@ class OrderedContentSetViewSet(SnippetViewSet):
     search_fields = ("name", "profile_fields")
 
 
-class WhatsAppTemplateViewSet(SnippetViewSet):
+class WhatsAppTemplateAdmin(SnippetViewSet):
     model = WhatsAppTemplate
     body_truncate_size = 200
     icon = "order"
@@ -240,6 +247,7 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
         "example_values",
         "submission_status",
     )
+    index_view_class = CustomIndexViewWhatsAppTemplate
 
     panels = [
         MultiFieldPanel(
@@ -271,4 +279,4 @@ register_snippet(OrderedContentSetViewSet)
 modeladmin_register(ContentPageAdmin)
 # Flag for turning on Standalone Whatsapp Templates, still in development
 if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
-    register_snippet(WhatsAppTemplateViewSet)
+    register_snippet(WhatsAppTemplateAdmin)

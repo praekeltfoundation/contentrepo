@@ -25,11 +25,12 @@ from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 from wagtail.contrib.modeladmin.views import IndexView
+from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTemplate
 
 from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
 from .import_content_pages import ImportException
-from .mixins import SpreadsheetExportMixin
+from .mixins import SpreadsheetExportMixin, SpreadsheetExportMixinWhatsAppTemplate
 from .models import (
     ContentPage,
     ContentPageRating,
@@ -38,11 +39,21 @@ from .models import (
     WhatsAppTemplate,
 )
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
+from .whatsapp_template_import_export import (
+    ImportWhatsAppTemplateException,
+    import_whatsapptemplate,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class CustomIndexView(SpreadsheetExportMixin, IndexView):
+    pass
+
+
+class CustomIndexViewWhatsAppTemplate(
+    SpreadsheetExportMixinWhatsAppTemplate, IndexViewWhatsAppTemplate
+):
     pass
 
 
@@ -296,6 +307,93 @@ class ContentUploadView(View):
                 name="ContentUploadThread",
             ).start()
             loading = "ContentUploadThread" in [th.name for th in threading.enumerate()]
+            return render(
+                request, self.template_name, {"form": form, "loading": loading}
+            )
+
+
+class WhatsAppTemplateUploadThread(UploadThread):
+    def __init__(self, purge, locale, **kwargs):
+        self.purge = purge
+        self.locale = locale
+        super().__init__(**kwargs)
+
+    def run(self):
+        try:
+            import_whatsapptemplate(
+                self.file, self.file_type, self.progress_queue, self.purge, self.locale
+            )
+        except ImportWhatsAppTemplateException as e:
+            self.result_queue.put(
+                (
+                    messages.ERROR,
+                    f"WhatsAppTemplate import failed: {e.message}",
+                )
+            )
+        except Exception:
+            self.result_queue.put((messages.ERROR, "WhatsAppTemplate import failed"))
+            logger.exception("WhatsAppTemplate import failed")
+        else:
+            self.result_queue.put(
+                (messages.SUCCESS, "WhatsAppTemplate import successful")
+            )
+        # Wait until the user has fetched the result message to close the thread
+        self.result_queue.join()
+
+
+class WhatsAppTemplateUploadView(View):
+    form_class = UploadContentFileForm
+    template_name = "whatsapp_template_upload.html"
+
+    def get(self, request, *args, **kwargs):
+        thread = next(
+            (
+                t
+                for t in threading.enumerate()
+                if t.name == "WhatsAppTemplateUploadThread"
+            ),
+            None,
+        )
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            if not thread:
+                return JsonResponse({"loading": False})
+
+            try:
+                # If there's a result message from the thread, send it to the user,
+                # and call task_done to end the thread.
+                level, text = thread.result_queue.get_nowait()
+                messages.add_message(request, level, text)
+                thread.result_queue.task_done()
+                return JsonResponse({"loading": False})
+            except queue.Empty:
+                # No message means that the task is still running
+                # Get the latest task progress and return that too
+                progress = None
+                try:
+                    while True:
+                        progress = thread.progress_queue.get_nowait()
+                except queue.Empty:
+                    pass
+
+                return JsonResponse({"loading": True, "progress": progress})
+        form = self.form_class()
+        return render(
+            request, self.template_name, {"form": form, "loading": thread is not None}
+        )
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, request.FILES)
+        if form.is_valid():
+            WhatsAppTemplateUploadThread(
+                form.cleaned_data["purge"],
+                form.cleaned_data["locale"],
+                file=request.FILES["file"],
+                file_type=form.cleaned_data["file_type"],
+                name="WhatsAppTemplateUploadThread",
+            ).start()
+            loading = "WhatsAppTemplateUploadThread" in [
+                th.name for th in threading.enumerate()
+            ]
             return render(
                 request, self.template_name, {"form": form, "loading": loading}
             )
