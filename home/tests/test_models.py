@@ -38,10 +38,11 @@ from home.models import (
 from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
 
+
 @pytest.fixture()
 def create_user():
     user = User.objects.create(username="testuser", email="testuser@example.com")
-    yield user
+    return user
 
 
 class MyPageTests(WagtailPageTests):
