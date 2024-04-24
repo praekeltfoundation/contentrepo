@@ -12,11 +12,10 @@ from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
-from wagtail.models.sites import Site  # type: ignore
 
 from home.models import Assessment, ContentPage, HomePage  # type: ignore
 
-PageId = tuple[str, Locale]
+AssessmentId = tuple[str, Locale]
 
 
 class ImportAssessmentException(Exception):
@@ -30,7 +29,7 @@ class ImportAssessmentException(Exception):
         super().__init__()
 
 
-class ContentImporter:
+class AssessmentImporter:
     def __init__(
         self,
         file_content: bytes,
@@ -47,7 +46,7 @@ class ContentImporter:
         self.purge = purge in ["True", "yes", True]
         self.locale = locale
         self.locale_map: dict[str, Locale] = {}
-        self.shadow_pages: dict[PageId, ShadowAssessmentPage] = {}
+        self.shadow_assessments: dict[AssessmentId, ShadowAssessment] = {}
 
     def locale_from_language_code(self, lang_code_entry: str) -> Locale:
         if lang_code_entry not in self.locale_map:
@@ -75,32 +74,34 @@ class ContentImporter:
         self.set_progress("Loaded file", 5)
 
         if self.purge:
-            self.delete_existing_content()
+            self.delete_existing_assessments()
         self.set_progress("Deleted existing assessment", 10)
 
         self.process_rows(rows)
-        self.save_pages_assessment()
+        self.save_assessments()
 
-    def process_rows(self, rows: list["ContentRow"]) -> None:
+    def process_rows(self, rows: list["AssessmentRow"]) -> None:
         for i, row in enumerate(rows, start=2):
             try:
-                self.create_shadow_assessment_page_from_row(row, i)
+                self.create_shadow_assessment_from_row(row, i)
             except ImportAssessmentException as e:
                 e.row_num = i
                 raise e
 
-    def save_pages_assessment(self) -> None:
-        for i, page in enumerate(reversed(self.shadow_pages.values())):
-            parent = self.home_page(page.locale)
-            page.save(parent)
-            self.set_progress("Importing pages", 10 + 70 * i // len(self.shadow_pages))
+    def save_assessments(self) -> None:
+        for i, assessment in enumerate(reversed(self.shadow_assessments.values())):
+            parent = self.home_page(assessment.locale)
+            assessment.save(parent)
+            self.set_progress(
+                "Importing assessments", 10 + 70 * i // len(self.shadow_assessments)
+            )
 
-    def parse_file(self) -> list["ContentRow"]:
+    def parse_file(self) -> list["AssessmentRow"]:
         if self.file_type == "XLSX":
             return self.parse_excel()
         return self.parse_csv()
 
-    def parse_excel(self) -> list["ContentRow"]:
+    def parse_excel(self) -> list["AssessmentRow"]:
         workbook = load_workbook(BytesIO(self.file_content), read_only=True)
         worksheet = workbook.worksheets[0]
 
@@ -109,24 +110,24 @@ class ContentImporter:
 
         first_row = next(worksheet.iter_rows(max_row=1, values_only=True))
         header = [clean_excel_cell(cell) if cell else None for cell in first_row]
-        rows: list[ContentRow] = []
+        rows: list[AssessmentRow] = []
         for row in worksheet.iter_rows(min_row=2, values_only=True):
             r = {}
             for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
                 if name and cell:
                     r[name] = clean_excel_cell(cell)
-            rows.append(ContentRow.from_flat(r))
+            rows.append(AssessmentRow.from_flat(r))
         return rows
 
-    def parse_csv(self) -> list["ContentRow"]:
+    def parse_csv(self) -> list["AssessmentRow"]:
         reader = csv.DictReader(StringIO(self.file_content.decode()))
-        rows = [ContentRow.from_flat(row) for row in reader]
+        rows = [AssessmentRow.from_flat(row) for row in reader]
         return rows
 
     def set_progress(self, message: str, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
 
-    def delete_existing_content(self) -> None:
+    def delete_existing_assessments(self) -> None:
         Assessment.objects.all().delete()
 
     def home_page(self, locale: Locale) -> HomePage:
@@ -134,19 +135,16 @@ class ContentImporter:
             return HomePage.objects.get(locale=locale)
         except ObjectDoesNotExist:
             raise ImportAssessmentException(
-                f"You are trying to add a child page to a '{locale}' HomePage that does not exist. Please create the '{locale}' HomePage first"
+                f"The HomePage for the locale {locale} does not exist. Please add "
+                f"it before importing an assessment for {locale}"
             )
 
-    def default_locale(self) -> Locale:
-        site = Site.objects.get(is_default_site=True)
-        return site.root_page.locale
-
-    def create_shadow_assessment_page_from_row(
-        self, row: "ContentRow", row_num: int
+    def create_shadow_assessment_from_row(
+        self, row: "AssessmentRow", row_num: int
     ) -> None:
         locale = self.locale_from_language_code(row.locale)
-        if not (page := self.shadow_pages.get((row.slug, locale))):
-            page = self.shadow_pages[(row.slug, locale)] = ShadowAssessmentPage(
+        if not (assessment := self.shadow_assessments.get((row.slug, locale))):
+            assessment = self.shadow_assessments[(row.slug, locale)] = ShadowAssessment(
                 row_num=row_num,
                 title=row.title,
                 slug=row.slug,
@@ -167,7 +165,7 @@ class ContentImporter:
         question = ShadowQuestionBlock(
             question=row.question, error=row.error, answers=answers
         )
-        page.questions.append(question)
+        assessment.questions.append(question)
 
 
 # Since wagtail page models are so difficult to create and modify programatically,
@@ -187,7 +185,7 @@ class ShadowQuestionBlock:
 
 
 @dataclass(slots=True)
-class ShadowAssessmentPage:
+class ShadowAssessment:
     row_num: int
     title: str
     slug: str
@@ -203,41 +201,72 @@ class ShadowAssessmentPage:
 
     def save(self, parent: Page) -> None:
         try:
-            page = Assessment.objects.get(slug=self.slug, locale=self.locale)
+            assessment = Assessment.objects.get(slug=self.slug, locale=self.locale)
         except Assessment.DoesNotExist:
-            page = Assessment(slug=self.slug, locale=self.locale)
-        self.add_identifiers_to_page(page)
-        self.add_tags_to_page(page)
+            assessment = Assessment(slug=self.slug, locale=self.locale)
+        self.add_field_values_to_assessment(assessment)
+        self.add_tags_to_assessment(assessment)
         try:
             with contextlib.suppress(NodeAlreadySaved):
-                parent.add_child(instance=page)
-            page.save_revision().publish()
+                parent.add_child(instance=assessment)
+            assessment.save_revision().publish()
         except ValidationError as err:
             raise ImportAssessmentException(f"Validation error: {err}", self.row_num)
 
-    def add_identifiers_to_page(self, page: Assessment) -> None:
-        page.slug = self.slug
-        page.title = self.title
-        page.locale = self.locale
-        page.high_inflection = self.high_inflection
-        page.high_result_page_id = result_page_get_id_from_slug(self.high_result_page)
-        page.medium_inflection = self.medium_inflection
-        page.medium_result_page_id = result_page_get_id_from_slug(
+    def add_field_values_to_assessment(self, assessment: Assessment) -> None:
+        assessment.slug = self.slug
+        assessment.title = self.title
+        assessment.locale = self.locale
+        assessment.high_inflection = self.high_inflection
+        assessment.high_result_page_id = get_content_page_id_from_slug(
+            self.high_result_page
+        )
+        assessment.medium_inflection = self.medium_inflection
+        assessment.medium_result_page_id = get_content_page_id_from_slug(
             self.medium_result_page
         )
-        page.low_result_page_id = result_page_get_id_from_slug(self.low_result_page)
-        page.generic_error = self.generic_error
-        page.questions = create_question_streamfield(self.questions)
+        assessment.low_result_page_id = get_content_page_id_from_slug(
+            self.low_result_page
+        )
+        assessment.generic_error = self.generic_error
+        assessment.questions = self.questions_as_streamfield
 
-    def add_tags_to_page(self, page: Assessment) -> None:
-        page.tags.clear()
+    def add_tags_to_assessment(self, assessment: Assessment) -> None:
+        assessment.tags.clear()
         for tag_name in self.tags:
             tag, _ = Tag.objects.get_or_create(name=tag_name)
-            page.tags.add(tag)
+            assessment.tags.add(tag)
+
+    @property
+    def questions_as_streamfield(self) -> list[dict[str, Any]]:
+        """
+        Formats the questions in the wagtail streamfield formatting
+        """
+        stream_data = []
+        for question in self.questions:
+            answers = [
+                {"answer": answer.answer, "score": answer.score}
+                for answer in question.answers
+            ]
+            stream_data.append(
+                {
+                    "type": "question",
+                    "value": {
+                        "question": question.question,
+                        "answers": answers,
+                        "error": question.error,
+                    },
+                }
+            )
+        return stream_data
 
 
 @dataclass(slots=True, frozen=True)
-class ContentRow:
+class AssessmentRow:
+    """
+    Represents a single, deserialised row from an import file
+    """
+
     slug: str
     title: str = ""
     tags: list[str] = field(default_factory=list)
@@ -258,7 +287,11 @@ class ContentRow:
         return [field.name for field in fields(cls)]
 
     @classmethod
-    def from_flat(cls, row: dict[str, str]) -> "ContentRow":
+    def from_flat(cls, row: dict[str, str]) -> "AssessmentRow":
+        """
+        Creates an AssessmentRow instance from a row in the import, deserialising the
+        fields.
+        """
         row = {
             key.strip(): value.strip()
             for key, value in row.items()
@@ -277,7 +310,7 @@ class ContentRow:
             )
 
 
-def result_page_get_id_from_slug(slug: str) -> int:
+def get_content_page_id_from_slug(slug: str) -> int:
     try:
         page = ContentPage.objects.get(slug=slug)
     except ObjectDoesNotExist:
@@ -289,28 +322,10 @@ def result_page_get_id_from_slug(slug: str) -> int:
     return page.id
 
 
-def create_question_streamfield(
-    questions: list[ShadowQuestionBlock],
-) -> list[dict[str, Any]]:
-    stream_data = []
-    for question in questions:
-        answers = [
-            {"answer": answer.answer, "score": answer.score}
-            for answer in question.answers
-        ]
-        stream_data.append(
-            {
-                "type": "question",
-                "value": {
-                    "question": question.question,
-                    "answers": answers,
-                    "error": question.error,
-                },
-            }
-        )
-    return stream_data
-
-
 def deserialise_list(value: str) -> list[str]:
+    """
+    Takes a comma separated value serialised by the CSV library, and returns it as a
+    deserialised list
+    """
     items = next(csv.reader([value]))
     return [item.strip() for item in items]
