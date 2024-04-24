@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate character limit fir footer and list items when importing
 - Add Document upload extension validation
 - Update tests to use model validations and update test data
+- updated ordered content set status to include In Moderation and Live + In Moderation
 
 -->
 ## v1.1.0
