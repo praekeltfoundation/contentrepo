@@ -39,7 +39,6 @@ from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
 
 
-@pytest.fixture()
 def create_user():
     user = User.objects.create(username="testuser", email="testuser@example.com")
     return user
@@ -505,7 +504,7 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save_revision()
         self.assertEqual(ordered_content_set.status(), "Live + Draft")
 
-    def test_status_live_plus_in_moderation(create_user):
+    def test_status_live_plus_in_moderation(self):
         requested_by = create_user()
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.save()
@@ -523,7 +522,7 @@ class OrderedContentSetTests(TestCase):
 
         assert ordered_content_set.status() == "Live + In Moderation"
 
-    def test_status_in_moderation(create_user):
+    def test_status_in_moderation(self):
         requested_by = create_user()
         ordered_content_set = OrderedContentSet(name="Test Title", live=False)
         ordered_content_set.save()
