@@ -1,6 +1,5 @@
 import contextlib
 import csv
-from collections import defaultdict
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
@@ -11,10 +10,6 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: 
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
-from wagtail.blocks import (  # type: ignore
-    StreamValue,
-    StructValue,
-)
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
@@ -121,14 +116,12 @@ class ContentImporter:
                 if name and cell:
                     r[name] = clean_excel_cell(cell)
             rows.append(ContentRow.from_flat(r))
-        page_id_rows = group_rows_by_page_id(rows)
-        return page_id_rows
+        return rows
 
     def parse_csv(self) -> list["ContentRow"]:
         reader = csv.DictReader(StringIO(self.file_content.decode()))
         rows = [ContentRow.from_flat(row) for row in reader]
-        page_id_rows = group_rows_by_page_id(rows)
-        return page_id_rows
+        return rows
 
     def set_progress(self, message: str, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
@@ -152,49 +145,61 @@ class ContentImporter:
         self, row: "ContentRow", row_num: int
     ) -> None:
         locale = self.locale_from_language_code(row.locale)
-        page = ShadowAssessmentPage(
-            row_num=row_num,
-            slug=row.slug,
-            title=row.title,
-            locale=locale,
-            high_result_page=row.high_result_page,
-            medium_result_page=row.medium_result_page,
-            low_result_page=row.low_result_page,
-            high_inflection=row.high_inflection,
-            medium_inflection=row.medium_inflection,
-            low_inflection=row.low_inflection,
-            answers=row.answers,
-            scores=row.scores,
-            questions=row.question,
-            generic_error=row.generic_error,
-            error=row.error,
-            tags=row.tags,
-        )
+        if not (page := self.shadow_pages.get((row.slug, locale))):
+            page = self.shadow_pages[(row.slug, locale)] = ShadowAssessmentPage(
+                row_num=row_num,
+                title=row.title,
+                slug=row.slug,
+                locale=locale,
+                high_result_page=row.high_result_page,
+                medium_result_page=row.medium_result_page,
+                low_result_page=row.low_result_page,
+                high_inflection=float(row.high_inflection),
+                medium_inflection=float(row.medium_inflection),
+                generic_error=row.generic_error,
+                tags=row.tags,
+            )
 
-        self.shadow_pages[(row.slug, locale)] = page
+        answers = [
+            ShadowAnswerBlock(answer=answer, score=score)
+            for (answer, score) in zip(row.answers, row.scores, strict=False)
+        ]
+        question = ShadowQuestionBlock(
+            question=row.question, error=row.error, answers=answers
+        )
+        page.questions.append(question)
 
 
 # Since wagtail page models are so difficult to create and modify programatically,
 # we instead store all the pages as these shadow objects, which we can then at the end
 # do a single write to the database from, and encapsulate all that complexity
 @dataclass(slots=True)
+class ShadowAnswerBlock:
+    answer: str
+    score: float
+
+
+@dataclass(slots=True)
+class ShadowQuestionBlock:
+    question: str
+    answers: list[ShadowAnswerBlock]
+    error: str = ""
+
+
+@dataclass(slots=True)
 class ShadowAssessmentPage:
+    row_num: int
+    title: str
     slug: str
     locale: Locale
-    row_num: int
-    title: str = ""
+    high_result_page: str
+    medium_result_page: str
+    low_result_page: str
+    high_inflection: float
+    medium_inflection: float
+    generic_error: str
+    questions: list[ShadowQuestionBlock] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
-    high_result_page: list[str] = field(default_factory=list)
-    medium_result_page: list[str] = field(default_factory=list)
-    low_result_page: list[str] = field(default_factory=list)
-    high_inflection: str = ""
-    medium_inflection: str = ""
-    low_inflection: str = ""
-    generic_error: str = ""
-    questions: list[str] | list[dict[str, Any]] | str = field(default_factory=list)
-    error: str = ""
-    answers: list[str] = field(default_factory=list)
-    scores: list[str] = field(default_factory=list)
 
     def save(self, parent: Page) -> None:
         try:
@@ -220,7 +225,6 @@ class ShadowAssessmentPage:
         page.medium_result_page_id = result_page_get_id_from_slug(
             self.medium_result_page
         )
-        page.low_inflection = self.low_inflection
         page.low_result_page_id = result_page_get_id_from_slug(self.low_result_page)
         page.generic_error = self.generic_error
         page.questions = create_question_streamfield(self.questions)
@@ -236,37 +240,36 @@ class ShadowAssessmentPage:
 class ContentRow:
     slug: str
     title: str = ""
-    page_id: int | None = None
     tags: list[str] = field(default_factory=list)
     locale: str = ""
-    high_result_page: list[str] = field(default_factory=list)
+    high_result_page: str = ""
     high_inflection: str = ""
-    medium_result_page: list[str] = field(default_factory=list)
+    medium_result_page: str = ""
     medium_inflection: str = ""
-    low_result_page: list[str] = field(default_factory=list)
-    low_inflection: str = ""
+    low_result_page: str = ""
     generic_error: str = ""
-    question_count: str = ""
-    question: list[str] | list[dict[str, Any]] | str = field(default_factory=list)
+    question: str = ""
     error: str = ""
     answers: list[str] = field(default_factory=list)
-    scores: list[str] = field(default_factory=list)
+    scores: list[float] = field(default_factory=list)
+
+    @classmethod
+    def fields(cls) -> list[str]:
+        return [field.name for field in fields(cls)]
 
     @classmethod
     def from_flat(cls, row: dict[str, str]) -> "ContentRow":
-        class_fields = {field.name for field in fields(cls)}
         row = {
             key.strip(): value.strip()
             for key, value in row.items()
-            if value and key in class_fields
+            if value and key.strip() in cls.fields()
         }
         try:
             return cls(
                 tags=deserialise_list(row.pop("tags", "")),
-                question=[row.pop("question")] if row.get("question") else "",
                 answers=deserialise_list(row.pop("answers", "")),
-                scores=deserialise_list(row.pop("scores", "")),
-                **row,  # type: ignore
+                scores=[float(i) for i in deserialise_list(row.pop("scores", ""))],
+                **row,
             )
         except TypeError:
             raise ImportAssessmentException(
@@ -274,54 +277,7 @@ class ContentRow:
             )
 
 
-def group_rows_by_page_id(rows: list[ContentRow]) -> list[ContentRow]:
-    grouped_rows = defaultdict(list)
-
-    for row in rows:
-        grouped_rows[row.slug].append(row)
-    output_rows = []
-    for _slug, grouped_rows_list in grouped_rows.items():
-        questions = []
-        for grouped_row in grouped_rows_list:
-            for _, question in enumerate(grouped_row.question):
-                answers = grouped_row.answers if grouped_row.answers else []
-                scores = grouped_row.scores if grouped_row.scores else []
-                error = grouped_row.error if grouped_row.error else []
-                question_entry = {
-                    "question": question,
-                    "answers": [
-                        {"answer": ans.strip(), "score": sc.strip()}
-                        for ans, sc in zip(answers, scores, strict=False)
-                    ],  # Strip whitespace
-                    "error": error,
-                }
-                questions.append(question_entry)
-
-        output_rows.append(
-            ContentRow(
-                slug=grouped_rows_list[0].slug,
-                title=grouped_rows_list[0].title,
-                tags=grouped_rows_list[0].tags,
-                locale=grouped_rows_list[0].locale,
-                high_result_page=grouped_rows_list[0].high_result_page,
-                high_inflection=grouped_rows_list[0].high_inflection,
-                medium_result_page=grouped_rows_list[0].medium_result_page,
-                medium_inflection=grouped_rows_list[0].medium_inflection,
-                low_result_page=grouped_rows_list[0].low_result_page,
-                low_inflection=grouped_rows_list[0].low_inflection,
-                generic_error=grouped_rows_list[0].generic_error,
-                question_count=str(len(questions)),
-                question=questions,
-                answers=[],
-                scores=[],
-                error="",
-            )
-        )
-
-    return output_rows
-
-
-def result_page_get_id_from_slug(slug: list[str]) -> int:
+def result_page_get_id_from_slug(slug: str) -> int:
     try:
         page = ContentPage.objects.get(slug=slug)
     except ObjectDoesNotExist:
@@ -333,21 +289,22 @@ def result_page_get_id_from_slug(slug: list[str]) -> int:
     return page.id
 
 
-def create_question_streamfield(questions: StreamValue) -> list[StructValue]:
+def create_question_streamfield(
+    questions: list[ShadowQuestionBlock],
+) -> list[dict[str, Any]]:
     stream_data = []
-    for question_data in questions:
+    for question in questions:
         answers = [
-            {"answer": ans_data["answer"], "score": float(ans_data["score"])}
-            for ans_data in question_data["answers"]
+            {"answer": answer.answer, "score": answer.score}
+            for answer in question.answers
         ]
-        error = question_data["error"]
         stream_data.append(
             {
                 "type": "question",
                 "value": {
-                    "question": question_data["question"],
+                    "question": question.question,
                     "answers": answers,
-                    "error": error,
+                    "error": question.error,
                 },
             }
         )
