@@ -1,5 +1,7 @@
 import copy
 import csv
+import io
+from collections.abc import Iterable
 from dataclasses import asdict, astuple, dataclass, fields
 from math import ceil
 
@@ -17,22 +19,16 @@ from wagtail.query import PageQuerySet  # type: ignore
 
 @dataclass
 class ExportRow:
-    title: str = ""
-    tags: str = ""
-    slug: str = ""
+    name: str = ""
+    category: str = ""
+    quick_replies: str = ""
     locale: str = ""
-    high_result_page: str = ""
-    high_inflection: str = ""
-    medium_result_page: str = ""
-    medium_inflection: str = ""
-    low_result_page: str = ""
-    low_inflection: str = ""
-    generic_error: str = ""
-    question_count: int = 0
-    question: str = ""
-    error: str = ""
-    answers: str = ""
-    scores: str = ""
+    image: str = ""
+    message: str = ""
+    example_values: str = ""
+    submission_name: str = ""
+    submission_status: str = ""
+    submission_result: str = ""
 
     @classmethod
     def headings(cls) -> list[str]:
@@ -54,28 +50,26 @@ class WhatsAppTemplateExporter:
         self.queryset = queryset
 
     def perform_export(self) -> list[dict[str | int, str | int]]:
+        print(f"QS = {self.queryset}")
         for item in self.queryset:
-            questions_data = self.get_questions(item.questions)
-            for i, question_data in enumerate(questions_data):
 
-                self.rows.append(
-                    {
-                        "title": item.title,
-                        # "page_id": item.id,
-                        "tags": self._comma_sep_qs(item.tags.all()),
-                        "slug": item.slug,
-                        "locale": str(item.locale.language_code),
-                        "high_result_page": str(item.high_result_page.slug),
-                        "high_inflection": item.high_inflection,
-                        "medium_result_page": str(item.medium_result_page.slug),
-                        "medium_inflection": item.medium_inflection,
-                        "low_result_page": str(item.low_result_page.slug),
-                        "low_inflection": 0,
-                        "generic_error": item.generic_error,
-                        "question_count": i + 1,
-                        **question_data,
-                    }
-                )
+            self.rows.append(
+                {
+                    "name": item.name,
+                    "category": item.category,
+                    "quick_replies": str(item.quick_replies),
+                    "locale": str(item.locale.language_code),
+                    "image": str(item.image),
+                    "message": str(item.message),
+                    "example_values": serialize_list(
+                        [v["value"] for v in item.example_values.raw_data]
+                    ),
+                    "submission_name": str(item.submission_name),
+                    "submission_status": str(item.submission_status),
+                    "submission_result": str(item.submission_result),
+                }
+            )
+
         return self.rows
 
     def format_answers(self, answers: list[str]) -> str:
@@ -124,23 +118,16 @@ class WhatsAppTemplateExportWriter:
         worksheet.append(ExportRow.headings())  # type: ignore
         for row in self.rows:
             row_values = [
-                row["title"],
-                # row["page_id"],
-                row["tags"],
-                row["slug"],
+                row["name"],
+                row["category"],
+                row["quick_replies"],
                 row["locale"],
-                row["high_result_page"],
-                row["high_inflection"],
-                row["medium_result_page"],
-                row["medium_inflection"],
-                row["low_result_page"],
-                row["low_inflection"],
-                row["generic_error"],
-                row["question_count"],
-                row["question"],
-                row["error"],
-                row["answers"],
-                row["scores"],
+                row["image"],
+                row["message"],
+                row["example_values"],
+                row["submission_name"],
+                row["submission_status"],
+                row["submission_result"],
             ]
             worksheet.append(row_values)  # type: ignore
         _set_xlsx_styles(workbook, worksheet)  # type: ignore
@@ -153,23 +140,16 @@ class WhatsAppTemplateExportWriter:
         # Write data rows
         for row in self.rows:
             row_values = [
-                row["title"],
-                # row["page_id"],
-                row["tags"],
-                row["slug"],
+                row["name"],
+                row["category"],
+                row["quick_replies"],
                 row["locale"],
-                row["high_result_page"],
-                row["high_inflection"],
-                row["medium_result_page"],
-                row["medium_inflection"],
-                row["low_result_page"],
-                row["low_inflection"],
-                row["generic_error"],
-                row["question_count"],
-                row["question"],
-                row["error"],
-                row["answers"],
-                row["scores"],
+                row["image"],
+                row["message"],
+                row["example_values"],
+                row["submission_name"],
+                row["submission_status"],
+                row["submission_result"],
             ]
             csv_response.writerow(row_values)
 
@@ -184,23 +164,16 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
     # Set columns based on best size
 
     column_widths_in_pts = {
-        "title": 110,
-        # "page_id": 110,
-        "tags": 110,
-        "slug": 110,
+        "name": 110,
+        "category": 110,
+        "quick_replies": 110,
         "locale": 118,
-        "high_result_page": 110,
-        "high_inflection": 110,
-        "medium_result_page": 110,
-        "medium_inflection": 110,
-        "low_result_page": 118,
-        "low_inflection": 110,
-        "generic_error": 300,
-        "question_count": 110,
-        "question": 370,
-        "error": 400,
-        "answer": 110,
-        "scores": 110,
+        "image": 110,
+        "message": 110,
+        "example_values": 110,
+        "submission_name": 110,
+        "submission_status": 118,
+        "submission_result": 110,
     }
 
     for index, column_width in enumerate(column_widths_in_pts.values(), 2):
@@ -255,3 +228,13 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
             alignment = copy.copy(cell.alignment)
             alignment.wrapText = True
             cell.alignment = alignment  # type: ignore # Broken typeshed update, maybe?
+
+
+def serialize_list(items: Iterable[str]) -> str:
+    """
+    Uses CSV formatting to seralize a list of strings, handling escaping
+    """
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(items)
+    return output.getvalue().rstrip("\r\n")
