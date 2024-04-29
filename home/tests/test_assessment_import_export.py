@@ -1,5 +1,5 @@
 import csv
-import re
+import json
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from functools import wraps
@@ -9,13 +9,14 @@ from queue import Queue
 from typing import Any
 
 import pytest
-from openpyxl import load_workbook
-from pytest_django.fixtures import SettingsWrapper
+from django.core import serializers  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
 from home.assessment_import_export import import_assessment
 from home.import_assessments import ImportAssessmentException
 from home.models import (
+    Assessment,
+    ContentPage,
     HomePage,
 )
 
@@ -30,50 +31,131 @@ from .page_builder import (
 IMP_EXP_DATA_BASE = Path("home/tests/import-export-data")
 
 ExpDict = dict[str, Any]
-ExpPair = tuple[ExpDict, ExpDict]
 ExpDicts = Iterable[ExpDict]
 ExpDictsPair = tuple[ExpDicts, ExpDicts]
-
-
-def filter_both(
-    filter_func: Callable[[ExpDict], ExpDict]
-) -> Callable[[ExpDict, ExpDict], ExpPair]:
-    @wraps(filter_func)
-    def ff(src: ExpDict, dst: ExpDict) -> ExpPair:
-        return filter_func(src), filter_func(dst)
-
-    return ff
-
-
-@filter_both
-def strip_leading_whitespace(entry: ExpDict) -> ExpDict:
-    # FIXME: Do we expect imported content to have leading spaces removed?
-    bodies = {k: v.lstrip(" ") for k, v in entry.items() if k.endswith("_body")}
-    return {**entry, **bodies}
-
-
-EXPORT_FILTER_FUNCS = [
-    # add_new_fields,
-    # ignore_certain_fields,
-    strip_leading_whitespace,
-]
-
-
-def filter_exports(srcs: ExpDicts, dsts: ExpDicts) -> ExpDictsPair:
-    fsrcs, fdsts = [], []
-    for src, dst in zip(srcs, dsts, strict=True):
-        for ff in EXPORT_FILTER_FUNCS:
-            src, dst = ff(src, dst)
-        fsrcs.append(src)
-        fdsts.append(dst)
-    return fsrcs, fdsts
 
 
 def csv2dicts(csv_bytes: bytes) -> ExpDicts:
     return list(csv.DictReader(StringIO(csv_bytes.decode())))
 
 
-WEB_PARA_RE = re.compile(r'^<div class="block-paragraph">(.*)</div>$')
+DbDict = dict[str, Any]
+DbDicts = Iterable[DbDict]
+
+
+def _models2dicts(model_instances: Any) -> DbDicts:
+    return json.loads(serializers.serialize("json", model_instances))
+
+
+def get_assessment_json() -> DbDicts:
+    # assessment_objs = Assessment.objects.all()
+    # assessments = {p["pk"]: p["fields"] for p in _models2dicts(assessment_objs)}
+    assessments = [*_models2dicts(Assessment.objects.all())]
+    return assessments
+    # return [p | {"fields": {**pages[p["pk"]], **p["fields"]}} for p in content_pages]
+
+
+def per_page(filter_func: Callable[[DbDict], DbDict]) -> Callable[[DbDicts], DbDicts]:
+    @wraps(filter_func)
+    def fp(pages: DbDicts) -> DbDicts:
+        return [filter_func(page) for page in pages]
+
+    return fp
+
+
+def _is_json_field(field_name: str) -> bool:
+    return field_name in {"questions"}
+
+
+@per_page
+def decode_json_fields(page: DbDict) -> DbDict:
+    fields = {
+        k: json.loads(v) if _is_json_field(k) else v for k, v in page["fields"].items()
+    }
+    return page | {"fields": fields}
+
+
+def _remove_fields(pages: DbDicts, field_names: set[str]) -> DbDicts:
+    for p in pages:
+        fields = {k: v for k, v in p["fields"].items() if k not in field_names}
+        yield p | {"fields": fields}
+
+
+def _update_field(
+    pages: DbDicts, field_name: str, update_fn: Callable[[Any], Any]
+) -> DbDicts:
+    for p in pages:
+        fields = p["fields"]
+        yield p | {"fields": {**fields, field_name: update_fn(fields[field_name])}}
+
+
+PAGE_TIMESTAMP_FIELDS = {
+    "first_published_at",
+    "last_published_at",
+}
+
+
+def remove_timestamps(assessments: DbDicts) -> DbDicts:
+    return _remove_fields(assessments, PAGE_TIMESTAMP_FIELDS)
+
+
+def normalise_revisions(assessments: DbDicts) -> DbDicts:
+    if "latest_revision" not in list(assessments)[0]["fields"]:
+        return assessments
+    min_latest = min(p["fields"]["latest_revision"] for p in assessments)
+    min_live = min(p["fields"]["live_revision"] for p in assessments)
+    assessments = _update_field(
+        assessments, "latest_revision", lambda v: v - min_latest
+    )
+    assessments = _update_field(assessments, "live_revision", lambda v: v - min_live)
+    return assessments
+
+
+def normalise_pks(assessments: DbDicts) -> DbDicts:
+    min_pk = min(p["pk"] for p in assessments)
+    assessments = _update_field(assessments, "pk", lambda v: v - min_pk)
+    return assessments
+
+
+def _normalise_answer_ids(
+    assessment: DbDict, q_list: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    for q in q_list:
+        for i, a in enumerate(q["value"]):
+            assert "id" in a
+            a["id"] = f"fake:{assessment['pk']}:answer:{i}"
+    return q_list
+
+
+def _normalise_question_ids(
+    assessment: DbDict, q_list: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    for i, q in enumerate(q_list):
+        assert "id" in q
+        q["id"] = f"fake:{assessment['pk']}:question:{i}"
+        fields = {
+            k: _normalise_answer_ids(assessment, v) if k == "answers" else v
+            for k, v in q["fields"].items()
+        }
+        q = q | {"fields": fields}
+    return q_list
+
+
+@per_page
+def normalise_nested_ids(assessment: DbDict) -> DbDict:
+    fields = {
+        k: _normalise_question_ids(assessment, v) if k == "questions" else v
+        for k, v in assessment["fields"].items()
+    }
+    return assessment | {"fields": fields}
+
+
+ASSESSMENT_FILTER_FUNCS = [
+    normalise_revisions,
+    normalise_pks,
+    normalise_nested_ids,
+    remove_timestamps,
+]
 
 
 @dataclass
@@ -81,68 +163,12 @@ class ImportExport:
     admin_client: Any
     format: str
 
-    @property
-    def _filter_export(self) -> Callable[..., bytes]:
-        return {
-            "csv": self._filter_export_CSV,
-            "xlsx": self._filter_export_XLSX,
-        }[self.format]
-
-    def _filter_export_row(self, row: ExpDict, locale: str | None) -> bool:
+    def export_assessment(self) -> bytes:
         """
-        Determine whether to keep a given export row.
-        """
-        if locale:
-            if row["locale"] not in [None, "", locale]:
-                return False
-        return True
-
-    def _filter_export_CSV(self, content: bytes, locale: str | None) -> bytes:
-        reader = csv.DictReader(StringIO(content.decode()))
-        assert reader.fieldnames is not None
-        out_content = StringIO()
-        writer = csv.DictWriter(out_content, fieldnames=reader.fieldnames)
-        writer.writeheader()
-        for row in reader:
-            if self._filter_export_row(row, locale=locale):
-                writer.writerow(row)
-        return out_content.getvalue().encode()
-
-    def _filter_export_XLSX(self, content: bytes, locale: str | None) -> bytes:
-        workbook = load_workbook(BytesIO(content))
-        worksheet = workbook.worksheets[0]
-        header = next(worksheet.iter_rows(max_row=1, values_only=True))
-
-        rows_to_remove: list[int] = []
-        for i, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True)):
-            r = {k: v for k, v in zip(header, row, strict=True) if isinstance(k, str)}
-            if not self._filter_export_row(r, locale=locale):
-                rows_to_remove.append(i + 2)
-        for row_num in reversed(rows_to_remove):
-            worksheet.delete_rows(row_num)
-
-        out_content = BytesIO()
-        workbook.save(out_content)
-        return out_content.getvalue()
-
-    def export_assessment(self, locale: str | None = None) -> bytes:
-        """
-        Export all (or filtered) content in the configured format.
-
-        FIXME:
-         * If we filter the export by locale, we only get ContentPage entries
-           for the given language, but we still get ContentPageIndex rows for
-           all languages.
+        Export all assessments in the configured format.
         """
         url = f"/admin/snippets/home/assessment/?export={self.format}"
-        if locale:
-            loc = Locale.objects.get(language_code=locale)
-            locale = str(loc)
-            url = f"{url}&locale__id__exact={loc.id}"
         content = self.admin_client.get(url).content
-        # Hopefully we can get rid of this at some point.
-        if locale:
-            content = self._filter_export(content, locale=locale)
         if self.format == "csv":
             print("-v-CONTENT-v-")
             print(content.decode())
@@ -172,22 +198,27 @@ class ImportExport:
         """
         Export all content, then immediately reimport it.
         """
-        self.import_assessment(self.export_assessment())
+        self.import_assessment(self.export_assessment(), purge=True)
 
     def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
         src = csv2dicts(src_bytes)
         dst = csv2dicts(dst_bytes)
-        return filter_exports(src, dst)
+        return src, dst
+
+    def get_assessment_json(self) -> DbDicts:
+        """
+        Serialize all Assessment instances and normalize things that vary across
+        import/export.
+        """
+        assessments = decode_json_fields(get_assessment_json())
+        for ff in ASSESSMENT_FILTER_FUNCS:
+            assessments = ff(assessments)
+        return sorted(assessments, key=lambda p: p["pk"])
 
 
 @pytest.fixture(params=["csv", "xlsx"])
 def impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, request.param)
-
-
-@pytest.fixture()
-def tmp_media_path(tmp_path: Path, settings: SettingsWrapper) -> None:
-    settings.MEDIA_ROOT = tmp_path
 
 
 @pytest.fixture()
@@ -200,11 +231,46 @@ def xlsx_impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, "xlsx")
 
 
+@pytest.fixture()
+def result_content_pages() -> None:
+    home_page = HomePage.objects.first()
+    main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="high-inflection",
+        title="High Inflection",
+        bodies=[
+            WABody("High Inflection", [WABlk("*High Inflection Page")]),
+            MBody("High inflection", [MBlk("High Inflection Page")]),
+        ],
+    )
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="medium-score",
+        title="Medium Score",
+        bodies=[
+            WABody("Medium Score", [WABlk("*Medium Inflection Page")]),
+            MBody("Medium Score", [MBlk("Medium Inflection Page")]),
+        ],
+    )
+
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="low-score",
+        title="Low Score",
+        bodies=[
+            WABody("Low Score", [WABlk("*Low Inflection Page")]),
+            MBody("Low Score", [MBlk("Low Inflection Page")]),
+        ],
+    )
+
+
+@pytest.mark.usefixtures("result_content_pages")
 @pytest.mark.django_db()
 class TestImportExportRoundtrip:
     """
-    Test importing and reexporting content produces an export that is
-    equilavent to the original imported content.
+    Test importing and reexporting assessments produces an export that is
+    equilavent to the original imported assessments.
 
     NOTE: This is not a Django (or even unittest) TestCase. It's just a
         container for related tests.
@@ -216,40 +282,7 @@ class TestImportExportRoundtrip:
         one question and export it
 
         (This uses assessment_simple.csv.)
-
         """
-
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="high-inflection",
-            title="High Inflection",
-            bodies=[
-                WABody("High Inflection", [WABlk("*High Inflection Page")]),
-                MBody("High inflection", [MBlk("High Inflection Page")]),
-            ],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="medium-score",
-            title="Medium Score",
-            bodies=[
-                WABody("Medium Score", [WABlk("*Medium Inflection Page")]),
-                MBody("Medium Score", [MBlk("Medium Inflection Page")]),
-            ],
-        )
-
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="low-score",
-            title="Low Score",
-            bodies=[
-                WABody("Low Score", [WABlk("*Low Inflection Page")]),
-                MBody("Low Score", [MBlk("Low Inflection Page")]),
-            ],
-        )
-
         csv_bytes = csv_impexp.import_file("assessment_simple.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
@@ -261,40 +294,7 @@ class TestImportExportRoundtrip:
         multiple questions and export it
 
         (This uses assessment_less_simple.csv.)
-
         """
-
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="high-inflection",
-            title="High Inflection",
-            bodies=[
-                WABody("High Inflection", [WABlk("*High Inflection Page")]),
-                MBody("High inflection", [MBlk("High Inflection Page")]),
-            ],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="medium-score",
-            title="Medium Score",
-            bodies=[
-                WABody("Medium Score", [WABlk("*Medium Inflection Page")]),
-                MBody("Medium Score", [MBlk("Medium Inflection Page")]),
-            ],
-        )
-
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="low-score",
-            title="Low Score",
-            bodies=[
-                WABody("Low Score", [WABlk("*Low Inflection Page")]),
-                MBody("Low Score", [MBlk("Low Inflection Page")]),
-            ],
-        )
-
         csv_bytes = csv_impexp.import_file("assessment_less_simple.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
@@ -306,40 +306,7 @@ class TestImportExportRoundtrip:
         multiple questions and export it
 
         (This uses multiple_assessments.csv.)
-
         """
-
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="high-inflection",
-            title="High Inflection",
-            bodies=[
-                WABody("High Inflection", [WABlk("*High Inflection Page")]),
-                MBody("High inflection", [MBlk("High Inflection Page")]),
-            ],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="medium-score",
-            title="Medium Score",
-            bodies=[
-                WABody("Medium Score", [WABlk("*Medium Inflection Page")]),
-                MBody("Medium Score", [MBlk("Medium Inflection Page")]),
-            ],
-        )
-
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="low-score",
-            title="Low Score",
-            bodies=[
-                WABody("Low Score", [WABlk("*Low Inflection Page")]),
-                MBody("Low Score", [MBlk("Low Inflection Page")]),
-            ],
-        )
-
         csv_bytes = csv_impexp.import_file("multiple_assessments.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
@@ -351,40 +318,7 @@ class TestImportExportRoundtrip:
         multiple questions and export it
 
         (This uses bulk_assessments.csv.)
-
         """
-
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="high-inflection",
-            title="High Inflection",
-            bodies=[
-                WABody("High Inflection", [WABlk("*High Inflection Page")]),
-                MBody("High inflection", [MBlk("High Inflection Page")]),
-            ],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="medium-score",
-            title="Medium Score",
-            bodies=[
-                WABody("Medium Score", [WABlk("*Medium Inflection Page")]),
-                MBody("Medium Score", [MBlk("Medium Inflection Page")]),
-            ],
-        )
-
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="low-score",
-            title="Low Score",
-            bodies=[
-                WABody("Low Score", [WABlk("*Low Inflection Page")]),
-                MBody("Low Score", [MBlk("Low Inflection Page")]),
-            ],
-        )
-
         csv_bytes = csv_impexp.import_file("bulk_assessments.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
@@ -392,55 +326,54 @@ class TestImportExportRoundtrip:
 
     def test_comma_separated_answers(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a CSV file with multiple assessments. Some with comma
-        separated answers and some without commas.
+        CSV file where the answers have commas in them that need to be escaped
 
-        (This uses comma_sep_assessments.csv.)
-
+        (This uses comma_seperated_answers.csv.)
         """
-
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="high-inflection",
-            title="High Inflection",
-            bodies=[
-                WABody("High Inflection", [WABlk("*High Inflection Page")]),
-                MBody("High inflection", [MBlk("High Inflection Page")]),
-            ],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="medium-score",
-            title="Medium Score",
-            bodies=[
-                WABody("Medium Score", [WABlk("*Medium Inflection Page")]),
-                MBody("Medium Score", [MBlk("Medium Inflection Page")]),
-            ],
-        )
-
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="low-score",
-            title="Low Score",
-            bodies=[
-                WABody("Low Score", [WABlk("*Low Inflection Page")]),
-                MBody("Low Score", [MBlk("Low Inflection Page")]),
-            ],
-        )
-
         csv_bytes = csv_impexp.import_file("comma_separated_answers.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
+    def test_single_assessment(self, impexp: ImportExport) -> None:
+        """
+        Exporting then reimporting leaves the database in the same state we started with
+        """
+        assessment = Assessment.objects.create(
+            title="Test",
+            slug="test",
+            locale=Locale.objects.get(language_code="en"),
+            high_result_page=ContentPage.objects.get(slug="high-inflection"),
+            high_inflection=3,
+            medium_result_page=ContentPage.objects.get(slug="medium-score"),
+            medium_inflection=2,
+            low_result_page=ContentPage.objects.get(slug="low-score"),
+            generic_error="error",
+            questions=[
+                {
+                    "type": "question",
+                    "value": {
+                        "question": "test question",
+                        "error": "test error",
+                        "answers": [{"answer": "test answer", "score": 2.0}],
+                    },
+                }
+            ],
+        )
+        assessment.save_revision().publish()
+        orig = impexp.get_assessment_json()
+        impexp.export_reimport()
+        imported = impexp.get_assessment_json()
+        assert imported == orig
 
+
+@pytest.mark.usefixtures("result_content_pages")
 @pytest.mark.django_db()
 class TestImportExport:
     """
     Test import and export scenarios that aren't specifically round
     trips.
+
     """
 
     def test_missing_related_pages(self, csv_impexp: ImportExport) -> None:
@@ -448,6 +381,8 @@ class TestImportExport:
         Related pages are listed as comma separated slugs in imported files. If there
         is a slug listed that we cannot find the page for, then we should show the
         user an error with information about the missing page.
+
+        (This uses assessment_missing_related_page.csv.)
         """
 
         with pytest.raises(ImportAssessmentException) as e:
@@ -462,38 +397,9 @@ class TestImportExport:
     def test_import_error(elf, csv_impexp: ImportExport) -> None:
         """
         Importing an invalid CSV file leaves the db as-is.
+
+        (This uses broken_assessment.csv)
         """
-
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="high-inflection",
-            title="High Inflection",
-            bodies=[
-                WABody("High Inflection", [WABlk("*High Inflection Page")]),
-                MBody("High inflection", [MBlk("High Inflection Page")]),
-            ],
-        )
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="medium-score",
-            title="Medium Score",
-            bodies=[
-                WABody("Medium Score", [WABlk("*Medium Inflection Page")]),
-                MBody("Medium Score", [MBlk("Medium Inflection Page")]),
-            ],
-        )
-
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="low-score",
-            title="Low Score",
-            bodies=[
-                WABody("Low Score", [WABlk("*Low Inflection Page")]),
-                MBody("Low Score", [MBlk("Low Inflection Page")]),
-            ],
-        )
         csv_bytes = csv_impexp.import_file("assessment_simple.csv")
         with pytest.raises(ImportAssessmentException) as e:
             csv_impexp.import_file("broken_assessment.csv")
@@ -506,6 +412,8 @@ class TestImportExport:
         """
         Importing assessments with invalid locale code should raise an error that results
         in an error message that gets sent back to the user
+
+        (This uses invalid-assessment-locale-name.csv.)
         """
         with pytest.raises(ImportAssessmentException) as e:
             csv_impexp.import_file("invalid-assessment-locale-name.csv")
