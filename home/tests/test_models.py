@@ -531,7 +531,7 @@ class OrderedContentSetTests(TestCase):
 
     def test_get_page(self):
         """
-        Ordered Content Sets with an page selected should return the choosen page. We compare
+        Ordered Content Sets with an page selected should return a list of the choosen page. We compare
         the unique slug of a page
         """
         home_page = HomePage.objects.first()
@@ -542,13 +542,27 @@ class OrderedContentSetTests(TestCase):
             title="HealthAlert menu",
             bodies=[],
         )
+        page2 = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="page2-menu",
+            title="page2 menu",
+            bodies=[],
+        )
         page.save_revision()
 
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.pages.append(("pages", {"contentpage": page}))
+        ordered_content_set.pages.append(("pages", {"contentpage": page2}))
         ordered_content_set.save()
-        print(ordered_content_set.page())
-        self.assertEqual(ordered_content_set.page()[0], "ha-menu")
+        self.assertEqual(ordered_content_set.page(), ["ha-menu", "page2-menu"])
+
+    def test_get_none_page(self):
+        """
+        Ordered Content Sets with no page selected should return the default value -
+        """
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.page(), ["-"])
 
 
 class WhatsappBlockTests(TestCase):
