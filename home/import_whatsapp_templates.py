@@ -1,5 +1,5 @@
 import csv
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
 from queue import Queue
@@ -67,7 +67,7 @@ class ContentImporter:
     def perform_import(self) -> None:
         rows = self.parse_file()
         self.set_progress("Loaded file", 5)
-
+        print("Doing importy things")
         if self.purge:
             self.delete_existing_content()
         self.set_progress("Deleted existing WhatsApp Template", 10)
@@ -78,11 +78,32 @@ class ContentImporter:
     def process_rows(self, rows: list["ContentRow"]) -> None:
         for i, row in enumerate(rows, start=2):
             try:
+                print("Row Data Below")
                 print(row)
-                # self.create_shadow_assessment_page_from_row(row, i)
+                self.create_whatsapp_template_from_row(row)
             except ImportWhatsAppTemplateException as e:
                 e.row_num = i
                 raise e
+
+    def create_whatsapp_template_from_row(self, row: "ContentRow") -> None:
+        locale = self.locale_from_language_code(row.locale)
+        print(f"Row Locale = {locale}")
+        template = WhatsAppTemplate(
+            name=row.name,
+            category=row.category,
+            quick_replies=row.quick_replies,
+            locale=locale,
+            # image = row.image_link,
+            message=row.message,
+            example_values=[("example_values", v) for v in row.example_values],
+            submission_status=row.submission_status,
+            submission_result=row.submission_result,
+            submission_name=row.submission_name,
+        )
+        print("Going to save")
+        template.save()
+
+        return
 
     # def save_pages_assessment(self) -> None:
     #     for i, page in enumerate(reversed(self.shadow_pages.values())):
@@ -136,14 +157,14 @@ class ContentRow:
     template_id: int | None = None
     name: str = ""
     category: str = ""
-    # locale: str = ""
-    # quick_replies: list[str] = field(default_factory=list)
-    # image_link: str = ""
-    # message: str = ""
-    # example_values: list[str] = field(default_factory=list)
-    # submission_name: str = ""
-    # submission_status: str = ""
-    # submission_result: str = ""
+    locale: str = ""
+    quick_replies: list[str] = field(default_factory=list)
+    image_link: str = ""
+    message: str = ""
+    example_values: list[str] = field(default_factory=list)
+    submission_name: str = ""
+    submission_status: str = ""
+    submission_result: str = ""
 
     @classmethod
     def from_flat(cls, row: dict[str, str]) -> "ContentRow":
@@ -157,13 +178,8 @@ class ContentRow:
             template_id=int(row.pop("template_id")) if row.get("template_id") else None,
             name=str(row.pop("name", "")),
             category=str(row.pop("category", "")),
-            # quick_replies=deserialise_list(row.pop("quick_replies", "")),
-            # triggers=deserialise_list(row.pop("triggers", "")),
-            # related_pages=deserialise_list(row.pop("related_pages", "")),
-            # example_values=deserialise_list(row.pop("example_values", "")),
-            # buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
-            # list_items=deserialise_list(row.pop("list_items", "")),
-            # footer=row.pop("footer") if row.get("footer") else "",
+            quick_replies=deserialise_list(row.pop("quick_replies", "")),
+            example_values=deserialise_list(row.pop("example_values", "")),
             **row,
         )
 

@@ -343,7 +343,7 @@ class WhatsAppTemplateUploadThread(UploadThread):
 
 class WhatsAppTemplateUploadView(View):
     form_class = UploadContentFileForm
-    template_name = "whatsapp_template_upload.html"
+    template_name = "whatsapptemplate_upload.html"
 
     def get(self, request, *args, **kwargs):
         thread = next(

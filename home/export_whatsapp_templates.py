@@ -10,10 +10,6 @@ from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from wagtail.blocks import (  # type: ignore
-    StreamValue,
-    StructValue,  # type: ignore
-)
 from wagtail.query import PageQuerySet  # type: ignore
 
 
@@ -51,7 +47,11 @@ class WhatsAppTemplateExporter:
 
     def perform_export(self) -> list[dict[str | int, str | int]]:
         print(f"QS = {self.queryset}")
+        image_link = ""
         for item in self.queryset:
+            if item.image:
+                image_link = item.image.file.url
+                print(f"Found file {image_link}")
 
             self.rows.append(
                 {
@@ -59,7 +59,7 @@ class WhatsAppTemplateExporter:
                     "category": item.category,
                     "quick_replies": str(item.quick_replies),
                     "locale": str(item.locale.language_code),
-                    "image": str(item.image),
+                    "image": str(image_link),
                     "message": str(item.message),
                     "example_values": serialize_list(
                         [v["value"] for v in item.example_values.raw_data]
@@ -71,34 +71,6 @@ class WhatsAppTemplateExporter:
             )
 
         return self.rows
-
-    def format_answers(self, answers: list[str]) -> str:
-        escaped_answer = [answer.replace(",", "</>") for answer in answers]
-        joined_string = ",".join(escaped_answer).split(",")
-        return_value = [answer.replace("</>", ",") for answer in joined_string]
-        return str(return_value)[1:-1]
-
-    def get_questions(self, questions: StreamValue) -> list[StructValue]:
-        question_data = []
-        for question in questions:
-            answers = []
-            scores = []
-            for answer in question.value["answers"]:
-                answers.append(answer["answer"])
-                scores.append(str(answer["score"]))
-            question_data.append(
-                {
-                    "question": (question.value["question"]).replace("\n", ","),
-                    "error": (question.value["error"]),
-                    "answers": self.format_answers(answers),
-                    "scores": ", ".join(scores),
-                }
-            )
-        return question_data
-
-    @staticmethod
-    def _comma_sep_qs(unformatted_query: PageQuerySet) -> str:
-        return ", ".join(str(x) for x in unformatted_query if str(x) != "")
 
 
 """
