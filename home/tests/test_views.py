@@ -654,3 +654,37 @@ class TestOrderedContentSetViews:
         assert "Time" in page_fields
         assert "Unit" in page_fields
         assert "Contact field" in page_fields
+
+
+class TestOrderedContentImportView:
+    def test_import_ordered_content(self, admin_client):
+        """
+        The import page can be accessed at the expected url
+        """
+        response = admin_client.get("/admin/import_orderedcontentset/")
+
+        assert response.status_code == status.HTTP_200_OK
+        asserts.assertContains(response, "Upload Ordered Content Sets")
+
+    def test_ordered_form_has_all_expected_options(self, admin_client):
+        """
+        The upload form has all expected options:
+            - heading
+            - file upload field
+            - csv and Excel file as file type options in a drop down
+            - Yes and No as purge options in a drop down
+            - All current locale and each locale as an option for the languages
+        """
+        response = admin_client.get("/admin/import_orderedcontentset/")
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        heading = soup.find("h1").text.strip()
+        assert heading == "Upload Ordered Content Sets"
+
+        form = soup.find("form")
+        file_upload = form.find("input", type="file", id="id_file")
+        assert file_upload
+
+        assert find_options(form, "file_type") == ["CSV file", "Excel File"]
+
+        assert find_options(soup, "purge") == ["No", "Yes"]
