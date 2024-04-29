@@ -67,7 +67,7 @@ class ContentImporter:
     def perform_import(self) -> None:
         rows = self.parse_file()
         self.set_progress("Loaded file", 5)
-        print("Doing importy things")
+
         if self.purge:
             self.delete_existing_content()
         self.set_progress("Deleted existing WhatsApp Template", 10)
@@ -78,8 +78,6 @@ class ContentImporter:
     def process_rows(self, rows: list["ContentRow"]) -> None:
         for i, row in enumerate(rows, start=2):
             try:
-                print("Row Data Below")
-                print(row)
                 self.create_whatsapp_template_from_row(row)
             except ImportWhatsAppTemplateException as e:
                 e.row_num = i
@@ -87,7 +85,6 @@ class ContentImporter:
 
     def create_whatsapp_template_from_row(self, row: "ContentRow") -> None:
         locale = self.locale_from_language_code(row.locale)
-        print(f"Row Locale = {locale}")
         template = WhatsAppTemplate(
             name=row.name,
             category=row.category,
@@ -100,7 +97,6 @@ class ContentImporter:
             submission_result=row.submission_result,
             submission_name=row.submission_name,
         )
-        print("Going to save")
         template.save()
 
         return

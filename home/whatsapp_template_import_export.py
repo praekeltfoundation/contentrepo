@@ -13,7 +13,6 @@ from .import_whatsapp_templates import ContentImporter
 logger = getLogger(__name__)
 
 
-# FWB TODO: Change PageQuerySet to pull templates
 def export_xlsx_whatsapp_template(
     queryset: PageQuerySet, response: HttpResponse
 ) -> None:
