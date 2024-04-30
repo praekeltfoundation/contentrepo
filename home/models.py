@@ -1287,6 +1287,97 @@ class PageView(models.Model):
     data = models.JSONField(default=dict, blank=True, null=True)
 
 
+class AnswerBlock(blocks.StructBlock):
+    answer = blocks.TextBlock(help_text="The choice shown to the user for this option")
+    score = blocks.FloatBlock(
+        help_text="How much to add to the total score if this answer is chosen"
+    )
+
+
+class QuestionBlock(blocks.StructBlock):
+    question = blocks.TextBlock(help_text="The question to ask the user")
+    error = blocks.TextBlock(
+        required=False,
+        help_text="Error message for this question if we don't understand the input",
+    )
+    answers = blocks.ListBlock(AnswerBlock())
+
+
+class AssessmentTag(TaggedItemBase):
+    content_object = ParentalKey(
+        "Assessment", on_delete=models.CASCADE, related_name="tagged_items"
+    )
+
+
+from home.serializers import ContentPageSerializer  # noqa: E402, I001
+
+
+class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(
+        max_length=255, help_text="A unique identifier for this assessment"
+    )
+    locale = models.ForeignKey(to=Locale, on_delete=models.CASCADE)
+    tags = ClusterTaggableManager(through=AssessmentTag, blank=True)
+    high_result_page = models.ForeignKey(
+        ContentPage,
+        related_name="assessment_high",
+        on_delete=models.CASCADE,
+        help_text="The page to show the user if they score high",
+    )
+    high_inflection = models.FloatField(
+        help_text="Any score equal to or above this amount is considered high"
+    )
+    medium_result_page = models.ForeignKey(
+        ContentPage,
+        related_name="assessment_medium",
+        on_delete=models.CASCADE,
+        help_text="The page to show the user if they score medium",
+    )
+    medium_inflection = models.FloatField(
+        help_text="Any score equal to or above this amount, but lower than the high "
+        "inflection, is considered medium. Any score below this amount is considered "
+        "low"
+    )
+    low_result_page = models.ForeignKey(
+        ContentPage,
+        related_name="assessment_low",
+        on_delete=models.CASCADE,
+        help_text="The page to show the user if they score low",
+    )
+    generic_error = models.TextField(
+        help_text="If no error is specified for a question, then this is used as the "
+        "fallback"
+    )
+    questions = StreamField([("question", QuestionBlock())], use_json_field=True)
+    _revisions = GenericRelation(
+        "wagtailcore.Revision", related_query_name="assessment"
+    )
+
+    search_fields = [
+        index.SearchField("title"),
+        index.AutocompleteField("title"),
+        index.SearchField("slug"),
+        index.AutocompleteField("slug"),
+        index.FilterField("locale"),
+    ]
+
+    api_fields = [
+        APIField("title"),
+        APIField("slug"),
+        APIField("high_result_page", serializer=ContentPageSerializer()),  # noqa: F821
+        APIField("high_inflection"),
+        APIField("medium_result_page", serializer=ContentPageSerializer()),
+        APIField("medium_inflection"),
+        APIField("low_result_page", serializer=ContentPageSerializer()),
+        APIField("generic_error"),
+        APIField("questions"),
+    ]
+
+    def __str__(self):
+        return self.title
+
+
 class TemplateContentQuickReply(TagBase):
 
     class Meta:
