@@ -344,6 +344,12 @@ class ContentImporter:
                 f"This is a variation for the content page with slug '{row.slug}' and locale '{locale}', but no such page exists"
             )
         whatsapp_block = page.whatsapp_body[-1]
+
+        if len(row.variation_body) > 4096:
+            raise ImportException(
+                f"Ensure this value has at most 4096 characters (it has {len(row.variation_body)})",
+            )
+
         whatsapp_block.variation_messages.append(
             ShadowVariationBlock(
                 message=row.variation_body, variation_restrictions=row.variation_title

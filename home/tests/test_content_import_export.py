@@ -1042,6 +1042,20 @@ class TestImportExport:
             == "Validation error: list_items - List item (Item no 5 a very long list item) has exceeded maximum character limit of 24"
         )
 
+    def test_max_char_variation(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a file with the variation message greater than 4096 characters should
+        return a validation error to the user
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("max_char_variation.csv")
+
+        assert e.value.row_num == 5
+        assert (
+            e.value.message
+            == "Ensure this value has at most 4096 characters (it has 4097)"
+        )
+
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with ordered content sets should not break
