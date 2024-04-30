@@ -416,9 +416,11 @@ class ContentPageTests(TestCase):
         ocs.pages.append(("pages", {"contentpage": test_page}))
         ocs.save()
         ocs.save_revision().publish()
-
-        page_links, ocs_links = test_page.get_all_links()
-
+        
+   
+        # TODO: FWB Add whatsapp template links test 
+        page_links, ocs_links, wat_links = test_page.get_all_links()
+        
         self.assertListEqual(
             [
                 (
@@ -436,6 +438,7 @@ class ContentPageTests(TestCase):
             [(f"/admin/snippets/home/orderedcontentset/edit/{ocs.id}/", "Test set")],
             ocs_links,
         )
+        
 
     def test_get_all_links_no_links(self):
         """
@@ -446,9 +449,9 @@ class ContentPageTests(TestCase):
         test_page = PageBuilder.build_cp(
             parent=main_menu, slug="page1", title="Page1", bodies=[]
         )
-
-        page_links, ocs_links = test_page.get_all_links()
-
+        # TODO: FWB Add whatsapp template links test 
+        page_links, ocs_links, wat_links = test_page.get_all_links()
+       
         self.assertListEqual([], page_links)
         self.assertListEqual([], ocs_links)
 

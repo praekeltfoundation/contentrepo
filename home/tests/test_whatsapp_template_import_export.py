@@ -13,7 +13,7 @@ from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
 from wagtail.models import Locale  # type: ignore
 
-from home.whatsapp_template_import_export import import_whatsapp_template
+from home.whatsapp_template_import_export import import_whatsapptemplate
 from home.import_whatsapp_templates import ImportWhatsAppTemplateException
 from home.models import (
     HomePage,
@@ -154,7 +154,7 @@ class ImportExport:
         """
         Import given content in the configured format with the configured importer.
         """
-        import_whatsapp_template(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
+        import_whatsapptemplate(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
 
     def read_bytes(self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE) -> bytes:
         return (path_base / path_str).read_bytes()

@@ -31,8 +31,8 @@ from .views import (  # isort:skip
 def before_delete_page(request, page):
     if page.content_type.name != ContentPage._meta.verbose_name:
         return
-
-    page_links, orderedcontentset_links = page.get_all_links()
+    # TODO: FWB Check this
+    page_links, orderedcontentset_links, wat_links = page.get_all_links()
 
     if page_links or orderedcontentset_links:
         msg_parts = ["You can't delete this page while it is linked."]
