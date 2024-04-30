@@ -17,9 +17,11 @@ from .models import Assessment, ContentPage, OrderedContentSet, WhatsAppTemplate
 from .views import (  # isort:skip
     ContentPageReportView,
     CustomIndexView,
+    CustomIndexViewAssessment,
     OrderedContentSetUploadView,
     PageViewReportView,
     ContentUploadView,
+    AssessmentUploadView,
 )
 
 
@@ -55,6 +57,11 @@ def register_import_urls():
             "import_orderedcontentset/",
             OrderedContentSetUploadView.as_view(),
             name="import_orderedcontentset",
+        ),
+        path(
+            "import_assessment/",
+            AssessmentUploadView.as_view(),
+            name="import_assessment",
         ),
     ]
 
@@ -271,6 +278,8 @@ class AssessmentAdmin(SnippetViewSet):
     list_filter = ("locale",)
     icon = "circle-check"
     menu_order = 300
+    list_export = "title"
+    index_view_class = CustomIndexViewAssessment
 
     panels = [
         MultiFieldPanel(
