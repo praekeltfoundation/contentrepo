@@ -515,87 +515,87 @@ class TemplateBuilder():
 
 
 
-    @classmethod
-    def build_whatsapp_template(
-        cls,
-        name: str,
-        category: str,
-        quick_replies: str,
-        locale: str,
-        message: str,
-        example_values: str,
-        submission_status: str,
-        submission_result: str,
-        submission_name: str,
+    # @classmethod
+    # def build_whatsapp_template(
+    #     cls,
+    #     name: str,
+    #     category: str,
+    #     quick_replies: str,
+    #     locale: str,
+    #     message: str,
+    #     example_values: str,
+    #     submission_status: str,
+    #     submission_result: str,
+    #     submission_name: str,git
        
-        publish: bool = True,
-    ) -> WhatsAppTemplate:
-        builder = cls.cp(parent, slug, title).add_bodies(*bodies)
-        if web_body:
-            builder = builder.add_web_body(*web_body)
-        if tags:
-            builder = builder.add_tags(*tags)
-        if triggers:
-            builder = builder.add_triggers(*triggers)
-        if quick_replies:
-            builder = builder.add_quick_replies(*quick_replies)
-        if whatsapp_template_name:
-            builder = builder.set_whatsapp_template_name(whatsapp_template_name)
-        if whatsapp_template_category:
-            builder = builder.set_whatsapp_template_category(whatsapp_template_category)
-        if translated_from:
-            builder = builder.translated_from(translated_from)
-        return builder.build(publish=publish)
+    #     publish: bool = True,
+    # ) -> WhatsAppTemplate:
+    #     builder = cls.cp(parent, slug, title).add_bodies(*bodies)
+    #     if web_body:
+    #         builder = builder.add_web_body(*web_body)
+    #     if tags:
+    #         builder = builder.add_tags(*tags)
+    #     if triggers:
+    #         builder = builder.add_triggers(*triggers)
+    #     if quick_replies:
+    #         builder = builder.add_quick_replies(*quick_replies)
+    #     if whatsapp_template_name:
+    #         builder = builder.set_whatsapp_template_name(whatsapp_template_name)
+    #     if whatsapp_template_category:
+    #         builder = builder.set_whatsapp_template_category(whatsapp_template_category)
+    #     if translated_from:
+    #         builder = builder.translated_from(translated_from)
+    #     return builder.build(publish=publish)
 
-    def build(self, publish: bool = True) -> TPage:
-        self.parent.add_child(instance=self.page)
-        rev = self.page.save_revision()
-        if publish:
-            rev.publish()
-        else:
-            self.page.unpublish()
-        # The page instance is out of date after revision operations, so reload.
-        self.page.refresh_from_db()
-        return self.page
+    # def build(self, publish: bool = True) -> TPage:
+    #     self.parent.add_child(instance=self.page)
+    #     rev = self.page.save_revision()
+    #     if publish:
+    #         rev.publish()
+    #     else:
+    #         self.page.unpublish()
+    #     # The page instance is out of date after revision operations, so reload.
+    #     self.page.refresh_from_db()
+    #     return self.page
 
-    def add_web_body(self, *paragraphs: str) -> "PageBuilder[TPage]":
-        # TODO: Support images?
-        self.page.enable_web = True
-        for paragraph in paragraphs:
-            self.page.body.append(("paragraph", RichTextBlock().to_python(paragraph)))
-        return self
+    # def add_web_body(self, *paragraphs: str) -> "PageBuilder[TPage]":
+    #     # TODO: Support images?
+    #     self.page.enable_web = True
+    #     for paragraph in paragraphs:
+    #         self.page.body.append(("paragraph", RichTextBlock().to_python(paragraph)))
+    #     return self
 
-    def add_bodies(self, *bodies: ContentBody[TCBlk]) -> "PageBuilder[TPage]":
-        for body in bodies:
-            body.set_on(self.page)
-        return self
+    # def add_bodies(self, *bodies: ContentBody[TCBlk]) -> "PageBuilder[TPage]":
+    #     for body in bodies:
+    #         body.set_on(self.page)
+    #     return self
 
-    def add_tags(self, *tag_strs: str) -> "PageBuilder[TPage]":
-        for tag_str in tag_strs:
-            tag, _ = Tag.objects.get_or_create(name=tag_str)
-            self.page.tags.add(tag)
-        return self
+    # def add_tags(self, *tag_strs: str) -> "PageBuilder[TPage]":
+    #     for tag_str in tag_strs:
+    #         tag, _ = Tag.objects.get_or_create(name=tag_str)
+    #         self.page.tags.add(tag)
+    #     return self
 
-    def add_triggers(self, *trigger_strs: str) -> "PageBuilder[TPage]":
-        for trigger_str in trigger_strs:
-            trigger, _ = ContentTrigger.objects.get_or_create(name=trigger_str)
-            self.page.triggers.add(trigger)
-        return self
+    # def add_triggers(self, *trigger_strs: str) -> "PageBuilder[TPage]":
+    #     for trigger_str in trigger_strs:
+    #         trigger, _ = ContentTrigger.objects.get_or_create(name=trigger_str)
+    #         self.page.triggers.add(trigger)
+    #     return self
 
-    def add_quick_replies(self, *qr_strs: str) -> "PageBuilder[TPage]":
-        for qr_str in qr_strs:
-            qr, _ = ContentQuickReply.objects.get_or_create(name=qr_str)
-            self.page.quick_replies.add(qr)
-        return self
+    # def add_quick_replies(self, *qr_strs: str) -> "PageBuilder[TPage]":
+    #     for qr_str in qr_strs:
+    #         qr, _ = ContentQuickReply.objects.get_or_create(name=qr_str)
+    #         self.page.quick_replies.add(qr)
+    #     return self
 
-    def set_whatsapp_template_name(self, name: str) -> "PageBuilder[TPage]":
-        self.page.is_whatsapp_template = True
-        self.page.whatsapp_template_name = name
-        return self
+    # def set_whatsapp_template_name(self, name: str) -> "PageBuilder[TPage]":
+    #     self.page.is_whatsapp_template = True
+    #     self.page.whatsapp_template_name = name
+    #     return self
 
-    def set_category(self, category: str) -> "PageBuilder[TPage]":
+    # def set_category(self, category: str) -> "PageBuilder[TPage]":
         
-        self.page.whatsapp_template_category = category
-        return self
+    #     self.page.whatsapp_template_category = category
+    #     return self
 
 

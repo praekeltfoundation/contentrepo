@@ -4,6 +4,8 @@ from unittest import mock
 
 import pytest
 import responses
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -13,6 +15,8 @@ from wagtail.images import get_image_model
 from wagtail.models import (
     Locale,  # type: ignore
     Page,
+    Workflow,
+    WorkflowState,
 )
 from wagtail.test.utils import WagtailPageTests
 
@@ -33,6 +37,11 @@ from home.models import (
 
 from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
+
+
+def create_user():
+    user = User.objects.create(username="testuser", email="testuser@example.com")
+    return user
 
 
 class MyPageTests(WagtailPageTests):
@@ -494,6 +503,42 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save_revision()
         self.assertEqual(ordered_content_set.status(), "Live + Draft")
+
+    def test_status_live_plus_in_moderation(self):
+        requested_by = create_user()
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+        workflow = Workflow.objects.create(name="Test Workflow", active="t")
+        content_type = ContentType.objects.get_for_model(ordered_content_set)
+        WorkflowState.objects.create(
+            content_type=content_type,
+            object_id=ordered_content_set.id,
+            workflow_id=workflow.id,
+            status="in_progress",
+            requested_by=requested_by,
+            current_task_state=None,
+            base_content_type=content_type,
+        )
+
+        assert ordered_content_set.status() == "Live + In Moderation"
+
+    def test_status_in_moderation(self):
+        requested_by = create_user()
+        ordered_content_set = OrderedContentSet(name="Test Title", live=False)
+        ordered_content_set.save()
+        workflow = Workflow.objects.create(name="Test Workflow", active="t")
+        content_type = ContentType.objects.get_for_model(ordered_content_set)
+        WorkflowState.objects.create(
+            content_type=content_type,
+            object_id=ordered_content_set.id,
+            workflow_id=workflow.id,
+            status="in_progress",
+            requested_by=requested_by,
+            current_task_state=None,
+            base_content_type=content_type,
+        )
+
+        assert ordered_content_set.status() == "In Moderation"
 
 
 class WhatsappBlockTests(TestCase):

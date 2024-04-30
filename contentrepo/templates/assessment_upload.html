@@ -1,0 +1,61 @@
+{% extends "wagtailadmin/generic/form.html" %}
+{% load i18n admin_urls static wagtailadmin_tags %}
+
+{% block header %}
+  <header>
+      <div class="row nice-padding">
+        <div class="left header-left">
+          <div class="col header-title">
+            {% block h1 %}
+              <h1>
+                {% icon name="openquote" class_name="header-title-icon" %}
+                  {% if loading %}
+                    {% trans 'Uploading Content...' %}
+                  {% else %}
+                    {% trans 'Upload Content' %}
+                  {% endif %}
+              </h1>
+            {% endblock %}
+          </div>
+        </div>
+      </div>
+  </header>
+{% endblock %}
+
+
+{% block main_content %}
+    {% if loading %}
+        <div class="meter animate" id="meter">
+            <span id="loadingBar" style="width: 1%"><span></span></span>
+        </div>
+    {% else %}
+      <form action="{% url 'import_assessment' %}" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <ul class="fields">
+              <li class="required {{ wrapper_classes }} {{ li_classes }} {% if field.errors %}error{% endif %}">
+                <div class="field">
+                  <div class="field-content">
+                      <div class="input {{ input_classes }} ">
+                        {{ form.as_p }}
+                      </div>
+                  </div>
+                </div>
+              </li>
+              <li>
+                {% block actions %}
+                    <button type="submit" class="button">{% trans 'Upload' %}</button>
+                {% endblock %}
+              </li>
+            </ul>
+      </form>
+    {% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+      var importURL = "{% url 'import_assessment' %}";
+      var destinationURL = "{% url 'wagtailsnippets_home_assessment:list' %}";
+    </script>
+    <script type="text/javascript" src="{% static 'js/contentrepo.js' %}"></script>
+{% endblock %}

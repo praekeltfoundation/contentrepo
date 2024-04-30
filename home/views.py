@@ -25,12 +25,15 @@ from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 from wagtail.contrib.modeladmin.views import IndexView
+from wagtail.snippets.views.snippets import IndexView as IndexViewAssessment
 from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTemplate
 
+from .assessment_import_export import import_assessment
 from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
+from .import_assessments import ImportAssessmentException
 from .import_content_pages import ImportException
-from .mixins import SpreadsheetExportMixin, SpreadsheetExportMixinWhatsAppTemplate
+from .mixins import SpreadsheetExportMixin, SpreadsheetExportMixinAssessment, SpreadsheetExportMixinWhatsAppTemplate
 from .models import (
     ContentPage,
     ContentPageRating,
@@ -48,6 +51,10 @@ logger = logging.getLogger(__name__)
 
 
 class CustomIndexView(SpreadsheetExportMixin, IndexView):
+    pass
+
+
+class CustomIndexViewAssessment(SpreadsheetExportMixinAssessment, IndexViewAssessment):
     pass
 
 
@@ -182,6 +189,33 @@ class ContentUploadThread(UploadThread):
         self.result_queue.join()
 
 
+class AssessmentUploadThread(UploadThread):
+    def __init__(self, purge, locale, **kwargs):
+        self.purge = purge
+        self.locale = locale
+        super().__init__(**kwargs)
+
+    def run(self):
+        try:
+            import_assessment(
+                self.file, self.file_type, self.progress_queue, self.purge, self.locale
+            )
+        except ImportAssessmentException as e:
+            self.result_queue.put(
+                (
+                    messages.ERROR,
+                    f"Assessment import failed: {e.message}",
+                )
+            )
+        except Exception:
+            self.result_queue.put((messages.ERROR, "Assessment import failed"))
+            logger.exception("Assessment import failed")
+        else:
+            self.result_queue.put((messages.SUCCESS, "Assessment import successful"))
+        # Wait until the user has fetched the result message to close the thread
+        self.result_queue.join()
+
+
 class OrderedContentSetUploadThread(UploadThread):
     def __init__(self, purge, **kwargs):
         self.purge = purge
@@ -307,6 +341,60 @@ class ContentUploadView(View):
                 name="ContentUploadThread",
             ).start()
             loading = "ContentUploadThread" in [th.name for th in threading.enumerate()]
+            return render(
+                request, self.template_name, {"form": form, "loading": loading}
+            )
+
+
+class AssessmentUploadView(View):
+    form_class = UploadContentFileForm
+    template_name = "assessment_upload.html"
+
+    def get(self, request, *args, **kwargs):
+        thread = next(
+            (t for t in threading.enumerate() if t.name == "AssessmentUploadThread"),
+            None,
+        )
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            if not thread:
+                return JsonResponse({"loading": False})
+
+            try:
+                # If there's a result message from the thread, send it to the user,
+                # and call task_done to end the thread.
+                level, text = thread.result_queue.get_nowait()
+                messages.add_message(request, level, text)
+                thread.result_queue.task_done()
+                return JsonResponse({"loading": False})
+            except queue.Empty:
+                # No message means that the task is still running
+                # Get the latest task progress and return that too
+                progress = None
+                try:
+                    while True:
+                        progress = thread.progress_queue.get_nowait()
+                except queue.Empty:
+                    pass
+
+                return JsonResponse({"loading": True, "progress": progress})
+        form = self.form_class()
+        return render(
+            request, self.template_name, {"form": form, "loading": thread is not None}
+        )
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, request.FILES)
+        if form.is_valid():
+            AssessmentUploadThread(
+                form.cleaned_data["purge"],
+                form.cleaned_data["locale"],
+                file=request.FILES["file"],
+                file_type=form.cleaned_data["file_type"],
+                name="AssessmentUploadThread",
+            ).start()
+            loading = "AssessmentUploadThread" in [
+                th.name for th in threading.enumerate()
+            ]
             return render(
                 request, self.template_name, {"form": form, "loading": loading}
             )
