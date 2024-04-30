@@ -46,12 +46,10 @@ class WhatsAppTemplateExporter:
         self.queryset = queryset
 
     def perform_export(self) -> list[dict[str | int, str | int]]:
-        print(f"QS = {self.queryset}")
         image_link = ""
         for item in self.queryset:
             if item.image:
                 image_link = item.image.file.url
-                print(f"Found file {image_link}")
 
             self.rows.append(
                 {
@@ -74,7 +72,7 @@ class WhatsAppTemplateExporter:
 
 
 """
-Definining ExportWriter class for assessments
+Definining ExportWriter class for Whatsapp Templates
 """
 
 
