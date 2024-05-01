@@ -520,7 +520,6 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save_revision()
         self.assertEqual(ordered_content_set.status(), "Live + Draft")
 
-
     def test_get_relationship(self):
         """
         Ordered Content Sets with a relationship selected should return the appropriate relationship
@@ -609,7 +608,6 @@ class OrderedContentSetTests(TestCase):
         )
 
         assert ordered_content_set.status() == "In Moderation"
-
 
 
 class WhatsappBlockTests(TestCase):
