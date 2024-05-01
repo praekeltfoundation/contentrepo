@@ -33,7 +33,11 @@ from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
 from .import_assessments import ImportAssessmentException
 from .import_content_pages import ImportException
-from .mixins import SpreadsheetExportMixin, SpreadsheetExportMixinAssessment, SpreadsheetExportMixinWhatsAppTemplate
+from .mixins import (
+    SpreadsheetExportMixin,
+    SpreadsheetExportMixinAssessment,
+    SpreadsheetExportMixinWhatsAppTemplate,
+)
 from .models import (
     ContentPage,
     ContentPageRating,

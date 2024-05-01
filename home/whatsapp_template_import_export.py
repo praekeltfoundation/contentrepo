@@ -8,7 +8,7 @@ from .export_whatsapp_templates import (
     WhatsAppTemplateExporter,
     WhatsAppTemplateExportWriter,
 )
-from .import_whatsapp_templates import ContentImporter
+from .import_whatsapp_templates import WhatsAppTemplateImporter
 
 logger = getLogger(__name__)
 
@@ -33,7 +33,9 @@ def export_csv_whatsapp_template(
 
 @transaction.atomic
 def import_whatsapptemplate(file, filetype, progress_queue, purge=True, locale=None) -> None:  # type: ignore
-    importer = ContentImporter(file.read(), filetype, progress_queue, purge, locale)
+    importer = WhatsAppTemplateImporter(
+        file.read(), filetype, progress_queue, purge, locale
+    )
     importer.perform_import()
 
 

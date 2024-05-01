@@ -25,7 +25,7 @@ class ImportWhatsAppTemplateException(Exception):
         super().__init__()
 
 
-class ContentImporter:
+class WhatsAppTemplateImporter:
     def __init__(
         self,
         file_content: bytes,

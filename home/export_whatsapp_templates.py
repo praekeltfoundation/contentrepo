@@ -1,7 +1,7 @@
 import copy
 import csv
 import io
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import asdict, astuple, dataclass, fields
 from math import ceil
 
@@ -37,7 +37,6 @@ class ExportRow:
         return astuple(self)
 
 
-# Define your AssessmentExporter class
 class WhatsAppTemplateExporter:
     rows: list[dict[str | int, str | int]]
 
@@ -45,30 +44,46 @@ class WhatsAppTemplateExporter:
         self.rows = []
         self.queryset = queryset
 
-    def perform_export(self) -> list[dict[str | int, str | int]]:
+    def perform_export(self) -> Iterable[ExportRow]:
         image_link = ""
         for item in self.queryset:
             if item.image:
                 image_link = item.image.file.url
 
-            self.rows.append(
-                {
-                    "name": item.name,
-                    "category": item.category,
-                    "quick_replies": str(item.quick_replies),
-                    "locale": str(item.locale.language_code),
-                    "image": str(image_link),
-                    "message": str(item.message),
-                    "example_values": serialize_list(
-                        [v["value"] for v in item.example_values.raw_data]
-                    ),
-                    "submission_name": str(item.submission_name),
-                    "submission_status": str(item.submission_status),
-                    "submission_result": str(item.submission_result),
-                }
+            yield ExportRow(
+                name=item.name,
+                category=item.category,
+                quick_replies=serialize_list(item.quick_replies.all()),
+                locale=str(item.locale.language_code),
+                image=str(image_link),
+                message=str(item.message),
+                example_values=serialize_list(
+                    [v["value"] for v in item.example_values.raw_data]
+                ),
+                submission_name=str(item.submission_name),
+                submission_status=str(item.submission_status),
+                submission_result=(item.submission_result),
             )
 
-        return self.rows
+
+# TODO: FWB to check how to use this with Rudi
+def filter_non_empty(items: Iterable[str]) -> Iterator[str]:
+    """
+    Ensures only truthy values are present in the iterable
+    """
+    for item in items:
+        if item:
+            yield item
+
+
+def serialize_list(items: Iterable[str]) -> str:
+    """
+    Uses CSV formatting to seralize a list of strings, handling escaping
+    """
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(items)
+    return output.getvalue().rstrip("\r\n")
 
 
 """
@@ -84,44 +99,19 @@ class WhatsAppTemplateExportWriter:
 
     def write_xlsx(self, response: HttpResponse) -> None:
         workbook = Workbook()
-        worksheet = workbook.active
-        worksheet.append(ExportRow.headings())  # type: ignore
+        worksheet: Worksheet = workbook.active  # type: ignore  # This is not a write or read only workbook
+        worksheet.append(ExportRow.headings())
         for row in self.rows:
-            row_values = [
-                row["name"],
-                row["category"],
-                row["quick_replies"],
-                row["locale"],
-                row["image"],
-                row["message"],
-                row["example_values"],
-                row["submission_name"],
-                row["submission_status"],
-                row["submission_result"],
-            ]
-            worksheet.append(row_values)  # type: ignore
-        _set_xlsx_styles(workbook, worksheet)  # type: ignore
+            worksheet.append(row.to_tuple())
+        _set_xlsx_styles(workbook, worksheet)
         workbook.save(response)
 
     def write_csv(self, response: HttpResponse) -> None:
-        csv_response = csv.writer(response)
-        csv_response.writerow(ExportRow.headings())
+        writer = csv.DictWriter(f=response, fieldnames=ExportRow.headings())
+        writer.writeheader()
 
-        # Write data rows
         for row in self.rows:
-            row_values = [
-                row["name"],
-                row["category"],
-                row["quick_replies"],
-                row["locale"],
-                row["image"],
-                row["message"],
-                row["example_values"],
-                row["submission_name"],
-                row["submission_status"],
-                row["submission_result"],
-            ]
-            csv_response.writerow(row_values)
+            writer.writerow(row.to_dict())
 
 
 def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
@@ -198,13 +188,3 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
             alignment = copy.copy(cell.alignment)
             alignment.wrapText = True
             cell.alignment = alignment  # type: ignore # Broken typeshed update, maybe?
-
-
-def serialize_list(items: Iterable[str]) -> str:
-    """
-    Uses CSV formatting to seralize a list of strings, handling escaping
-    """
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(items)
-    return output.getvalue().rstrip("\r\n")
