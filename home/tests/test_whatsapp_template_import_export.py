@@ -7,17 +7,17 @@ from io import BytesIO, StringIO
 from pathlib import Path
 from queue import Queue
 from typing import Any, TypeVar
-from pytest_django.fixtures import SettingsWrapper
+
 import pytest
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
-from wagtail.models import Locale  # type: ignore
 from wagtail.snippets.models import register_snippet
-from home.wagtail_hooks import WhatsAppTemplateAdmin
+
 from home.import_whatsapp_templates import ImportWhatsAppTemplateException
 from home.models import (
     WhatsAppTemplate,
 )
+from home.wagtail_hooks import WhatsAppTemplateAdmin
 from home.whatsapp_template_import_export import import_whatsapptemplate
 
 TTemplate = TypeVar("TTemplate", bound=WhatsAppTemplate)
@@ -130,9 +130,7 @@ class ImportExport:
            all languages.
         """
         url = f"/admin/snippets/home/whatsapptemplate/?export={self.format}"
-        print(f"URL {url}")
         content = self.admin_client.get(url).content
-        print(f"Content1 {content}")
         # Hopefully we can get rid of this at some point.
         if self.format == "csv":
             print("-v-CONTENT-v-")
@@ -193,9 +191,9 @@ def xlsx_impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, "xlsx")
 
 
-
 # Needs this here while standalone templates are hidden behind feature flag
 register_snippet(WhatsAppTemplateAdmin)
+
 
 @pytest.mark.django_db()
 class TestImportExportRoundtrip:
@@ -206,7 +204,7 @@ class TestImportExportRoundtrip:
     NOTE: This is not a Django (or even unittest) TestCase. It's just a
         container for related tests.
     """
-    
+
     def test_simple(self, csv_impexp: ImportExport) -> None:
         """
         Importing a simple CSV file with one whatsapp template and
@@ -215,7 +213,7 @@ class TestImportExportRoundtrip:
         (This uses whatsapp_template_simple.csv.)
 
         """
-        
+
         csv_bytes = csv_impexp.import_file("whatsapp-template-simple.csv")
         content = csv_impexp.export_whatsapp_template()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
@@ -226,9 +224,15 @@ class TestImportExportRoundtrip:
         Importing a simple CSV file with two whatsapp templates and
         multiple questions and export it
 
-        (This uses whatsapp_template_less_simple.csv.)
+        (This uses whatsapp-template-less-simple-multiple.csv.)
 
         """
+        csv_bytes = csv_impexp.import_file("whatsapp-template-less-simple-multiple.csv")
+        content = csv_impexp.export_whatsapp_template()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        print(f"SRC {src}")
+        print(f"DST {dst}")
+        assert dst == src
 
     def test_multiple_whatsapp_templates(self, csv_impexp: ImportExport) -> None:
         """

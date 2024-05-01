@@ -49,7 +49,6 @@ class WhatsAppTemplateExporter:
         for item in self.queryset:
             if item.image:
                 image_link = item.image.file.url
-
             yield ExportRow(
                 name=item.name,
                 category=item.category,

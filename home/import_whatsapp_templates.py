@@ -3,13 +3,14 @@ from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
 from queue import Queue
+from taggit.models import Tag
 
 from openpyxl import load_workbook
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 
-from home.models import WhatsAppTemplate  # type: ignore
+from home.models import WhatsAppTemplate, TemplateContentQuickReply # type: ignore
 
 PageId = tuple[str, Locale]
 
@@ -85,20 +86,20 @@ class WhatsAppTemplateImporter:
 
     def create_whatsapp_template_from_row(self, row: "ContentRow") -> None:
         locale = self.locale_from_language_code(row.locale)
+        
         template = WhatsAppTemplate(
             name=row.name,
             category=row.category,
-            quick_replies=row.quick_replies,
             locale=locale,
-            # image = row.image_link,
             message=row.message,
             example_values=[("example_values", v) for v in row.example_values],
             submission_status=row.submission_status,
             submission_result=row.submission_result,
             submission_name=row.submission_name,
         )
+        
+        add_tags_to_whatsapp_template(row.quick_replies, template)
         template.save()
-
         return
 
     # def save_pages_assessment(self) -> None:
@@ -196,3 +197,12 @@ def deserialise_list(value: str) -> list[str]:
 
     items = list(csv.reader([value]))[0]
     return [item.strip() for item in items]
+
+def add_tags_to_whatsapp_template(tags: list[str], template: WhatsAppTemplate) -> None:
+    template.quick_replies.clear()
+    
+    for quick_reply_name in tags:
+            quick_reply, _ = TemplateContentQuickReply.objects.get_or_create(
+                name=quick_reply_name
+            )
+            template.quick_replies.add(quick_reply)    
