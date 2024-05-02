@@ -10,11 +10,11 @@ from queue import Queue
 from typing import Any, TypeVar
 
 import pytest
-from django.core import serializers
+from django.core import serializers  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
-from wagtail.models import Locale # type: ignore
-from wagtail.snippets.models import register_snippet
+from wagtail.models import Locale  # type: ignore
+from wagtail.snippets.models import register_snippet  # type: ignore
 
 from home.import_whatsapp_templates import ImportWhatsAppTemplateException
 from home.models import (
@@ -120,9 +120,9 @@ def normalise_pks(templates: DbDicts) -> DbDicts:
     min_pk = min(t["pk"] for t in templates)
     return [_normalise_pks(template, min_pk) for template in templates]
 
+
 def _normalise_pks(template: DbDict, min_pk: str) -> DbDict:
     return template | {"pk": template["pk"] - min_pk}
-
 
 
 @per_template
@@ -321,7 +321,7 @@ class TestImportExportRoundtrip:
         """
         Exporting then reimporting leaves the database in the same state we started with
         """
-        template = WhatsAppTemplate.objects.create(
+        WhatsAppTemplate.objects.create(
             name="wa_title",
             message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
             category="UTILITY",
@@ -333,8 +333,6 @@ class TestImportExportRoundtrip:
             submission_name="testname",
             submission_status="NOT YET SUBMITTED",
             submission_result="test result",
-
-
         )
 
         orig = impexp.get_whatsapp_template_json()

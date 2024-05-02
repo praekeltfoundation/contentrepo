@@ -90,9 +90,9 @@ Definining ExportWriter class for Whatsapp Templates
 
 
 class WhatsAppTemplateExportWriter:
-    rows: list[dict[str | int, str | int]]
+    rows: Iterable[ExportRow]
 
-    def __init__(self, rows: list[dict[str | int, str | int]]):
+    def __init__(self, rows: Iterable[ExportRow]):
         self.rows = rows
 
     def write_xlsx(self, response: HttpResponse) -> None:
