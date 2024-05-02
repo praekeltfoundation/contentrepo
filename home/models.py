@@ -228,7 +228,6 @@ class VariationBlock(blocks.StructBlock):
         validators=(MaxLengthValidator(4096),),
     )
 
-
 class NextMessageButton(blocks.StructBlock):
     title = blocks.CharBlock(
         help_text="text for the button, up to 20 characters.",
@@ -326,6 +325,13 @@ class WhatsappBlock(blocks.StructBlock):
             if len(item) > 24:
                 errors["list_items"] = ValidationError(
                     f"List item ({item}) has exceeded maximum character limit of 24"
+                )
+
+        variation_messages = result["variation_messages"]
+        for message in variation_messages:
+            if len(message) > 4096:
+                errors["variation_messages"] = ValidationError(
+                    f"Ensure this variation message has at most 4096 characters, it has {len(message)} characters"
                 )
 
         if errors:

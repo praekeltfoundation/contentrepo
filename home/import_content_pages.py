@@ -345,11 +345,6 @@ class ContentImporter:
             )
         whatsapp_block = page.whatsapp_body[-1]
 
-        if len(row.variation_body) > 4096:
-            raise ImportException(
-                f"Ensure this value has at most 4096 characters (it has {len(row.variation_body)})",
-            )
-
         whatsapp_block.variation_messages.append(
             ShadowVariationBlock(
                 message=row.variation_body, variation_restrictions=row.variation_title
@@ -519,7 +514,8 @@ class ShadowContentPage:
             for value in json_data_errors["blockErrors"][0]["blockErrors"].values():
                 if isinstance(value, dict) and "messages" in value:
                     error_messages.extend(value["messages"])
-            error_messages = error_messages[0]
+            if error_messages:
+                error_messages = error_messages[0]
             error_message = f"{field_name} - {error_messages}"
         elif isinstance(errors, ValidationError):
             field_name = list(errs.keys())[0]

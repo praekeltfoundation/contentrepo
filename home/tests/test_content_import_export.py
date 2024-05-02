@@ -1050,10 +1050,10 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("max_char_variation.csv")
 
-        assert e.value.row_num == 5
+        assert e.value.row_num == 4
         assert (
             e.value.message
-            == "Ensure this value has at most 4096 characters (it has 4097)"
+            == "Validation error: variation_messages - Ensure this value has at most 4096 characters (it has 4097)"
         )
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
