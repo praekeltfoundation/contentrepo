@@ -3,14 +3,13 @@ from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
 from queue import Queue
-from taggit.models import Tag
 
 from openpyxl import load_workbook
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 
-from home.models import WhatsAppTemplate, TemplateContentQuickReply # type: ignore
+from home.models import TemplateContentQuickReply, WhatsAppTemplate  # type: ignore
 
 PageId = tuple[str, Locale]
 
@@ -77,7 +76,7 @@ class WhatsAppTemplateImporter:
         # self.save_pages_assessment()
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
-        for i, row in enumerate(rows, start=2):
+        for i, row in reversed(list(enumerate(rows, start=2))):
             try:
                 self.create_whatsapp_template_from_row(row)
             except ImportWhatsAppTemplateException as e:
@@ -86,7 +85,7 @@ class WhatsAppTemplateImporter:
 
     def create_whatsapp_template_from_row(self, row: "ContentRow") -> None:
         locale = self.locale_from_language_code(row.locale)
-        
+
         template = WhatsAppTemplate(
             name=row.name,
             category=row.category,
@@ -97,16 +96,10 @@ class WhatsAppTemplateImporter:
             submission_result=row.submission_result,
             submission_name=row.submission_name,
         )
-        
+
         add_tags_to_whatsapp_template(row.quick_replies, template)
         template.save()
         return
-
-    # def save_pages_assessment(self) -> None:
-    #     for i, page in enumerate(reversed(self.shadow_pages.values())):
-    #         parent = self.home_page(page.locale)
-    #         page.save(parent)
-    #         self.set_progress("Importing pages", 10 + 70 * i // len(self.shadow_pages))
 
     def parse_file(self) -> list["ContentRow"]:
         if self.file_type == "XLSX":
@@ -177,6 +170,9 @@ class ContentRow:
             category=str(row.pop("category", "")),
             quick_replies=deserialise_list(row.pop("quick_replies", "")),
             example_values=deserialise_list(row.pop("example_values", "")),
+            submission_name=str(row.pop("submission_name", "")),
+            submission_status=str(row.pop("submission_status", "")),
+            submission_result=str(row.pop("submission_result", "")),
             **row,
         )
 
@@ -198,11 +194,12 @@ def deserialise_list(value: str) -> list[str]:
     items = list(csv.reader([value]))[0]
     return [item.strip() for item in items]
 
+
 def add_tags_to_whatsapp_template(tags: list[str], template: WhatsAppTemplate) -> None:
     template.quick_replies.clear()
-    
+
     for quick_reply_name in tags:
-            quick_reply, _ = TemplateContentQuickReply.objects.get_or_create(
-                name=quick_reply_name
-            )
-            template.quick_replies.add(quick_reply)    
+        quick_reply, _ = TemplateContentQuickReply.objects.get_or_create(
+            name=quick_reply_name
+        )
+        template.quick_replies.add(quick_reply)

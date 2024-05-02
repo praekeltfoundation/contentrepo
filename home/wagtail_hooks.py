@@ -31,7 +31,6 @@ from .views import (  # isort:skip
 def before_delete_page(request, page):
     if page.content_type.name != ContentPage._meta.verbose_name:
         return
-    # TODO: FWB Check this
     page_links, orderedcontentset_links, wat_links = page.get_all_links()
 
     if page_links or orderedcontentset_links:

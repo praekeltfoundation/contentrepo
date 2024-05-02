@@ -1,4 +1,5 @@
 import csv
+import json
 import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -9,8 +10,10 @@ from queue import Queue
 from typing import Any, TypeVar
 
 import pytest
+from django.core import serializers
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
+from wagtail.models import Locale # type: ignore
 from wagtail.snippets.models import register_snippet
 
 from home.import_whatsapp_templates import ImportWhatsAppTemplateException
@@ -48,8 +51,6 @@ def strip_leading_whitespace(entry: ExpDict) -> ExpDict:
 
 
 EXPORT_FILTER_FUNCS = [
-    # add_new_fields,
-    # ignore_certain_fields,
     strip_leading_whitespace,
 ]
 
@@ -69,6 +70,72 @@ def csv2dicts(csv_bytes: bytes) -> ExpDicts:
 
 
 WEB_PARA_RE = re.compile(r'^<div class="block-paragraph">(.*)</div>$')
+
+DbDict = dict[str, Any]
+DbDicts = Iterable[DbDict]
+
+
+def _models2dicts(model_instances: Any) -> DbDicts:
+    return json.loads(serializers.serialize("json", model_instances))
+
+
+def get_whatsapp_template_json() -> DbDicts:
+    templates = [*_models2dicts(WhatsAppTemplate.objects.all())]
+    return templates
+
+
+def _is_json_field(field_name: str) -> bool:
+    return field_name in {"example_values"}
+
+
+def per_template(
+    filter_func: Callable[[DbDict], DbDict]
+) -> Callable[[DbDicts], DbDicts]:
+    @wraps(filter_func)
+    def fp(templates: DbDicts) -> DbDicts:
+        return [filter_func(template) for template in templates]
+
+    return fp
+
+
+@per_template
+def decode_json_fields(template: DbDict) -> DbDict:
+
+    fields = {
+        k: json.loads(v) if _is_json_field(k) else v
+        for k, v in template["fields"].items()
+    }
+    return template | {"fields": fields}
+
+
+def _update_field(
+    templates: DbDicts, field_name: str, update_fn: Callable[[Any], Any]
+) -> DbDicts:
+    for t in templates:
+        fields = t["fields"]
+        yield t | {"fields": {**fields, field_name: update_fn(fields[field_name])}}
+
+
+def normalise_pks(templates: DbDicts) -> DbDicts:
+    min_pk = min(t["pk"] for t in templates)
+    return [_normalise_pks(template, min_pk) for template in templates]
+
+def _normalise_pks(template: DbDict, min_pk: str) -> DbDict:
+    return template | {"pk": template["pk"] - min_pk}
+
+
+
+@per_template
+def remove_example_value_ids(template: DbDict) -> DbDict:
+    if "example_values" in template["fields"]:
+        example_values = template["fields"]["example_values"]
+        for example_value in example_values:
+            example_value.pop("id", None)
+
+    return template
+
+
+WHATSAPP_TEMPLATE_FILTER_FUNCS = [remove_example_value_ids, normalise_pks]
 
 
 @dataclass
@@ -123,15 +190,11 @@ class ImportExport:
     def export_whatsapp_template(self) -> bytes:
         """
         Export all (or filtered) content in the configured format.
-
-        FIXME:
-         * If we filter the export by locale, we only get ContentPage entries
-           for the given language, but we still get ContentPageIndex rows for
-           all languages.
         """
         url = f"/admin/snippets/home/whatsapptemplate/?export={self.format}"
         content = self.admin_client.get(url).content
         # Hopefully we can get rid of this at some point.
+        print(f"Content = {content}")
         if self.format == "csv":
             print("-v-CONTENT-v-")
             print(content.decode())
@@ -169,6 +232,16 @@ class ImportExport:
         src = csv2dicts(src_bytes)
         dst = csv2dicts(dst_bytes)
         return filter_exports(src, dst)
+
+    def get_whatsapp_template_json(self) -> DbDicts:
+        """
+        Serialize all Whatsapp Template instances and normalize things that vary across
+        import/export.
+        """
+        templates = decode_json_fields(get_whatsapp_template_json())
+        for ff in WHATSAPP_TEMPLATE_FILTER_FUNCS:
+            templates = ff(templates)
+        return sorted(templates, key=lambda p: p["pk"])
 
 
 @pytest.fixture(params=["csv", "xlsx"])
@@ -216,41 +289,58 @@ class TestImportExportRoundtrip:
 
         csv_bytes = csv_impexp.import_file("whatsapp-template-simple.csv")
         content = csv_impexp.export_whatsapp_template()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        assert dst == src
+        csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert export == csv
 
-    def test_less_simple_multiple_questions(self, csv_impexp: ImportExport) -> None:
+    def test_less_simple_with_quick_replies(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a simple CSV file with two whatsapp templates and
-        multiple questions and export it
+        Importing a simple CSV file with one whatsapp templates including quick replies
 
-        (This uses whatsapp-template-less-simple-multiple.csv.)
+
+        (This uses whatsapp-template-less-simple.csv.)
 
         """
-        csv_bytes = csv_impexp.import_file("whatsapp-template-less-simple-multiple.csv")
+        csv_bytes = csv_impexp.import_file("whatsapp-template-less-simple.csv")
         content = csv_impexp.export_whatsapp_template()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        print(f"SRC {src}")
-        print(f"DST {dst}")
-        assert dst == src
+        csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert export == csv
 
     def test_multiple_whatsapp_templates(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a simple CSV file with more than one whatsapp template and
-        multiple questions and export it
+        Importing a simple CSV file with more than one whatsapp template and export it
 
-        (This uses multiple_whatsapp_templates.csv.)
-
-        """
-
-    def test_comma_separated_answers(self, csv_impexp: ImportExport) -> None:
-        """
-        Importing a CSV file with multiple whatsapp templates. Some with comma
-        separated answers and some without commas.
-
-        (This uses comma_sep_whatsapp_templates.csv.)
+        (This uses whatsapp-template-multiple.csv)
 
         """
+        csv_bytes = csv_impexp.import_file("whatsapp-template-multiple.csv")
+        content = csv_impexp.export_whatsapp_template()
+        csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert export == csv
+
+    def test_single_whatsapp_template(self, impexp: ImportExport) -> None:
+        """
+        Exporting then reimporting leaves the database in the same state we started with
+        """
+        template = WhatsAppTemplate.objects.create(
+            name="wa_title",
+            message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[
+                ("example_values", "Ev1"),
+                ("example_values", "Ev2"),
+            ],
+            submission_name="testname",
+            submission_status="NOT YET SUBMITTED",
+            submission_result="test result",
+
+
+        )
+
+        orig = impexp.get_whatsapp_template_json()
+        impexp.export_reimport()
+        imported = impexp.get_whatsapp_template_json()
+        assert imported == orig
 
 
 @pytest.mark.django_db()
@@ -264,6 +354,13 @@ class TestImportExport:
         """
         Importing an invalid CSV file leaves the db as-is.
         """
+        csv_bytes = csv_impexp.import_file("whatsapp-template-simple.csv")
+        with pytest.raises(ImportWhatsAppTemplateException) as e:
+            csv_impexp.import_file("whatsapp-template-broken.csv")
+        assert e.value.message == "Language code not found: "
+        content = csv_impexp.export_whatsapp_template()
+        csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert export == csv
 
     def test_invalid_locale_code(self, csv_impexp: ImportExport) -> None:
         """

@@ -1516,7 +1516,7 @@ class WhatsAppTemplate(
         )
 
         if not settings.WHATSAPP_CREATE_TEMPLATES:
-            return
+            return revision
 
         # If there are any missing fields in the previous revision, then carry on
         if previous_revision:
@@ -1569,6 +1569,7 @@ class WhatsAppTemplate(
             )
 
         message = self.message
+
         # TODO: Explain what this does, or find a cleaner implementation
 
         # Checks for mismatches in the number of opening and closing brackets.  First from right to left, then from left to right
@@ -1576,6 +1577,13 @@ class WhatsAppTemplate(
         right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
         left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
         mismatches = right_mismatch + left_mismatch
+
+        example_values = self.example_values.raw_data
+        for ev in example_values:
+            if "," in ev["value"]:
+                errors["example_values"] = ValidationError(
+                    "Example values cannot contain commas"
+                )
 
         if mismatches:
             errors.setdefault("message", []).append(

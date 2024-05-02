@@ -417,7 +417,6 @@ class ContentPageTests(TestCase):
         ocs.save()
         ocs.save_revision().publish()
 
-        # TODO: FWB Add whatsapp template links test
         page_links, ocs_links, wat_links = test_page.get_all_links()
 
         self.assertListEqual(
@@ -447,7 +446,7 @@ class ContentPageTests(TestCase):
         test_page = PageBuilder.build_cp(
             parent=main_menu, slug="page1", title="Page1", bodies=[]
         )
-        # TODO: FWB Add whatsapp template links test
+
         page_links, ocs_links, wat_links = test_page.get_all_links()
 
         self.assertListEqual([], page_links)

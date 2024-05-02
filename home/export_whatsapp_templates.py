@@ -65,7 +65,6 @@ class WhatsAppTemplateExporter:
             )
 
 
-# TODO: FWB to check how to use this with Rudi
 def filter_non_empty(items: Iterable[str]) -> Iterator[str]:
     """
     Ensures only truthy values are present in the iterable
