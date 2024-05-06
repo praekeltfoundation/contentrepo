@@ -418,7 +418,7 @@ class ContentPageTests(TestCase):
         ocs.save()
         ocs.save_revision().publish()
 
-        page_links, ocs_links = test_page.get_all_links()
+        page_links, ocs_links, wat_links = test_page.get_all_links()
 
         self.assertListEqual(
             [
@@ -448,7 +448,7 @@ class ContentPageTests(TestCase):
             parent=main_menu, slug="page1", title="Page1", bodies=[]
         )
 
-        page_links, ocs_links = test_page.get_all_links()
+        page_links, ocs_links, wat_links = test_page.get_all_links()
 
         self.assertListEqual([], page_links)
         self.assertListEqual([], ocs_links)

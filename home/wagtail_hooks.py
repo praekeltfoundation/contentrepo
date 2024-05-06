@@ -22,6 +22,8 @@ from .views import (  # isort:skip
     PageViewReportView,
     ContentUploadView,
     AssessmentUploadView,
+    CustomIndexViewWhatsAppTemplate,
+    WhatsAppTemplateUploadView,
 )
 
 
@@ -29,8 +31,7 @@ from .views import (  # isort:skip
 def before_delete_page(request, page):
     if page.content_type.name != ContentPage._meta.verbose_name:
         return
-
-    page_links, orderedcontentset_links = page.get_all_links()
+    page_links, orderedcontentset_links, wat_links = page.get_all_links()
 
     if page_links or orderedcontentset_links:
         msg_parts = ["You can't delete this page while it is linked."]
@@ -62,6 +63,11 @@ def register_import_urls():
             "import_assessment/",
             AssessmentUploadView.as_view(),
             name="import_assessment",
+        ),
+        path(
+            "import_whatsapptemplate/",
+            WhatsAppTemplateUploadView.as_view(),
+            name="import_whatsapptemplate",
         ),
     ]
 
@@ -230,7 +236,7 @@ class OrderedContentSetViewSet(SnippetViewSet):
     search_fields = ("name", "profile_fields")
 
 
-class WhatsAppTemplateViewSet(SnippetViewSet):
+class WhatsAppTemplateAdmin(SnippetViewSet):
     model = WhatsAppTemplate
     body_truncate_size = 200
     icon = "order"
@@ -238,6 +244,7 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
     add_to_admin_menu = True
     add_to_settings_menu = False
     exclude_from_explorer = False
+    list_export = "name"
     list_display = (
         "name",
         "category",
@@ -247,6 +254,7 @@ class WhatsAppTemplateViewSet(SnippetViewSet):
         "example_values",
         "submission_status",
     )
+    index_view_class = CustomIndexViewWhatsAppTemplate
 
     panels = [
         MultiFieldPanel(
@@ -322,4 +330,4 @@ register_snippet(OrderedContentSetViewSet)
 modeladmin_register(ContentPageAdmin)
 # Flag for turning on Standalone Whatsapp Templates, still in development
 if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
-    register_snippet(WhatsAppTemplateViewSet)
+    register_snippet(WhatsAppTemplateAdmin)
