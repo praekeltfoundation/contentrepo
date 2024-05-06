@@ -144,7 +144,6 @@ class WhatsAppTemplateImporter:
 
 @dataclass(slots=True, frozen=True)
 class ContentRow:
-    template_id: int | None = None
     name: str = ""
     category: str = ""
     locale: str = ""
@@ -165,7 +164,6 @@ class ContentRow:
             if value and key in class_fields
         }
         return cls(
-            template_id=int(row.pop("template_id")) if row.get("template_id") else None,
             name=str(row.pop("name", "")),
             category=str(row.pop("category", "")),
             quick_replies=deserialise_list(row.pop("quick_replies", "")),
@@ -175,16 +173,6 @@ class ContentRow:
             submission_result=str(row.pop("submission_result", "")),
             **row,
         )
-
-
-def deserialise_dict(value: str) -> dict[str, str]:
-    if not value:
-        return {}
-    result = {}
-    for item in value.strip().split(","):
-        key, value = item.split(":")
-        result[key.strip()] = value.strip()
-    return result
 
 
 def deserialise_list(value: str) -> list[str]:

@@ -1,6 +1,5 @@
 import csv
 import json
-import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from functools import wraps
@@ -43,23 +42,9 @@ def filter_both(
     return ff
 
 
-@filter_both
-def strip_leading_whitespace(entry: ExpDict) -> ExpDict:
-    # FIXME: Do we expect imported content to have leading spaces removed?
-    bodies = {k: v.lstrip(" ") for k, v in entry.items() if k.endswith("_body")}
-    return {**entry, **bodies}
-
-
-EXPORT_FILTER_FUNCS = [
-    strip_leading_whitespace,
-]
-
-
 def filter_exports(srcs: ExpDicts, dsts: ExpDicts) -> ExpDictsPair:
     fsrcs, fdsts = [], []
     for src, dst in zip(srcs, dsts, strict=True):
-        for ff in EXPORT_FILTER_FUNCS:
-            src, dst = ff(src, dst)
         fsrcs.append(src)
         fdsts.append(dst)
     return fsrcs, fdsts
@@ -68,8 +53,6 @@ def filter_exports(srcs: ExpDicts, dsts: ExpDicts) -> ExpDictsPair:
 def csv2dicts(csv_bytes: bytes) -> ExpDicts:
     return list(csv.DictReader(StringIO(csv_bytes.decode())))
 
-
-WEB_PARA_RE = re.compile(r'^<div class="block-paragraph">(.*)</div>$')
 
 DbDict = dict[str, Any]
 DbDicts = Iterable[DbDict]

@@ -1463,15 +1463,15 @@ class WhatsAppTemplate(
 
     submission_result = models.TextField(
         help_text="The result of submitting the template",
-        null=True,
         blank=True,
         max_length=4096,
+        default="",
     )
     submission_name = models.TextField(
         help_text="The name of the template that was submitted",
-        null=True,
         blank=True,
         max_length=1024,
+        default="",
     )
 
     search_fields = [

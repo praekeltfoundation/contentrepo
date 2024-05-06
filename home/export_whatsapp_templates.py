@@ -1,7 +1,7 @@
 import copy
 import csv
 import io
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable
 from dataclasses import asdict, astuple, dataclass, fields
 from math import ceil
 
@@ -38,15 +38,15 @@ class ExportRow:
 
 
 class WhatsAppTemplateExporter:
-    rows: list[dict[str | int, str | int]]
 
     def __init__(self, queryset: PageQuerySet):
-        self.rows = []
+        self.rows = []  #  type:  list[dict[str | int, str | int]]
         self.queryset = queryset
 
     def perform_export(self) -> Iterable[ExportRow]:
-        image_link = ""
+
         for item in self.queryset:
+            image_link = ""
             if item.image:
                 image_link = item.image.file.url
             yield ExportRow(
@@ -63,15 +63,6 @@ class WhatsAppTemplateExporter:
                 submission_status=str(item.submission_status),
                 submission_result=(item.submission_result),
             )
-
-
-def filter_non_empty(items: Iterable[str]) -> Iterator[str]:
-    """
-    Ensures only truthy values are present in the iterable
-    """
-    for item in items:
-        if item:
-            yield item
 
 
 def serialize_list(items: Iterable[str]) -> str:
