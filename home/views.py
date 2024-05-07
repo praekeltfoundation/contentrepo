@@ -115,6 +115,7 @@ class PageViewReportView(ReportView):
     title = "Page views"
     template_name = "reports/page_view_report.html"
     filterset_class = PageViewFilterSet
+    paginate_by = None
 
     def get_queryset(self):
         return PageView.objects.all()
