@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Document upload extension validation
 - Update tests to use model validations and update test data
 - updated ordered content set status to include In Moderation and Live + In Moderation
+- Remove pagination on page view report
 
 -->
 ## v1.1.0
