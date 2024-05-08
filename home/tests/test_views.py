@@ -1,6 +1,9 @@
+from datetime import datetime, timedelta
 import json
+from unittest.mock import patch
 from urllib.parse import urlencode
 
+from django.urls import reverse
 import pytest
 from bs4 import BeautifulSoup
 from pytest_django import asserts
@@ -8,8 +11,9 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from wagtail.models import Locale
 
-from home.models import ContentPageRating, HomePage
+from home.models import ContentPageRating, HomePage, PageView
 from home.serializers import ContentPageRatingSerializer, PageViewSerializer
+from home.views import PageViewFilterSet, PageViewReportView
 
 from .page_builder import (
     MBlk,
@@ -688,3 +692,112 @@ class TestOrderedContentImportView:
         assert find_options(form, "file_type") == ["CSV file", "Excel File"]
 
         assert find_options(soup, "purge") == ["No", "Yes"]
+
+@pytest.mark.django_db
+class TestPageViewReportView:
+    def create_content_page(self):
+        """
+        Helper function to create pages needed for each test.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        bodies = [WABody("default page", [WABlk("default body")])]
+
+        content_page = PageBuilder.build_cp(
+            parent=main_menu, slug="default-page", title="default page", bodies=bodies
+        )
+        return content_page
+
+    def test_get_queryset(self):
+        """
+        Check if get_queryset returns all PageView objects
+        """
+        content_page = self.create_content_page()
+  
+        content_page.views.create(revision=content_page.get_latest_revision())
+        content_page.views.create(revision=content_page.get_latest_revision())
+
+        view = PageViewReportView()
+        queryset = view.get_queryset()
+
+        assert queryset.count() == PageView.objects.count()
+
+
+    def test_get_context_data(self):
+        content_page = self.create_content_page()
+  
+        content_page.views.create(revision=content_page.get_latest_revision())
+        content_page.views.create(revision=content_page.get_latest_revision())
+    
+        view = PageViewReportView()
+
+        with patch.object(view, 'get_queryset') as mock_get_queryset:
+            mock_get_queryset.return_value = PageView.objects.all()
+            view.object_list = list(mock_get_queryset.return_value)
+
+            with patch.object(view, 'get_views_data') as mock_get_views_data:
+                mock_get_views_data.return_value = {"data": [], "labels": []}
+                context = view.get_context_data()
+
+                self.assertIn("object_list", context)
+                self.assertIn("page_view_data", context)
+
+    def test_template_rendering(self,admin_client):
+        """
+        Check if the correct template is used and context data is rendered properly
+        """
+        url = reverse('page_view_report')
+        response = admin_client.get(url)
+        asserts.assertTemplateUsed(response, 'reports/page_view_report.html')
+        asserts.assertContains(response, 'Page views')
+
+
+
+    # def test_timestamp_filter(self):
+    #     date = datetime.now()
+    #     date2 = date - timedelta(days=90)
+
+    #     content_page = self.create_content_page()
+
+    #     PageView.objects.create(timestamp=date, page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
+    #     PageView.objects.create(timestamp=date2, page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
+    #     PageView.objects.create(timestamp=date2, page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="sms")
+
+
+    #     year = date.year
+    #     month = date.month
+
+    #     date_from = datetime(year, month, 1)
+    #     date_to = datetime(year, month, 30)
+    #     filter_data = {'timestamp': [date_from, date_to]}
+    #     filter_set = PageViewFilterSet(filter_data, queryset=PageView.objects.all())
+    #     filtered_queryset = filter_set.qs
+        
+    #     assert filtered_queryset.count() == 2
+
+    def test_platform_filter(self):
+        content_page = self.create_content_page()
+
+        PageView.objects.create(timestamp="2023-01-01", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="web")
+        PageView.objects.create(timestamp="2024-01-01", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
+        PageView.objects.create(timestamp="2024-01-15", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
+
+        filterset = {'platform': 'web'}
+        filter_set = PageViewFilterSet(filterset, queryset=PageView.objects.all())
+        filtered_queryset = filter_set.qs
+
+        assert filtered_queryset.count() == 1
+
+    def test_page_filter(self):
+        content_page = self.create_content_page()
+
+        PageView.objects.create(timestamp="2023-01-01", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="web")
+        PageView.objects.create(timestamp="2024-01-01", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
+        PageView.objects.create(timestamp="2024-01-15", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
+
+        filterset_data = {'page': content_page.id}
+        filter_set = PageViewFilterSet(filterset_data, queryset=PageView.objects.all())
+        filtered_queryset = filter_set.qs
+
+        assert filtered_queryset.count() == 3
