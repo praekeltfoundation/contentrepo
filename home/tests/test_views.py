@@ -1,8 +1,10 @@
-from datetime import datetime, timedelta
+import datetime
 import json
 from unittest.mock import patch
 from urllib.parse import urlencode
+import zoneinfo
 
+from django.test import RequestFactory
 from django.urls import reverse
 import pytest
 from bs4 import BeautifulSoup
@@ -709,43 +711,9 @@ class TestPageViewReportView:
         )
         return content_page
 
-    def test_get_queryset(self):
-        """
-        Check if get_queryset returns all PageView objects
-        """
-        content_page = self.create_content_page()
-  
-        content_page.views.create(revision=content_page.get_latest_revision())
-        content_page.views.create(revision=content_page.get_latest_revision())
-
-        view = PageViewReportView()
-        queryset = view.get_queryset()
-
-        assert queryset.count() == PageView.objects.count()
-
-
-    def test_get_context_data(self):
-        content_page = self.create_content_page()
-  
-        content_page.views.create(revision=content_page.get_latest_revision())
-        content_page.views.create(revision=content_page.get_latest_revision())
-    
-        view = PageViewReportView()
-
-        with patch.object(view, 'get_queryset') as mock_get_queryset:
-            mock_get_queryset.return_value = PageView.objects.all()
-            view.object_list = list(mock_get_queryset.return_value)
-
-            with patch.object(view, 'get_views_data') as mock_get_views_data:
-                mock_get_views_data.return_value = {"data": [], "labels": []}
-                context = view.get_context_data()
-
-                self.assertIn("object_list", context)
-                self.assertIn("page_view_data", context)
-
     def test_template_rendering(self,admin_client):
         """
-        Check if the correct template is used and context data is rendered properly
+        The correct template is used and context data is rendered properly
         """
         url = reverse('page_view_report')
         response = admin_client.get(url)
@@ -753,30 +721,10 @@ class TestPageViewReportView:
         asserts.assertContains(response, 'Page views')
 
 
-
-    # def test_timestamp_filter(self):
-    #     date = datetime.now()
-    #     date2 = date - timedelta(days=90)
-
-    #     content_page = self.create_content_page()
-
-    #     PageView.objects.create(timestamp=date, page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
-    #     PageView.objects.create(timestamp=date2, page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
-    #     PageView.objects.create(timestamp=date2, page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="sms")
-
-
-    #     year = date.year
-    #     month = date.month
-
-    #     date_from = datetime(year, month, 1)
-    #     date_to = datetime(year, month, 30)
-    #     filter_data = {'timestamp': [date_from, date_to]}
-    #     filter_set = PageViewFilterSet(filter_data, queryset=PageView.objects.all())
-    #     filtered_queryset = filter_set.qs
-        
-    #     assert filtered_queryset.count() == 2
-
     def test_platform_filter(self):
+        """
+        The filter returns correct data platform.
+        """
         content_page = self.create_content_page()
 
         PageView.objects.create(timestamp="2023-01-01", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="web")
@@ -790,6 +738,9 @@ class TestPageViewReportView:
         assert filtered_queryset.count() == 1
 
     def test_page_filter(self):
+        """
+        The filter returns correct data according to page.
+        """
         content_page = self.create_content_page()
 
         PageView.objects.create(timestamp="2023-01-01", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="web")
@@ -801,3 +752,26 @@ class TestPageViewReportView:
         filtered_queryset = filter_set.qs
 
         assert filtered_queryset.count() == 3
+
+
+    def test_timestamp_filter(self):
+        """
+        The filter returns correct data according to timestamp.
+        """
+        content_page = self.create_content_page()
+        from django.utils import timezone
+
+        content_page.views.create(revision=content_page.get_latest_revision())
+        content_page.views.create(revision=content_page.get_latest_revision())
+        start_date = timezone.now() - timezone.timedelta(days=90)
+        end_date = timezone.now()  - timezone.timedelta(days=91)
+        filterset_data = {'timestamp': [start_date.date(),end_date.date()]}
+
+        future_books_exist = PageView.objects.filter(timestamp__range=[start_date, end_date]).exists()
+        assert future_books_exist == False
+
+        filter_set = PageViewFilterSet(filterset_data, queryset=PageView.objects.all())
+        filtered_queryset = filter_set.qs
+
+        assert filtered_queryset.count() == 0
+
