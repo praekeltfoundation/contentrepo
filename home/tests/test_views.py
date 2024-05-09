@@ -763,8 +763,8 @@ class TestPageViewReportView:
         end_date = timezone.now()  - timezone.timedelta(days=91)
         filterset_data = {'timestamp': [start_date.date(),end_date.date()]}
 
-        future_books_exist = PageView.objects.filter(timestamp__range=[start_date, end_date]).exists()
-        assert future_books_exist == False
+        pageview_exists = PageView.objects.filter(timestamp__range=[start_date, end_date]).exists()
+        assert pageview_exists == False
 
         filter_set = PageViewFilterSet(filterset_data, queryset=PageView.objects.all())
         filtered_queryset = filter_set.qs
