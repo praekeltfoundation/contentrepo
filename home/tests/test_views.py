@@ -1,10 +1,6 @@
-import datetime
 import json
-from unittest.mock import patch
 from urllib.parse import urlencode
-import zoneinfo
 
-from django.test import RequestFactory
 from django.urls import reverse
 import pytest
 from bs4 import BeautifulSoup
@@ -15,7 +11,7 @@ from wagtail.models import Locale
 
 from home.models import ContentPageRating, HomePage, PageView
 from home.serializers import ContentPageRatingSerializer, PageViewSerializer
-from home.views import PageViewFilterSet, PageViewReportView
+from home.views import PageViewFilterSet
 
 from .page_builder import (
     MBlk,
