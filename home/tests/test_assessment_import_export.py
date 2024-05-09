@@ -13,6 +13,7 @@ from django.core import serializers  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
 from home.assessment_import_export import import_assessment
+from home.content_import_export import import_content
 from home.import_assessments import ImportAssessmentException
 from home.models import (
     Assessment,
@@ -193,6 +194,22 @@ class ImportExport:
         content = self.read_bytes(path_str, path_base)
         self.import_assessment(content, **kw)
         return content
+
+    def import_content_file(
+        self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE, **kw: Any
+    ) -> bytes:
+        """
+        Import given content file in the configured format with the configured importer.
+        """
+        content = self.read_bytes(path_str, path_base)
+        self.import_content(content, **kw)
+        return content
+
+    def import_content(self, content_bytes: bytes, **kw: Any) -> None:
+        """
+        Import given content in the configured format with the configured importer.
+        """
+        import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
 
     def export_reimport(self) -> None:
         """
@@ -420,3 +437,12 @@ class TestImportExport:
 
         assert e.value.row_num == 2
         assert e.value.message == "Language code not found: fakecode"
+
+    def test_import_assessment_xlsx(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing an XLSX file with Assessments should not break
+        """
+        xlsx_impexp.import_content_file("assessment_results.xlsx", purge=False)
+        xlsx_impexp.import_file("assessment.xlsx", purge=False)
+        content_pages = Assessment.objects.all()
+        assert len(content_pages) > 0
