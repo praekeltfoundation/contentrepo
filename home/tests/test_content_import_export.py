@@ -710,8 +710,8 @@ class TestImportExport:
 
         assert e.value.row_num == 4
         # FIXME: Find a better way to represent this.
-        assert "translation_key" in e.value.message
-        assert "“” is not a valid UUID." in e.value.message
+        assert "translation_key" in e.value.message[0]
+        assert "“” is not a valid UUID." in e.value.message[0]
 
         # A ContentPage without a translation key fails
         with pytest.raises(ImportException) as e:
@@ -719,8 +719,8 @@ class TestImportExport:
 
         assert e.value.row_num == 5
         # FIXME: Find a better way to represent this.
-        assert "translation_key" in e.value.message
-        assert "“” is not a valid UUID." in e.value.message
+        assert "translation_key" in e.value.message[0]
+        assert "“” is not a valid UUID." in e.value.message[0]
 
     def test_invalid_locale_name(self, csv_impexp: ImportExport) -> None:
         """
@@ -731,7 +731,7 @@ class TestImportExport:
             csv_impexp.import_file("invalid-locale-name.csv")
 
         assert e.value.row_num == 2
-        assert e.value.message == "Language not found: NotEnglish"
+        assert e.value.message == ["Language not found: NotEnglish"]
 
     def test_multiple_locales_for_name(
         self, csv_impexp: ImportExport, settings: SettingsWrapper
@@ -748,10 +748,9 @@ class TestImportExport:
             csv_impexp.import_file("invalid-locale-name.csv")
 
         assert e.value.row_num == 2
-        assert (
-            e.value.message
-            == "Multiple codes for language: NotEnglish -> ['en1', 'en2']"
-        )
+        assert e.value.message == [
+            "Multiple codes for language: NotEnglish -> ['en1', 'en2']"
+        ]
 
     def test_locale_HomePage_DNE(self, csv_impexp: ImportExport) -> None:
         """
@@ -762,10 +761,9 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("content_without_locale_homepage.csv")
         assert e.value.row_num == 13
-        assert (
-            e.value.message
-            == "You are trying to add a child page to a 'Portuguese' HomePage that does not exist. Please create the 'Portuguese' HomePage first"
-        )
+        assert e.value.message == [
+            "You are trying to add a child page to a 'Portuguese' HomePage that does not exist. Please create the 'Portuguese' HomePage first"
+        ]
 
     def test_missing_parent(self, csv_impexp: ImportExport) -> None:
         """
@@ -776,11 +774,10 @@ class TestImportExport:
             csv_impexp.import_file("missing-parent.csv")
 
         assert e.value.row_num == 2
-        assert (
-            e.value.message
-            == "Cannot find parent page with title 'missing-parent' and locale "
+        assert e.value.message == [
+            "Cannot find parent page with title 'missing-parent' and locale "
             "'English'"
-        )
+        ]
 
     def test_multiple_parents(self, csv_impexp: ImportExport) -> None:
         """
@@ -796,11 +793,10 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("missing-parent.csv", purge=False)
         assert e.value.row_num == 2
-        assert (
-            e.value.message
-            == "Multiple pages with title 'missing-parent' and locale 'English' for "
+        assert e.value.message == [
+            "Multiple pages with title 'missing-parent' and locale 'English' for "
             "parent page: ['missing-parent1', 'missing-parent2']"
-        )
+        ]
 
     def test_message_for_missing_page(self, csv_impexp: ImportExport) -> None:
         """
@@ -816,11 +812,10 @@ class TestImportExport:
             csv_impexp.import_file("message-row-missing-page.csv")
 
         assert e.value.row_num == 4
-        assert (
-            e.value.message
-            == "This is a message for page with slug 'not-cp-import-export' and locale "
+        assert e.value.message == [
+            "This is a message for page with slug 'not-cp-import-export' and locale "
             "'English', but no such page exists"
-        )
+        ]
 
     def test_variation_for_missing_page(self, csv_impexp: ImportExport) -> None:
         """
@@ -836,11 +831,10 @@ class TestImportExport:
             csv_impexp.import_file("variation-row-missing-page.csv")
 
         assert e.value.row_num == 4
-        assert (
-            e.value.message
-            == "This is a variation for the content page with slug 'not-cp-import-export' and locale "
+        assert e.value.message == [
+            "This is a variation for the content page with slug 'not-cp-import-export' and locale "
             "'English', but no such page exists"
-        )
+        ]
 
     def test_go_to_page_button_missing_page(self, csv_impexp: ImportExport) -> None:
         """
@@ -851,11 +845,10 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("missing-gotopage.csv")
         assert e.value.row_num == 2
-        assert (
-            e.value.message
-            == "No pages found with slug 'missing' and locale 'English' for go_to_page "
+        assert e.value.message == [
+            "No pages found with slug 'missing' and locale 'English' for go_to_page "
             "button 'Missing' on page 'ma_import-export'"
-        )
+        ]
 
     def test_missing_related_pages(self, csv_impexp: ImportExport) -> None:
         """
@@ -866,11 +859,10 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("missing-related-page.csv")
         assert e.value.row_num == 2
-        assert (
-            e.value.message
-            == "Cannot find related page with slug 'missing related' and locale "
+        assert e.value.message == [
+            "Cannot find related page with slug 'missing related' and locale "
             "'English'"
-        )
+        ]
 
     def test_invalid_wa_template_category(self, csv_impexp: ImportExport) -> None:
         """
@@ -882,10 +874,9 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices."
-        )
+        assert e.value.message == [
+            "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices."
+        ]
 
     def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
         """
@@ -897,10 +888,9 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
-        )
+        assert e.value.message == [
+            "Validation error: example_values - [['The number of example values provided (1) does not match the number of variables used in the template (3)']]"
+        ]
 
     def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
         """
@@ -918,10 +908,9 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
-        )
+        assert e.value.message == [
+            "Validation error: example_values - [['The number of example values provided (1) does not match the number of variables used in the template (3)']]"
+        ]
 
     def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
         """
@@ -934,10 +923,9 @@ class TestImportExport:
 
         assert e.value.row_num == 2
         # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
-        )
+        assert e.value.message == [
+            "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
+        ]
 
     def test_cpi_validation_failure_update(self, csv_impexp: ImportExport) -> None:
         """
@@ -953,10 +941,9 @@ class TestImportExport:
 
         assert e.value.row_num == 2
         # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
-        )
+        assert e.value.message == [
+            "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
+        ]
 
     def test_ContentPageIndex_required_fields(self, csv_impexp: ImportExport) -> None:
         """
@@ -1009,10 +996,9 @@ class TestImportExport:
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
-        assert (
-            e.value.message
-            == "Validation error: footer - Ensure this value has at most 60 characters (it has 110)."
-        )
+        assert e.value.message == [
+            "Validation error: footer - [['Ensure this value has at most 60 characters (it has 110).']]"
+        ]
 
     def test_list_items_maximum_num(self, csv_impexp: ImportExport) -> None:
         """
@@ -1023,10 +1009,9 @@ class TestImportExport:
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
-        assert (
-            e.value.message
-            == "Validation error: list_items - The maximum number of items is 10"
-        )
+        assert e.value.message == [
+            "Validation error: list_items - [['The maximum number of items is 10']]"
+        ]
 
     def test_list_items_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
@@ -1037,10 +1022,9 @@ class TestImportExport:
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
-        assert (
-            e.value.message
-            == "Validation error: list_items - List item (Item no 5 a very long list item) has exceeded maximum character limit of 24"
-        )
+        assert e.value.message == [
+            "Validation error: list_items - [['List item (Item no 5 a very long list item) has exceeded maximum character limit of 24']]"
+        ]
 
     def test_max_char_variation(self, csv_impexp: ImportExport) -> None:
         """
@@ -1051,10 +1035,10 @@ class TestImportExport:
             csv_impexp.import_file("max_char_variation.csv")
 
         assert e.value.row_num == 4
-        assert (
-            e.value.message
-            == "Validation error: variation_messages - Ensure this value has at most 4096 characters (it has 4097)"
-        )
+        assert e.value.message == [
+            "Content import failed on row 4: Cannot find parent page with title 'Panda' and locale 'English' ",
+            "Validation error: variation_messages - [['Select a valid choice. male is not one of the available choices.'], ['Ensure this value has at most 4096 characters (it has 4097).']]",
+        ]
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
@@ -1145,10 +1129,9 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("changed_parent.csv", purge=False)
         assert e.value.row_num == 5
-        assert (
-            e.value.message
-            == "Changing the parent from 'Home' to 'Main Menu' for the page with title 'self-help' during import is not allowed. Please use the UI"
-        )
+        assert e.value.message == [
+            "Changing the parent from 'Home' to 'Main Menu' for the page with title 'self-help' during import is not allowed. Please use the UI"
+        ]
 
     def test_import_pages_xlsx(self, xlsx_impexp: ImportExport) -> None:
         """
