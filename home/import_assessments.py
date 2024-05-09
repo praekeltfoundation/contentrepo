@@ -53,7 +53,7 @@ class AssessmentImporter:
             codes = []
             lang_name = ""
             for lang_code, lang_dn in get_content_languages().items():
-                if lang_code == lang_code_entry:
+                if lang_code == lang_code_entry or lang_dn == lang_code_entry:
                     lang_name = lang_dn
                     codes.append(lang_code)
             if not codes:
@@ -102,7 +102,9 @@ class AssessmentImporter:
         return self.parse_csv()
 
     def parse_excel(self) -> list["AssessmentRow"]:
-        workbook = load_workbook(BytesIO(self.file_content), read_only=True)
+        workbook = load_workbook(
+            BytesIO(self.file_content), read_only=True, data_only=True
+        )
         worksheet = workbook.worksheets[0]
 
         def clean_excel_cell(cell_value: str | float | datetime | None) -> str:
@@ -116,7 +118,8 @@ class AssessmentImporter:
             for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
                 if name and cell:
                     r[name] = clean_excel_cell(cell)
-            rows.append(AssessmentRow.from_flat(r))
+            if r:
+                rows.append(AssessmentRow.from_flat(r))
         return rows
 
     def parse_csv(self) -> list["AssessmentRow"]:

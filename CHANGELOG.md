@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 -Page not found api status change to 404 from 400.
+- Use cache for data when importing assessments with xlsx. 
 
 ### Added
 - content page import validation using the model
