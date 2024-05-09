@@ -706,7 +706,10 @@ class TestPageViewReportView:
             bodies = [WABody(f"default page{i}", [WABlk(f"default body{i}")])]
 
             content_page = PageBuilder.build_cp(
-                parent=main_menu, slug=f"default-page-{i}", title=f"default page{i}", bodies=bodies
+                parent=main_menu,
+                slug=f"default-page-{i}",
+                title=f"default page{i}",
+                bodies=bodies,
             )
             content_page_list.append(content_page)
         return content_page_list
