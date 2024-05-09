@@ -1,9 +1,10 @@
 import json
 from urllib.parse import urlencode
 
-from django.urls import reverse
 import pytest
 from bs4 import BeautifulSoup
+from django.urls import reverse
+from django.utils import timezone # type: ignore
 from pytest_django import asserts
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -691,6 +692,7 @@ class TestOrderedContentImportView:
 
         assert find_options(soup, "purge") == ["No", "Yes"]
 
+
 @pytest.mark.django_db
 class TestPageViewReportView:
     def create_content_page(self):
@@ -707,15 +709,14 @@ class TestPageViewReportView:
         )
         return content_page
 
-    def test_template_rendering(self,admin_client):
+    def test_template_rendering(self, admin_client):
         """
         The correct template is used and context data is rendered properly
         """
-        url = reverse('page_view_report')
+        url = reverse("page_view_report")
         response = admin_client.get(url)
-        asserts.assertTemplateUsed(response, 'reports/page_view_report.html')
-        asserts.assertContains(response, 'Page views')
-
+        asserts.assertTemplateUsed(response, "reports/page_view_report.html")
+        asserts.assertContains(response, "Page views")
 
     def test_platform_filter(self):
         """
@@ -723,11 +724,26 @@ class TestPageViewReportView:
         """
         content_page = self.create_content_page()
 
-        PageView.objects.create(timestamp="2023-01-01", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="web")
-        PageView.objects.create(timestamp="2024-01-01", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
-        PageView.objects.create(timestamp="2024-01-15", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
+        PageView.objects.create(
+            timestamp="2023-01-01",
+            page_id=content_page.id,
+            revision_id=content_page.get_latest_revision().id,
+            platform="web",
+        )
+        PageView.objects.create(
+            timestamp="2024-01-01",
+            page_id=content_page.id,
+            revision_id=content_page.get_latest_revision().id,
+            platform="whatsapp",
+        )
+        PageView.objects.create(
+            timestamp="2024-01-15",
+            page_id=content_page.id,
+            revision_id=content_page.get_latest_revision().id,
+            platform="whatsapp",
+        )
 
-        filterset = {'platform': 'web'}
+        filterset = {"platform": "web"}
         filter_set = PageViewFilterSet(filterset, queryset=PageView.objects.all())
         filtered_queryset = filter_set.qs
 
@@ -739,35 +755,51 @@ class TestPageViewReportView:
         """
         content_page = self.create_content_page()
 
-        PageView.objects.create(timestamp="2023-01-01", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="web")
-        PageView.objects.create(timestamp="2024-01-01", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
-        PageView.objects.create(timestamp="2024-01-15", page_id=content_page.id, revision_id=content_page.get_latest_revision().id, platform="whatsapp")
+        PageView.objects.create(
+            timestamp="2023-01-01",
+            page_id=content_page.id,
+            revision_id=content_page.get_latest_revision().id,
+            platform="web",
+        )
+        PageView.objects.create(
+            timestamp="2024-01-01",
+            page_id=content_page.id,
+            revision_id=content_page.get_latest_revision().id,
+            platform="whatsapp",
+        )
+        PageView.objects.create(
+            timestamp="2024-01-15",
+            page_id=content_page.id,
+            revision_id=content_page.get_latest_revision().id,
+            platform="whatsapp",
+        )
 
-        filterset_data = {'page': content_page.id}
+        filterset_data = {"page": content_page.id}
         filter_set = PageViewFilterSet(filterset_data, queryset=PageView.objects.all())
         filtered_queryset = filter_set.qs
 
         assert filtered_queryset.count() == 3
 
-
-    def test_timestamp_filter(self):
+    def test_timestamp_filter_no_data(self):
         """
         The filter returns correct data according to timestamp.
         """
         content_page = self.create_content_page()
-        from django.utils import timezone
 
         content_page.views.create(revision=content_page.get_latest_revision())
         content_page.views.create(revision=content_page.get_latest_revision())
         start_date = timezone.now() - timezone.timedelta(days=90)
-        end_date = timezone.now()  - timezone.timedelta(days=91)
-        filterset_data = {'timestamp': [start_date.date(),end_date.date()]}
+        end_date = timezone.now() - timezone.timedelta(days=91)
+        filter_data = {"timestamp_0": start_date, "timestamp_1": end_date}
 
-        pageview_exists = PageView.objects.filter(timestamp__range=[start_date, end_date]).exists()
-        assert pageview_exists == False
+        pageview_exists = PageView.objects.filter(
+            timestamp__range=[start_date, end_date]
+        ).exists()
+        assert pageview_exists is False
 
-        filter_set = PageViewFilterSet(filterset_data, queryset=PageView.objects.all())
+        filter_set = PageViewFilterSet(
+            data=filter_data, queryset=PageView.objects.all()
+        )
         filtered_queryset = filter_set.qs
 
         assert filtered_queryset.count() == 0
-
