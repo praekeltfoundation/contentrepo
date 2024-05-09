@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 import pytest
 from bs4 import BeautifulSoup
 from django.urls import reverse
-from django.utils import timezone # type: ignore
+from django.utils import timezone  # type: ignore
 from pytest_django import asserts
 from rest_framework import status
 from rest_framework.test import APIClient
