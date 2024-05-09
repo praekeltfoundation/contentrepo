@@ -695,19 +695,21 @@ class TestOrderedContentImportView:
 
 @pytest.mark.django_db
 class TestPageViewReportView:
-    def create_content_page(self):
+    def create_content_page(self, number_of_pages):
         """
         Helper function to create pages needed for each test.
         """
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        content_page_list = []
+        for i in range(number_of_pages):
+            bodies = [WABody(f"default page{i}", [WABlk(f"default body{i}")])]
 
-        bodies = [WABody("default page", [WABlk("default body")])]
-
-        content_page = PageBuilder.build_cp(
-            parent=main_menu, slug="default-page", title="default page", bodies=bodies
-        )
-        return content_page
+            content_page = PageBuilder.build_cp(
+                parent=main_menu, slug=f"default-page-{i}", title=f"default page{i}", bodies=bodies
+            )
+            content_page_list.append(content_page)
+        return content_page_list
 
     def test_template_rendering(self, admin_client):
         """
@@ -722,7 +724,8 @@ class TestPageViewReportView:
         """
         The filter returns correct data platform.
         """
-        content_page = self.create_content_page()
+        content_page = self.create_content_page(1)
+        content_page = content_page[0]
 
         PageView.objects.create(
             timestamp="2023-01-01",
@@ -753,28 +756,42 @@ class TestPageViewReportView:
         """
         The filter returns correct data according to page.
         """
-        content_page = self.create_content_page()
+        content_page = self.create_content_page(2)
+        content_page_one = content_page[0]
+        content_page_two = content_page[1]
 
         PageView.objects.create(
             timestamp="2023-01-01",
-            page_id=content_page.id,
-            revision_id=content_page.get_latest_revision().id,
+            page_id=content_page_one.id,
+            revision_id=content_page_one.get_latest_revision().id,
             platform="web",
         )
         PageView.objects.create(
             timestamp="2024-01-01",
-            page_id=content_page.id,
-            revision_id=content_page.get_latest_revision().id,
+            page_id=content_page_one.id,
+            revision_id=content_page_one.get_latest_revision().id,
             platform="whatsapp",
         )
         PageView.objects.create(
             timestamp="2024-01-15",
-            page_id=content_page.id,
-            revision_id=content_page.get_latest_revision().id,
+            page_id=content_page_one.id,
+            revision_id=content_page_one.get_latest_revision().id,
+            platform="whatsapp",
+        )
+        PageView.objects.create(
+            timestamp="2023-01-01",
+            page_id=content_page_two.id,
+            revision_id=content_page_two.get_latest_revision().id,
+            platform="web",
+        )
+        PageView.objects.create(
+            timestamp="2024-01-01",
+            page_id=content_page_two.id,
+            revision_id=content_page_two.get_latest_revision().id,
             platform="whatsapp",
         )
 
-        filterset_data = {"page": content_page.id}
+        filterset_data = {"page": content_page_one.id}
         filter_set = PageViewFilterSet(filterset_data, queryset=PageView.objects.all())
         filtered_queryset = filter_set.qs
 
@@ -784,7 +801,8 @@ class TestPageViewReportView:
         """
         The filter returns correct data according to timestamp.
         """
-        content_page = self.create_content_page()
+        content_page = self.create_content_page(1)
+        content_page = content_page[0]
 
         content_page.views.create(revision=content_page.get_latest_revision())
         content_page.views.create(revision=content_page.get_latest_revision())
