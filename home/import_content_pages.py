@@ -59,7 +59,7 @@ class ImportException(Exception):
         locale: Locale | None = None,
     ):
         self.row_num = row_num
-        self.message = message
+        self.message = [message] if isinstance(message, str) else message
         self.slug = slug
         self.locale = locale
         super().__init__()
@@ -506,14 +506,28 @@ class ShadowContentPage:
         elif isinstance(errors, list):
             error_message = [self.errors_to_strings(value) for value in errs]
         elif isinstance(errors, StreamBlockValidationError):
+
             json_data_errors = errors.as_json_data()
             field_name = list(json_data_errors["blockErrors"][0]["blockErrors"].keys())[
                 0
             ]
             error_messages = []
-            for value in json_data_errors["blockErrors"][0]["blockErrors"].values():
-                if isinstance(value, dict) and "messages" in value:
-                    error_messages.extend(value["messages"])
+
+            def extract_messages(val):
+                messages = []
+                if isinstance(val, dict):
+                    for key, value in val.items():
+                        if key == "messages":
+                            messages.append(value)
+                        else:
+                            messages.extend(extract_messages(value))
+                return messages
+
+            for val in json_data_errors["blockErrors"][0]["blockErrors"].values():
+                print(f"errors: {val}")
+                messages = extract_messages(val)
+                error_messages.append(messages)
+
             if error_messages:
                 error_messages = error_messages[0]
             error_message = f"{field_name} - {error_messages}"

@@ -228,6 +228,7 @@ class VariationBlock(blocks.StructBlock):
         validators=(MaxLengthValidator(4096),),
     )
 
+
 class NextMessageButton(blocks.StructBlock):
     title = blocks.CharBlock(
         help_text="text for the button, up to 20 characters.",
