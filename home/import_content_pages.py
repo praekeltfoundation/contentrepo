@@ -498,39 +498,49 @@ class ShadowContentPage:
                 )
 
     def errors_to_strings(self, errs: dict[str, list[str]]) -> str | list[str]:
+        messages = []
+
+        def _nested_form_data(data):
+            if isinstance(data, dict):
+                items = data.items()
+            elif isinstance(data, list):
+                items = enumerate(data)
+
+            for key, value in items:
+                key = str(key)
+                if isinstance(value, dict| list):
+                    for child_keys, child_value in _nested_form_data(value):
+                        yield [key] + child_keys, child_value
+                else:
+                    yield [key], value
+
+        def nested_form_data(data):
+            return {"-".join(key): value for key, value in _nested_form_data(data)}
+
         errors = errs[next(iter(errs))][0]
+
         if isinstance(errors, dict):
             error_message = {
                 key: self.errors_to_strings(value) for key, value in errs.items()
             }
         elif isinstance(errors, list):
             error_message = [self.errors_to_strings(value) for value in errs]
-        elif isinstance(errors, StreamBlockValidationError):
 
+        elif isinstance(errors, StreamBlockValidationError):
             json_data_errors = errors.as_json_data()
             field_name = list(json_data_errors["blockErrors"][0]["blockErrors"].keys())[
                 0
             ]
             error_messages = []
 
-            def extract_messages(val):
-                messages = []
-                if isinstance(val, dict):
-                    for key, value in val.items():
-                        if key == "messages":
-                            messages.append(value)
-                        else:
-                            messages.extend(extract_messages(value))
-                return messages
-
             for val in json_data_errors["blockErrors"][0]["blockErrors"].values():
-                print(f"errors: {val}")
-                messages = extract_messages(val)
-                error_messages.append(messages)
-
+                messages = list(nested_form_data(val).values())
+            error_messages.append(messages)
             if error_messages:
+
                 error_messages = error_messages[0]
             error_message = f"{field_name} - {error_messages}"
+
         elif isinstance(errors, ValidationError):
             field_name = list(errs.keys())[0]
             error_messages = errors.messages[0]
