@@ -508,7 +508,7 @@ class ShadowContentPage:
 
             for key, value in items:
                 key = str(key)
-                if isinstance(value, dict| list):
+                if isinstance(value, dict | list):
                     for child_keys, child_value in _nested_form_data(value):
                         yield [key] + child_keys, child_value
                 else:
