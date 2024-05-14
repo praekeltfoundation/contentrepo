@@ -498,9 +498,8 @@ class ShadowContentPage:
                 )
 
     def errors_to_strings(self, errs: dict[str, list[str]]) -> str | list[str]:
-        messages = []
 
-        def _nested_form_data(data):
+        def _nested_form_data(data: dict[str, dict] | list[str]) -> dict:
             if isinstance(data, dict):
                 items = data.items()
             elif isinstance(data, list):
