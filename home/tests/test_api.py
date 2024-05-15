@@ -567,6 +567,23 @@ class TestContentPageAPI:
         assert body["text"]["type"] == "Whatsapp_Message"
         assert body["text"]["value"]["message"] == "*Default whatsapp Content 1* 🏥"
 
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
+    def test_detail_view_platform_enabled_no_message(self, uclient, platform):
+        """
+        Fetching a detail page and selecting the <platform> content returns a
+        400 when <platform> is enabled but there are no <platform> messages in
+        the body.
+        """
+        page = self.create_content_page(body_type=platform, body_count=0)
+        setattr(page, f"enable_{platform}", True)
+        page.save()
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=true")
+        content = response.json()
+
+        assert response.status_code == 400
+        assert content == ["The requested message does not exist"]
+
     @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     def test_detail_view_platform_message(self, uclient, platform):
         """
