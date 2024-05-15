@@ -538,6 +538,36 @@ class TestContentPageAPI:
 
         assert content["has_children"] is True
 
+    def test_detail_view_whatsapp_enabled_no_message(self, uclient):
+        """
+        Fetching a detail page with WhatsApp enabled returns a 400 when there
+        are no WhatsApp messages.
+        """
+        page = self.create_content_page(body_count=0)
+        page.enable_whatsapp = True
+        page.save()
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        assert response.status_code == 400
+        assert content == ["The requested message does not exist"]
+
+    def test_detail_view_whatsapp_disabled(self, uclient):
+        """
+        Fetching a detail page with WhatsApp disabled content returns a 404
+        even if the page has WhatsApp messages.
+        """
+        page = self.create_content_page(body_count=1)
+        page.enable_whatsapp = False
+        page.save()
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        assert response.status_code == 404
+        assert content == {"message": "No ContentPage matches the given query."}
+
     def test_detail_view_whatsapp_message(self, uclient):
         """
         Fetching a detail page and selecting the WhatsApp content returns the
