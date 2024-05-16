@@ -874,6 +874,8 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
+
+        # print(e.value.message)
         assert e.value.message == [
             "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices."
         ]
@@ -889,7 +891,7 @@ class TestImportExport:
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
         assert e.value.message == [
-            "Validation error: example_values - ['The number of example values provided (1) does not match the number of variables used in the template (3)']"
+            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
         ]
 
     def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
@@ -909,7 +911,7 @@ class TestImportExport:
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
         assert e.value.message == [
-            "Validation error: example_values - ['The number of example values provided (1) does not match the number of variables used in the template (3)']"
+            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
         ]
 
     def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
@@ -997,7 +999,7 @@ class TestImportExport:
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
         assert e.value.message == [
-            "Validation error: footer - ['Ensure this value has at most 60 characters (it has 110).']"
+            "Validation error: footer - Ensure this value has at most 60 characters (it has 110)."
         ]
 
     def test_list_items_maximum_num(self, csv_impexp: ImportExport) -> None:
@@ -1010,7 +1012,7 @@ class TestImportExport:
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
         assert e.value.message == [
-            "Validation error: list_items - ['The maximum number of items is 10']"
+            "Validation error: list_items - The maximum number of items is 10"
         ]
 
     def test_list_items_maximum_characters(self, csv_impexp: ImportExport) -> None:
@@ -1023,7 +1025,7 @@ class TestImportExport:
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
         assert e.value.message == [
-            "Validation error: list_items - ['List item (Item no 5 a very long list item) has exceeded maximum character limit of 24']"
+            "Validation error: list_items - List item (Item no 5 a very long list item) has exceeded maximum character limit of 24"
         ]
 
     def test_max_char_variation(self, csv_impexp: ImportExport) -> None:
@@ -1036,7 +1038,8 @@ class TestImportExport:
 
         assert e.value.row_num == 4
         assert e.value.message == [
-            "Validation error: variation_messages - ['Select a valid choice. male is not one of the available choices.', 'Ensure this value has at most 4096 characters (it has 4097).']",
+            "Validation error: variation_messages - The minimum number of items is 1",
+            "Validation error: variation_messages - Ensure this value has at most 4096 characters (it has 4097).",
         ]
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:

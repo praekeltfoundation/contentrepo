@@ -2,6 +2,7 @@ import contextlib
 import csv
 import json
 from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
@@ -492,38 +493,43 @@ class ShadowContentPage:
                     del errs["slug"]
             # TODO: better error stuff
             if errs:
-                error_message = self.errors_to_strings(errs)
-                raise ImportException(
-                    f"Validation error: {error_message}", self.row_num
-                )
+                errors = []
+                error_message = self.errors_to_list(errs)
+                print(type(error_message))
+                for err in error_message:
+                    errors.extend(ValidationError(f"Validation error: {err}"))
+                raise ImportException(errors, self.row_num)
 
-    def errors_to_strings(self, errs: dict[str, list[str]]) -> str | list[str]:
+    # The error messages are processed and parsed into a list of messages we return to the user
+    def errors_to_list(self, errs: dict[str, list[str]]) -> str | list[str]:
 
-        def _nested_form_data(data: dict[str, dict] | list[str]) -> dict:
+        def _extract_errors(
+            data: dict[str | int, Any] | list[str]
+        ) -> Iterator[tuple[list[str], str]]:
             if isinstance(data, dict):
-                items = data.items()
+                items = list(data.items())
             elif isinstance(data, list):
-                items = enumerate(data)
+                items = list(enumerate(data))
 
             for key, value in items:
                 key = str(key)
                 if isinstance(value, dict | list):
-                    for child_keys, child_value in _nested_form_data(value):
+                    for child_keys, child_value in _extract_errors(value):
                         yield [key] + child_keys, child_value
                 else:
                     yield [key], value
 
-        def nested_form_data(data):
-            return {"-".join(key): value for key, value in _nested_form_data(data)}
+        def extract_errors(data: dict[str | int, Any] | list[str]) -> dict[str, str]:
+            return {"-".join(key): value for key, value in _extract_errors(data)}
 
         errors = errs[next(iter(errs))][0]
 
         if isinstance(errors, dict):
             error_message = {
-                key: self.errors_to_strings(value) for key, value in errs.items()
+                key: self.errors_to_list(value) for key, value in errs.items()
             }
         elif isinstance(errors, list):
-            error_message = [self.errors_to_strings(value) for value in errs]
+            error_message = [self.errors_to_list(value) for value in errs]
 
         elif isinstance(errors, StreamBlockValidationError):
             json_data_errors = errors.as_json_data()
@@ -533,17 +539,15 @@ class ShadowContentPage:
             error_messages = []
 
             for val in json_data_errors["blockErrors"][0]["blockErrors"].values():
-                messages = list(nested_form_data(val).values())
-            error_messages.append(messages)
-            if error_messages:
+                messages = list(extract_errors(val).values())
+            error_messages.extend(messages)
 
-                error_messages = error_messages[0]
-            error_message = f"{field_name} - {error_messages}"
+            error_message = [f"{field_name} - {msg}" for msg in error_messages]
 
         elif isinstance(errors, ValidationError):
             field_name = list(errs.keys())[0]
             error_messages = errors.messages[0]
-            error_message = f"{field_name} - {error_messages}"
+            error_message = [f"{field_name} - {error_messages}"]
         else:
             pass
 
