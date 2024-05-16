@@ -474,6 +474,7 @@ class ShadowContentPage:
     triggers: list[str] = field(default_factory=list)
     related_pages: list[str] = field(default_factory=list)
 
+    #FIXME: collect errors across all fields
     def validate_page_using_form(self, page: Page) -> None:
         edit_handler = page.edit_handler.bind_to_model(ContentPage)
         form_class = edit_handler.get_form_class()
