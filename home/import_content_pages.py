@@ -54,7 +54,7 @@ class ImportException(Exception):
 
     def __init__(
         self,
-        message: str,
+        message: str | list[Any],
         row_num: int | None = None,
         slug: str | None = None,
         locale: Locale | None = None,
@@ -495,7 +495,6 @@ class ShadowContentPage:
             if errs:
                 errors = []
                 error_message = self.errors_to_list(errs)
-                print(type(error_message))
                 for err in error_message:
                     errors.extend(ValidationError(f"Validation error: {err}"))
                 raise ImportException(errors, self.row_num)
