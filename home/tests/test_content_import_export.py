@@ -1042,6 +1042,21 @@ class TestImportExport:
             "Validation error: variation_messages - Ensure this value has at most 4096 characters (it has 4097).",
         ]
 
+    @pytest.mark.xfail(reason="Form creation during import needs to be fixed.")
+    def test_multiple_field_errors(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a file with multiple errors for different fields should return errors for each of those fields,
+        at the same time, for the same row
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("multiple-validation-errors.csv")
+
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (2)",
+            "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices.",
+        ]
+
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with ordered content sets should not break

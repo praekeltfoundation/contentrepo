@@ -166,10 +166,10 @@ class ContentUploadThread(UploadThread):
                 )
             )
         except Exception:
-            self.result_queue.put((messages.ERROR, "Content import failed"))
+            self.result_queue.put((messages.ERROR, ["Content import failed"]))
             logger.exception("Content import failed")
         else:
-            self.result_queue.put((messages.SUCCESS, "Content import successful"))
+            self.result_queue.put((messages.SUCCESS, ["Content import successful"]))
         # Wait until the user has fetched the result message to close the thread
         self.result_queue.join()
 

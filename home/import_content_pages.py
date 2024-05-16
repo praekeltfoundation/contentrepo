@@ -536,9 +536,9 @@ class ShadowContentPage:
                 0
             ]
             error_messages = []
-
             for val in json_data_errors["blockErrors"][0]["blockErrors"].values():
                 messages = list(extract_errors(val).values())
+
             error_messages.extend(messages)
 
             error_message = [f"{field_name} - {msg}" for msg in error_messages]
