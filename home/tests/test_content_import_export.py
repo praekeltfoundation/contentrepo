@@ -710,8 +710,8 @@ class TestImportExport:
 
         assert e.value.row_num == 4
         # FIXME: Find a better way to represent this.
-        assert "translation_key" in e.value.message[0]
-        assert "“” is not a valid UUID." in e.value.message[0]
+        assert "translation_key" in str(e.value.message)
+        assert "“” is not a valid UUID." in str(e.value.message)
 
         # A ContentPage without a translation key fails
         with pytest.raises(ImportException) as e:
@@ -719,8 +719,8 @@ class TestImportExport:
 
         assert e.value.row_num == 5
         # FIXME: Find a better way to represent this.
-        assert "translation_key" in e.value.message[0]
-        assert "“” is not a valid UUID." in e.value.message[0]
+        assert "translation_key" in str(e.value.message)
+        assert "“” is not a valid UUID." in str(e.value.message)
 
     def test_invalid_locale_name(self, csv_impexp: ImportExport) -> None:
         """
