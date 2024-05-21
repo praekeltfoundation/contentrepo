@@ -709,18 +709,20 @@ class TestImportExport:
             csv_impexp.import_file("no-translation-key-cpi.csv")
 
         assert e.value.row_num == 4
-        # FIXME: Find a better way to represent this.
-        assert "translation_key" in str(e.value.message)
-        assert "“” is not a valid UUID." in str(e.value.message)
+
+        assert e.value.message == [
+            "Validation error: translation_key - “” is not a valid UUID."
+        ]
 
         # A ContentPage without a translation key fails
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("no-translation-key-cp.csv")
 
         assert e.value.row_num == 5
-        # FIXME: Find a better way to represent this.
-        assert "translation_key" in str(e.value.message)
-        assert "“” is not a valid UUID." in str(e.value.message)
+
+        assert e.value.message == [
+            "Validation error: translation_key - “” is not a valid UUID."
+        ]
 
     def test_invalid_locale_name(self, csv_impexp: ImportExport) -> None:
         """
@@ -926,7 +928,7 @@ class TestImportExport:
         assert e.value.row_num == 2
         # FIXME: Find a better way to represent this.
         assert e.value.message == [
-            "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
+            "Validation error: translation_key - “BADUUID” is not a valid UUID."
         ]
 
     def test_cpi_validation_failure_update(self, csv_impexp: ImportExport) -> None:
@@ -944,7 +946,7 @@ class TestImportExport:
         assert e.value.row_num == 2
         # FIXME: Find a better way to represent this.
         assert e.value.message == [
-            "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
+            "Validation error: translation_key - “BADUUID” is not a valid UUID."
         ]
 
     def test_ContentPageIndex_required_fields(self, csv_impexp: ImportExport) -> None:

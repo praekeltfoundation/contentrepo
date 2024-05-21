@@ -281,8 +281,11 @@ class ContentImporter:
                 self.home_page(locale).add_child(instance=index)
             index.save_revision().publish()
         except ValidationError as err:
-            # FIXME: Find a better way to represent this.
-            raise ImportException(f"Validation error: {err}")
+            for key in err.error_dict:
+                field_name = key
+            raise ImportException(
+                f"Validation error: {field_name} - {'; '.join(err.messages)}"
+            )
 
     def create_shadow_content_page_from_row(
         self, row: "ContentRow", row_num: int
@@ -575,8 +578,12 @@ class ShadowContentPage:
                 parent.add_child(instance=page)
             page.save_revision().publish()
         except ValidationError as err:
-            # FIXME: Find a better way to represent this.
-            raise ImportException(f"Validation error: {err}", self.row_num)
+            for key in err.error_dict:
+                field_name = key
+            raise ImportException(
+                f"Validation error: {field_name} - {'; '.join(err.messages)}",
+                self.row_num,
+            )
 
     def add_web_to_page(self, page: ContentPage) -> None:
         page.enable_web = self.enable_web
