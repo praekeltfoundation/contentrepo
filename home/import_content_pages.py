@@ -280,12 +280,13 @@ class ContentImporter:
             with contextlib.suppress(NodeAlreadySaved):
                 self.home_page(locale).add_child(instance=index)
             index.save_revision().publish()
-        except ValidationError as err:
-            for key in err.error_dict:
-                field_name = key
-            raise ImportException(
-                f"Validation error: {field_name} - {'; '.join(err.messages)}"
-            )
+        except ValidationError as errors:
+            err = []
+            for error in errors:
+                field_name = error[0]
+                for msg in error[1]:
+                    err.append(f"{field_name} - {msg}")
+            raise ImportException([f"Validation error: {msg}" for msg in err])
 
     def create_shadow_content_page_from_row(
         self, row: "ContentRow", row_num: int
@@ -577,12 +578,15 @@ class ShadowContentPage:
             with contextlib.suppress(NodeAlreadySaved):
                 parent.add_child(instance=page)
             page.save_revision().publish()
-        except ValidationError as err:
-            for key in err.error_dict:
-                field_name = key
+
+        except ValidationError as errors:
+            err = []
+            for error in errors:
+                field_name = error[0]
+                for msg in error[1]:
+                    err.append(f"{field_name} - {msg}")
             raise ImportException(
-                f"Validation error: {field_name} - {'; '.join(err.messages)}",
-                self.row_num,
+                [f"Validation error: {msg}" for msg in err], self.row_num
             )
 
     def add_web_to_page(self, page: ContentPage) -> None:
