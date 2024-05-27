@@ -182,14 +182,17 @@ class ContentUploadThread(UploadThread):
             self.result_queue.put(
                 (
                     messages.ERROR,
-                    f"Content import failed on row {e.row_num}: {e.message}",
+                    [
+                        f"Content import failed on row {e.row_num}: {msg}"
+                        for msg in e.message
+                    ],
                 )
             )
         except Exception:
-            self.result_queue.put((messages.ERROR, "Content import failed"))
+            self.result_queue.put((messages.ERROR, ["Content import failed"]))
             logger.exception("Content import failed")
         else:
-            self.result_queue.put((messages.SUCCESS, "Content import successful"))
+            self.result_queue.put((messages.SUCCESS, ["Content import successful"]))
         # Wait until the user has fetched the result message to close the thread
         self.result_queue.join()
 
@@ -315,8 +318,11 @@ class ContentUploadView(View):
             try:
                 # If there's a result message from the thread, send it to the user,
                 # and call task_done to end the thread.
-                level, text = thread.result_queue.get_nowait()
-                messages.add_message(request, level, text)
+                level, texts = thread.result_queue.get_nowait()
+                if isinstance(texts, str):
+                    text = [texts]
+                for text in texts:
+                    messages.add_message(request, level, text)
                 thread.result_queue.task_done()
                 return JsonResponse({"loading": False})
             except queue.Empty:

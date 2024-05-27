@@ -2,6 +2,7 @@ import contextlib
 import csv
 import json
 from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
@@ -53,13 +54,13 @@ class ImportException(Exception):
 
     def __init__(
         self,
-        message: str,
+        message: str | list[str],
         row_num: int | None = None,
         slug: str | None = None,
         locale: Locale | None = None,
     ):
         self.row_num = row_num
-        self.message = message
+        self.message = [message] if isinstance(message, str) else message
         self.slug = slug
         self.locale = locale
         super().__init__()
@@ -279,9 +280,13 @@ class ContentImporter:
             with contextlib.suppress(NodeAlreadySaved):
                 self.home_page(locale).add_child(instance=index)
             index.save_revision().publish()
-        except ValidationError as err:
-            # FIXME: Find a better way to represent this.
-            raise ImportException(f"Validation error: {err}")
+        except ValidationError as errors:
+            err = []
+            for error in errors:
+                field_name = error[0]
+                for msg in error[1]:
+                    err.append(f"{field_name} - {msg}")
+            raise ImportException([f"Validation error: {msg}" for msg in err])
 
     def create_shadow_content_page_from_row(
         self, row: "ContentRow", row_num: int
@@ -344,6 +349,7 @@ class ContentImporter:
                 f"This is a variation for the content page with slug '{row.slug}' and locale '{locale}', but no such page exists"
             )
         whatsapp_block = page.whatsapp_body[-1]
+
         whatsapp_block.variation_messages.append(
             ShadowVariationBlock(
                 message=row.variation_body, variation_restrictions=row.variation_title
@@ -472,6 +478,7 @@ class ShadowContentPage:
     triggers: list[str] = field(default_factory=list)
     related_pages: list[str] = field(default_factory=list)
 
+    # FIXME: collect errors across all fields
     def validate_page_using_form(self, page: Page) -> None:
         edit_handler = page.edit_handler.bind_to_model(ContentPage)
         form_class = edit_handler.get_form_class()
@@ -491,34 +498,60 @@ class ShadowContentPage:
                     del errs["slug"]
             # TODO: better error stuff
             if errs:
-                error_message = self.errors_to_strings(errs)
-                raise ImportException(
-                    f"Validation error: {error_message}", self.row_num
-                )
+                errors = []
+                error_message = self.errors_to_list(errs)
+                for err in error_message:
+                    errors.append(f"Validation error: {err}")
+                raise ImportException(errors, self.row_num)
 
-    def errors_to_strings(self, errs: dict[str, list[str]]) -> str | list[str]:
+    # The error messages are processed and parsed into a list of messages we return to the user
+    def errors_to_list(self, errs: dict[str, list[str]]) -> str | list[str]:
+
+        def _extract_errors(
+            data: dict[str | int, Any] | list[str]
+        ) -> Iterator[tuple[list[str], str]]:
+            if isinstance(data, dict):
+                items = list(data.items())
+            elif isinstance(data, list):
+                items = list(enumerate(data))
+
+            for key, value in items:
+                key = str(key)
+                if isinstance(value, dict | list):
+                    for child_keys, child_value in _extract_errors(value):
+                        yield [key] + child_keys, child_value
+                else:
+                    yield [key], value
+
+        def extract_errors(data: dict[str | int, Any] | list[str]) -> dict[str, str]:
+            return {"-".join(key): value for key, value in _extract_errors(data)}
+
         errors = errs[next(iter(errs))][0]
+
         if isinstance(errors, dict):
             error_message = {
-                key: self.errors_to_strings(value) for key, value in errs.items()
+                key: self.errors_to_list(value) for key, value in errs.items()
             }
         elif isinstance(errors, list):
-            error_message = [self.errors_to_strings(value) for value in errs]
+            error_message = [self.errors_to_list(value) for value in errs]
+
         elif isinstance(errors, StreamBlockValidationError):
             json_data_errors = errors.as_json_data()
             field_name = list(json_data_errors["blockErrors"][0]["blockErrors"].keys())[
                 0
             ]
             error_messages = []
-            for value in json_data_errors["blockErrors"][0]["blockErrors"].values():
-                if isinstance(value, dict) and "messages" in value:
-                    error_messages.extend(value["messages"])
-            error_messages = error_messages[0]
-            error_message = f"{field_name} - {error_messages}"
+            for val in json_data_errors["blockErrors"][0]["blockErrors"].values():
+                messages = list(extract_errors(val).values())
+
+            error_messages.extend(messages)
+
+            error_message = [f"{field_name} - {msg}" for msg in error_messages]
+
         elif isinstance(errors, ValidationError):
             field_name = list(errs.keys())[0]
             error_messages = errors.messages[0]
-            error_message = f"{field_name} - {error_messages}"
+            error_message = [f"{field_name} - {error_messages}"]
         else:
             pass
 
@@ -545,9 +578,16 @@ class ShadowContentPage:
             with contextlib.suppress(NodeAlreadySaved):
                 parent.add_child(instance=page)
             page.save_revision().publish()
-        except ValidationError as err:
-            # FIXME: Find a better way to represent this.
-            raise ImportException(f"Validation error: {err}", self.row_num)
+
+        except ValidationError as errors:
+            err = []
+            for error in errors:
+                field_name = error[0]
+                for msg in error[1]:
+                    err.append(f"{field_name} - {msg}")
+            raise ImportException(
+                [f"Validation error: {msg}" for msg in err], self.row_num
+            )
 
     def add_web_to_page(self, page: ContentPage) -> None:
         page.enable_web = self.enable_web
