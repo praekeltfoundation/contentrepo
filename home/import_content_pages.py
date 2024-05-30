@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
+from json.decoder import JSONDecodeError
 from queue import Queue
 from typing import Any
 from uuid import uuid4
@@ -833,7 +834,7 @@ class ContentRow:
             triggers=deserialise_list(row.pop("triggers", "")),
             related_pages=deserialise_list(row.pop("related_pages", "")),
             example_values=deserialise_list(row.pop("example_values", "")),
-            buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
+            buttons=loader(row.pop("buttons", "")) if row.get("buttons") else [],
             list_items=deserialise_list(row.pop("list_items", "")),
             footer=row.pop("footer") if row.get("footer") else "",
             **row,
@@ -902,3 +903,15 @@ def deserialise_list(value: str) -> list[str]:
 
     items = list(csv.reader([value]))[0]
     return [item.strip() for item in items]
+
+def loader(value):
+    if not value:
+        return []
+    
+    try:
+         button = json.loads(value)
+    except JSONDecodeError:
+        raise ValidationError(f"Bad button: {value}")
+    
+    return button
+

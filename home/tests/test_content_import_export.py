@@ -1044,6 +1044,20 @@ class TestImportExport:
             "Validation error: variation_messages - Ensure this value has at most 4096 characters (it has 4097).",
         ]
 
+    def test_invalid_JSON_button(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a file with an invalid JSON value for the button should return a detailed error message
+        to the user
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("broken_button.csv")
+
+        assert e.value.row_num == 2
+        assert e.value.message == [
+            "Validation error: buttons - Bad JSON button: ",
+            
+        ]
+
     @pytest.mark.xfail(reason="Form creation during import needs to be fixed.")
     def test_multiple_field_errors(self, csv_impexp: ImportExport) -> None:
         """

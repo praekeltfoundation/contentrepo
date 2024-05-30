@@ -1,5 +1,6 @@
 import logging
 import re
+import json
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -11,6 +12,7 @@ from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from json.decoder import JSONDecodeError
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
@@ -334,7 +336,12 @@ class WhatsappBlock(blocks.StructBlock):
                 errors["variation_messages"] = ValidationError(
                     f"Ensure this variation message has at most 4096 characters, it has {len(message)} characters"
                 )
-
+        buttons = result["buttons"]
+        for button in buttons:
+            try:
+                button = json.loads(button)
+            except JSONDecodeError:
+                errors = ValidationError(f"Bad JSON button: {button} ")
         if errors:
             raise StructBlockValidationError(errors)
         return result
