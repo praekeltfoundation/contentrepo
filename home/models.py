@@ -336,12 +336,6 @@ class WhatsappBlock(blocks.StructBlock):
                 errors["variation_messages"] = ValidationError(
                     f"Ensure this variation message has at most 4096 characters, it has {len(message)} characters"
                 )
-        buttons = result["buttons"]
-        for button in buttons:
-            try:
-                button = json.loads(button)
-            except JSONDecodeError:
-                errors = ValidationError(f"Bad JSON button: {button} ")
         if errors:
             raise StructBlockValidationError(errors)
         return result
