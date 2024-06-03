@@ -911,7 +911,7 @@ def deserialise_list(value: str) -> list[str]:
     return [item.strip() for item in items]
 
 
-def JSON_loader(row_num, value):
+def JSON_loader(row_num: int, value: list) -> dict[str, str]:
     if not value:
         return []
 
