@@ -1,6 +1,5 @@
 import logging
 import re
-import json
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -12,7 +11,6 @@ from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from json.decoder import JSONDecodeError
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel

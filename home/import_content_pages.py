@@ -240,13 +240,13 @@ class ContentImporter:
                 if name and cell:
                     r[name] = clean_excel_cell(cell)
             if r:
-                rows.append(ContentRow.from_flat(r,i))
-                i+=1
+                rows.append(ContentRow.from_flat(r, i))
+                i += 1
         return rows
 
     def parse_csv(self) -> list["ContentRow"]:
         reader = csv.DictReader(StringIO(self.file_content.decode()))
-        return [ContentRow.from_flat(row,i) for i, row in enumerate(reader, start=1)]  
+        return [ContentRow.from_flat(row, i) for i, row in enumerate(reader, start=1)]
 
     def set_progress(self, message: str, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
@@ -821,7 +821,7 @@ class ContentRow:
     footer: str = ""
 
     @classmethod
-    def from_flat(cls, row: dict[str, str], row_num:int) -> "ContentRow":
+    def from_flat(cls, row: dict[str, str], row_num: int) -> "ContentRow":
         class_fields = {field.name for field in fields(cls)}
         row = {
             key.strip(): value.strip()
@@ -836,7 +836,11 @@ class ContentRow:
             triggers=deserialise_list(row.pop("triggers", "")),
             related_pages=deserialise_list(row.pop("related_pages", "")),
             example_values=deserialise_list(row.pop("example_values", "")),
-            buttons=JSON_loader(row_num,row.pop("buttons", "")) if row.get("buttons") else [],
+            buttons=(
+                JSON_loader(row_num, row.pop("buttons", ""))
+                if row.get("buttons")
+                else []
+            ),
             list_items=deserialise_list(row.pop("list_items", "")),
             footer=row.pop("footer") if row.get("footer") else "",
             **row,
@@ -906,14 +910,14 @@ def deserialise_list(value: str) -> list[str]:
     items = list(csv.reader([value]))[0]
     return [item.strip() for item in items]
 
+
 def JSON_loader(row_num, value):
     if not value:
         return []
-    
+
     try:
-         button = json.loads(value)
+        button = json.loads(value)
     except JSONDecodeError:
         raise ImportException(f"Bad JSON button, you have: {value}", row_num)
-    
-    return button
 
+    return button
