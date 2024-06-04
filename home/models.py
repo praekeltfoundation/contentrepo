@@ -1311,10 +1311,15 @@ class AnswerBlock(blocks.StructBlock):
 
 class QuestionBlock(blocks.StructBlock):
     question = blocks.TextBlock(help_text="The question to ask the user")
+    explainer = blocks.TextBlock(
+        required=False,
+        help_text="Explainer message which tells the user why we need this question",
+    )
     error = blocks.TextBlock(
         required=False,
         help_text="Error message for this question if we don't understand the input",
     )
+    
     answers = blocks.ListBlock(AnswerBlock())
 
 
