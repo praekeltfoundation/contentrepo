@@ -1319,7 +1319,7 @@ class QuestionBlock(blocks.StructBlock):
         required=False,
         help_text="Error message for this question if we don't understand the input",
     )
-    
+
     answers = blocks.ListBlock(AnswerBlock())
 
 

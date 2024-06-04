@@ -166,7 +166,10 @@ class AssessmentImporter:
             for (answer, score) in zip(row.answers, row.scores, strict=False)
         ]
         question = ShadowQuestionBlock(
-            question=row.question, explainer=row.explainer, error=row.error, answers=answers
+            question=row.question,
+            explainer=row.explainer,
+            error=row.error,
+            answers=answers,
         )
         assessment.questions.append(question)
 
