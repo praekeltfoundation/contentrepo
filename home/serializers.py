@@ -555,13 +555,15 @@ class QuestionField(serializers.Field):
     def to_representation(self, page):
         questions = []
         for question in page.questions.raw_data:
-
             questions.append(
                 {
                     "id": question["id"],
+                    "type": question["type"],
                     "question": question["value"]["question"],
                     "error": question["value"]["error"],
-                    "answers": [x["value"] for x in question["value"]["answers"]],
+                    "answers": [
+                        x["value"] for x in question["value"].get("answers", [])
+                    ],
                 }
             )
         return questions

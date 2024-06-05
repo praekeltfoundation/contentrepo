@@ -166,7 +166,10 @@ class AssessmentImporter:
             for (answer, score) in zip(row.answers, row.scores, strict=False)
         ]
         question = ShadowQuestionBlock(
-            question=row.question, error=row.error, answers=answers
+            question=row.question,
+            error=row.error,
+            answers=answers,
+            type=row.question_type,
         )
         assessment.questions.append(question)
 
@@ -185,6 +188,7 @@ class ShadowQuestionBlock:
     question: str
     answers: list[ShadowAnswerBlock]
     error: str = ""
+    type: str = ""
 
 
 @dataclass(slots=True)
@@ -253,7 +257,7 @@ class ShadowAssessment:
             ]
             stream_data.append(
                 {
-                    "type": "question",
+                    "type": question.type,
                     "value": {
                         "question": question.question,
                         "answers": answers,
@@ -273,6 +277,7 @@ class AssessmentRow:
     slug: str
     title: str = ""
     tags: list[str] = field(default_factory=list)
+    question_type: str = ""
     locale: str = ""
     high_result_page: str = ""
     high_inflection: str = ""

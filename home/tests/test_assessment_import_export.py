@@ -368,7 +368,7 @@ class TestImportExportRoundtrip:
             generic_error="error",
             questions=[
                 {
-                    "type": "question",
+                    "type": "categorical_question",
                     "value": {
                         "question": "test question",
                         "error": "test error",

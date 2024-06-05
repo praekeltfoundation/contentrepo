@@ -1,2 +1,2 @@
-title,tags,slug,locale,high_result_page,high_inflection,medium_result_page,medium_inflection,low_result_page,generic_error,question,error,answers,scores
-Health Assessment Simple,checker,Health-assessment-simple,en,high-inflection,4.0,medium-score,2.0,low-score,"Sorry, we didn't quite get that.",How often do you check your blood pressure,Sorry we don't under stand.,"Once a week,Twice a week,Thrice a week","1.0,3.5,4.5"
+title,question_type,tags,slug,locale,high_result_page,high_inflection,medium_result_page,medium_inflection,low_result_page,generic_error,question,error,answers,scores
+Health Assessment Simple,categorical_question,checker,Health-assessment-simple,en,high-inflection,4.0,medium-score,2.0,low-score,"Sorry, we didn't quite get that.",How often do you check your blood pressure,Sorry we don't under stand.,"Once a week,Twice a week,Thrice a week","1.0,3.5,4.5"
