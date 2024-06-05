@@ -1309,7 +1309,7 @@ class AnswerBlock(blocks.StructBlock):
     )
 
 
-class QuestionBlock(blocks.StructBlock):
+class CategoricalQuestionBlock(blocks.StructBlock):
     question = blocks.TextBlock(help_text="The question to ask the user")
     explainer = blocks.TextBlock(
         required=False,
@@ -1321,6 +1321,15 @@ class QuestionBlock(blocks.StructBlock):
     )
 
     answers = blocks.ListBlock(AnswerBlock())
+
+
+class AgeQuestionBlock(blocks.StructBlock):
+    question = blocks.TextBlock(help_text="The question to ask the user")
+    error = blocks.TextBlock(
+        required=False,
+        help_text="Error message for this question if we don't understand the input",
+    )
+    answers = None
 
 
 class AssessmentTag(TaggedItemBase):
@@ -1369,7 +1378,13 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
         help_text="If no error is specified for a question, then this is used as the "
         "fallback"
     )
-    questions = StreamField([("question", QuestionBlock())], use_json_field=True)
+    questions = StreamField(
+        [
+            ("categorical_question", CategoricalQuestionBlock()),
+            ("age_question", AgeQuestionBlock()),
+        ],
+        use_json_field=True,
+    )
     _revisions = GenericRelation(
         "wagtailcore.Revision", related_query_name="assessment"
     )

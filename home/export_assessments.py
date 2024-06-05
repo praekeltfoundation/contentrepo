@@ -21,6 +21,7 @@ class ExportRow:
 
     title: str
     tags: str
+    question_type: str
     slug: str
     locale: str
     high_result_page: str
@@ -59,13 +60,14 @@ class AssessmentExporter:
         """
         for item in self.queryset:
             for question in item.questions:
-                answers = [a["answer"] for a in question.value["answers"]]
-                scores = [a["score"] for a in question.value["answers"]]
+                answers = [a["answer"] for a in question.value.get("answers", [])]
+                scores = [a["score"] for a in question.value.get("answers", [])]
                 yield ExportRow(
                     title=item.title,
                     tags=serialize_list(
                         filter_non_empty(t.name for t in item.tags.all())
                     ),
+                    question_type=question.block_type,
                     slug=item.slug,
                     locale=item.locale.language_code,
                     high_result_page=item.high_result_page.slug,
@@ -139,6 +141,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
     column_widths_in_pts = {
         "title": 110,
         "tags": 110,
+        "question_type": 110,
         "slug": 110,
         "locale": 50,
         "high_result_page": 110,
