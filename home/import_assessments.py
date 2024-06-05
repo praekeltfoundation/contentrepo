@@ -170,6 +170,7 @@ class AssessmentImporter:
             error=row.error,
             answers=answers,
             type=row.question_type,
+            explainer=row.explainer,
         )
         assessment.questions.append(question)
 
@@ -187,6 +188,7 @@ class ShadowAnswerBlock:
 class ShadowQuestionBlock:
     question: str
     answers: list[ShadowAnswerBlock]
+    explainer: str = ""
     error: str = ""
     type: str = ""
 
@@ -261,6 +263,7 @@ class ShadowAssessment:
                     "value": {
                         "question": question.question,
                         "answers": answers,
+                        "explainer": question.explainer,
                         "error": question.error,
                     },
                 }
@@ -286,6 +289,7 @@ class AssessmentRow:
     low_result_page: str = ""
     generic_error: str = ""
     question: str = ""
+    explainer: str = ""
     error: str = ""
     answers: list[str] = field(default_factory=list)
     scores: list[float] = field(default_factory=list)

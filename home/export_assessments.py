@@ -31,6 +31,7 @@ class ExportRow:
     low_result_page: str
     generic_error: str
     question: str
+    explainer: str
     error: str
     answers: str
     scores: str
@@ -76,6 +77,7 @@ class AssessmentExporter:
                     low_result_page=item.low_result_page.slug,
                     generic_error=item.generic_error,
                     question=question.value["question"],
+                    explainer=question.value["explainer"],
                     error=question.value["error"],
                     answers=serialize_list(answers),
                     scores=serialize_list(scores),
@@ -149,6 +151,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "low_result_page": 110,
         "generic_error": 370,
         "question": 370,
+        "explainer": 370,
         "error": 370,
         "answers": 370,
         "scores": 110,
