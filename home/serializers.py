@@ -539,6 +539,7 @@ class QuestionField(serializers.Field):
     Example:
     "question": {
         "question": "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
+        "explainer": "we need this information to provide a more accurate risk assessment",
         "error": "Unknown answer given",
         "answers": [
             {
@@ -560,6 +561,7 @@ class QuestionField(serializers.Field):
                 {
                     "id": question["id"],
                     "question": question["value"]["question"],
+                    "explainer": question["value"]["explainer"],
                     "error": question["value"]["error"],
                     "answers": [x["value"] for x in question["value"]["answers"]],
                 }
