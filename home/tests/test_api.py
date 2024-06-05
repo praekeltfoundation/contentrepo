@@ -20,13 +20,14 @@ from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content
 from home.models import (
+    AgeQuestionBlock,
     AnswerBlock,
     Assessment,
+    CategoricalQuestionBlock,
     ContentPage,
     HomePage,
     OrderedContentSet,
     PageView,
-    QuestionBlock,
 )
 
 from .page_builder import (
@@ -1359,7 +1360,7 @@ class TestAssessmentAPI:
                 {"answer": "Flake", "score": "3"},
             ]
         )
-        question_block = QuestionBlock()
+        question_block = CategoricalQuestionBlock()
         question_block_value = question_block.to_python(
             {
                 "question": "What is the best chocolate?",
@@ -1369,8 +1370,22 @@ class TestAssessmentAPI:
         )
         self.assessment.questions.append(
             (
-                "question",
+                "categorical_question",
                 question_block_value,
+            )
+        )
+        age_question_block = AgeQuestionBlock()
+        age_question_block_value = age_question_block.to_python(
+            {
+                "question": "How old are you?",
+                "error": "Invalid answer",
+                "answers": None,
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "age_question",
+                age_question_block_value,
             )
         )
         self.assessment.save()
@@ -1438,6 +1453,24 @@ class TestAssessmentAPI:
             "quick_replies": [],
             "tags": [],
             "triggers": [],
+        }
+
+        assert content["results"][0]["questions"][0] == {
+            "id": self.assessment.questions[0].id,
+            "question_type": "categorical_question",
+            "question": "What is the best chocolate?",
+            "error": "Invalid answer",
+            "answers": [
+                {"answer": "Crunchie", "score": "5"},
+                {"answer": "Flake", "score": "3"},
+            ],
+        }
+        assert content["results"][0]["questions"][1] == {
+            "id": self.assessment.questions[1].id,
+            "question_type": "age_question",
+            "question": "How old are you?",
+            "error": "Invalid answer",
+            "answers": [],
         }
 
     def test_assessment_detail_endpoint(self, uclient):

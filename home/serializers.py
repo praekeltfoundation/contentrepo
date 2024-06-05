@@ -558,7 +558,7 @@ class QuestionField(serializers.Field):
             questions.append(
                 {
                     "id": question["id"],
-                    "type": question["type"],
+                    "question_type": question["type"],
                     "question": question["value"]["question"],
                     "error": question["value"]["error"],
                     "answers": [
