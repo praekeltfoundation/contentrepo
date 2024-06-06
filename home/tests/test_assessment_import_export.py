@@ -296,7 +296,7 @@ class TestImportExportRoundtrip:
     def test_simple(self, csv_impexp: ImportExport) -> None:
         """
         Importing a simple CSV file with one assessment and
-        one question and export it
+        one of each question and export it
 
         (This uses assessment_simple.csv.)
         """
