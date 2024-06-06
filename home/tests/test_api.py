@@ -26,6 +26,7 @@ from home.models import (
     CategoricalQuestionBlock,
     ContentPage,
     HomePage,
+    MultiselectQuestionBlock,
     OrderedContentSet,
     PageView,
 )
@@ -1360,8 +1361,8 @@ class TestAssessmentAPI:
                 {"answer": "Flake", "score": "3"},
             ]
         )
-        question_block = CategoricalQuestionBlock()
-        question_block_value = question_block.to_python(
+        categorical_question_block = CategoricalQuestionBlock()
+        categorical_question_block_value = categorical_question_block.to_python(
             {
                 "question": "What is the best chocolate?",
                 "error": "Invalid answer",
@@ -1371,7 +1372,7 @@ class TestAssessmentAPI:
         self.assessment.questions.append(
             (
                 "categorical_question",
-                question_block_value,
+                categorical_question_block_value,
             )
         )
         age_question_block = AgeQuestionBlock()
@@ -1386,6 +1387,20 @@ class TestAssessmentAPI:
             (
                 "age_question",
                 age_question_block_value,
+            )
+        )
+        multiselect_question_block = MultiselectQuestionBlock()
+        multiselect_question_block_value = multiselect_question_block.to_python(
+            {
+                "question": "Which chocolates are yummy?",
+                "error": "Invalid answer",
+                "answers": answers_block_value,
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "multiselect_question",
+                multiselect_question_block_value,
             )
         )
         self.assessment.save()
@@ -1471,6 +1486,16 @@ class TestAssessmentAPI:
             "question": "How old are you?",
             "error": "Invalid answer",
             "answers": [],
+        }
+        assert content["results"][0]["questions"][2] == {
+            "id": self.assessment.questions[2].id,
+            "question_type": "multiselect_question",
+            "question": "Which chocolates are yummy?",
+            "error": "Invalid answer",
+            "answers": [
+                {"answer": "Crunchie", "score": "5"},
+                {"answer": "Flake", "score": "3"},
+            ],
         }
 
     def test_assessment_detail_endpoint(self, uclient):
