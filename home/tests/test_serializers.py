@@ -1,7 +1,9 @@
 import pytest
+from wagtail.models import Locale  # type: ignore
 
-from home.models import ContentPage, HomePage
+from home.models import Assessment, ContentPage, HomePage
 from home.serializers import (
+    QuestionField,
     format_whatsapp_message,
     has_next_message,
     has_previous_message,
@@ -71,6 +73,133 @@ def create_content_page(
         bodies=bodies,
     )
     return content_page
+
+
+@pytest.fixture()
+def create_form_pages() -> None:
+    home_page = HomePage.objects.first()
+    main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="high-inflection",
+        title="High Inflection",
+        bodies=[
+            WABody("High Inflection", [WABlk("*High Inflection Page")]),
+            MBody("High inflection", [MBlk("High Inflection Page")]),
+        ],
+    )
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="medium-score",
+        title="Medium Score",
+        bodies=[
+            WABody("Medium Score", [WABlk("*Medium Inflection Page")]),
+            MBody("Medium Score", [MBlk("Medium Inflection Page")]),
+        ],
+    )
+
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="low-score",
+        title="Low Score",
+        bodies=[
+            WABody("Low Score", [WABlk("*Low Inflection Page")]),
+            MBody("Low Score", [MBlk("Low Inflection Page")]),
+        ],
+    )
+
+
+def create_form_with_explainer() -> Assessment:
+    """
+    Create form with an explainer field and pass it
+    through the serializer
+    """
+
+    form = Assessment.objects.create(
+        title="Test",
+        slug="test",
+        locale=Locale.objects.get(language_code="en"),
+        high_result_page=ContentPage.objects.get(slug="high-inflection"),
+        high_inflection=3,
+        medium_result_page=ContentPage.objects.get(slug="medium-score"),
+        medium_inflection=2,
+        low_result_page=ContentPage.objects.get(slug="low-score"),
+        generic_error="error",
+        questions=[
+            {
+                "type": "question",
+                "value": {
+                    "question": "test question",
+                    "error": "test error",
+                    "explainer": "We need to know this",
+                    "answers": [
+                        {
+                            "id": "eb96ad43-c231-4493-a235-de88e60219ea",
+                            "type": "item",
+                            "value": {"score": 2.0, "answer": "A"},
+                        },
+                        {
+                            "id": "06576523-e9de-4585-a8cd-08cafd6ef56d",
+                            "type": "item",
+                            "value": {"score": 1.0, "answer": "B"},
+                        },
+                        {
+                            "id": "c2d71503-92bf-4557-b198-dac64737e27c",
+                            "type": "item",
+                            "value": {"score": 2.0, "answer": "C"},
+                        },
+                    ],
+                },
+            }
+        ],
+    )
+    return form
+
+
+def create_form_without_explainer() -> Assessment:
+    """
+    Create form without an explainer field and pass it
+    through the serializer
+    """
+
+    form = Assessment.objects.create(
+        title="Test",
+        slug="test",
+        locale=Locale.objects.get(language_code="en"),
+        high_result_page=ContentPage.objects.get(slug="high-inflection"),
+        high_inflection=3,
+        medium_result_page=ContentPage.objects.get(slug="medium-score"),
+        medium_inflection=2,
+        low_result_page=ContentPage.objects.get(slug="low-score"),
+        generic_error="error",
+        questions=[
+            {
+                "type": "question",
+                "value": {
+                    "question": "test question",
+                    "error": "test error",
+                    "answers": [
+                        {
+                            "id": "eb96ad43-c231-4493-a235-de88e60219ea",
+                            "type": "item",
+                            "value": {"score": 2.0, "answer": "A"},
+                        },
+                        {
+                            "id": "06576523-e9de-4585-a8cd-08cafd6ef56d",
+                            "type": "item",
+                            "value": {"score": 1.0, "answer": "B"},
+                        },
+                        {
+                            "id": "c2d71503-92bf-4557-b198-dac64737e27c",
+                            "type": "item",
+                            "value": {"score": 2.0, "answer": "C"},
+                        },
+                    ],
+                },
+            }
+        ],
+    )
+    return form
 
 
 @pytest.mark.django_db
@@ -328,4 +457,54 @@ class TestFormatMessage:
             },
             "id": f'{result["id"]}',
         }
+        assert result == expected_result
+
+
+@pytest.mark.usefixtures("create_form_pages")
+@pytest.mark.django_db
+class TestAssessmentSerializer:
+    def test_form_with_explainer(self) -> None:
+        """
+        Test Form with explainer
+        """
+        page = create_form_with_explainer()
+        assessment_page = QuestionField()
+        result = assessment_page.to_representation(page)
+        expected_result = [
+            {
+                "question": "test question",
+                "explainer": "We need to know this",
+                "error": "test error",
+                "answers": [
+                    {"score": 2.0, "answer": "A"},
+                    {"score": 1.0, "answer": "B"},
+                    {"score": 2.0, "answer": "C"},
+                ],
+            }
+        ]
+        result[0].pop("id")
+        assert result == expected_result
+
+    def test_form_without_explainer(self) -> None:
+        """
+        Test Form without explainer
+        """
+        page = create_form_without_explainer()
+        assessment_page = QuestionField()
+        result = assessment_page.to_representation(page)
+        expected_result = [
+            {
+                "question": "test question",
+                "explainer": None,
+                "error": "test error",
+                "answers": [
+                    {"score": 2.0, "answer": "A"},
+                    {"score": 1.0, "answer": "B"},
+                    {"score": 2.0, "answer": "C"},
+                ],
+            }
+        ]
+        result[0].pop("id")
+        print("%%%%%%%%%%%%%%%%%%%%")
+        print(result)
         assert result == expected_result

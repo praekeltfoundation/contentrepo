@@ -1363,6 +1363,7 @@ class TestAssessmentAPI:
         question_block_value = question_block.to_python(
             {
                 "question": "What is the best chocolate?",
+                "explainer": "We need to know your preference",
                 "error": "Invalid answer",
                 "answers": answers_block_value,
             }
@@ -1439,6 +1440,10 @@ class TestAssessmentAPI:
             "tags": [],
             "triggers": [],
         }
+        assert (
+            content["results"][0]["questions"][0]["explainer"]
+            == "We need to know your preference"
+        )
 
     def test_assessment_detail_endpoint(self, uclient):
         response = uclient.get(f"/api/v2/assessment/{self.assessment.id}/")
