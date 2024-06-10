@@ -1474,6 +1474,7 @@ class TestAssessmentAPI:
             "id": self.assessment.questions[0].id,
             "question_type": "categorical_question",
             "question": "What is the best chocolate?",
+            "explainer": None,
             "error": "Invalid answer",
             "answers": [
                 {"answer": "Crunchie", "score": "5"},
@@ -1484,6 +1485,7 @@ class TestAssessmentAPI:
             "id": self.assessment.questions[1].id,
             "question_type": "age_question",
             "question": "How old are you?",
+            "explainer": None,
             "error": "Invalid answer",
             "answers": [],
         }
@@ -1491,6 +1493,7 @@ class TestAssessmentAPI:
             "id": self.assessment.questions[2].id,
             "question_type": "multiselect_question",
             "question": "Which chocolates are yummy?",
+            "explainer": None,
             "error": "Invalid answer",
             "answers": [
                 {"answer": "Crunchie", "score": "5"},
