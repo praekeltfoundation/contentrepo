@@ -538,6 +538,7 @@ class QuestionField(serializers.Field):
 
     Example:
     "question": {
+        "id": "f8f4c0d8-5e5e-4b5e-9b5e-5e5e8f4c0d8",
         "question_type": "categorical_question",
         "question": "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
         "explainer": None,
@@ -545,7 +546,8 @@ class QuestionField(serializers.Field):
         "answers": [
             {
                 "answer": "Yes",
-                "score": 5.0
+                "score": 5.0,
+                "semantic_id": "woodchuck-chuck-yes"
             }
         ]
     }

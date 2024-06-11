@@ -1357,8 +1357,8 @@ class TestAssessmentAPI:
         answers_block = blocks.ListBlock(AnswerBlock())
         answers_block_value = answers_block.to_python(
             [
-                {"answer": "Crunchie", "score": "5"},
-                {"answer": "Flake", "score": "3"},
+                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
             ]
         )
         categorical_question_block = CategoricalQuestionBlock()
@@ -1478,8 +1478,8 @@ class TestAssessmentAPI:
             "explainer": None,
             "error": "Invalid answer",
             "answers": [
-                {"answer": "Crunchie", "score": "5"},
-                {"answer": "Flake", "score": "3"},
+                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
             ],
         }
         assert content["results"][0]["questions"][1] == {
@@ -1497,8 +1497,8 @@ class TestAssessmentAPI:
             "explainer": None,
             "error": "Invalid answer",
             "answers": [
-                {"answer": "Crunchie", "score": "5"},
-                {"answer": "Flake", "score": "3"},
+                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
             ],
         }
 

@@ -36,6 +36,7 @@ class ExportRow:
     error: str
     answers: str
     scores: str
+    semantic_ids: str
 
     @classmethod
     def headings(cls) -> list[str]:
@@ -63,6 +64,9 @@ class AssessmentExporter:
             for question in item.questions:
                 answers = [a["answer"] for a in question.value.get("answers", [])]
                 scores = [a["score"] for a in question.value.get("answers", [])]
+                semantic_ids = [
+                    a["semantic_id"] for a in question.value.get("answers", [])
+                ]
                 yield ExportRow(
                     title=item.title,
                     tags=serialize_list(
@@ -83,6 +87,7 @@ class AssessmentExporter:
                     error=question.value["error"],
                     answers=serialize_list(answers),
                     scores=serialize_list(scores),
+                    semantic_ids=serialize_list(semantic_ids),
                 )
 
 
@@ -158,6 +163,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "error": 370,
         "answers": 370,
         "scores": 110,
+        "semantic_ids": 110,
     }
     for column in sheet.iter_cols(max_row=1):
         [cell] = column

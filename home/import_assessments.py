@@ -163,8 +163,10 @@ class AssessmentImporter:
             )
 
         answers = [
-            ShadowAnswerBlock(answer=answer, score=score)
-            for (answer, score) in zip(row.answers, row.scores, strict=False)
+            ShadowAnswerBlock(answer=answer, score=score, semantic_id=semantic_id)
+            for (answer, score, semantic_id) in zip(
+                row.answers, row.scores, row.semantic_ids, strict=False
+            )
         ]
         question = ShadowQuestionBlock(
             question=row.question,
@@ -183,6 +185,7 @@ class AssessmentImporter:
 class ShadowAnswerBlock:
     answer: str
     score: float
+    semantic_id: str
 
 
 @dataclass(slots=True)
@@ -257,7 +260,11 @@ class ShadowAssessment:
         stream_data = []
         for question in self.questions:
             answers = [
-                {"answer": answer.answer, "score": answer.score}
+                {
+                    "answer": answer.answer,
+                    "score": answer.score,
+                    "semantic_id": answer.semantic_id,
+                }
                 for answer in question.answers
             ]
             stream_data.append(
@@ -297,6 +304,7 @@ class AssessmentRow:
     error: str = ""
     answers: list[str] = field(default_factory=list)
     scores: list[float] = field(default_factory=list)
+    semantic_ids: list[str] = field(default_factory=list)
 
     @classmethod
     def fields(cls) -> list[str]:
@@ -318,6 +326,7 @@ class AssessmentRow:
                 tags=deserialise_list(row.pop("tags", "")),
                 answers=deserialise_list(row.pop("answers", "")),
                 scores=[float(i) for i in deserialise_list(row.pop("scores", ""))],
+                semantic_ids=deserialise_list(row.pop("semantic_ids", "")),
                 **row,
             )
         except TypeError:
