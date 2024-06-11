@@ -22,7 +22,6 @@ class ExportRow:
     title: str
     tags: str
     question_type: str
-    semantic_id: str
     slug: str
     locale: str
     high_result_page: str
@@ -36,6 +35,7 @@ class ExportRow:
     error: str
     answers: str
     scores: str
+    semantic_ids: str
 
     @classmethod
     def headings(cls) -> list[str]:
@@ -63,13 +63,15 @@ class AssessmentExporter:
             for question in item.questions:
                 answers = [a["answer"] for a in question.value.get("answers", [])]
                 scores = [a["score"] for a in question.value.get("answers", [])]
+                semantic_ids = [
+                    a["semantic_id"] for a in question.value.get("answers", [])
+                ]
                 yield ExportRow(
                     title=item.title,
                     tags=serialize_list(
                         filter_non_empty(t.name for t in item.tags.all())
                     ),
                     question_type=question.block_type,
-                    semantic_id=question.value["semantic_id"],
                     slug=item.slug,
                     locale=item.locale.language_code,
                     high_result_page=item.high_result_page.slug,
@@ -83,6 +85,7 @@ class AssessmentExporter:
                     error=question.value["error"],
                     answers=serialize_list(answers),
                     scores=serialize_list(scores),
+                    semantic_ids=serialize_list(semantic_ids),
                 )
 
 
@@ -144,7 +147,6 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "title": 110,
         "tags": 110,
         "question_type": 110,
-        "semantic_id": 110,
         "slug": 110,
         "locale": 50,
         "high_result_page": 110,
@@ -158,6 +160,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "error": 370,
         "answers": 370,
         "scores": 110,
+        "semantic_ids": 110,
     }
     for column in sheet.iter_cols(max_row=1):
         [cell] = column

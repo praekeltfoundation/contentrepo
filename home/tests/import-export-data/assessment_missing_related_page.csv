@@ -1,4 +1,4 @@
-title,question_type,semantic_id,tags,slug,locale,high_result_page,high_inflection,medium_result_page,medium_inflection,low_result_page,generic_error,questions,error,answers,score
-Fake Test,categorical_question,test-1,"Random, selection",fake-test,en,fake-page,4,fake-page,3,fake-page,We did not quite get that,Select a number for the first question,Please retry,"A,B","4.0,1.0"
-Fake Test,categorical_question,test-2,"Random, selection",fake-test,en,fake-page,4,fake-page,3,fake-page,We did not quite get that,Select a number for the second question,We did not quite get that,"A,B,C","1.0,3.0,4.0"
-Fake Test,categorical_question,test-3,"Random, selection",fake-test,en,fake-page,4,fake-page,3,fake-page,We did not quite get that,Select a number for the third question,Sorry we did not quite get that,"A,B,C","2.0,1.0,2.0"
+title,question_type,tags,slug,locale,high_result_page,high_inflection,medium_result_page,medium_inflection,low_result_page,generic_error,questions,error,answers,score,semantic_ids
+Fake Test,categorical_question,"Random, selection",fake-test,en,fake-page,4,fake-page,3,fake-page,We did not quite get that,Select a number for the first question,Please retry,"A,B","4.0,1.0","test-1,test-2"
+Fake Test,categorical_question,"Random, selection",fake-test,en,fake-page,4,fake-page,3,fake-page,We did not quite get that,Select a number for the second question,We did not quite get that,"A,B,C","1.0,3.0,4.0","test-1,test-2,test-3"
+Fake Test,categorical_question,"Random, selection",fake-test,en,fake-page,4,fake-page,3,fake-page,We did not quite get that,Select a number for the third question,Sorry we did not quite get that,"A,B,C","2.0,1.0,2.0","test-1,test-2,test-3"

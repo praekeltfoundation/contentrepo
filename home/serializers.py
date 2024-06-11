@@ -540,14 +540,14 @@ class QuestionField(serializers.Field):
     "question": {
         "id": "f8f4c0d8-5e5e-4b5e-9b5e-5e5e8f4c0d8",
         "question_type": "categorical_question",
-        "semantic_id": "woodchuck-chuck",
         "question": "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
         "explainer": None,
         "error": "Unknown answer given",
         "answers": [
             {
                 "answer": "Yes",
-                "score": 5.0
+                "score": 5.0,
+                "semantic_id": "woodchuck-chuck-yes"
             }
         ]
     }
@@ -564,7 +564,6 @@ class QuestionField(serializers.Field):
                 {
                     "id": question["id"],
                     "question_type": question["type"],
-                    "semantic_id": question["value"]["semantic_id"],
                     "question": question["value"]["question"],
                     "explainer": question.get("value", {}).get("explainer"),
                     "error": question["value"]["error"],

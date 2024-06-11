@@ -1357,14 +1357,13 @@ class TestAssessmentAPI:
         answers_block = blocks.ListBlock(AnswerBlock())
         answers_block_value = answers_block.to_python(
             [
-                {"answer": "Crunchie", "score": "5"},
-                {"answer": "Flake", "score": "3"},
+                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
             ]
         )
         categorical_question_block = CategoricalQuestionBlock()
         categorical_question_block_value = categorical_question_block.to_python(
             {
-                "semantic_id": "chocolate",
                 "question": "What is the best chocolate?",
                 "error": "Invalid answer",
                 "answers": answers_block_value,
@@ -1379,7 +1378,6 @@ class TestAssessmentAPI:
         age_question_block = AgeQuestionBlock()
         age_question_block_value = age_question_block.to_python(
             {
-                "semantic_id": "age",
                 "question": "How old are you?",
                 "error": "Invalid answer",
                 "answers": None,
@@ -1394,7 +1392,6 @@ class TestAssessmentAPI:
         multiselect_question_block = MultiselectQuestionBlock()
         multiselect_question_block_value = multiselect_question_block.to_python(
             {
-                "semantic_id": "yummy-chocolates",
                 "question": "Which chocolates are yummy?",
                 "error": "Invalid answer",
                 "answers": answers_block_value,
@@ -1476,13 +1473,12 @@ class TestAssessmentAPI:
         assert content["results"][0]["questions"][0] == {
             "id": self.assessment.questions[0].id,
             "question_type": "categorical_question",
-            "semantic_id": "chocolate",
             "question": "What is the best chocolate?",
             "explainer": None,
             "error": "Invalid answer",
             "answers": [
-                {"answer": "Crunchie", "score": "5"},
-                {"answer": "Flake", "score": "3"},
+                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
             ],
         }
         assert content["results"][0]["questions"][1] == {
@@ -1502,8 +1498,8 @@ class TestAssessmentAPI:
             "explainer": None,
             "error": "Invalid answer",
             "answers": [
-                {"answer": "Crunchie", "score": "5"},
-                {"answer": "Flake", "score": "3"},
+                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
             ],
         }
 
