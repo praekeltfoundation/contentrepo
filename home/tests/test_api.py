@@ -1364,6 +1364,7 @@ class TestAssessmentAPI:
         categorical_question_block = CategoricalQuestionBlock()
         categorical_question_block_value = categorical_question_block.to_python(
             {
+                "semantic_id": "chocolate",
                 "question": "What is the best chocolate?",
                 "error": "Invalid answer",
                 "answers": answers_block_value,
@@ -1378,6 +1379,7 @@ class TestAssessmentAPI:
         age_question_block = AgeQuestionBlock()
         age_question_block_value = age_question_block.to_python(
             {
+                "semantic_id": "age",
                 "question": "How old are you?",
                 "error": "Invalid answer",
                 "answers": None,
@@ -1392,6 +1394,7 @@ class TestAssessmentAPI:
         multiselect_question_block = MultiselectQuestionBlock()
         multiselect_question_block_value = multiselect_question_block.to_python(
             {
+                "semantic_id": "yummy-chocolates",
                 "question": "Which chocolates are yummy?",
                 "error": "Invalid answer",
                 "answers": answers_block_value,
@@ -1473,6 +1476,7 @@ class TestAssessmentAPI:
         assert content["results"][0]["questions"][0] == {
             "id": self.assessment.questions[0].id,
             "question_type": "categorical_question",
+            "semantic_id": "chocolate",
             "question": "What is the best chocolate?",
             "explainer": None,
             "error": "Invalid answer",
@@ -1484,6 +1488,7 @@ class TestAssessmentAPI:
         assert content["results"][0]["questions"][1] == {
             "id": self.assessment.questions[1].id,
             "question_type": "age_question",
+            "semantic_id": "age",
             "question": "How old are you?",
             "explainer": None,
             "error": "Invalid answer",
@@ -1492,6 +1497,7 @@ class TestAssessmentAPI:
         assert content["results"][0]["questions"][2] == {
             "id": self.assessment.questions[2].id,
             "question_type": "multiselect_question",
+            "semantic_id": "yummy-chocolates",
             "question": "Which chocolates are yummy?",
             "explainer": None,
             "error": "Invalid answer",

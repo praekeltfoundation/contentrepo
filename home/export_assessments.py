@@ -22,6 +22,7 @@ class ExportRow:
     title: str
     tags: str
     question_type: str
+    semantic_id: str
     slug: str
     locale: str
     high_result_page: str
@@ -68,6 +69,7 @@ class AssessmentExporter:
                         filter_non_empty(t.name for t in item.tags.all())
                     ),
                     question_type=question.block_type,
+                    semantic_id=question.value["semantic_id"],
                     slug=item.slug,
                     locale=item.locale.language_code,
                     high_result_page=item.high_result_page.slug,
@@ -142,6 +144,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "title": 110,
         "tags": 110,
         "question_type": 110,
+        "semantic_id": 110,
         "slug": 110,
         "locale": 50,
         "high_result_page": 110,

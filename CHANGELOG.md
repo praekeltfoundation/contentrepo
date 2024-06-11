@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - content page import validation using the model
 - Add Age question type for forms
 - Add Multiselect question type for forms
+- Add Semantic ID for form questions
 
 ### Changed
 - Increased SMS limit to 459 characters

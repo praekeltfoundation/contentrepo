@@ -171,6 +171,7 @@ class AssessmentImporter:
             answers=answers,
             type=row.question_type,
             explainer=row.explainer,
+            semantic_id=row.semantic_id,
         )
         assessment.questions.append(question)
 
@@ -191,6 +192,7 @@ class ShadowQuestionBlock:
     explainer: str = ""
     error: str = ""
     type: str = ""
+    semantic_id: str = ""
 
 
 @dataclass(slots=True)
@@ -261,6 +263,7 @@ class ShadowAssessment:
                 {
                     "type": question.type,
                     "value": {
+                        "semantic_id": question.semantic_id,
                         "question": question.question,
                         "answers": answers,
                         "explainer": question.explainer,
@@ -281,6 +284,7 @@ class AssessmentRow:
     title: str = ""
     tags: list[str] = field(default_factory=list)
     question_type: str = ""
+    semantic_id: str = ""
     locale: str = ""
     high_result_page: str = ""
     high_inflection: str = ""

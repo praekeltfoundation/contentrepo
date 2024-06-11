@@ -370,6 +370,7 @@ class TestImportExportRoundtrip:
                 {
                     "type": "categorical_question",
                     "value": {
+                        "semantic_id": "unique-id",
                         "question": "test question",
                         "error": "test error",
                         "answers": [{"answer": "test answer", "score": 2.0}],

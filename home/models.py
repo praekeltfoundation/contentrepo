@@ -1310,6 +1310,7 @@ class AnswerBlock(blocks.StructBlock):
 
 
 class BaseQuestionBlock(blocks.StructBlock):
+    semantic_id = blocks.TextBlock(help_text="Semantic ID for this question")
     question = blocks.TextBlock(help_text="The question to ask the user")
     explainer = blocks.TextBlock(
         required=False,
