@@ -1485,7 +1485,6 @@ class TestAssessmentAPI:
         assert content["results"][0]["questions"][1] == {
             "id": self.assessment.questions[1].id,
             "question_type": "age_question",
-            "semantic_id": "age",
             "question": "How old are you?",
             "explainer": None,
             "error": "Invalid answer",
@@ -1494,7 +1493,6 @@ class TestAssessmentAPI:
         assert content["results"][0]["questions"][2] == {
             "id": self.assessment.questions[2].id,
             "question_type": "multiselect_question",
-            "semantic_id": "yummy-chocolates",
             "question": "Which chocolates are yummy?",
             "explainer": None,
             "error": "Invalid answer",
