@@ -1347,6 +1347,12 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
     slug = models.SlugField(
         max_length=255, help_text="A unique identifier for this assessment"
     )
+    version = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="A version number for the question set",
+    )
     locale = models.ForeignKey(to=Locale, on_delete=models.CASCADE)
     tags = ClusterTaggableManager(through=AssessmentTag, blank=True)
     high_result_page = models.ForeignKey(
@@ -1396,12 +1402,15 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
         index.AutocompleteField("title"),
         index.SearchField("slug"),
         index.AutocompleteField("slug"),
+        index.SearchField("version"),
+        index.AutocompleteField("version"),
         index.FilterField("locale"),
     ]
 
     api_fields = [
         APIField("title"),
         APIField("slug"),
+        APIField("version"),
         APIField("high_result_page", serializer=ContentPageSerializer()),  # noqa: F821
         APIField("high_inflection"),
         APIField("medium_result_page", serializer=ContentPageSerializer()),

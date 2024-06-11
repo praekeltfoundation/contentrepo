@@ -223,6 +223,7 @@ class AssessmentViewSet(BaseAPIViewSet):
     body_fields = BaseAPIViewSet.body_fields + [
         "title",
         "slug",
+        "version",
         "locale",
         "tags",
         "high_result_page",
@@ -236,6 +237,7 @@ class AssessmentViewSet(BaseAPIViewSet):
     listing_default_fields = BaseAPIViewSet.listing_default_fields + [
         "title",
         "slug",
+        "version",
         "locale",
         "tags",
         "high_result_page",
@@ -264,6 +266,7 @@ class AssessmentViewSet(BaseAPIViewSet):
                     # set the assessment's details to that of the latest revision
                     assessment.title = latest_revision.title
                     assessment.slug = latest_revision.slug
+                    assessment.version = latest_revision.version
                     assessment.locale = latest_revision.locale
                     assessment.tags = latest_revision.tags
                     assessment.high_result_page = latest_revision.high_result_page
