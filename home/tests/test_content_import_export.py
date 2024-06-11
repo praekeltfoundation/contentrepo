@@ -1052,7 +1052,7 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("broken_button.csv")
 
-        assert e.value.row_num == 2
+        assert e.value.row_num == 3
         assert e.value.message == ["Bad JSON button, you have: Broken Button"]
 
     def test_invalid_JSON_button_xlsx(self, xlsx_impexp: ImportExport) -> None:
@@ -1062,7 +1062,7 @@ class TestImportExport:
         """
         with pytest.raises(ImportException) as e:
             xlsx_impexp.import_file("broken_button.xlsx", purge=True)
-        assert e.value.row_num == 2
+        assert e.value.row_num == 3
         assert e.value.message == ["Bad JSON button, you have: Broken button"]
 
     @pytest.mark.xfail(reason="Form creation during import needs to be fixed.")
