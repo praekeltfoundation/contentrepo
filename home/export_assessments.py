@@ -20,9 +20,10 @@ class ExportRow:
     """
 
     title: str
-    tags: str
     question_type: str
+    tags: str
     slug: str
+    version: str
     locale: str
     high_result_page: str
     high_inflection: str
@@ -69,6 +70,7 @@ class AssessmentExporter:
                     ),
                     question_type=question.block_type,
                     slug=item.slug,
+                    version=item.version,
                     locale=item.locale.language_code,
                     high_result_page=item.high_result_page.slug,
                     high_inflection=str(item.high_inflection),
@@ -140,9 +142,10 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
     # Set columns based on best size
     column_widths_in_pts = {
         "title": 110,
-        "tags": 110,
         "question_type": 110,
+        "tags": 110,
         "slug": 110,
+        "version": 90,
         "locale": 50,
         "high_result_page": 110,
         "high_inflection": 110,
