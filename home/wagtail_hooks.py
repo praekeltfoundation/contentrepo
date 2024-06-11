@@ -285,8 +285,8 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
 class AssessmentAdmin(SnippetViewSet):
     model = Assessment
     add_to_admin_menu = True
-    list_display = ("title", "slug", "locale")
-    search_fields = ("title", "slug")
+    list_display = ("title", "slug", "version", "locale")
+    search_fields = ("title", "slug", "version")
     list_filter = ("locale",)
     icon = "circle-check"
     menu_order = 300
@@ -298,6 +298,7 @@ class AssessmentAdmin(SnippetViewSet):
             [
                 TitleFieldPanel("title"),
                 FieldPanel("slug", widget=SlugInput()),
+                FieldPanel("version"),
                 FieldPanel("locale"),
                 FieldPanel("tags"),
             ],

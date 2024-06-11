@@ -118,6 +118,7 @@ def create_form_with_fields() -> Assessment:
     form = Assessment.objects.create(
         title="test page",
         slug="test-page",
+        version="v1.0",
         locale=Locale.objects.get(language_code="en"),
         high_result_page=ContentPage.objects.get(slug="high-inflection"),
         high_inflection=3,

@@ -151,6 +151,7 @@ class AssessmentImporter:
                 row_num=row_num,
                 title=row.title,
                 slug=row.slug,
+                version=row.version,
                 locale=locale,
                 high_result_page=row.high_result_page,
                 medium_result_page=row.medium_result_page,
@@ -201,6 +202,7 @@ class ShadowAssessment:
     row_num: int
     title: str
     slug: str
+    version: str
     locale: Locale
     high_result_page: str
     medium_result_page: str
@@ -228,6 +230,7 @@ class ShadowAssessment:
     def add_field_values_to_assessment(self, assessment: Assessment) -> None:
         assessment.slug = self.slug
         assessment.title = self.title
+        assessment.version = self.version
         assessment.locale = self.locale
         assessment.high_inflection = self.high_inflection
         assessment.high_result_page_id = get_content_page_id_from_slug(
@@ -286,6 +289,7 @@ class AssessmentRow:
 
     slug: str
     title: str = ""
+    version: str = ""
     tags: list[str] = field(default_factory=list)
     question_type: str = ""
     locale: str = ""

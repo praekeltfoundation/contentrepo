@@ -1412,6 +1412,7 @@ class TestAssessmentAPI:
         assert content["results"][0]["title"] == self.assessment.title
         assert content["results"][0]["locale"] == self.assessment.locale.language_code
         assert content["results"][0]["slug"] == self.assessment.slug
+        assert content["results"][0]["version"] == self.assessment.version
         assert sorted(content["results"][0]["tags"]) == sorted(
             [tag.name for tag in self.assessment.tags.all()]
         )
@@ -1509,6 +1510,7 @@ class TestAssessmentAPI:
         assert content["title"] == self.assessment.title
         assert content["locale"] == self.assessment.locale.language_code
         assert content["slug"] == self.assessment.slug
+        assert content["version"] == self.assessment.version
         assert sorted(content["tags"]) == sorted(
             [tag.name for tag in self.assessment.tags.all()]
         )
