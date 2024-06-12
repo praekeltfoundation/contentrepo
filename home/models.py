@@ -334,7 +334,6 @@ class WhatsappBlock(blocks.StructBlock):
                 errors["variation_messages"] = ValidationError(
                     f"Ensure this variation message has at most 4096 characters, it has {len(message)} characters"
                 )
-
         if errors:
             raise StructBlockValidationError(errors)
         return result
