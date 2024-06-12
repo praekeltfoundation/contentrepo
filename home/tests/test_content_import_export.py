@@ -1068,7 +1068,7 @@ class TestImportExport:
     def test_max_varation_xlsx(self, xlsx_impexp: ImportExport) -> None:
         """
         Importing a XLSX file with the variation message greater than 4096 characters should
-        return a validation error to the user
+        return a validation error to the user.
         """
         with pytest.raises(ImportException) as e:
             xlsx_impexp.import_file("max_char_variation.xlsx", purge=True)
@@ -1081,7 +1081,7 @@ class TestImportExport:
     def test_max_WA_body_xlsx(self, xlsx_impexp: ImportExport) -> None:
         """
         Importing a XLSX file with the whatsapp body message greater than 4096 characters should
-        return a validation error to the user
+        return a validation error to the user.
         """
         with pytest.raises(ImportException) as e:
             xlsx_impexp.import_file("max_char_WA_body.xlsx", purge=True)
