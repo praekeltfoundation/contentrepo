@@ -1019,7 +1019,7 @@ class TestImportExport:
 
     def test_list_items_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with list_items and and list items characters exceeding maximum charactercount
+        Importing an CSV file with list_items and and list items characters exceeding maximum character count
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp_list_items_max_characters.csv")
@@ -1064,6 +1064,32 @@ class TestImportExport:
             xlsx_impexp.import_file("broken_button.xlsx", purge=True)
         assert e.value.row_num == 3
         assert e.value.message == ["Bad JSON button, you have: Broken button"]
+
+    def test_max_varation_xlsx(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing a XLSX file with the variation message greater than 4096 characters should
+        return a validation error to the user
+        """
+        with pytest.raises(ImportException) as e:
+            xlsx_impexp.import_file("max_char_variation.xlsx", purge=True)
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Validation error: variation_messages - The minimum number of items is 1",
+            "Validation error: variation_messages - Ensure this value has at most 4096 characters (it has 4319).",
+        ]
+
+    def test_max_WA_body_xlsx(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing a XLSX file with the whatsapp body message greater than 4096 characters should
+        return a validation error to the user
+        """
+        with pytest.raises(ImportException) as e:
+            xlsx_impexp.import_file("max_char_WA_body.xlsx", purge=True)
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Validation error: message - The minimum number of items is 1",
+            "Validation error: message - Ensure this value has at most 4096 characters (it has 4319).",
+        ]
 
     @pytest.mark.xfail(reason="Form creation during import needs to be fixed.")
     def test_multiple_field_errors(self, csv_impexp: ImportExport) -> None:
