@@ -1019,7 +1019,7 @@ class TestImportExport:
 
     def test_list_items_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with list_items and and list items characters exceeding maximum charactercount
+        Importing an CSV file with list_items and and list items characters exceeding maximum character count
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp_list_items_max_characters.csv")
@@ -1064,6 +1064,32 @@ class TestImportExport:
             xlsx_impexp.import_file("broken_button.xlsx", purge=True)
         assert e.value.row_num == 3
         assert e.value.message == ["Bad JSON button, you have: Broken button"]
+
+    def test_max_varation_xlsx(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing a XLSX file with the variation message greater than 4096 characters should
+        return a validation error to the user.
+        """
+        with pytest.raises(ImportException) as e:
+            xlsx_impexp.import_file("max_char_variation.xlsx", purge=True)
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Validation error: variation_messages - The minimum number of items is 1",
+            "Validation error: variation_messages - Ensure this value has at most 4096 characters (it has 4319).",
+        ]
+
+    def test_max_WA_body_xlsx(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing a XLSX file with the whatsapp body message greater than 4096 characters should
+        return a validation error to the user.
+        """
+        with pytest.raises(ImportException) as e:
+            xlsx_impexp.import_file("max_char_WA_body.xlsx", purge=True)
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Validation error: message - The minimum number of items is 1",
+            "Validation error: message - Ensure this value has at most 4096 characters (it has 4319).",
+        ]
 
     @pytest.mark.xfail(reason="Form creation during import needs to be fixed.")
     def test_multiple_field_errors(self, csv_impexp: ImportExport) -> None:
@@ -1180,6 +1206,52 @@ class TestImportExport:
         xlsx_impexp.import_file("content_pages.xlsx", purge=False)
         content_pages = ContentPage.objects.all()
         assert len(content_pages) > 0
+
+    def test_invalid_page(self, csv_impexp: ImportExport) -> None:
+        """
+        Import an invalid page that matches a valid page already in the db
+        """
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="main-menu-first-time-user",
+            title="main menu first time user",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome M")]),
+            ],
+        )
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("broken_button.csv")
+
+        assert e.value.row_num == 3
+        assert e.value.message == ["Bad JSON button, you have: Broken Button"]
+
+    def test_invalid_page_already_in_db(self, csv_impexp: ImportExport) -> None:
+        """
+        Import an invalid page that matches an invalid page already in the db
+        """
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        wa_block = [WABlk("Vars {1} {2} {3}", example_values=["Example value 1"])]
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="main-menu-first-time-user",
+            title="main menu first time user",
+            bodies=[WABody("HA menu ", wa_block)],
+        )
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("bad-whatsapp-template-vars.csv")
+
+        assert e.value.row_num == 3
+        # FIXME: Find a better way to represent this.
+        assert e.value.message == [
+            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
+        ]
 
 
 @pytest.mark.django_db
