@@ -1236,14 +1236,12 @@ class TestImportExport:
 
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        wa_block = [WABlk("Vars {1} {2} {3}", example_values = ["Example value 1"])]
+        wa_block = [WABlk("Vars {1} {2} {3}", example_values=["Example value 1"])]
         _ha_menu = PageBuilder.build_cp(
             parent=main_menu,
             slug="main-menu-first-time-user",
             title="main menu first time user",
-            bodies=[
-                WABody("HA menu ", wa_block)
-            ],
+            bodies=[WABody("HA menu ", wa_block)],
         )
 
         with pytest.raises(ImportException) as e:
