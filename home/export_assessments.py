@@ -84,7 +84,7 @@ class AssessmentExporter:
                     generic_error=item.generic_error,
                     question=question.value["question"],
                     explainer=question.value["explainer"],
-                    error=question.value["error"],
+                    error=question.value.get("error"),
                     answers=serialize_list(answers),
                     scores=serialize_list(scores),
                     semantic_ids=serialize_list(semantic_ids),

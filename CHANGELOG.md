@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Multiselect question type for forms
 - Add Semantic ID for form answers
 - Add version number to distinguish question sets
+- Add Freetext question type for forms
 
 ### Changed
 - Increased SMS limit to 459 characters
