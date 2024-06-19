@@ -25,6 +25,7 @@ from home.models import (
     Assessment,
     CategoricalQuestionBlock,
     ContentPage,
+    FreeTextQuestionBlock,
     HomePage,
     MultiselectQuestionBlock,
     OrderedContentSet,
@@ -1403,6 +1404,19 @@ class TestAssessmentAPI:
                 multiselect_question_block_value,
             )
         )
+        freetext_question_block = FreeTextQuestionBlock()
+        freetext_question_block_value = freetext_question_block.to_python(
+            {
+                "question": "How useful is this information?",
+                "answers": None,
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "freetext_question",
+                freetext_question_block_value,
+            )
+        )
         self.assessment.save()
 
     def test_assessment_endpoint(self, uclient):
@@ -1500,6 +1514,14 @@ class TestAssessmentAPI:
                 {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
                 {"answer": "Flake", "score": "3", "semantic_id": "flake"},
             ],
+        }
+        assert content["results"][0]["questions"][3] == {
+            "id": self.assessment.questions[3].id,
+            "question_type": "freetext_question",
+            "question": "How useful is this information?",
+            "explainer": None,
+            "error": None,
+            "answers": [],
         }
 
     def test_assessment_detail_endpoint(self, uclient):

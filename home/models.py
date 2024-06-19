@@ -1333,6 +1333,11 @@ class MultiselectQuestionBlock(BaseQuestionBlock):
     answers = blocks.ListBlock(AnswerBlock())
 
 
+class FreeTextQuestionBlock(BaseQuestionBlock):
+    answers = None
+    error = None
+
+
 class AssessmentTag(TaggedItemBase):
     content_object = ParentalKey(
         "Assessment", on_delete=models.CASCADE, related_name="tagged_items"
@@ -1390,6 +1395,7 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
             ("categorical_question", CategoricalQuestionBlock()),
             ("age_question", AgeQuestionBlock()),
             ("multiselect_question", MultiselectQuestionBlock()),
+            ("freetext_question", FreeTextQuestionBlock()),
         ],
         use_json_field=True,
     )

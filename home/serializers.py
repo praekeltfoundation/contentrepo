@@ -566,7 +566,7 @@ class QuestionField(serializers.Field):
                     "question_type": question["type"],
                     "question": question["value"]["question"],
                     "explainer": question.get("value", {}).get("explainer"),
-                    "error": question["value"]["error"],
+                    "error": question.get("value", {}).get("error"),
                     "answers": [
                         x["value"] for x in question["value"].get("answers", [])
                     ],
