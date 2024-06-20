@@ -34,6 +34,8 @@ class ExportRow:
     question: str
     explainer: str
     error: str
+    min: int
+    max: int
     answers: str
     scores: str
     semantic_ids: str
@@ -85,6 +87,8 @@ class AssessmentExporter:
                     question=question.value["question"],
                     explainer=question.value["explainer"],
                     error=question.value.get("error"),
+                    min=question.value.get("min"),
+                    max=question.value.get("max"),
                     answers=serialize_list(answers),
                     scores=serialize_list(scores),
                     semantic_ids=serialize_list(semantic_ids),
@@ -161,6 +165,8 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "question": 370,
         "explainer": 370,
         "error": 370,
+        "min": 110,
+        "max": 110,
         "answers": 370,
         "scores": 110,
         "semantic_ids": 110,

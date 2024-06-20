@@ -171,6 +171,8 @@ class AssessmentImporter:
         question = ShadowQuestionBlock(
             question=row.question,
             error=row.error,
+            min=row.min,
+            max=row.max,
             answers=answers,
             type=row.question_type,
             explainer=row.explainer,
@@ -194,6 +196,8 @@ class ShadowQuestionBlock:
     answers: list[ShadowAnswerBlock]
     explainer: str = ""
     error: str = ""
+    min: str = ""
+    max: str = ""
     type: str = ""
 
 
@@ -275,6 +279,8 @@ class ShadowAssessment:
                         "answers": answers,
                         "explainer": question.explainer,
                         "error": question.error,
+                        "min": question.min,
+                        "max": question.max,
                     },
                 }
             )
@@ -302,6 +308,8 @@ class AssessmentRow:
     question: str = ""
     explainer: str = ""
     error: str = ""
+    min: str = ""
+    max: str = ""
     answers: list[str] = field(default_factory=list)
     scores: list[float] = field(default_factory=list)
     semantic_ids: list[str] = field(default_factory=list)
