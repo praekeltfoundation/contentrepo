@@ -130,8 +130,6 @@ def create_form_with_fields() -> Assessment:
             {
                 "type": "categorical_question",
                 "value": {
-                    # "type": "categorical_question",
-                    # "question_type": "categorical_question",
                     "question": "test question",
                     "explainer": "We need to know this",
                     "error": "test error",
@@ -479,6 +477,8 @@ class TestAssessmentSerializer:
                 "question": "test question",
                 "explainer": "We need to know this",
                 "error": "test error",
+                "min": None,
+                "max": None,
                 "answers": [
                     {"score": 2.0, "answer": "A"},
                     {"score": 1.0, "answer": "B"},
@@ -503,6 +503,8 @@ class TestAssessmentSerializer:
                 "question": "test question",
                 "explainer": None,
                 "error": "test error",
+                "min": None,
+                "max": None,
                 "answers": [
                     {"score": 2.0, "answer": "A"},
                     {"score": 1.0, "answer": "B"},

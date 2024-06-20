@@ -27,6 +27,7 @@ from home.models import (
     ContentPage,
     FreeTextQuestionBlock,
     HomePage,
+    IntegerQuestionBlock,
     MultiselectQuestionBlock,
     OrderedContentSet,
     PageView,
@@ -1417,6 +1418,22 @@ class TestAssessmentAPI:
                 freetext_question_block_value,
             )
         )
+        integer_question_block = IntegerQuestionBlock()
+        integer_question_block_value = integer_question_block.to_python(
+            {
+                "question": "What's your weight in kilograms?",
+                "error": "Your weight should be between 40 and 500kg",
+                "min": 40,
+                "max": 500,
+                "answers": None,
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "integer_question",
+                integer_question_block_value,
+            )
+        )
         self.assessment.save()
 
     def test_assessment_endpoint(self, uclient):
@@ -1491,6 +1508,8 @@ class TestAssessmentAPI:
             "question": "What is the best chocolate?",
             "explainer": None,
             "error": "Invalid answer",
+            "min": None,
+            "max": None,
             "answers": [
                 {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
                 {"answer": "Flake", "score": "3", "semantic_id": "flake"},
@@ -1502,6 +1521,8 @@ class TestAssessmentAPI:
             "question": "How old are you?",
             "explainer": None,
             "error": "Invalid answer",
+            "min": None,
+            "max": None,
             "answers": [],
         }
         assert content["results"][0]["questions"][2] == {
@@ -1510,6 +1531,8 @@ class TestAssessmentAPI:
             "question": "Which chocolates are yummy?",
             "explainer": None,
             "error": "Invalid answer",
+            "min": None,
+            "max": None,
             "answers": [
                 {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
                 {"answer": "Flake", "score": "3", "semantic_id": "flake"},
@@ -1521,6 +1544,18 @@ class TestAssessmentAPI:
             "question": "How useful is this information?",
             "explainer": None,
             "error": None,
+            "min": None,
+            "max": None,
+            "answers": [],
+        }
+        assert content["results"][0]["questions"][4] == {
+            "id": self.assessment.questions[4].id,
+            "question_type": "integer_question",
+            "question": "What's your weight in kilograms?",
+            "explainer": None,
+            "error": "Your weight should be between 40 and 500kg",
+            "min": 40,
+            "max": 500,
             "answers": [],
         }
 

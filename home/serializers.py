@@ -543,6 +543,8 @@ class QuestionField(serializers.Field):
         "question": "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
         "explainer": None,
         "error": "Unknown answer given",
+        "min": 100,
+        "max": 500,
         "answers": [
             {
                 "answer": "Yes",
@@ -567,6 +569,8 @@ class QuestionField(serializers.Field):
                     "question": question["value"]["question"],
                     "explainer": question.get("value", {}).get("explainer"),
                     "error": question.get("value", {}).get("error"),
+                    "min": question.get("value", {}).get("min"),
+                    "max": question.get("value", {}).get("max"),
                     "answers": [
                         x["value"] for x in question["value"].get("answers", [])
                     ],

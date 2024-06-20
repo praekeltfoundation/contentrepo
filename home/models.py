@@ -1338,6 +1338,18 @@ class FreeTextQuestionBlock(BaseQuestionBlock):
     error = None
 
 
+class IntegerQuestionBlock(BaseQuestionBlock):
+    min = blocks.IntegerBlock(
+        required=False,
+        help_text="The minimum value that can be entered",
+    )
+    max = blocks.IntegerBlock(
+        required=False,
+        help_text="The maximum value that can be entered",
+    )
+    answers = None
+
+
 class AssessmentTag(TaggedItemBase):
     content_object = ParentalKey(
         "Assessment", on_delete=models.CASCADE, related_name="tagged_items"
@@ -1396,6 +1408,7 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
             ("age_question", AgeQuestionBlock()),
             ("multiselect_question", MultiselectQuestionBlock()),
             ("freetext_question", FreeTextQuestionBlock()),
+            ("integer_question", IntegerQuestionBlock()),
         ],
         use_json_field=True,
     )
