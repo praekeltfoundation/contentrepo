@@ -31,6 +31,7 @@ from home.models import (
     MultiselectQuestionBlock,
     OrderedContentSet,
     PageView,
+    YearofBirthQuestionBlock,
 )
 
 from .page_builder import (
@@ -1434,6 +1435,21 @@ class TestAssessmentAPI:
                 integer_question_block_value,
             )
         )
+        year_of_birth_question_block = YearofBirthQuestionBlock()
+        year_of_birth_question_block_value = year_of_birth_question_block.to_python(
+            {
+                "question": "What's your year of birth?",
+                "error": "You entered an invalid year of birth",
+                "explainer": "We need to know some things",
+                "answers": None,
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "year_of_birth_question",
+                year_of_birth_question_block_value,
+            )
+        )
         self.assessment.save()
 
     def test_assessment_endpoint(self, uclient):
@@ -1556,6 +1572,16 @@ class TestAssessmentAPI:
             "error": "Your weight should be between 40 and 500kg",
             "min": 40,
             "max": 500,
+            "answers": [],
+        }
+        assert content["results"][0]["questions"][5] == {
+            "id": self.assessment.questions[5].id,
+            "question_type": "year_of_birth_question",
+            "question": "What's your year of birth?",
+            "explainer": "We need to know some things",
+            "error": "You entered an invalid year of birth",
+            "min": None,
+            "max": None,
             "answers": [],
         }
 

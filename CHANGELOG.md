@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add version number to distinguish question sets
 - Add Freetext question type for forms
 - Add Integer question with min and max values
+- Add Year of Birth type question type
 
 ### Changed
 - Increased SMS limit to 459 characters
