@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove pagination on page view report
 - Add tests for the pageview report filters
 - Make inflection points and results pages optional
+- Mkae min and max fields mandatory for integer question type
 
 -->
 ## v1.1.0

@@ -1340,12 +1340,12 @@ class FreeTextQuestionBlock(BaseQuestionBlock):
 
 class IntegerQuestionBlock(BaseQuestionBlock):
     min = blocks.IntegerBlock(
-        required=False,
         help_text="The minimum value that can be entered",
+        default=None,
     )
     max = blocks.IntegerBlock(
-        required=False,
         help_text="The maximum value that can be entered",
+        default=None,
     )
     answers = None
 
