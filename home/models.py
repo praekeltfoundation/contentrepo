@@ -1381,31 +1381,42 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
         related_name="assessment_high",
         on_delete=models.CASCADE,
         help_text="The page to show the user if they score high",
+        blank=True,
+        null=True,
     )
     high_inflection = models.FloatField(
-        help_text="Any score equal to or above this amount is considered high"
+        help_text="Any score equal to or above this amount is considered high",
+        blank=True,
+        null=True,
     )
     medium_result_page = models.ForeignKey(
         ContentPage,
         related_name="assessment_medium",
         on_delete=models.CASCADE,
         help_text="The page to show the user if they score medium",
+        blank=True,
+        null=True,
     )
     medium_inflection = models.FloatField(
         help_text="Any score equal to or above this amount, but lower than the high "
         "inflection, is considered medium. Any score below this amount is considered "
-        "low"
+        "low",
+        blank=True,
+        null=True,
     )
     low_result_page = models.ForeignKey(
         ContentPage,
         related_name="assessment_low",
         on_delete=models.CASCADE,
         help_text="The page to show the user if they score low",
+        blank=True,
+        null=True,
     )
     generic_error = models.TextField(
         help_text="If no error is specified for a question, then this is used as the "
         "fallback"
     )
+
     questions = StreamField(
         [
             ("categorical_question", CategoricalQuestionBlock()),

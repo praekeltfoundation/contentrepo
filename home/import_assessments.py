@@ -156,8 +156,14 @@ class AssessmentImporter:
                 high_result_page=row.high_result_page,
                 medium_result_page=row.medium_result_page,
                 low_result_page=row.low_result_page,
-                high_inflection=float(row.high_inflection),
-                medium_inflection=float(row.medium_inflection),
+                high_inflection=(
+                    None if row.high_inflection == "" else float(row.high_inflection)
+                ),
+                medium_inflection=(
+                    None
+                    if row.medium_inflection == ""
+                    else float(row.medium_inflection)
+                ),
                 generic_error=row.generic_error,
                 tags=row.tags,
             )
@@ -211,8 +217,8 @@ class ShadowAssessment:
     high_result_page: str
     medium_result_page: str
     low_result_page: str
-    high_inflection: float
-    medium_inflection: float
+    high_inflection: float | None
+    medium_inflection: float | None
     generic_error: str
     questions: list[ShadowQuestionBlock] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
@@ -237,15 +243,21 @@ class ShadowAssessment:
         assessment.version = self.version
         assessment.locale = self.locale
         assessment.high_inflection = self.high_inflection
-        assessment.high_result_page_id = get_content_page_id_from_slug(
-            self.high_result_page
+        assessment.high_result_page_id = (
+            None
+            if self.high_result_page == ""
+            else get_content_page_id_from_slug(self.high_result_page)
         )
         assessment.medium_inflection = self.medium_inflection
-        assessment.medium_result_page_id = get_content_page_id_from_slug(
-            self.medium_result_page
+        assessment.medium_result_page_id = (
+            None
+            if self.medium_result_page == ""
+            else get_content_page_id_from_slug(self.medium_result_page)
         )
-        assessment.low_result_page_id = get_content_page_id_from_slug(
-            self.low_result_page
+        assessment.low_result_page_id = (
+            None
+            if self.low_result_page == ""
+            else get_content_page_id_from_slug(self.low_result_page)
         )
         assessment.generic_error = self.generic_error
         assessment.questions = self.questions_as_streamfield
