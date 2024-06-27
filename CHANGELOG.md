@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - updated ordered content set status to include In Moderation and Live + In Moderation
 - Remove pagination on page view report
 - Add tests for the pageview report filters
+- Make inflection points and results pages optional
 
 -->
 ## v1.1.0

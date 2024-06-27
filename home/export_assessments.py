@@ -25,11 +25,11 @@ class ExportRow:
     slug: str
     version: str
     locale: str
-    high_result_page: str
-    high_inflection: str
-    medium_result_page: str
-    medium_inflection: str
-    low_result_page: str
+    high_result_page: str | None
+    high_inflection: str | None
+    medium_result_page: str | None
+    medium_inflection: str | None
+    low_result_page: str | None
     generic_error: str
     question: str
     explainer: str
@@ -78,11 +78,11 @@ class AssessmentExporter:
                     slug=item.slug,
                     version=item.version,
                     locale=item.locale.language_code,
-                    high_result_page=item.high_result_page.slug,
-                    high_inflection=str(item.high_inflection),
-                    medium_result_page=item.medium_result_page.slug,
-                    medium_inflection=str(item.medium_inflection),
-                    low_result_page=item.low_result_page.slug,
+                    high_result_page=getattr(item.high_result_page, "slug", None),
+                    high_inflection=getattr(item, "high_inflection", None),
+                    medium_result_page=getattr(item.medium_result_page, "slug", None),
+                    medium_inflection=getattr(item, "medium_inflection", None),
+                    low_result_page=getattr(item.low_result_page, "slug", None),
                     generic_error=item.generic_error,
                     question=question.value["question"],
                     explainer=question.value["explainer"],

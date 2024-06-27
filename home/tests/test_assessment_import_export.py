@@ -341,6 +341,16 @@ class TestImportExportRoundtrip:
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
+    def test_assessments_with_blank_results(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a simple CSV file without results pages and inflection points
+        (This uses results_assessments.csv.)
+        """
+        csv_bytes = csv_impexp.import_file("results_assessments.csv")
+        content = csv_impexp.export_assessment()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
+
     def test_comma_separated_answers(self, csv_impexp: ImportExport) -> None:
         """
         CSV file where the answers have commas in them that need to be escaped
