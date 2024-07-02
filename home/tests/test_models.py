@@ -25,6 +25,7 @@ from home.models import (
     ContentPageIndex,
     GoToPageButton,
     HomePage,
+    IntegerQuestionBlock,
     NextMessageButton,
     OrderedContentSet,
     PageView,
@@ -953,3 +954,32 @@ class TestWhatsAppTemplate:
         wat_from_db = WhatsAppTemplate.objects.last()
         assert wat_from_db.submission_status == "FAILED"
         assert "Error" in wat_from_db.submission_result
+
+
+class IntegerQuestionBlockTests(TestCase):
+    def create_min_max_value(
+        self,
+        min,
+        max,
+    ):
+        return {
+            "min": min,
+            "max": max,
+        }
+
+    def test_clean_identical_min_max(self):
+        """Min and Max values must not be the same"""
+        IntegerQuestionBlock().clean(self.create_min_max_value(min=40, max=50))
+
+        with self.assertRaises(ValidationError) as e:
+            IntegerQuestionBlock().clean(self.create_min_max_value(min=50, max=50))
+        self.assertEqual(
+            "min and max values need to be different",
+            e.exception.message,
+        )
+        with self.assertRaises(ValidationError) as e:
+            IntegerQuestionBlock().clean(self.create_min_max_value(min=50, max=40))
+        self.assertEqual(
+            "min cannot be greater than max",
+            e.exception.message,
+        )

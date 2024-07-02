@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Freetext question type for forms
 - Add Integer question with min and max values
 - Add Year of Birth type question type
+- Custom model validation for IntegerQuestionBlock min and max
 
 ### Changed
 - Increased SMS limit to 459 characters
