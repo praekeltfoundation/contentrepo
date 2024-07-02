@@ -1349,6 +1349,16 @@ class IntegerQuestionBlock(BaseQuestionBlock):
     )
     answers = None
 
+    def clean(self, value):
+        result = super().clean(value)
+        min = result["min"]
+        max = result["max"]
+        if min == max:
+            raise ValidationError("min and max values need to be different")
+        if min > max:
+            raise ValidationError("min cannot be greater than max")
+        return result
+
 
 class YearofBirthQuestionBlock(BaseQuestionBlock):
     answers = None
