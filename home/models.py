@@ -1357,6 +1357,8 @@ class IntegerQuestionBlock(BaseQuestionBlock):
             raise ValidationError("min and max values need to be different")
         if min > max:
             raise ValidationError("min cannot be greater than max")
+        if min < 0 or max < 0:
+            raise ValidationError("min and max cannot be less than zero")
         return result
 
 
