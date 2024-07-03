@@ -21,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Freetext question type for forms
 - Add Integer question with min and max values
 - Add Year of Birth type question type
-- Custom model validation for IntegerQuestionBlock min and max
 
 ### Changed
 - Increased SMS limit to 459 characters
@@ -32,7 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove pagination on page view report
 - Add tests for the pageview report filters
 - Make inflection points and results pages optional
-- Mkae min and max fields mandatory for integer question type
+- Make min and max fields mandatory for integer question type
+- Custom model validation for IntegerQuestionBlock min and max
+- Custom model validation for min and max values to only be positive
 
 -->
 ## v1.1.0

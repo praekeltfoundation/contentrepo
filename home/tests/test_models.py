@@ -983,3 +983,21 @@ class IntegerQuestionBlockTests(TestCase):
             "min cannot be greater than max",
             e.exception.message,
         )
+        with self.assertRaises(ValidationError) as e:
+            IntegerQuestionBlock().clean(self.create_min_max_value(min=-50, max=40))
+        self.assertEqual(
+            "min and max cannot be less than zero",
+            e.exception.message,
+        )
+        with self.assertRaises(ValidationError) as e:
+            IntegerQuestionBlock().clean(self.create_min_max_value(min=50, max=-40))
+        self.assertEqual(
+            "min and max cannot be less than zero",
+            e.exception.message,
+        )
+        with self.assertRaises(ValidationError) as e:
+            IntegerQuestionBlock().clean(self.create_min_max_value(min=-60, max=-50))
+        self.assertEqual(
+            "min and max cannot be less than zero",
+            e.exception.message,
+        )
