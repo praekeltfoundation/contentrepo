@@ -682,11 +682,25 @@ class TestImportExport:
         (This uses missing-slug.csv.)
         """
 
-        # One of the page rows doesn't have a slug.
+        # One of the content page rows doesn't have a slug.
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("missing-slug.csv")
 
         assert e.value.row_num == 3
+        assert e.value.message == ["Missing slug value"]
+
+    def test_missing_slug_on_index_page(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing index pages without slugs causes a validation error.
+
+        (This uses missing-slug-index.csv.)
+        """
+
+        # One of the index page rows doesn't have a slug.
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("missing-slug-index.csv")
+
+        assert e.value.row_num == 2
         assert e.value.message == ["Missing slug value"]
 
     def test_no_translation_key_default(self, csv_impexp: ImportExport) -> None:
