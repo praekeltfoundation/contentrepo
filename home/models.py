@@ -1398,7 +1398,7 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
         null=True,
     )
     high_inflection = models.FloatField(
-        help_text="Any score equal to or above this amount is considered high",
+        help_text="Any score equal to or above this amount is considered high. Note that this is a percentage-based number.",
         blank=True,
         null=True,
     )
@@ -1413,7 +1413,7 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
     medium_inflection = models.FloatField(
         help_text="Any score equal to or above this amount, but lower than the high "
         "inflection, is considered medium. Any score below this amount is considered "
-        "low",
+        "low. Note that this is a percentage-based number.",
         blank=True,
         null=True,
     )
