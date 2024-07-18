@@ -828,6 +828,8 @@ class ContentRow:
             for key, value in row.items()
             if value and key in class_fields
         }
+        if "slug" not in row:
+            raise ImportException("Missing slug value", row_num)
         return cls(
             page_id=int(row.pop("page_id")) if row.get("page_id") else None,
             variation_title=deserialise_dict(row.pop("variation_title", "")),
