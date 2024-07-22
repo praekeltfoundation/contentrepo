@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--
 ## Unreleased
+-->
 
+## v1.2.0
 ### Fixed
 - Page not found api status change to 404 from 400
 - Use cache for data when importing assessments with xlsx
@@ -36,7 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom model validation for IntegerQuestionBlock min and max
 - Custom model validation for min and max values to only be positive
 
--->
 ## v1.1.0
 ### Fixed
 - Autofill for empty slug
