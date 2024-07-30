@@ -250,10 +250,17 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
         "category",
         "locale",
         "status",
-        "quick_replies",
-        "example_values",
         "submission_status",
     )
+    list_filter = ("locale",)
+
+    search_fields = (
+        "name",
+        "category",
+        "message",
+        "locale",
+    )
+
     index_view_class = CustomIndexViewWhatsAppTemplate
 
     panels = [
@@ -273,13 +280,6 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
             heading="Whatsapp Template",
         ),
     ]
-
-    search_fields = (
-        "name",
-        "category",
-        "message",
-        "locale",
-    )
 
 
 class AssessmentAdmin(SnippetViewSet):
