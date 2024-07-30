@@ -85,7 +85,7 @@ class AssessmentExporter:
                     medium_result_page=getattr(item.medium_result_page, "slug", None),
                     medium_inflection=getattr(item, "medium_inflection", None),
                     low_result_page=getattr(item.low_result_page, "slug", None),
-                    skip_threshold=getattr(item, "skip_threshold", 0.0),
+                    skip_threshold=getattr(item, "skip_threshold", "0.0"),
                     skip_high_result_page=getattr(
                         item.skip_high_result_page, "slug", None
                     ),
