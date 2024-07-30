@@ -231,6 +231,8 @@ class AssessmentViewSet(BaseAPIViewSet):
         "medium_result_page",
         "medium_inflection",
         "low_result_page",
+        "skip_threshold",
+        "skip_high_result_page",
         "generic_error",
         "questions",
     ]
@@ -246,6 +248,8 @@ class AssessmentViewSet(BaseAPIViewSet):
         "medium_inflection",
         "low_result_page",
         "low_inflection",
+        "skip_threshold",
+        "skip_high_result_page",
         "generic_error",
         "questions",
     ]
@@ -274,6 +278,10 @@ class AssessmentViewSet(BaseAPIViewSet):
                     assessment.medium_result_page = latest_revision.medium_result_page
                     assessment.medium_inflection = latest_revision.medium_inflection
                     assessment.low_result_page = latest_revision.low_result_page
+                    assessment.skip_threshold = latest_revision.skip_threshold
+                    assessment.skip_high_result_page = (
+                        latest_revision.skip_high_result_page
+                    )
                     assessment.generic_error = latest_revision.generic_error
                     assessment.questions = latest_revision.questions
 

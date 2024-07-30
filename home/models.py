@@ -1425,6 +1425,18 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
         blank=True,
         null=True,
     )
+    skip_threshold = models.FloatField(
+        help_text="If a user skips equal to or greater than this many questions they will be presented with the skip page",
+        default=0,
+    )
+    skip_high_result_page = models.ForeignKey(
+        ContentPage,
+        related_name="assessment_high_skip",
+        on_delete=models.CASCADE,
+        help_text="The page to show a user if they skip a question",
+        blank=True,
+        null=True,
+    )
     generic_error = models.TextField(
         help_text="If no error is specified for a question, then this is used as the "
         "fallback"
@@ -1464,6 +1476,8 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
         APIField("medium_result_page", serializer=ContentPageSerializer()),
         APIField("medium_inflection"),
         APIField("low_result_page", serializer=ContentPageSerializer()),
+        APIField("skip_threshold"),
+        APIField("skip_high_result_page", serializer=ContentPageSerializer()),
         APIField("generic_error"),
         APIField("questions"),
     ]

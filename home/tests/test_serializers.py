@@ -108,6 +108,16 @@ def create_form_pages() -> None:
         ],
     )
 
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="skip-score",
+        title="Skip Score",
+        bodies=[
+            WABody("Skip Score", [WABlk("*Skip Result Page")]),
+            MBody("Skip Score", [MBlk("Skip Result Page")]),
+        ],
+    )
+
 
 def create_form_with_fields() -> Assessment:
     """
@@ -125,6 +135,8 @@ def create_form_with_fields() -> Assessment:
         medium_result_page=ContentPage.objects.get(slug="medium-score"),
         medium_inflection=2,
         low_result_page=ContentPage.objects.get(slug="low-score"),
+        skip_threshold=2,
+        skip_high_result_page=ContentPage.objects.get(slug="skip-score"),
         generic_error="error",
         questions=[
             {
@@ -172,6 +184,8 @@ def create_form_with_missing_fields() -> Assessment:
         medium_result_page=ContentPage.objects.get(slug="medium-score"),
         medium_inflection=2,
         low_result_page=ContentPage.objects.get(slug="low-score"),
+        skip_threshold=2,
+        skip_high_result_page=ContentPage.objects.get(slug="skip-score"),
         generic_error="error",
         questions=[
             {

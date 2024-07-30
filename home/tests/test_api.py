@@ -1338,13 +1338,34 @@ class TestAssessmentAPI:
                 }
             ],
         )
+        self.skip_high_result_page = ContentPage(
+            title="skip result",
+            slug="skip-result",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {
+                                "type": "next_message",
+                                "value": {"title": "You skipped a question"},
+                            }
+                        ],
+                    },
+                }
+            ],
+        )
         homepage = HomePage.objects.first()
         homepage.add_child(instance=self.high_result_page)
         homepage.add_child(instance=self.medium_result_page)
         homepage.add_child(instance=self.low_result_page)
+        homepage.add_child(instance=self.skip_high_result_page)
         self.high_result_page.save_revision().publish()
         self.medium_result_page.save_revision().publish()
         self.low_result_page.save_revision().publish()
+        self.skip_high_result_page.save_revision().publish()
         site = Site.objects.get(is_default_site=True)
         tag, _ = Tag.objects.get_or_create(name="tag1")
         self.assessment.tags.add(tag)
@@ -1356,6 +1377,8 @@ class TestAssessmentAPI:
         self.assessment.medium_result_page = self.medium_result_page
         self.assessment.medium_inflection = 2.0
         self.assessment.low_result_page = self.low_result_page
+        self.assessment.skip_threshold = 3.0
+        self.assessment.skip_high_result_page = self.skip_high_result_page
         self.assessment.generic_error = "This is a generic error"
         answers_block = blocks.ListBlock(AnswerBlock())
         answers_block_value = answers_block.to_python(
@@ -1517,6 +1540,24 @@ class TestAssessmentAPI:
             "tags": [],
             "triggers": [],
         }
+
+        meta = content["results"][0]["skip_high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.skip_high_result_page.slug
+        assert meta["parent"]["id"] == self.skip_high_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["skip_high_result_page"] == {
+            "id": self.skip_high_result_page.id,
+            "title": self.skip_high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["skip_threshold"] == 3.0
 
         assert content["results"][0]["questions"][0] == {
             "id": self.assessment.questions[0].id,
