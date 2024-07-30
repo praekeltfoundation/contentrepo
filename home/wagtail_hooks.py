@@ -311,6 +311,8 @@ class AssessmentAdmin(SnippetViewSet):
                 FieldPanel("medium_result_page"),
                 FieldPanel("medium_inflection"),
                 FieldPanel("low_result_page"),
+                FieldPanel("skip_threshold"),
+                FieldPanel("skip_high_result_page"),
             ],
             heading="Results",
         ),

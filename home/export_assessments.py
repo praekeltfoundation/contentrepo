@@ -30,6 +30,8 @@ class ExportRow:
     medium_result_page: str | None
     medium_inflection: str | None
     low_result_page: str | None
+    skip_threshold: str | None
+    skip_high_result_page: str | None
     generic_error: str
     question: str
     explainer: str
@@ -83,6 +85,10 @@ class AssessmentExporter:
                     medium_result_page=getattr(item.medium_result_page, "slug", None),
                     medium_inflection=getattr(item, "medium_inflection", None),
                     low_result_page=getattr(item.low_result_page, "slug", None),
+                    skip_threshold=getattr(item, "skip_threshold", "0.0"),
+                    skip_high_result_page=getattr(
+                        item.skip_high_result_page, "slug", None
+                    ),
                     generic_error=item.generic_error,
                     question=question.value["question"],
                     explainer=question.value["explainer"],
@@ -161,6 +167,8 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "medium_result_page": 120,
         "medium_inflection": 110,
         "low_result_page": 110,
+        "skip_threshold": 110,
+        "skip_high_result_page": 110,
         "generic_error": 370,
         "question": 370,
         "explainer": 370,

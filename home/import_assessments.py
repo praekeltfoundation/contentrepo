@@ -156,6 +156,7 @@ class AssessmentImporter:
                 high_result_page=row.high_result_page,
                 medium_result_page=row.medium_result_page,
                 low_result_page=row.low_result_page,
+                skip_high_result_page=row.skip_high_result_page,
                 high_inflection=(
                     None if row.high_inflection == "" else float(row.high_inflection)
                 ),
@@ -163,6 +164,9 @@ class AssessmentImporter:
                     None
                     if row.medium_inflection == ""
                     else float(row.medium_inflection)
+                ),
+                skip_threshold=(
+                    0.0 if row.skip_threshold == "" else float(row.skip_threshold)
                 ),
                 generic_error=row.generic_error,
                 tags=row.tags,
@@ -219,6 +223,8 @@ class ShadowAssessment:
     low_result_page: str
     high_inflection: float | None
     medium_inflection: float | None
+    skip_threshold: float
+    skip_high_result_page: str
     generic_error: str
     questions: list[ShadowQuestionBlock] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
@@ -259,6 +265,12 @@ class ShadowAssessment:
             if self.low_result_page == ""
             else get_content_page_id_from_slug(self.low_result_page)
         )
+        assessment.skip_high_result_page_id = (
+            None
+            if self.skip_high_result_page == ""
+            else get_content_page_id_from_slug(self.skip_high_result_page)
+        )
+        assessment.skip_threshold = self.skip_threshold
         assessment.generic_error = self.generic_error
         assessment.questions = self.questions_as_streamfield
 
@@ -316,6 +328,8 @@ class AssessmentRow:
     medium_result_page: str = ""
     medium_inflection: str = ""
     low_result_page: str = ""
+    skip_threshold: str = ""
+    skip_high_result_page: str = ""
     generic_error: str = ""
     question: str = ""
     explainer: str = ""
