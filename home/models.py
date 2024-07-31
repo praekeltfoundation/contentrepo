@@ -1542,9 +1542,8 @@ class WhatsAppTemplate(
         related_name="image",
     )
     message = models.TextField(
-        help_text="each text message cannot exceed 4096 characters, messages with "
-        "media cannot exceed 1024 characters.",
-        max_length=4096,
+        help_text="each template message cannot exceed 1024 characters",
+        max_length=1024,
     )
 
     example_values = StreamField(
@@ -1603,8 +1602,8 @@ class WhatsAppTemplate(
         previous_revision=None,
         clean=True,
     ):
-        previous_revision = self.get_latest_revision()
 
+        previous_revision = self.get_latest_revision()
         revision = super().save_revision(
             user,
             submitted_for_moderation,
@@ -1626,7 +1625,7 @@ class WhatsAppTemplate(
             previous_revision_fields = ()
 
         if self.fields == previous_revision_fields:
-            return
+            return revision
 
         self.template_name = self.create_whatsapp_template_name()
         try:
@@ -1655,7 +1654,6 @@ class WhatsAppTemplate(
             )
 
         revision.save(update_fields=["content"])
-
         return revision
 
     def clean(self):
