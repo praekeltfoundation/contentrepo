@@ -145,6 +145,7 @@ def create_form_with_fields() -> Assessment:
                     "question": "test question",
                     "explainer": "We need to know this",
                     "error": "test error",
+                    "semantic_id": "test-semantic-id",
                     "answers": [
                         {
                             "id": "eb96ad43-c231-4493-a235-de88e60219ea",
@@ -493,6 +494,7 @@ class TestAssessmentSerializer:
                 "error": "test error",
                 "min": None,
                 "max": None,
+                "semantic_id": "test-semantic-id",
                 "answers": [
                     {"score": 2.0, "answer": "A"},
                     {"score": 1.0, "answer": "B"},
@@ -519,6 +521,7 @@ class TestAssessmentSerializer:
                 "error": "test error",
                 "min": None,
                 "max": None,
+                "semantic_id": None,
                 "answers": [
                     {"score": 2.0, "answer": "A"},
                     {"score": 1.0, "answer": "B"},

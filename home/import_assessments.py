@@ -175,7 +175,7 @@ class AssessmentImporter:
         answers = [
             ShadowAnswerBlock(answer=answer, score=score, semantic_id=semantic_id)
             for (answer, score, semantic_id) in zip(
-                row.answers, row.scores, row.semantic_ids, strict=False
+                row.answers, row.scores, row.answer_semantic_ids, strict=False
             )
         ]
         question = ShadowQuestionBlock(
@@ -186,6 +186,7 @@ class AssessmentImporter:
             answers=answers,
             type=row.question_type,
             explainer=row.explainer,
+            semantic_id=row.question_semantic_id,
         )
         assessment.questions.append(question)
 
@@ -209,6 +210,7 @@ class ShadowQuestionBlock:
     min: str = ""
     max: str = ""
     type: str = ""
+    semantic_id: str = ""
 
 
 @dataclass(slots=True)
@@ -305,6 +307,7 @@ class ShadowAssessment:
                         "error": question.error,
                         "min": question.min,
                         "max": question.max,
+                        "semantic_id": question.semantic_id,
                     },
                 }
             )
@@ -338,7 +341,8 @@ class AssessmentRow:
     max: str = ""
     answers: list[str] = field(default_factory=list)
     scores: list[float] = field(default_factory=list)
-    semantic_ids: list[str] = field(default_factory=list)
+    answer_semantic_ids: list[str] = field(default_factory=list)
+    question_semantic_id: str = ""
 
     @classmethod
     def fields(cls) -> list[str]:
@@ -360,7 +364,9 @@ class AssessmentRow:
                 tags=deserialise_list(row.pop("tags", "")),
                 answers=deserialise_list(row.pop("answers", "")),
                 scores=[float(i) for i in deserialise_list(row.pop("scores", ""))],
-                semantic_ids=deserialise_list(row.pop("semantic_ids", "")),
+                answer_semantic_ids=deserialise_list(
+                    row.pop("answer_semantic_ids", "")
+                ),
                 **row,
             )
         except TypeError:

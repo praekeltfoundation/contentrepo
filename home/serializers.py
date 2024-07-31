@@ -571,6 +571,7 @@ class QuestionField(serializers.Field):
                     "error": question.get("value", {}).get("error"),
                     "min": question.get("value", {}).get("min"),
                     "max": question.get("value", {}).get("max"),
+                    "semantic_id": question.get("value", {}).get("semantic_id"),
                     "answers": [
                         x["value"] for x in question["value"].get("answers", [])
                     ],
