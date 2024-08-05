@@ -1614,13 +1614,10 @@ class WhatsAppTemplate(
             previous_revision,
             clean,
         )
-        print(f"Template Status {self.status()}")
-        print(self.fields)
 
         if not settings.WHATSAPP_CREATE_TEMPLATES:
             return revision
-        
-        
+
         # If there are any missing fields in the previous revision, then carry on
         if previous_revision:
             previous_revision = previous_revision.as_object()
@@ -1630,49 +1627,47 @@ class WhatsAppTemplate(
 
         if self.fields == previous_revision_fields:
             return revision
-        
-        # Only submit the template to WhatsApp if the status is live
-        template_status = self.status()
-        if self.status() == "Live":
-            print("Going to submit template as its live")
-            # self.template_name = self.create_whatsapp_template_name()
-            # try:
-            #     response_json = create_standalone_whatsapp_template(
-            #         name=self.template_name,
-            #         message=self.message,
-            #         category=self.category,
-            #         locale=self.locale,
-            #         quick_replies=sorted(self.quick_reply_buttons),
-            #         image_obj=self.image,
-            #         example_values=[v["value"] for v in self.example_values.raw_data],
-            #     )
-            #     revision.content["name"] = self.name
-            #     revision.content["submission_name"] = self.template_name
-            #     revision.content["submission_status"] = self.SubmissionStatus.SUBMITTED
-            #     revision.content["submission_result"] = (
-            #         f"Success! Template ID = {response_json['id']}"
-            #     )
-            # except TemplateSubmissionException as e:
-            #     # The submission failed
-            #     revision.content["name"] = self.name
-            #     revision.content["submission_name"] = self.template_name
-            #     revision.content["submission_status"] = self.SubmissionStatus.FAILED
-            #     revision.content["submission_result"] = (
-            #         f"Error! {e.response_json['error']['error_user_msg']} "
-            #     )
-            # revision.save(update_fields=["content"])
+
+        self.template_name = self.create_whatsapp_template_name()
+        self.submission_status = ""
+        self.submission_result = ""
+        try:
+            response_json = create_standalone_whatsapp_template(
+                name=self.template_name,
+                message=self.message,
+                category=self.category,
+                locale=self.locale,
+                quick_replies=sorted(self.quick_reply_buttons),
+                image_obj=self.image,
+                example_values=[v["value"] for v in self.example_values.raw_data],
+            )
+            self.submission_status = self.SubmissionStatus.SUBMITTED
+            self.submission_result = (
+                f"Success! Template ID = {response_json['id']}"
+            )
 
 
-        #Update the submissions status fields for all revisions
-        # revisions = self.revisions
-        # for r in revisions:
-        #      r.content["submission_name"] = "temp"
-        #      r.content["submission_status"] = _(self.SubmissionStatus.FAILED)
-        #      r.content["submission_result"] = "moretemp"
-        #      r.save()
-        # print("Rev deets")
-    #    revs = super().revisions(self)
-        # print(revisions)
+        except TemplateSubmissionException as e:
+            # The submission failed
+            self.submission_status = self.SubmissionStatus.FAILED
+            self.submission_result = (
+                f"Error! {e.response_json['error']['error_user_msg']} "
+            )
+
+        revision.content["name"] = self.name
+        revision.content["submission_name"] = self.template_name
+        revision.content["submission_status"] = self.submission_status
+        revision.content["submission_result"] = self.submission_result
+
+        revision.save(update_fields=["content"])
+
+        # Update the submissions status fields for all revisions, regardless of Draft vs Live status
+        revisions = self.revisions
+        for r in revisions:
+            r.content["submission_name"] = self.template_name
+            r.content["submission_status"] = self.submission_status
+            r.content["submission_result"] = self.submission_result
+            r.save()
         return revision
 
     def clean(self):
@@ -1749,7 +1744,7 @@ class WhatsAppTemplate(
             sorted(self.quick_reply_buttons),
             self.image,
             self.example_values,
-            self.status()
+            self.status(),
         )
 
     def create_whatsapp_template_name(self) -> str:
