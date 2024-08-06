@@ -1558,7 +1558,7 @@ class WhatsAppTemplate(
         max_length=30,
         choices=SubmissionStatus.choices,
         blank=True,
-        default=SubmissionStatus.NOT_SUBMITTED_YET,
+        default="",
     )
 
     submission_result = models.TextField(
@@ -1641,15 +1641,12 @@ class WhatsAppTemplate(
                 image_obj=self.image,
                 example_values=[v["value"] for v in self.example_values.raw_data],
             )
-            self.submission_status = self.SubmissionStatus.SUBMITTED
-            self.submission_result = (
-                f"Success! Template ID = {response_json['id']}"
-            )
-
+            self.submission_status = _(self.SubmissionStatus.SUBMITTED)
+            self.submission_result = f"Success! Template ID = {response_json['id']}"
 
         except TemplateSubmissionException as e:
             # The submission failed
-            self.submission_status = self.SubmissionStatus.FAILED
+            self.submission_status = _(self.SubmissionStatus.FAILED)
             self.submission_result = (
                 f"Error! {e.response_json['error']['error_user_msg']} "
             )
@@ -1660,6 +1657,8 @@ class WhatsAppTemplate(
         revision.content["submission_result"] = self.submission_result
 
         revision.save(update_fields=["content"])
+        # TODO this publish is a workaround for now, as described in ticket Delta-877
+        revision.publish()
 
         # Update the submissions status fields for all revisions, regardless of Draft vs Live status
         revisions = self.revisions
@@ -1667,6 +1666,10 @@ class WhatsAppTemplate(
             r.content["submission_name"] = self.template_name
             r.content["submission_status"] = self.submission_status
             r.content["submission_result"] = self.submission_result
+            # r.content["latest_revision"] = self.get_latest_revision().pk
+            # r.content["live_revision"] = self.get_latest_revision().pk
+            # r.content["last_published_at"] = datetime.datetime.now()
+            # r.content["first_published_at"] = datetime.datetime.now()
             r.save()
         return revision
 
@@ -1744,7 +1747,6 @@ class WhatsAppTemplate(
             sorted(self.quick_reply_buttons),
             self.image,
             self.example_values,
-            self.status(),
         )
 
     def create_whatsapp_template_name(self) -> str:
