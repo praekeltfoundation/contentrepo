@@ -1666,10 +1666,6 @@ class WhatsAppTemplate(
             r.content["submission_name"] = self.template_name
             r.content["submission_status"] = self.submission_status
             r.content["submission_result"] = self.submission_result
-            # r.content["latest_revision"] = self.get_latest_revision().pk
-            # r.content["live_revision"] = self.get_latest_revision().pk
-            # r.content["last_published_at"] = datetime.datetime.now()
-            # r.content["first_published_at"] = datetime.datetime.now()
             r.save()
         return revision
 
