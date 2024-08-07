@@ -1,0 +1,209 @@
+no,web_title,slug generator,slug,Domain,parent,whatsapp_title,Image,Media,whatsapp_body,footer,tags,ButtonA,Button A type,ButtonB,ButtonC,ListOption,OptionA,OptionB,OptionC,OptionD,OptionE,OptionF,OptionG,OptionH,OptionI,OptionJ,CMS buttons,A label cms,A destination cms,B button label cms,B destination cms,C button label cms,C destination cms,D button label cms,D destination cms,E button label cms,E destination cms,F button label cms,F destination cms,G button label cms,G destination cms,H button label cms,H destination cms,I button label cms,I destination cms,J button label cms,J destination cms,A json code,B json code,C json code,D json code,E json code,F json code,G json code,H json code,I json code,J json code,buttons,locale,whatsapp_template_category
+42,Bleeding after birth,mnch_after_birth_bleeding_after_birth,mnch_after_birth_bleeding_after_birth,mnch,,Bleeding after birth,,,"*Bleeding after birth*
+
+After you give birth, you will have some bleeding for up to 8 weeks. This bleeding is called lochia.
+
+It’s important to pay attention to your bleeding. Changes in the bleeding can tell you if you're healing well, or if there’s a problem.
+
+👇Want to know how to tell if your bleeding is normal?",,,"Yes, tell me","""next_message""",,,,,,,,,,,,,,,"Yes, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}]",English,MARKETING
+43,,,mnch_after_birth_bleeding_after_birth,,,,,,"*What's normal and what's not*
+
+At first, the lochia blood will be heavy and red. It can be like this for up to 10 days. It should get less and less. It will then turn pink, brown, and then yellowish-white.
+
+*When to go to the hospital*
+It’s normal for lochia to change colour, but go to the hospital straight away if:
+• you see large clots (lumps) of blood
+• bleeding gets heavier after the first week
+• you still have bright red bleeding after 7 days
+• the blood smells bad
+• you have a fever
+
+👇 Need tips for taking care of yourself during this time?",,,Share tips,"""next_message""",,,,,,,,,,,,,,,Share tips,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Share tips"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Share tips"", ""slug"": """"}]",English,MARKETING
+44,,,mnch_after_birth_bleeding_after_birth,,,,,,"*Care for yourself after the birth*
+
+It's really important to look after yourself when you've just had a baby. With bleeding after the birth:
+
+• Keep your vaginal area (private parts) clean to avoid infection. Be gentle when you wash.
+
+• Wear loose clothes to feel more comfortable.
+
+• Use maternity pads (sanitary pads for after a birth) if you can.
+
+• Change pads regularly.
+
+• Speak to a health worker or check here on [Service Name] if you’re worried about your bleeding.
+
+👇 One last thing to remember…",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+45,,,mnch_after_birth_bleeding_after_birth,,,,,,"*Bleeding after birth is normal. But if you start bleeding heavily, have a fever, or notice a bad smell, go to the clinic immediately.*
+
+⭐ Explore more topics",,,Healing after birth,"""go_to_page""",After natural birth,After a c-section,,,,,,,,,,,,,Healing after birth,mnch_after_birth_healing_after_birth,After natural birth,mnch_after_birth_after_natural_birth,After a c-section,mnch_after_birth_after_a_csection,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Healing after birth"", ""slug"": ""mnch_after_birth_healing_after_birth""}","{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""}","{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Healing after birth"", ""slug"": ""mnch_after_birth_healing_after_birth""},{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""},{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""}]",English,MARKETING
+116,Home birth,mnch_delivery_home_birth,mnch_delivery_home_birth,mnch,,Home birth,,,"*Having your baby at home*
+
+Many women have their babies safely at home. If you have your baby at home, it’s important to be prepared and to have a skilled birth attendant with you. 
+
+Even if you want a home birth, sometimes it’s safer for you and the baby to go to the hospital or clinic. 
+
+👇 Want to know if a home birth is the best choice for you?",,,"Yes, tell me","""next_message""",,,,,,,,,,,,,,,"Yes, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}]",English,MARKETING
+117,,,mnch_delivery_home_birth,,,,,,"*Is a home birth right for you?*
+
+A home birth could be for you if: 
+• you and your baby are healthy
+• you have had a problem-free pregnancy
+• you are only having 1 baby
+• the baby is in a good position, ready to come out head first.
+ 
+Chat to your health worker about it at your next pregnancy check-up. 
+
+👇 Let’s look at what you need to do to prepare for a home birth",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+118,,,mnch_delivery_home_birth,,,,,,"*Prepare for a home birth*
+
+The more prepared you are, the less you will have to worry about when the time comes. 
+
+*Find out what to expect* 
+Learn what you can about the stages of labour and natural birth. There’s lots of info here on [Service Name], and you can ask your health worker too. 
+
+*Learn about managing labour pain* 
+There are things you can do to help manage your pain at home. Find info here on [Service Name].
+
+*Get a support team*
+Decide who you are going to call when labour starts. Talk to them about what you will need from them and how they can help. 
+
+*Organise a birth attendant* 
+Speak to your health worker about who would be best to help you when you go into labour. It’s safest to have someone who knows what to do if a birth gets complicated. 
+
+*Decide where you want to give birth* 
+Pick a comfortable place in your home and clear it of extra things. 
+
+*Get everything you need ready*
+Make sure you have lots of clean towels, extra sheets, maternity pads, nappies and clothes for the baby. On the day you will need clean boiled water. 
+
+👇 What to do if things don’t go smoothly…",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+119,,,mnch_delivery_home_birth,,,,,,"*Make a plan in case something goes wrong*
+
+Most births are straightforward, but things can go wrong. Be prepared to go to the clinic or hospital if you have to. 
+
+• Keep emergency numbers close.
+• Plan how you will get to the hospital.
+• Charge your phone and get extra airtime.
+• Pack an emergency bag for the hospital. 
+
+You and your baby's safety are the most important thing. [Service Name] is here if you need us.
+
+👇 What to remember during the birth",,,Remind me,"""next_message""",,,,,,,,,,,,,,,Remind me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Remind me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Remind me"", ""slug"": """"}]",English,MARKETING
+120,,,mnch_delivery_home_birth,,,,,,"*Labour at home*
+
+The good thing about a home birth is that you have more freedom to move around and do things your way. 
+
+Moving around and changing your position can help you with the pain. See what works for you.
+
+Labour can take a long time, so it’s important to drink lots of water and eat to keep your energy up. Nap if you can.
+
+Talk to your birth attendant or health worker about different positions for giving birth.
+
+👇 What are the signs you need to get urgent medical help?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+121,,,mnch_delivery_home_birth,,,,,,"*When to go to the clinic*
+
+Go to the clinic or hospital urgently if your birth attendant advises you to or if: 
+
+• You are less than 37 weeks pregnant when your labour starts.
+
+• Your waters break and the liquid is green or brown. It should be clear or pale.
+
+• Your baby’s movements or heart beat changes.
+
+• You start bleeding heavily from your vagina. 
+
+• Your waters have broken but contractions haven’t started within 24 hours.
+
+• You have a fever.
+
+• You have signs of a stroke (trouble speaking, walking or seeing, numbness or weakness in your face, arms or legs on one or both sides, a very sudden, bad headache.)
+
+
+👇 What to do after the birth",,,Give me more info,"""next_message""",,,,,,,,,,,,,,,Give me more info,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Give me more info"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Give me more info"", ""slug"": """"}]",English,MARKETING
+122,,,mnch_delivery_home_birth,,,,,,"*After your baby is born*
+
+The birth attendant will check the baby and make sure you are both fine. 
+
+Straight after the birth, ask to hold your baby on your chest and try to breastfeed. 
+
+Skin-to-skin contact and breastfeeding within an hour of the birth are very good for your baby. 
+
+👇 What else you need to do after the birth",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+123,,,mnch_delivery_home_birth,,,,,,"*Things to remember to do*
+
+When your baby is born at home there are a few important things you need to remember to do afterwards. 
+
+It can be easy to forget when you have a new baby in your home, but these are important for the health of you both.
+
+• See a health worker within 24 hours of the birth if you haven’t seen one.
+
+• Go to the clinic as soon as you can to get your baby his vaccinations for  [TB / hepatitis B / polio]. 
+
+• At the clinic ask for a [child health record] for your baby. This is important to track how he grows and develops. 
+
+• Remember to register the birth within [30] days. [Get the form you need from your birth attendant.]
+
+
+👇 Almost done…",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+124,,,mnch_delivery_home_birth,,,,,,"*If you’re planning a home birth, know what to expect and be prepared. This will help things go smoothly*
+
+⭐ These topics can help you prepare for your home birth",,,Clinic visits,"""go_to_page""",After natural birth,Bleeding after birth,,,,,,,,,,,,,Clinic visits,mnch_babys_health_clinic_visits,After natural birth,mnch_after_birth_after_natural_birth,Bleeding after birth,mnch_after_birth_bleeding_after_birth,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""}","{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""}","{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""},{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""},{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}]",English,MARKETING
+125,Having a C-section,mnch_delivery_having_a_csection,mnch_delivery_having_a_csection,mnch,,Having a C-section,,,"*What is a C-section?*
+
+A C-section is an operation to deliver a baby through a cut in your tummy. 
+
+Often C-sections are done in an emergency, but there are other important reasons for having a planned C-section.
+
+Knowing more about a C-section can help you feel less worried about it. 
+
+👇 Do you want to know more about C-sections now?",,,"Yes, I do","""next_message""",,,,,,,,,,,,,,,"Yes, I do",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, I do"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, I do"", ""slug"": """"}]",English,MARKETING
+126,,,mnch_delivery_having_a_csection,,,,,,"*What happens in a C-section?*
+
+If you need a C-section, you will be given an injection (anaesthetic) to make you go numb. 
+
+During the operation, you are awake. You feel some pressure and movement, but you won’t feel any pain.
+
+The doctor will make a cut across your tummy and lift your baby out into the world. 
+
+Usually after the baby is born and the doctor has checked everything is fine, they put your baby on your chest. If you can, breastfeed your baby immediately. 
+
+👇 What about after the operation?",,,Share what happens next,"""next_message""",,,,,,,,,,,,,,,Share what happens next,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Share what happens next"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Share what happens next"", ""slug"": """"}]",English,MARKETING
+127,,,mnch_delivery_having_a_csection,,,,,,"*Healing after a C-section*
+
+If you’ve had a C-section, it takes some time to recover. 
+
+You will need to stay in the hospital for a few days until you can sit up and move around. To recover fully it takes most women at least 6 weeks.
+
+The health worker will give you pain medicine and instructions on how to care for the wound (the cut) before you go home. 
+
+If your wound becomes red, swollen or oozes, or if you have a fever after you leave, go back to the clinic. 
+
+👇 Need home recovery tips?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+128,,,mnch_delivery_having_a_csection,,,,,,"*Home recovery tips*
+
+• Avoid driving or lifting anything heavy until the wound is healed. 
+
+• Keep your wound clean and dry. Clean and dry it gently. Speak to a health worker if it looks red or feels hot.
+
+• Take pain medication as your doctor has prescribed. 
+
+• Stay active by walking. This helps healing and stops blood clots.
+
+• Eat food with lots of iron and drink plenty of water. Eat fibre to avoid constipation.
+
+• Talk to someone about your C-section if you need to. It can leave some women feeling sad and upset, especially if it was an emergency. 
+
+👇 Wondering about breastfeeding after a C-section?",,,Tell me about it,"""next_message""",,,,,,,,,,,,,,,Tell me about it,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me about it"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me about it"", ""slug"": """"}]",English,MARKETING
+129,,,mnch_delivery_having_a_csection,,,,,,"*Breastfeeding after a C-section*
+
+You can usually breastfeed immediately after a C-section. 
+
+Try different positions, like tucking your baby under your arm or lying on your side. This can be more comfortable and protect your wound.
+
+If you need help, ask the health workers for advice.
+
+👇 One last thing to remember",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+130,,,mnch_delivery_having_a_csection,,,,,,"*If your wound becomes red, swollen or oozes, or if you have a fever, go to the clinic straight away.
+
+⭐ Explore more topics now:",,,After a c-section,"""go_to_page""",Bleeding after birth,Clinic visits,,,,,,,,,,,,,After a c-section,mnch_after_birth_after_a_csection,Bleeding after birth,mnch_after_birth_bleeding_after_birth,Clinic visits,mnch_babys_health_clinic_visits,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""}","{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}","{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""},{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""},{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""}]",English,MARKETING
