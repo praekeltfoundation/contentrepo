@@ -1,0 +1,54 @@
+no,web_title,slug generator,slug,Domain,parent,whatsapp_title,Image,Media,whatsapp_body,footer,tags,ButtonA,Button A type,ButtonB,ButtonC,ListOption,OptionA,OptionB,OptionC,OptionD,OptionE,OptionF,OptionG,OptionH,OptionI,OptionJ,CMS buttons,A label cms,A destination cms,B button label cms,B destination cms,C button label cms,C destination cms,D button label cms,D destination cms,E button label cms,E destination cms,F button label cms,F destination cms,G button label cms,G destination cms,H button label cms,H destination cms,I button label cms,I destination cms,J button label cms,J destination cms,A json code,B json code,C json code,D json code,E json code,F json code,G json code,H json code,I json code,J json code,buttons,locale,whatsapp_template_category
+42,Bleeding after birth,mnch_after_birth_bleeding_after_birth,mnch_after_birth_bleeding_after_birth,mnch,,Bleeding after birth,,,"*Bleeding after birth*
+",,,"Yes, tell me","""next_message""",,,,,,,,,,,,,,,"Yes, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}]",English,MARKETING
+43,,,mnch_after_birth_bleeding_after_birth,,,,,,"*What's normal and what's not*
+",,,Share tips,"""next_message""",,,,,,,,,,,,,,,Share tips,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Share tips"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Share tips"", ""slug"": """"}]",English,MARKETING
+44,,,mnch_after_birth_bleeding_after_birth,,,,,,"*Care for yourself after the birth*
+
+",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+45,,,mnch_after_birth_bleeding_after_birth,,,,,,"*Bleeding after birth is normal. But if you start bleeding heavily, have a fever, or notice a bad smell, go to the clinic immediately.*
+
+⭐ Explore more topics",,,Healing after birth,"""go_to_page""",After natural birth,After a c-section,,,,,,,,,,,,,Healing after birth,mnch_after_birth_healing_after_birth,After natural birth,mnch_after_birth_after_natural_birth,After a c-section,mnch_after_birth_after_a_csection,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Healing after birth"", ""slug"": ""mnch_after_birth_healing_after_birth""}","{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""}","{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Healing after birth"", ""slug"": ""mnch_after_birth_healing_after_birth""},{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""},{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""}]",English,MARKETING
+116,Home birth,mnch_delivery_home_birth,mnch_delivery_home_birth,mnch,,Home birth,,,"*Having your baby at home*
+
+",,,"Yes, tell me","""next_message""",,,,,,,,,,,,,,,"Yes, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}]",English,MARKETING
+117,,,mnch_delivery_home_birth,,,,,,"*Is a home birth right for you?*
+
+",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+118,,,mnch_delivery_home_birth,,,,,,"*Prepare for a home birth*
+
+",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+119,,,mnch_delivery_home_birth,,,,,,"*Make a plan in case something goes wrong*
+",,,Remind me,"""next_message""",,,,,,,,,,,,,,,Remind me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Remind me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Remind me"", ""slug"": """"}]",English,MARKETING
+120,,,mnch_delivery_home_birth,,,,,,"*Labour at home*
+
+",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+121,,,mnch_delivery_home_birth,,,,,,"*When to go to the clinic*
+
+",,,Give me more info,"""next_message""",,,,,,,,,,,,,,,Give me more info,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Give me more info"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Give me more info"", ""slug"": """"}]",English,MARKETING
+122,,,mnch_delivery_home_birth,,,,,,"*After your baby is born*
+
+",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+123,,,mnch_delivery_home_birth,,,,,,"*Things to remember to do*
+
+",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+124,,,mnch_delivery_home_birth,,,,,,"*If you’re planning a home birth, know what to expect and be prepared. This will help things go smoothly*
+
+⭐ These topics can help you prepare for your home birth",,,Clinic visits,"""go_to_page""",After natural birth,Bleeding after birth,,,,,,,,,,,,,Clinic visits,mnch_babys_health_clinic_visits,After natural birth,mnch_after_birth_after_natural_birth,Bleeding after birth,mnch_after_birth_bleeding_after_birth,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""}","{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""}","{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""},{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""},{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}]",English,MARKETING
+125,Having a C-section,mnch_delivery_having_a_csection,mnch_delivery_having_a_csection,mnch,,Having a C-section,,,"*What is a C-section?*
+
+",,,"Yes, I do","""next_message""",,,,,,,,,,,,,,,"Yes, I do",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, I do"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, I do"", ""slug"": """"}]",English,MARKETING
+126,,,mnch_delivery_having_a_csection,,,,,,"*What happens in a C-section?*
+
+",,,Share what happens next,"""next_message""",,,,,,,,,,,,,,,Share what happens next,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Share what happens next"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Share what happens next"", ""slug"": """"}]",English,MARKETING
+127,,,mnch_delivery_having_a_csection,,,,,,"*Healing after a C-section*
+",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+128,,,mnch_delivery_having_a_csection,,,,,,"*Home recovery tips*
+
+",,,Tell me about it,"""next_message""",,,,,,,,,,,,,,,Tell me about it,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me about it"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me about it"", ""slug"": """"}]",English,MARKETING
+129,,,mnch_delivery_having_a_csection,,,,,,"*Breastfeeding after a C-section*
+
+",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+130,,,mnch_delivery_having_a_csection,,,,,,"*If your wound becomes red, swollen or oozes, or if you have a fever, go to the clinic straight away.
+
+⭐ Explore more topics now:",,,After a c-section,"""go_to_page""",Bleeding after birth,Clinic visits,,,,,,,,,,,,,After a c-section,mnch_after_birth_after_a_csection,Bleeding after birth,mnch_after_birth_bleeding_after_birth,Clinic visits,mnch_babys_health_clinic_visits,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""}","{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}","{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""},{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""},{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""}]",English,MARKETING

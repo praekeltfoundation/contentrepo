@@ -540,11 +540,15 @@ class ShadowContentPage:
 
         elif isinstance(errors, StreamBlockValidationError):
             json_data_errors = errors.as_json_data()
-            field_name = list(json_data_errors["blockErrors"][0]["blockErrors"].keys())[
-                0
-            ]
+            if isinstance(json_data_errors["blockErrors"], dict):
+                error_level = list(json_data_errors["blockErrors"].keys())[0]
+                field_name = list(
+                    json_data_errors["blockErrors"][error_level]["blockErrors"].keys()
+                )[0]
             error_messages = []
-            for val in json_data_errors["blockErrors"][0]["blockErrors"].values():
+            for val in json_data_errors["blockErrors"][error_level][
+                "blockErrors"
+            ].values():
                 messages = list(extract_errors(val).values())
 
             error_messages.extend(messages)
