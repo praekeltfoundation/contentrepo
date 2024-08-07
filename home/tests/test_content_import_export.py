@@ -1083,6 +1083,19 @@ class TestImportExport:
         assert e.value.row_num == 3
         assert e.value.message == ["Bad JSON button, you have: Broken Button"]
 
+    @pytest.mark.xfail(reason="This will fail because of the old error implementation")
+    def test_max_char_button(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file with a button chars greater than the limit should fail
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("max chars button.csv")
+
+        assert e.value.row_num == 126
+        assert e.value.message == [
+            "Validation error: buttons - Ensure this value has at most 20 characters (it has 23)."
+        ]
+
     def test_invalid_JSON_button_xlsx(self, xlsx_impexp: ImportExport) -> None:
         """
         Importing a XLSX file with an invalid JSON value for the button should return a detailed error message

@@ -1,0 +1,1362 @@
+no,web_title,slug generator,slug,Domain,parent,whatsapp_title,Image,Media,whatsapp_body,footer,tags,ButtonA,Button A type,ButtonB,ButtonC,ListOption,OptionA,OptionB,OptionC,OptionD,OptionE,OptionF,OptionG,OptionH,OptionI,OptionJ,CMS buttons,A label cms,A destination cms,B button label cms,B destination cms,C button label cms,C destination cms,D button label cms,D destination cms,E button label cms,E destination cms,F button label cms,F destination cms,G button label cms,G destination cms,H button label cms,H destination cms,I button label cms,I destination cms,J button label cms,J destination cms,A json code,B json code,C json code,D json code,E json code,F json code,G json code,H json code,I json code,J json code,buttons,locale,whatsapp_template_category
+1,Coping with loss,mnch_work_stress__loss_coping_with_loss,mnch_work_stress__loss_coping_with_loss,mnch,,Coping with loss,,,"*Signs of miscarriage*
+
+A miscarriage is when you lose your baby within the first [28] weeks of pregnancy. Most miscarriages happen within the first 3 months.
+
+Signs you may be having a miscarriage are:
+
+• bleeding that starts light and gets heavier
+
+• bleeding followed by lower back pain or tummy pain that feels like bad cramps
+
+• passing blood clots or grey tissue
+
+• no longer feeling any pregnancy symptoms
+
+Some women will feel severe pain, while for others there will be no pain.
+
+Sometimes a miscarriage happens without the mother knowing it. At the pregnancy check-up the health worker will detect that the baby has no heartbeat.
+
+👇Learn when you should go to the clinic",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+2,,,mnch_work_stress__loss_coping_with_loss,,,,,,"*When to go to the clinic*
+
+If you think you have miscarried or are bleeding and cramping, get someone to go with you to the clinic.
+
+Go urgently if:
+• the bleeding is very heavy
+• the blood smells bad
+• you have a fever
+• you have sharp, severe pains on one or both sides of your tummy
+• you have pain in your shoulders
+• you have a sharp pain when you poo
+
+Use a sanitary pad to catch any blood, blood clots or grey-coloured tissue.
+
+Don't use a tampon.
+
+👇 What to expect",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+3,,,mnch_work_stress__loss_coping_with_loss,,,,,,"*What happens at the clinic*
+
+At the clinic, the health worker will examine you and confirm if you have had a miscarriage.
+
+If you have, it’s important that there are no tissues from the pregnancy left in your body. If there are, you could get an infection.
+
+The health worker may give you medicine to help your body pass these tissues.
+
+👇Would you like information on what happens after a miscarriage?",,,Yes please,"""next_message""",,,,,,,,,,,,,,,Yes please,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes please"", ""slug"": """"}]",English,MARKETING
+4,,,mnch_work_stress__loss_coping_with_loss,,,,,,"*After a miscarriage*
+
+You may bleed for a few days and feel very tired and emotional.
+
+Rest and avoid doing any heavy work or lifting. Tell your family and friends you need rest and ask them for help.
+
+Go back to the clinic urgently if:
+• you have heavy bleeding
+• the blood smells bad
+• you have a fever
+• you have strong stomach pains
+
+Even though miscarriages are common, many people don’t like to talk about them. That doesn't mean they don't matter. A miscarriage can feel devastating.
+
+👇 Want to know what causes miscarriages?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+5,,,mnch_work_stress__loss_coping_with_loss,,,,,,"*Why miscarriages happen*
+
+Many women blame themselves when they have a miscarriage. But it was most likely not your fault and there is nothing wrong with your body. Around 1 in every 7 pregnancies ends in a miscarriage.
+
+Most miscarriages happen because the baby isn’t growing properly. A lot can go wrong with developing babies, especially in the first 3 to 4 months.
+
+Most women who have a miscarriage will go on to have a healthy baby.
+
+You will most probably never find out why you miscarried.
+
+👇 Let me tell you more about how people respond to miscarriage",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+6,,,mnch_work_stress__loss_coping_with_loss,,,,,,"*Coping after a miscarriage*
+
+Everyone reacts differently after a miscarriage and there is no right or wrong way to feel. You may feel grief, anger or numbness. You may struggle to eat, sleep or think clearly.
+
+• Wait at least 6 months before trying to fall pregnant again. Give your body time to recover first. Use contraception or condoms to prevent another pregnancy. You may not feel like having sex anytime soon - talk to your partner about this.
+
+• Take time off work if you need it.
+
+• Try to talk with your partner in an open and honest way.
+
+• Look after yourself.
+
+• Talking about your grief can help. If you can’t talk to a friend or family member, speak to your health worker or call a support service.
+
+👇 Learn where you can get support",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+7,,,mnch_work_stress__loss_coping_with_loss,,,,,,"*Support after a miscarriage*
+
+If you have had a miscarriage or a stillbirth, you can choose to stop getting messages from [SERVICE NAME] by tapping on the *Stop messages* button below.
+
+You will then be asked if you want to receive a few messages of support.
+
+For more help contact:
+
+[SADAG Mental Health Line
+0800 567 567 (toll free, closes at 8pm)
+
+CIPLA Mental Health Helpline
+0800 456 789 (toll free, 24 hours)]",,,Next,"""next_message""",,,,,,,,,,,,,,,Next,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Next"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Next"", ""slug"": """"}]",English,MARKETING
+8,,,mnch_work_stress__loss_coping_with_loss,,,,,,Placeholder,,,Loss,"""go_to_page""",Depression and anxiety,Managing stress,,,,,,,,,,,,,Loss,mnch_get_help_and_support_loss,Depression and anxiety,mnch_more_conditions_depression_and_anxiety,Managing stress,mnch_work_stress__loss_managing_stress,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Loss"", ""slug"": ""mnch_get_help_and_support_loss""}","{""type"": ""go_to_page"",""title"": ""Depression and anxiety"", ""slug"": ""mnch_more_conditions_depression_and_anxiety""}","{""type"": ""go_to_page"",""title"": ""Managing stress"", ""slug"": ""mnch_work_stress__loss_managing_stress""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Loss"", ""slug"": ""mnch_get_help_and_support_loss""},{""type"": ""go_to_page"",""title"": ""Depression and anxiety"", ""slug"": ""mnch_more_conditions_depression_and_anxiety""},{""type"": ""go_to_page"",""title"": ""Managing stress"", ""slug"": ""mnch_work_stress__loss_managing_stress""}]",English,MARKETING
+9,Soft spot on head,mnch_newborn_care_soft_spot_on_head,mnch_newborn_care_soft_spot_on_head,mnch,,Soft spot on head,,,"*The soft spots on a baby's head*
+
+All babies have at least two soft spots on their heads called fontanels. These are gaps where the bones of the baby’s skull have not yet joined together.
+
+Be careful with these soft spots. There is no bone here to protect your baby’s brain from injury. Don’t press down on them.
+
+Go to the clinic immediately if your baby's soft spot is dipping in or bulging out. This can be a sign your baby is dehydrated or has an infection.
+
+👇 Want to know why your baby has soft spots?",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+10,,,mnch_newborn_care_soft_spot_on_head,,,,,,"*Why babies have fontanels*
+
+All babies have 1 fontanel on the top and 1 smaller fontanel on the back of their skulls. There may also be other smaller ones on the sides.
+
+The soft spots let the bones of the skull move, so the baby’s head can change shapes as it passes through the narrow birth canal.
+
+A newborn's head is small, but it grows quickly in the first two years. These gaps in the skull will close as it grows.
+
+👇 Find out more about your newborn",,,Next,"""next_message""",,,,,,,,,,,,,,,Next,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Next"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Next"", ""slug"": """"}]",English,MARKETING
+11,,,mnch_newborn_care_soft_spot_on_head,,,,,,"*Remember: call a doctor or go to the clinic immediately if your baby's soft spot is sunken in or bulging.*
+
+⭐ Explore these topics to learn more about your newborn",,,Cord care,"""go_to_page""",Baby head bump,Baby's sleep,,,,,,,,,,,,,Cord care,mnch_newborn_care_cord_care,Baby head bump,mnch_newborn_care_baby_head_bump,Baby's sleep,mnch_newborn_care_babys_sleep,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Cord care"", ""slug"": ""mnch_newborn_care_cord_care""}","{""type"": ""go_to_page"",""title"": ""Baby head bump"", ""slug"": ""mnch_newborn_care_baby_head_bump""}","{""type"": ""go_to_page"",""title"": ""Baby's sleep"", ""slug"": ""mnch_newborn_care_babys_sleep""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Cord care"", ""slug"": ""mnch_newborn_care_cord_care""},{""type"": ""go_to_page"",""title"": ""Baby head bump"", ""slug"": ""mnch_newborn_care_baby_head_bump""},{""type"": ""go_to_page"",""title"": ""Baby's sleep"", ""slug"": ""mnch_newborn_care_babys_sleep""}]",English,MARKETING
+12,Gaining weight,mnch_your_pregnant_body__gaining_weight,mnch_your_pregnant_body__gaining_weight,mnch,,Gaining weight,,,"*Gaining weight when pregnant*
+
+Putting on some weight during your pregnancy is healthy and expected, but it can be unhealthy if you put on too much weight.
+
+Too much extra weight can increase your risk of getting high blood pressure, gestational hypertension and preeclampsia.
+
+The healthcare worker will weigh you at each pregnancy check-up and can answer your questions about your weight.
+
+👇 Each pregnancy is different, so how much weight you put on will vary.",,,What can I expect?,"""next_message""",,,,,,,,,,,,,,,What can I expect?,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""What can I expect?"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""What can I expect?"", ""slug"": """"}]",English,MARKETING
+13,,,mnch_your_pregnant_body__gaining_weight,,,,,,"*Healthy weight gain differs depending on your body and your pregnancy*
+
+To work out what a healthy weight gain could be for you, start with your weight before you got pregnant.
+
+• If you were a healthy, average weight for your height, it’s healthy to gain between 11.5 and 16 kg during your pregnancy.
+
+• If you were underweight, you may need to gain more (between 12 and 18 kg).
+
+• If you were overweight you may need to gain less (between 7 and 11.5 kg).
+
+
+But every pregnancy and body shape is different, so this is a general guide.
+
+Remember that you don’t need to eat for 2 when you are pregnant. Eat a healthy, balanced diet and keep active.
+
+👇 Do you want to know what to do if you are losing weight?",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+14,,,mnch_your_pregnant_body__gaining_weight,,,,,,"*It is not healthy to lose weight while you are pregnant.*
+
+Sometimes pregnant women who have extreme morning sickness lose weight during pregnancy. If you are struggling to keep down liquids or food, you may lose weight.
+
+If you are, please speak to your health worker.
+
+👇 Those are the key points on a healthy pregnancy weight.",,,Got it,"""next_message""",,,,,,,,,,,,,,,Got it,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Got it"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Got it"", ""slug"": """"}]",English,MARKETING
+15,,,mnch_your_pregnant_body__gaining_weight,,,,,,"*Note: How much weight you gain during your pregnancy will depend on your starting weight, your body and your pregnancy.*
+
+
+⭐ Here are more topics that might interest you",,,Healthy diet,"""go_to_page""",Safe exercise,Sleeping tips,,,,,,,,,,,,,Healthy diet,mnch_healthy_eating_healthy_diet,Safe exercise,mnch_tips_to_stay_healthy_safe_exercise,Sleeping tips,mnch_tips_to_stay_healthy_sleeping_tips,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Healthy diet"", ""slug"": ""mnch_healthy_eating_healthy_diet""}","{""type"": ""go_to_page"",""title"": ""Safe exercise"", ""slug"": ""mnch_tips_to_stay_healthy_safe_exercise""}","{""type"": ""go_to_page"",""title"": ""Sleeping tips"", ""slug"": ""mnch_tips_to_stay_healthy_sleeping_tips""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Healthy diet"", ""slug"": ""mnch_healthy_eating_healthy_diet""},{""type"": ""go_to_page"",""title"": ""Safe exercise"", ""slug"": ""mnch_tips_to_stay_healthy_safe_exercise""},{""type"": ""go_to_page"",""title"": ""Sleeping tips"", ""slug"": ""mnch_tips_to_stay_healthy_sleeping_tips""}]",English,MARKETING
+16,Leaking wee,mnch_toilet_issues_leaking_wee,mnch_toilet_issues_leaking_wee,mnch,,Leaking wee,,,"*Leaking wee*
+
+When you are pregnant it is common to start leaking a bit of wee when you cough, sneeze, run or laugh. This is called urinary incontinence. More than half of pregnant women experience it.
+
+It is most likely to happen in your third trimester, but can happen at any stage of your pregnancy.
+
+It is caused by the hormones that your body produces to let your ligaments and muscles relax and stretch, so you can give birth. This makes your pelvic floor muscles weaker.
+
+👇 Want to know what you can do about it?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+17,,,mnch_toilet_issues_leaking_wee,,,,,,"Yes, tell me",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+18,,,mnch_toilet_issues_leaking_wee,,,,,,"*Preventing leaking wee*
+
+The best thing you can do to stop wee from leaking is to strengthen your pelvic floor muscles.
+
+These are the muscles around your vagina and bottom (anus) that you use to try and stop yourself from weeing or [passing wind].
+
+*Pelvic floor exercise*
+• Sit down and lean a tiny bit forward with a straight back.
+
+• Squeeze and lift the muscles around your vagina and your anus like you are trying to stop yourself from weeing or [passing wind].
+
+• Hold for 5 seconds if you can. (As you get stronger you can hold for longer.)
+
+• Relax.
+
+• Repeat 10 to 15 times.
+
+• Don’t hold your breath or squeeze your bum cheeks (buttocks) while you do these.
+
+Do these exercises 3 to 4 times every day. You can do them while you are watching TV or sitting down to do something else.
+
+Ask your health worker for advice at your next pregnancy check-up.
+
+👇 Will this problem go away after the birth?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+19,,,mnch_toilet_issues_leaking_wee,,,,,,"*Leaking wee after birth*
+
+For many women, the leaking will stop a couple of weeks after the birth. But for others, it can continue, especially if they have had more than 1 baby.
+
+Doing pelvic floor exercises can help you recover control of your bladder after the birth.
+
+Talk to the health worker at your 6-week mother-and-baby check-up if you are still having problems.
+
+👇 Those are the main points about leaking wee",,,Got it,"""next_message""",,,,,,,,,,,,,,,Got it,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Got it"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Got it"", ""slug"": """"}]",English,MARKETING
+20,,,mnch_toilet_issues_leaking_wee,,,,,,"*Remember: Doing pelvic floor exercises 3 or 4 times every day is the best way to reduce leaking wee.*
+
+⭐ More on common symptoms of pregnancy",,,Urinating often,"""go_to_page""",Your changing bump,Baby's position,,,,,,,,,,,,,Urinating often,mnch_toilet_issues_urinating_often,Your changing bump,mnch_your_pregnant_body__your_changing_bump,Baby's position,mnch_your_growing_baby_babys_position,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Urinating often"", ""slug"": ""mnch_toilet_issues_urinating_often""}","{""type"": ""go_to_page"",""title"": ""Your changing bump"", ""slug"": ""mnch_your_pregnant_body__your_changing_bump""}","{""type"": ""go_to_page"",""title"": ""Baby's position"", ""slug"": ""mnch_your_growing_baby_babys_position""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Urinating often"", ""slug"": ""mnch_toilet_issues_urinating_often""},{""type"": ""go_to_page"",""title"": ""Your changing bump"", ""slug"": ""mnch_your_pregnant_body__your_changing_bump""},{""type"": ""go_to_page"",""title"": ""Baby's position"", ""slug"": ""mnch_your_growing_baby_babys_position""}]",English,MARKETING
+21,Stages of labour,mnch_labour_stages_of_labour,mnch_labour_stages_of_labour,mnch,,Stages of labour,,,"*The 3 stages of labour*
+
+Labour is the natural process of giving birth. Knowing what happens in labour can help you feel calmer.
+
+You can think about labour in 3 separate stages.
+Dilation and early contractions
+
+Pushing and birth
+
+Delivering the placenta
+
+
+👇 Let's go through what to expect at each stage",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+22,,,mnch_labour_stages_of_labour,,,,,,"*Dilation and early contractions*
+
+Labour starts with your body preparing to give birth.
+
+During early labour your cervix (the opening of the uterus) starts dilating (opening) to allow the baby to be born.
+
+You will feel your tummy tightening and then relaxing. These are early contractions. They may be irregular and far apart but will get closer together and more regular as time goes on.
+
+If this is your first baby, it may still be 24 hours before your baby is born. For second babies labour can be much quicker.
+
+Make yourself comfortable, try to relax and get ready for what's next.
+
+👇 What does happen next?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+23,,,mnch_labour_stages_of_labour,,,,,,"*Contractions get stronger*
+
+As your cervix opens wider, your contractions will get stronger and longer and your waters may break.
+
+The contractions will also get closer together. When each contraction lasts up to 1 minute each it’s called active labour.
+
+When your cervix is fully dilated (10cm wide), your baby is ready to be born.
+
+👇 What happens now?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+24,,,mnch_labour_stages_of_labour,,,,,,"*Time to have your baby*
+
+Now your baby starts moving down the birth canal (vagina). Your contractions will be strong and feel like there’s no break between them.
+
+You may feel a pressure in your pervis, as if you need to have a poo. This is your baby coming.
+
+This part can be hard, but you can do it. Now your birth attendant will ask you to push during each contraction to help move your baby down the birth canal. It won’t be long now.
+
+As soon as your baby is born, she will be put naked on your chest. You can breastfeed almost immediately and enjoy skin-to-skin contact. This is really good for both of you.
+
+👇 There’s one last thing…",,,What’s that?,"""next_message""",,,,,,,,,,,,,,,What’s that?,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""What’s that?"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""What’s that?"", ""slug"": """"}]",English,MARKETING
+25,,,mnch_labour_stages_of_labour,,,,,,"*Delivering the placenta*
+
+After your baby is born, the placenta (afterbirth) needs to come out. You may still have contractions, but these won’t be as strong.
+
+Delivering the placenta can take up to an hour. During this time you can breastfeed and cuddle your baby for the very first time.
+
+👇 So now you know what to expect. Want to know more?",,,"OK, let’s hear more","""next_message""",,,,,,,,,,,,,,,"OK, let’s hear more",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK, let’s hear more"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK, let’s hear more"", ""slug"": """"}]",English,MARKETING
+26,,,mnch_labour_stages_of_labour,,,,,,"*Ask your health worker if you have any questions. Knowing what to expect can help you feel calmer during labour.*
+
+⭐️ You can also find out more about:",,,Contractions,"""go_to_page""",Managing labour pain,Time for hospital,,,,,,,,,,,,,Contractions,mnch_signs_of_labour_contractions,Managing labour pain,mnch_labour_managing_labour_pain,Time for hospital,mnch_delivery_time_for_hospital,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Contractions"", ""slug"": ""mnch_signs_of_labour_contractions""}","{""type"": ""go_to_page"",""title"": ""Managing labour pain"", ""slug"": ""mnch_labour_managing_labour_pain""}","{""type"": ""go_to_page"",""title"": ""Time for hospital"", ""slug"": ""mnch_delivery_time_for_hospital""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Contractions"", ""slug"": ""mnch_signs_of_labour_contractions""},{""type"": ""go_to_page"",""title"": ""Managing labour pain"", ""slug"": ""mnch_labour_managing_labour_pain""},{""type"": ""go_to_page"",""title"": ""Time for hospital"", ""slug"": ""mnch_delivery_time_for_hospital""}]",English,MARKETING
+27,Home birth,mnch_delivery_home_birth,mnch_delivery_home_birth,mnch,,Home birth,,,"*Having your baby at home*
+
+Many women have their babies safely at home. If you have your baby at home, it’s important to be prepared and to have a skilled birth attendant with you.
+
+Even if you want a home birth, sometimes it’s safer for you and the baby to go to the hospital or clinic.
+
+👇 Want to know if a home birth is the best choice for you?",,,"Yes, tell me","""next_message""",,,,,,,,,,,,,,,"Yes, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}]",English,MARKETING
+28,,,mnch_delivery_home_birth,,,,,,"*Is a home birth right for you?*
+
+A home birth could be for you if:
+• you and your baby are healthy
+• you have had a problem-free pregnancy
+• you are only having 1 baby
+• the baby is in a good position, ready to come out head first.
+
+Chat to your health worker about it at your next pregnancy check-up.
+
+👇 Let’s look at what you need to do to prepare for a home birth",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+29,,,mnch_delivery_home_birth,,,,,,"*Prepare for a home birth*
+
+The more prepared you are, the less you will have to worry about when the time comes.
+
+*Find out what to expect*
+Learn what you can about the stages of labour and natural birth. There’s lots of info here on [Service Name], and you can ask your health worker too.
+
+*Learn about managing labour pain*
+There are things you can do to help manage your pain at home. Find info here on [Service Name].
+
+*Get a support team*
+Decide who you are going to call when labour starts. Talk to them about what you will need from them and how they can help.
+
+*Organise a birth attendant*
+Speak to your health worker about who would be best to help you when you go into labour. It’s safest to have someone who knows what to do if a birth gets complicated.
+
+*Decide where you want to give birth*
+Pick a comfortable place in your home and clear it of extra things.
+
+*Get everything you need ready*
+Make sure you have lots of clean towels, extra sheets, maternity pads, nappies and clothes for the baby. On the day you will need clean boiled water.
+
+👇 What to do if things don’t go smoothly…",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+30,,,mnch_delivery_home_birth,,,,,,"*Make a plan in case something goes wrong*
+
+Most births are straightforward, but things can go wrong. Be prepared to go to the clinic or hospital if you have to.
+
+• Keep emergency numbers close.
+• Plan how you will get to the hospital.
+• Charge your phone and get extra airtime.
+• Pack an emergency bag for the hospital.
+
+You and your baby's safety are the most important thing. [Service Name] is here if you need us.
+
+👇 What to remember during the birth",,,Remind me,"""next_message""",,,,,,,,,,,,,,,Remind me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Remind me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Remind me"", ""slug"": """"}]",English,MARKETING
+31,,,mnch_delivery_home_birth,,,,,,"*Labour at home*
+
+The good thing about a home birth is that you have more freedom to move around and do things your way.
+
+Moving around and changing your position can help you with the pain. See what works for you.
+
+Labour can take a long time, so it’s important to drink lots of water and eat to keep your energy up. Nap if you can.
+
+Talk to your birth attendant or health worker about different positions for giving birth.
+
+👇 What are the signs you need to get urgent medical help?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+32,,,mnch_delivery_home_birth,,,,,,"*When to go to the clinic*
+
+Go to the clinic or hospital urgently if your birth attendant advises you to or if:
+
+• You are less than 37 weeks pregnant when your labour starts.
+
+• Your waters break and the liquid is green or brown. It should be clear or pale.
+
+• Your baby’s movements or heart beat changes.
+
+• You start bleeding heavily from your vagina.
+
+• Your waters have broken but contractions haven’t started within 24 hours.
+
+• You have a fever.
+
+• You have signs of a stroke (trouble speaking, walking or seeing, numbness or weakness in your face, arms or legs on one or both sides, a very sudden, bad headache.)
+
+
+👇 What to do after the birth",,,Give me more info,"""next_message""",,,,,,,,,,,,,,,Give me more info,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Give me more info"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Give me more info"", ""slug"": """"}]",English,MARKETING
+33,,,mnch_delivery_home_birth,,,,,,"*After your baby is born*
+
+The birth attendant will check the baby and make sure you are both fine.
+
+Straight after the birth, ask to hold your baby on your chest and try to breastfeed.
+
+Skin-to-skin contact and breastfeeding within an hour of the birth are very good for your baby.
+
+👇 What else you need to do after the birth",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+34,,,mnch_delivery_home_birth,,,,,,"*Things to remember to do*
+
+When your baby is born at home there are a few important things you need to remember to do afterwards.
+
+It can be easy to forget when you have a new baby in your home, but these are important for the health of you both.
+
+• See a health worker within 24 hours of the birth if you haven’t seen one.
+
+• Go to the clinic as soon as you can to get your baby his vaccinations for [TB / hepatitis B / polio].
+
+• At the clinic ask for a [child health record] for your baby. This is important to track how he grows and develops.
+
+• Remember to register the birth within [30] days. [Get the form you need from your birth attendant.]
+
+
+👇 Almost done…",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+35,,,mnch_delivery_home_birth,,,,,,"*If you’re planning a home birth, know what to expect and be prepared. This will help things go smoothly*
+
+⭐ These topics can help you prepare for your home birth",,,Birth attendant,"""go_to_page""",The first feed,Bleeding after birth,,,,,,,,,,,,,Birth attendant,mnch_delivery_birth_attendant,The first feed,mnch_breastfeeding_the_first_feed,Bleeding after birth,mnch_after_birth_bleeding_after_birth,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Birth attendant"", ""slug"": ""mnch_delivery_birth_attendant""}","{""type"": ""go_to_page"",""title"": ""The first feed"", ""slug"": ""mnch_breastfeeding_the_first_feed""}","{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Birth attendant"", ""slug"": ""mnch_delivery_birth_attendant""},{""type"": ""go_to_page"",""title"": ""The first feed"", ""slug"": ""mnch_breastfeeding_the_first_feed""},{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}]",English,MARKETING
+36,Having a C-section,mnch_delivery_having_a_csection,mnch_delivery_having_a_csection,mnch,,Having a C-section,,,"*What is a C-section?*
+
+A C-section is an operation to deliver a baby through a cut in your tummy.
+
+Often C-sections are done in an emergency, but there are other important reasons for having a planned C-section.
+
+Knowing more about a C-section can help you feel less worried about it.
+
+👇 Do you want to know more about C-sections now?",,,"Yes, I do","""next_message""",,,,,,,,,,,,,,,"Yes, I do",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, I do"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, I do"", ""slug"": """"}]",English,MARKETING
+37,,,mnch_delivery_having_a_csection,,,,,,"*What happens in a C-section?*
+
+If you need a C-section, you will be given an injection (anaesthetic) to make you go numb.
+
+During the operation, you are awake. You feel some pressure and movement, but you won’t feel any pain.
+
+The doctor will make a cut across your tummy and lift your baby out into the world.
+
+Usually after the baby is born and the doctor has checked everything is fine, they put your baby on your chest. If you can, breastfeed your baby immediately.
+
+👇 What about after the operation?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+38,,,mnch_delivery_having_a_csection,,,,,,"*Healing after a C-section*
+
+If you’ve had a C-section, it takes some time to recover.
+
+You will need to stay in the hospital for a few days until you can sit up and move around. To recover fully it takes most women at least 6 weeks.
+
+The health worker will give you pain medicine and instructions on how to care for the wound (the cut) before you go home.
+
+If your wound becomes red, swollen or oozes, or if you have a fever after you leave, go back to the clinic.
+
+👇 Need home recovery tips?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+39,,,mnch_delivery_having_a_csection,,,,,,"*Home recovery tips*
+
+• Avoid driving or lifting anything heavy until the wound is healed.
+
+• Keep your wound clean and dry. Clean and dry it gently. Speak to a health worker if it looks red or feels hot.
+
+• Take pain medication as your doctor has prescribed.
+
+• Stay active by walking. This helps healing and stops blood clots.
+
+• Eat food with lots of iron and drink plenty of water. Eat fibre to avoid constipation.
+
+• Talk to someone about your C-section if you need to. It can leave some women feeling sad and upset, especially if it was an emergency.
+
+👇 Wondering about breastfeeding after a C-section?",,,Tell me about it,"""next_message""",,,,,,,,,,,,,,,Tell me about it,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me about it"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me about it"", ""slug"": """"}]",English,MARKETING
+40,,,mnch_delivery_having_a_csection,,,,,,"*Breastfeeding after a C-section*
+
+You can usually breastfeed immediately after a C-section.
+
+Try different positions, like tucking your baby under your arm or lying on your side. This can be more comfortable and protect your wound.
+
+If you need help, ask the health workers for advice.
+
+👇 One last thing to remember",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+41,,,mnch_delivery_having_a_csection,,,,,,"*If your wound becomes red, swollen or oozes, or if you have a fever, go to the clinic straight away.
+
+⭐ Explore more topics now:",,,After a c-section,"""go_to_page""",Bleeding after birth,Bonding with baby,,,,,,,,,,,,,After a c-section,mnch_after_birth_after_a_csection,Bleeding after birth,mnch_after_birth_bleeding_after_birth,Bonding with baby,mnch_newborn_care_bonding_with_baby,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""}","{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}","{""type"": ""go_to_page"",""title"": ""Bonding with baby"", ""slug"": ""mnch_newborn_care_bonding_with_baby""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""},{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""},{""type"": ""go_to_page"",""title"": ""Bonding with baby"", ""slug"": ""mnch_newborn_care_bonding_with_baby""}]",English,MARKETING
+42,Bleeding after birth,mnch_after_birth_bleeding_after_birth,mnch_after_birth_bleeding_after_birth,mnch,,Bleeding after birth,,,"*Bleeding after birth*
+
+After you give birth, you will have some bleeding for up to 8 weeks. This bleeding is called lochia.
+
+It’s important to pay attention to your bleeding. Changes in the bleeding can tell you if you're healing well, or if there’s a problem.
+
+👇Want to know how to tell if your bleeding is normal?",,,"Yes, tell me","""next_message""",,,,,,,,,,,,,,,"Yes, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}]",English,MARKETING
+43,,,mnch_after_birth_bleeding_after_birth,,,,,,"*What's normal and what's not*
+
+At first, the lochia blood will be heavy and red. It can be like this for up to 10 days. It should get less and less. It will then turn pink, brown, and then yellowish-white.
+
+*When to go to the hospital*
+It’s normal for lochia to change colour, but go to the hospital straight away if:
+• you see large clots (lumps) of blood
+• bleeding gets heavier after the first week
+• you still have bright red bleeding after 7 days
+• the blood smells bad
+• you have a fever
+
+👇 Need tips for taking care of yourself during this time?",,,Share tips,"""next_message""",,,,,,,,,,,,,,,Share tips,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Share tips"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Share tips"", ""slug"": """"}]",English,MARKETING
+44,,,mnch_after_birth_bleeding_after_birth,,,,,,"*Care for yourself after the birth*
+
+It's really important to look after yourself when you've just had a baby. With bleeding after the birth:
+
+• Keep your vaginal area (private parts) clean to avoid infection. Be gentle when you wash.
+
+• Wear loose clothes to feel more comfortable.
+
+• Use maternity pads (sanitary pads for after a birth) if you can.
+
+• Change pads regularly.
+
+• Speak to a health worker or check here on [Service Name] if you’re worried about your bleeding.
+
+👇 One last thing to remember…",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+45,,,mnch_after_birth_bleeding_after_birth,,,,,,"*Bleeding after birth is normal. But if you start bleeding heavily, have a fever, or notice a bad smell, go to the clinic immediately.*
+
+⭐ Explore more topics",,,Healing after birth,"""go_to_page""",After natural birth,After a c-section,,,,,,,,,,,,,Healing after birth,mnch_after_birth_healing_after_birth,After natural birth,mnch_after_birth_after_natural_birth,After a c-section,mnch_after_birth_after_a_csection,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Healing after birth"", ""slug"": ""mnch_after_birth_healing_after_birth""}","{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""}","{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Healing after birth"", ""slug"": ""mnch_after_birth_healing_after_birth""},{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""},{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""}]",English,MARKETING
+46,Time for hospital,mnch_delivery_time_for_hospital,mnch_delivery_time_for_hospital,mnch,,Time for hospital,,,"*Going to hospital for the birth*
+
+It's a big moment when labour starts – it means you will meet your baby soon. But labour can take a long time. If you go to the clinic or hospital too early you may be sent home.
+
+From the first signs of labour to giving birth usually takes 12 to 24 hours for your first baby.
+
+So don’t rush to the clinic or hospital as soon as you feel a contraction or see another sign of labour.
+
+👇 When should you go to the hospital?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+47,,,mnch_delivery_time_for_hospital,,,,,,"*When to go to the hospital*
+
+Choosing when to go to the hospital is really important.
+
+If you have had a healthy pregnancy and this is your first baby, go to the hospital when your contractions:
+• are about 5 minutes apart
+• last for about 1 minute each
+• have been like this for an hour.
+
+If you have given birth before, go when your contractions are 7-10 minutes apart.
+
+Every birth is different, so listen to your body and the health worker’s advice.
+
+👇 Want to know when to go to the clinic immediately?",,,"Yes, I want to know","""next_message""",,,,,,,,,,,,,,,"Yes, I want to know",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, I want to know"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, I want to know"", ""slug"": """"}]",English,MARKETING
+48,,,mnch_delivery_time_for_hospital,,,,,,"*Go to the hospital immediately*
+
+When you experience the first signs of labour, go to the hospital immediately if:
+
+• You have a high-risk pregnancy. For example, you have high blood pressure, your baby is not lying head down (breach), or you are expecting twins.
+
+• You are less than 37 weeks pregnant.
+
+• Your waters break and the liquid is green or brown. It should be clear or pale.
+
+• Your baby’s movements change.
+
+• You start bleeding from your vagina.
+
+• Your waters have broken but contractions haven’t started within 24 hours.
+
+• You have a fever.
+
+• You have signs of a stroke (trouble speaking, walking or seeing, numbness or weakness in your face, arms or legs on one or both sides, a very sudden, bad headache.)
+
+👇 Want to know how to prepare for going to hospital?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+49,,,mnch_delivery_time_for_hospital,,,,,,"*Prepare for your trip to the hospital*
+
+• Plan how you will get to the hospital. Have a back-up plan in case there’s a problem.
+
+• Pack a bag for the hospital with things for you and the baby.
+
+• Take water and some snacks with you.
+
+• Take your pregnancy record.
+
+👇 One last thing to remember…",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+50,,,mnch_delivery_time_for_hospital,,,,,,"*Remember to make a plan for getting to the hospital in an emergency or if it’s the middle of the night.*
+
+⭐ Learn more about labour and preparing for birth",,,Stages of labour,"""go_to_page""",What to pack,Giving natural birth,,,,,,,,,,,,,Stages of labour,mnch_labour_stages_of_labour,What to pack,mnch_preparing_for_birth_what_to_pack,Giving natural birth,mnch_delivery_giving_natural_birth,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Stages of labour"", ""slug"": ""mnch_labour_stages_of_labour""}","{""type"": ""go_to_page"",""title"": ""What to pack"", ""slug"": ""mnch_preparing_for_birth_what_to_pack""}","{""type"": ""go_to_page"",""title"": ""Giving natural birth"", ""slug"": ""mnch_delivery_giving_natural_birth""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Stages of labour"", ""slug"": ""mnch_labour_stages_of_labour""},{""type"": ""go_to_page"",""title"": ""What to pack"", ""slug"": ""mnch_preparing_for_birth_what_to_pack""},{""type"": ""go_to_page"",""title"": ""Giving natural birth"", ""slug"": ""mnch_delivery_giving_natural_birth""}]",English,MARKETING
+51,COVID-19,mnch_health_issues_covid19,mnch_health_issues_covid19,mnch,,COVID-19,,,"*Support for COVID-19*
+
+COVID can be dangerous when you’re pregnant.
+
+You can get information here on [Service Name] on what to do and how to protect yourself.
+
+For more help and advice
+
+[Call the *National Covid Helpline* on
+*XXXXX*]
+
+[Tap on this link wa.me/27600123456?text=hi to join the *National Department of Health COVID-19 WhatsApp Group*.]
+
+👇 Want more information on COVID-19 safety while pregnant?",,,"Yes, send more info","""next_message""",,,,,,,,,,,,,,,"Yes, send more info",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, send more info"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, send more info"", ""slug"": """"}]",English,MARKETING
+52,,,mnch_health_issues_covid19,,,,,,"*Knowing more about COVID-19 in pregnancy can help keep you and baby safe.*
+
+⭐ These topics could help you find the information about COVID-19 you want",,,COVID-19 basics,"""go_to_page""",COVID: birth,COVID: breastfeeding,,,,,,,,,,,,,COVID-19 basics,mnch_covid19_covid19_basics,COVID: birth,mnch_covid19_covid_birth,COVID: breastfeeding,mnch_covid19_covid_breastfeeding,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""COVID-19 basics"", ""slug"": ""mnch_covid19_covid19_basics""}","{""type"": ""go_to_page"",""title"": ""COVID: birth"", ""slug"": ""mnch_covid19_covid_birth""}","{""type"": ""go_to_page"",""title"": ""COVID: breastfeeding"", ""slug"": ""mnch_covid19_covid_breastfeeding""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""COVID-19 basics"", ""slug"": ""mnch_covid19_covid19_basics""},{""type"": ""go_to_page"",""title"": ""COVID: birth"", ""slug"": ""mnch_covid19_covid_birth""},{""type"": ""go_to_page"",""title"": ""COVID: breastfeeding"", ""slug"": ""mnch_covid19_covid_breastfeeding""}]",English,MARKETING
+53,Ambulance,mnch_get_help_and_support_ambulance,mnch_get_help_and_support_ambulance,mnch,,Ambulance,,,"*Need an ambulance?*
+
+Call *[10177]* or *[112]* for an ambulance.
+
+Tell them:
+• you are pregnant
+• where you are
+• what’s wrong
+• any important health information
+
+👇 What to do next…",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+54,,,mnch_get_help_and_support_ambulance,,,,,,"*After calling the ambulance*
+
+Take deep breaths and try to stay calm. Ask someone to look out for the ambulance.
+
+Get your:
+[• ID book/card]
+[• medical aid card]
+[• pregnancy record]
+• any medication you use
+• personal items like your phone and wallet
+
+Put these in a bag with some spare clothes to take with you.
+
+Make space for the paramedics to move easily and put any pets in another room.
+
+Get someone to make a back-up plan to get you to the hospital in case the ambulance is delayed.
+
+👇 Check the danger signs again",,,Next,"""next_message""",,,,,,,,,,,,,,,Next,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Next"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Next"", ""slug"": """"}]",English,MARKETING
+55,,,mnch_get_help_and_support_ambulance,,,,,,"*Know when to call an ambulance by knowing the danger signs to look out for. Don’t ignore them.*
+
+⭐ Check the danger signs now",,,Get help and support,"""go_to_page""",Depression and anxiety,Violence and abuse,,,,,,,,,,,,,Get help and support,mnch_info_and_support_get_help_and_support,Depression and anxiety,mnch_more_conditions_depression_and_anxiety,Violence and abuse,mnch_get_help_and_support_violence_and_abuse,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Get help and support"", ""slug"": ""mnch_info_and_support_get_help_and_support""}","{""type"": ""go_to_page"",""title"": ""Depression and anxiety"", ""slug"": ""mnch_more_conditions_depression_and_anxiety""}","{""type"": ""go_to_page"",""title"": ""Violence and abuse"", ""slug"": ""mnch_get_help_and_support_violence_and_abuse""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Get help and support"", ""slug"": ""mnch_info_and_support_get_help_and_support""},{""type"": ""go_to_page"",""title"": ""Depression and anxiety"", ""slug"": ""mnch_more_conditions_depression_and_anxiety""},{""type"": ""go_to_page"",""title"": ""Violence and abuse"", ""slug"": ""mnch_get_help_and_support_violence_and_abuse""}]",English,MARKETING
+56,Breastfeeding,mnch_feeding_breastfeeding,mnch_feeding_breastfeeding,mnch,,Breastfeeding,,,"*Get help with breastfeeding*
+
+If you are in pain, struggling to get your baby to feed, or worried that your baby isn’t getting enough to drink, you can get help.
+
+[• Call the [Service Name] support line on XXXXXXXXXXXX]
+
+• Speak to a health worker at the clinic.
+
+• Look at the information here on [Service Name]. There are links to it in the next message.
+
+[• Visit the La Leche League website at www.llli.org or go to their Facebook page - LLLI Breastfeeding Support]
+
+👇 Want more information on breastfeeding?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+57,,,mnch_feeding_breastfeeding,,,,,,"*Remember, breastfeeding isn’t something that comes naturally every time. And each baby is different. Learning to breastfeed takes time. Be patient with yourself and your baby.*
+
+⭐ Here are some topics that might help you",,,Why breast is best,"""go_to_page""",Latching,Breastfeeding tips,,,,,,,,,,,,,Why breast is best,mnch_breastfeeding_why_breast_is_best,Latching,mnch_breastfeeding_latching,Breastfeeding tips,mnch_breastfeeding_breastfeeding_tips,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Why breast is best"", ""slug"": ""mnch_breastfeeding_why_breast_is_best""}","{""type"": ""go_to_page"",""title"": ""Latching"", ""slug"": ""mnch_breastfeeding_latching""}","{""type"": ""go_to_page"",""title"": ""Breastfeeding tips"", ""slug"": ""mnch_breastfeeding_breastfeeding_tips""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Why breast is best"", ""slug"": ""mnch_breastfeeding_why_breast_is_best""},{""type"": ""go_to_page"",""title"": ""Latching"", ""slug"": ""mnch_breastfeeding_latching""},{""type"": ""go_to_page"",""title"": ""Breastfeeding tips"", ""slug"": ""mnch_breastfeeding_breastfeeding_tips""}]",English,MARKETING
+58,Adoption,mnch_get_help_and_support_adoption,mnch_get_help_and_support_adoption,mnch,,Adoption,,,"*Adoption*
+
+If you are thinking of giving your child up for adoption, these organisations can help you.
+
+*[Service Name]*
+[0800 864 658]
+[Free, 24-hour helpline]
+
+*[Service Name]*
+[0800 864 658]
+[Normal phone charges, open 8am to 6pm]
+
+*[Service Name]*
+[0800 864 658]
+[Free, 24-hour helpline]
+[www.webaddress.org]
+
+
+👇 Need help with something else?",,,"Yes, please Get help","""next_message""",,,,,,,,,,,,,,,"Yes, please Get help",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please Get help"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please Get help"", ""slug"": """"}]",English,MARKETING
+59,Abortion,mnch_get_help_and_support_abortion,mnch_get_help_and_support_abortion,mnch,,Abortion,,,"*Support with an abortion*
+
+[If you want to terminate (end) your pregnancy or are thinking about it, go to the clinic soon.]
+
+Or these organisations can help.
+
+*[Service Name]*
+[0800 864 658]
+[Free, 24-hour helpline]
+
+*[Service Name]*
+[0800 864 658]
+[Normal phone charges, open 8am to 6pm]
+
+Deciding to have an abortion is very personal. For some people, it can be a hard decision to make. Speak to someone you can trust.
+
+👇 What happens with an abortion?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+60,,,mnch_get_help_and_support_abortion,,,,,,"*How do abortions work?*
+
+In [Country Name] any girl or woman can get an [free] abortion until she is [XX] weeks pregnant.
+
+After that you may be able to get an abortion up until [XX] weeks, if there is a good reason.
+
+There are different ways to end your pregnancy. You could be given medicine or you may need a small operation. Both are safe if a trained health worker helps you.
+
+Your options will depend on how many weeks you have been pregnant, so talk to someone soon.
+
+👇 One last thing…",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+61,,,mnch_get_help_and_support_abortion,,,,,,"* Remember, if you don’t know if you want to have a baby, you've got options and there's help for you.*
+
+⭐ More about early pregnancy",,,Get help and support,"""go_to_page""",Ambulance,Danger signs,,,,,,,,,,,,,Get help and support,mnch_info_and_support_get_help_and_support,Ambulance,mnch_get_help_and_support_ambulance,Danger signs,mnch_pregnancy_danger_signs,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Get help and support"", ""slug"": ""mnch_info_and_support_get_help_and_support""}","{""type"": ""go_to_page"",""title"": ""Ambulance"", ""slug"": ""mnch_get_help_and_support_ambulance""}","{""type"": ""go_to_page"",""title"": ""Danger signs"", ""slug"": ""mnch_pregnancy_danger_signs""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Get help and support"", ""slug"": ""mnch_info_and_support_get_help_and_support""},{""type"": ""go_to_page"",""title"": ""Ambulance"", ""slug"": ""mnch_get_help_and_support_ambulance""},{""type"": ""go_to_page"",""title"": ""Danger signs"", ""slug"": ""mnch_pregnancy_danger_signs""}]",English,MARKETING
+62,HIV,mnch_health_issues_hiv,mnch_health_issues_hiv,mnch,,HIV,,,"*Help with HIV/AIDS in pregnancy*
+
+If you're pregnant and living with HIV, or think you may have HIV, it's really important to do something as soon as possible.
+
+Talk to a health worker or contact one of these organisations.
+
+*[Service Name]*
+[0800 864 658]
+[Free, 24-hour helpline]
+
+*[Service Name]*
+[0800 864 658]
+[Normal phone charges, open 8am to 6pm]
+
+👇 [Service Name] is here to help you learn how to look after both of you",,,Give me more info,"""next_message""",,,,,,,,,,,,,,,Give me more info,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Give me more info"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Give me more info"", ""slug"": """"}]",English,MARKETING
+63,,,mnch_health_issues_hiv,,,,,,"*Remember, make sure you test for HIV early in your pregnancy. There are medicines you can take to keep you and your baby healthy.*
+
+⭐ Learn more about HIV in pregnancy",,,Testing for HIV,"""go_to_page""",Pregnancy check-ups,Treatment for life,,,,,,,,,,,,,Testing for HIV,mnch_testing_and_treatment_testing_for_hiv,Pregnancy check-ups,mnch_tips_to_stay_healthy_pregnancy_checkups,Treatment for life,mnch_testing_and_treatment_treatment_for_life,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Testing for HIV"", ""slug"": ""mnch_testing_and_treatment_testing_for_hiv""}","{""type"": ""go_to_page"",""title"": ""Pregnancy check-ups"", ""slug"": ""mnch_tips_to_stay_healthy_pregnancy_checkups""}","{""type"": ""go_to_page"",""title"": ""Treatment for life"", ""slug"": ""mnch_testing_and_treatment_treatment_for_life""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Testing for HIV"", ""slug"": ""mnch_testing_and_treatment_testing_for_hiv""},{""type"": ""go_to_page"",""title"": ""Pregnancy check-ups"", ""slug"": ""mnch_tips_to_stay_healthy_pregnancy_checkups""},{""type"": ""go_to_page"",""title"": ""Treatment for life"", ""slug"": ""mnch_testing_and_treatment_treatment_for_life""}]",English,MARKETING
+64,Alcohol or drugs,mnch_get_help_and_support_alcohol_or_drugs,mnch_get_help_and_support_alcohol_or_drugs,mnch,,Alcohol or drugs,,,"*Alcohol and drugs in pregnancy*
+
+Using drugs or alcohol during pregnancy can harm you and your baby. There is no safe amount you can use.
+
+There are organisations that can help you stop.
+
+*[Service Name]*
+[0800 864 658]
+[Free, 24-hour helpline]
+
+*[Service Name]*
+[0800 864 658]
+[Normal phone charges, open 8am to 6pm]
+
+
+👇 Want to know more about treatments?",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+65,,,mnch_get_help_and_support_alcohol_or_drugs,,,,,,"*Treatment options*
+
+There are safe ways you can reduce or stop using alcohol or drugs when you're pregnant.
+
+You can try talking to a counsellor, using medicines that help with quitting, or joining a support group. All these are safe for you and your baby.
+
+👇 Worried about how you might feel when you stop using alcohol or drugs?",,,"Yes, please help","""next_message""",,,,,,,,,,,,,,,"Yes, please help",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please help"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please help"", ""slug"": """"}]",English,MARKETING
+66,,,mnch_get_help_and_support_alcohol_or_drugs,,,,,,"*Quitting alcohol or drugs*
+
+Quitting can be tough because your body is used to having the drugs or the alcohol. You could get really sick if you stop suddenly and without any support.
+
+But you're not alone. And there are medicines that can help get you through.
+
+Health workers can help you deal with withdrawal — that's when you might feel bad or get sick after you stop using drugs or alcohol.
+
+👇 Want to know why quitting is so important?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+67,,,mnch_get_help_and_support_alcohol_or_drugs,,,,,,"*Using alcohol or drugs during pregnancy is risky for you and your baby. They can change the way your baby grows and develops and cause problems for the rest of your child’s life.*
+
+⭐ Learn more about:",,,Get help and support,"""go_to_page""",Ambulance,Depression and anxiety,,,,,,,,,,,,,Get help and support,mnch_info_and_support_get_help_and_support,Ambulance,mnch_get_help_and_support_ambulance,Depression and anxiety,mnch_more_conditions_depression_and_anxiety,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Get help and support"", ""slug"": ""mnch_info_and_support_get_help_and_support""}","{""type"": ""go_to_page"",""title"": ""Ambulance"", ""slug"": ""mnch_get_help_and_support_ambulance""}","{""type"": ""go_to_page"",""title"": ""Depression and anxiety"", ""slug"": ""mnch_more_conditions_depression_and_anxiety""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Get help and support"", ""slug"": ""mnch_info_and_support_get_help_and_support""},{""type"": ""go_to_page"",""title"": ""Ambulance"", ""slug"": ""mnch_get_help_and_support_ambulance""},{""type"": ""go_to_page"",""title"": ""Depression and anxiety"", ""slug"": ""mnch_more_conditions_depression_and_anxiety""}]",English,MARKETING
+68,Quit smoking,mnch_get_help_and_support_quit_smoking,mnch_get_help_and_support_quit_smoking,mnch,,Quit smoking,,,"*Quit smoking*
+
+Smoking or vaping during pregnancy puts you and your baby’s health at risk. These organisations can help you quit.
+
+*[Service Name]*
+[0800 864 658]
+[Free, 24-hour helpline]
+
+*[Service Name]*
+[0800 864 658]
+[Normal phone charges, open 8am to 6pm]
+
+👇 One last thing…",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+69,,,mnch_get_help_and_support_quit_smoking,,,,,,"*If you quit smoking for your pregnancy, you can make a big difference to the future health of your child.*
+
+⭐ Learn more about:",,,Get help and support,"""next_message""",Stress relief,,,,,,,,,,,,,,Get help and support,mnch_info_and_support_get_help_and_support,Stress relief,mnch_caring_for_you_stress_relief,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Get help and support"", ""slug"": ""mnch_info_and_support_get_help_and_support""}","{""type"": ""go_to_page"",""title"": ""Stress relief"", ""slug"": ""mnch_caring_for_you_stress_relief""}",,,,,,,,,"[{""type"": ""next_message"",""title"": ""Get help and support"", ""slug"": ""mnch_info_and_support_get_help_and_support""},{""type"": ""go_to_page"",""title"": ""Stress relief"", ""slug"": ""mnch_caring_for_you_stress_relief""}]",English,MARKETING
+70,Birth attendant,mnch_delivery_birth_attendant,mnch_delivery_birth_attendant,mnch,,Birth attendant,,,"*Birth attendants*
+
+Having the right people with you during childbirth is important.
+
+When you have a home birth, try to get the support of a professional health worker with medical skills and experience. These are called skilled birth attendants.
+
+The right person will keep you and your baby safe, respect you and your birth plan, and be able to help if there are complications.
+
+Skilled birth attendants include:
+· midwives
+· obstetricians
+· [other’s qualified within the country’s system]
+
+👇 Want to know more about these professionals?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+71,,,mnch_delivery_birth_attendant,,,,,,"*Midwives*
+
+A midwife is a specialist in pregnancy, birth and newborn babies. They can look after you while you're pregnant, when you give birth, and after your baby comes.
+
+They can guide and support you during labour and know the danger signs to look out for. If you are at home, they will know if or when you need to go to the hospital for emergency care.
+
+A midwife will also be able to check everything is fine with you and your baby after the baby is born and help you with breastfeeding.
+
+[They may be able to give your baby important vaccinations [and vitamin K] immediately to protect them.]
+👇 Want to know about [doulas] and [traditional birth attendants] and how they are different?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+72,,,mnch_delivery_birth_attendant,,,,,,"*[Doulas and other traditional birth attendants]*
+
+There are also other birth attendants, such as [doulas] or [traditional birth attendants]. Many are very experienced and give valuable support, but most have no medical training.
+
+For example, a [doula] will focus on helping you to stay calm, manage your pain and give birth naturally. In the hospital or at home, they will speak up for you and tell others what you want if you can’t.
+
+These non-medical birth attendants can guide and support you through labour.
+
+*For a home birth, it’s important to have a skilled birth attendant, such as a [midwife] there too, if you can.*
+
+👇 Want to learn about doctors who deliver babies?",,,"OK, tell me","""next_message""",,,,,,,,,,,,,,,"OK, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK, tell me"", ""slug"": """"}]",English,MARKETING
+73,,,mnch_delivery_birth_attendant,,,,,,"*Obstetricians*
+
+Obstetricians are specialised doctors who know a lot about supporting women in pregnancy and birth. They usually work in hospitals.
+
+Many women give birth without needing an obstetrician. But if there’s a serious medical emergency or you need a C-section, the obstetrician will often be the one to help.
+
+👇 Want to know who else can help with your baby's birth?",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+74,,,mnch_delivery_birth_attendant,,,,,,"*Doctors and nurses*
+
+At the clinic or hospital, you may be cared for by a general doctor or nurse.
+
+Although they are not specialists, like obstetricians, they are trained in childbirth and can deal with emergencies.
+
+👇 One last thing…",,,"Sure, go on","""next_message""",,,,,,,,,,,,,,,"Sure, go on",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Sure, go on"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Sure, go on"", ""slug"": """"}]",English,MARKETING
+75,,,mnch_delivery_birth_attendant,,,,,,"*Ask the health worker at your next pregnancy check-up if you have more questions about birth attendants. [Service Name] is here to support you all the way too. You're not alone!*
+
+⭐ Read more to prepare for the birth",,,Home birth,"""go_to_page""",Giving natural birth,After natural birth,,,,,,,,,,,,,Home birth,mnch_delivery_home_birth,Giving natural birth,mnch_delivery_giving_natural_birth,After natural birth,mnch_after_birth_after_natural_birth,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Home birth"", ""slug"": ""mnch_delivery_home_birth""}","{""type"": ""go_to_page"",""title"": ""Giving natural birth"", ""slug"": ""mnch_delivery_giving_natural_birth""}","{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Home birth"", ""slug"": ""mnch_delivery_home_birth""},{""type"": ""go_to_page"",""title"": ""Giving natural birth"", ""slug"": ""mnch_delivery_giving_natural_birth""},{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""}]",English,MARKETING
+76,Premature labour,mnch_labour_premature_labour,mnch_labour_premature_labour,mnch,,Premature labour,,,"*Premature labour*
+
+If you go into labour before 37 weeks, it’s called premature or preterm labour.
+
+Call your health worker or go to the clinic immediately if this happens.
+
+Getting help early can make a big difference to your baby’s health and how they develop and grow.
+
+👇 Want to know the signs your baby may be coming early?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+77,,,mnch_labour_premature_labour,,,,,,"*Signs of premature labour*
+
+Knowing the signs that you may be starting labour early (before 37 weeks) can help you react quickly.
+
+Get help if:
+· your waters break
+· you feel like your baby is pushing down towards your pelvis (hips)
+· you start having regular contractions that may or may not be painful
+· there’s a new, steady ache in your lower back
+· you have tummy cramps
+· there are changes to the discharge from your vagina
+
+If you have any of these things, call your health worker or go to the clinic.
+
+👇 Want to know what might make you have your baby early?",,,"Yes, tell me","""next_message""",,,,,,,,,,,,,,,"Yes, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}]",English,MARKETING
+78,,,mnch_labour_premature_labour,,,,,,"*What increases your chances of early labour?*
+
+Some things make it more likely you will have your baby early. For example, if:
+
+· you have had a premature baby before
+· other women in your family have had premature births
+· you are having more than 1 baby
+· you gave birth less than 18 months ago
+· you have diabetes, high blood pressure or an STI
+· you smoke, drink or use drugs
+
+At your pregnancy check-up, you can chat to your health worker about what you can do to cut the risks of your baby coming early.
+
+👇 So, what happens if you go into premature labour?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+79,,,mnch_labour_premature_labour,,,,,,"*Treatment for premature labour*
+
+If you go into labour early, the health worker may give you medicine to slow down or delay labour.
+
+They may also give you an injection to help your baby's lungs develop faster and to protect you both from infections.
+
+You may be moved to a hospital or clinic that can give premature babies specialist care.
+
+👇 One last thing to remember…",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+80,,,mnch_labour_premature_labour,,,,,,"*Chat to the health worker at your next check-up if you think you are at risk of having your baby early.*
+
+⭐ Learn more about",,,Stages of labour,"""go_to_page""",Practice contraction,Time for hospital,,,,,,,,,,,,,Stages of labour,mnch_labour_stages_of_labour,Practice contraction,mnch_pregnancy_practice_contraction,Time for hospital,mnch_delivery_time_for_hospital,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Stages of labour"", ""slug"": ""mnch_labour_stages_of_labour""}","{""type"": ""go_to_page"",""title"": ""Practice contraction"", ""slug"": ""mnch_pregnancy_practice_contraction""}","{""type"": ""go_to_page"",""title"": ""Time for hospital"", ""slug"": ""mnch_delivery_time_for_hospital""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Stages of labour"", ""slug"": ""mnch_labour_stages_of_labour""},{""type"": ""go_to_page"",""title"": ""Practice contraction"", ""slug"": ""mnch_pregnancy_practice_contraction""},{""type"": ""go_to_page"",""title"": ""Time for hospital"", ""slug"": ""mnch_delivery_time_for_hospital""}]",English,MARKETING
+81,What not to eat,mnch_healthy_eating_what_not_to_eat,mnch_healthy_eating_what_not_to_eat,mnch,,What not to eat,,,"*Things to avoid when you are pregnant*
+
+Your baby gets all the nutrients she needs to grow from what you eat and drink. But some things you eat, drink or breathe can pass through the placenta and harm your baby,
+
+To protect your baby, avoid:
+• alcohol
+• drugs
+• smoking cigarettes or marijuana
+• being around cigarette or marijuana smoke
+• nicotine (found in tobacco and vapes)
+• some medicines
+• some traditional remedies
+• eating soil or clay
+
+These can be dangerous for your baby. They can affect her health for her whole life.
+
+👇 Want to know what problems these cause?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+82,,,mnch_healthy_eating_what_not_to_eat,,,,,,"*Risks to you and your baby*
+
+These substances can cause serious health problems for your baby, such as:
+• low birth weight
+• mouth or lip defects
+• poor brain development
+• behaviour and learning difficulties
+• breathing problems
+
+They can also increase the risk of:
+• stillbirth
+• early labour
+• death of the baby in the first few months of life
+
+👇 Get more information about a healthy pregnancy",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+83,,,mnch_healthy_eating_what_not_to_eat,,,,,,"*The dangers of alcohol*
+
+Even a few drinks when you are pregnant can seriously harm your baby.
+
+Babies whose mothers drink alcohol can develop foetal alcohol syndrome (FAS). This is when alcohol passing from the mother to the baby causes brain damage. It also affects how the baby looks.
+
+Babies with FAS have:
+
+• behaviour and learning difficulties
+• changes to their faces
+• problems with vision and hearing
+• small heads and smaller brains
+• heart problems
+• kidney problems
+• deformed joints
+
+
+👇 Get more information about avoiding things that can harm your baby",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+84,,,mnch_healthy_eating_what_not_to_eat,,,,,,"*Remember: Don’t use alcohol and drugs or smoke while you are pregnant. And check any medicine before you take it. Even small amounts of the wrong things can cause serious harm.*
+
+Learn more about getting help to make healthy choices while you are pregnant:",,,Medicines,"""go_to_page""",Vitamins/supplements,Quit,,,,,,,,,,,,,Medicines,mnch_tips_to_stay_healthy_medicines,Vitamins/supplements,mnch_tips_to_stay_healthy_vitaminssupplements,Quit,mnch_tips_to_stay_healthy_quit,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Medicines"", ""slug"": ""mnch_tips_to_stay_healthy_medicines""}","{""type"": ""go_to_page"",""title"": ""Vitamins/supplements"", ""slug"": ""mnch_tips_to_stay_healthy_vitaminssupplements""}","{""type"": ""go_to_page"",""title"": ""Quit"", ""slug"": ""mnch_tips_to_stay_healthy_quit""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Medicines"", ""slug"": ""mnch_tips_to_stay_healthy_medicines""},{""type"": ""go_to_page"",""title"": ""Vitamins/supplements"", ""slug"": ""mnch_tips_to_stay_healthy_vitaminssupplements""},{""type"": ""go_to_page"",""title"": ""Quit"", ""slug"": ""mnch_tips_to_stay_healthy_quit""}]",English,MARKETING
+85,Managing labour pain,mnch_labour_managing_labour_pain,mnch_labour_managing_labour_pain,mnch,,Managing labour pain,,,"*Managing labour pain*
+
+Every woman’s labour is different. You won’t know what works for you until you are in labour. That’s why it’s important to know and try different things.
+
+From breathing exercises to walking around, find out what may work for you.
+
+👇 Want to learn about natural ways to deal with the pain during labour?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+86,,,mnch_labour_managing_labour_pain,,,,,,"*Natural ways to help with labour pain*
+
+Labour is tough, but you can do it. Here are some things you can try for the pain when you are in labour.
+
+*Keep moving*
+Walking or swaying can help with the pain from contractions.
+
+*Try different positions*
+Try kneeling, leaning against a wall or against another person, sitting in a chair or bending down on your hands and knees. Go with what your body tells you. You don’t need to lie down.
+
+*Focus on your breathing*
+Deep, slow breaths can help you relax. Even if you can’t take deep breaths, try to focus on each breath.
+
+*Create a relaxing space*
+Gentle light and calm music can help you feel calmer too. Try to have calm, people with you. This can help too.
+
+*Get into water*
+Try having a shower or a warm bath.
+
+*Use warmth*
+Put a hot water bottle or heat pack on your back or tummy. Make sure it’s not too hot.
+
+*Ask for a massage*
+Rubbing your back, shoulders or feet can help with the pain. But don’t be surprised if you don’t want to be touched either.
+
+👇 Interested in medical options for help with labour pain?",,,"Yes, I want to know","""next_message""",,,,,,,,,,,,,,,"Yes, I want to know",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, I want to know"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, I want to know"", ""slug"": """"}]",English,MARKETING
+87,,,mnch_labour_managing_labour_pain,,,,,,"*Pain relief at the hospital or clinic*
+
+If you are in the hospital or clinic, you may have the choice of other ways to manage pain during labour. These could be:
+
+· gas and air (Entonox)
+· a TENS machine
+· a spinal block (a local anaesthetic)
+· an epidural (a local anaesthetic)
+· pethidine (a strong painkiller)
+
+Chat to your health worker about these at your pregnancy check-ups so that you can choose what's right for you.
+
+👇 Want to know more about each of these options for pain relief?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+88,,,mnch_labour_managing_labour_pain,,,,,,"*Gas and air*
+
+Also called ‘laughing gas’ or Entonox, this mixture of gases relaxes you. It makes the pain feel less intense.
+
+You must breathe the gas in before each contraction. It takes about 15 to 20 seconds for it to start working.
+
+The gas might make you feel a bit dizzy, nauseous and make you giggle.
+
+👇 Interested in the TENS machine?",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+89,,,mnch_labour_managing_labour_pain,,,,,,"*A TENS machine*
+
+This is a small machine that uses electricity to help with the pain. Wires from the machine connect to flat pads that you put on your body.
+
+A TENS can be used in early labour, but never use it in water.
+
+Check with your health worker first if you have epilepsy or any heart problems.
+
+👇 Want to know about a spinal block?",,,Tell me about it,"""next_message""",,,,,,,,,,,,,,,Tell me about it,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me about it"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me about it"", ""slug"": """"}]",English,MARKETING
+90,,,mnch_labour_managing_labour_pain,,,,,,"*A spinal block*
+
+A spinal block is an injection of a local anaesthetic into your back to stop you feeling pain.
+
+You won’t feel any pain or contractions during the labour, and you will stay awake.
+
+A spinal block is usually quicker to inject and works faster than an epidural. But it doesn’t last as long, so it’s better closer to the birth.
+
+After a spinal block, you have to stay in bed and can’t move around. It can make pushing the baby out more difficult, which means the health team may need to help the baby out.
+
+👇 Interested in knowing how an epidural is different?",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+91,,,mnch_labour_managing_labour_pain,,,,,,"*An epidural*
+
+An epidural is another kind of anaesthetic that stops you feeling pain in your lower body. It is given through a tiny tube that is stuck into your spine.
+
+An epidural takes longer than a spinal block to work, but once it starts working it can keep going as long as you need it. You can also make it stronger if you are still feeling pain.
+
+You may still be able to feel your contractions, but these shouldn’t be painful.
+
+Sometimes you can move around a bit if you have an epidural, but you will be attached to a pole on wheels.
+
+Your head may feel a bit fuzzy for a few hours afterwards.
+
+👇 Want to learn more about labour now?",,,"OK, tell me","""next_message""",,,,,,,,,,,,,,,"OK, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK, tell me"", ""slug"": """"}]",English,MARKETING
+92,,,mnch_labour_managing_labour_pain,,,,,,"*Pethidine*
+
+Pethidine is a very strong painkiller that is usually injected. It can take away the pain, but can make you vomit or feel nauseous. It can also make you feel confused and dizzy.
+
+It usually takes about 20 minutes for the drug to work, and the effects can last for 2 to 4 hours.
+
+👇 That’s all about pain relief…",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+93,,,mnch_labour_managing_labour_pain,,,,,,"*Remember, you are stronger than you think, and with good advice and support, you can manage the pain of labour.*
+
+⭐ More information to prepare you for labour",,,Contractions,"""go_to_page""",Stages of labour,Healing after birth,,,,,,,,,,,,,Contractions,mnch_signs_of_labour_contractions,Stages of labour,mnch_labour_stages_of_labour,Healing after birth,mnch_after_birth_healing_after_birth,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Contractions"", ""slug"": ""mnch_signs_of_labour_contractions""}","{""type"": ""go_to_page"",""title"": ""Stages of labour"", ""slug"": ""mnch_labour_stages_of_labour""}","{""type"": ""go_to_page"",""title"": ""Healing after birth"", ""slug"": ""mnch_after_birth_healing_after_birth""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Contractions"", ""slug"": ""mnch_signs_of_labour_contractions""},{""type"": ""go_to_page"",""title"": ""Stages of labour"", ""slug"": ""mnch_labour_stages_of_labour""},{""type"": ""go_to_page"",""title"": ""Healing after birth"", ""slug"": ""mnch_after_birth_healing_after_birth""}]",English,MARKETING
+94,Waters break,mnch_signs_of_labour_waters_break,mnch_signs_of_labour_waters_break,mnch,,Waters break,,,"*What happens when your waters break*
+
+If you feel a sudden gush or a slow drip of liquid from your vagina, this could be your waters breaking. The liquid should be clear, a bit pink, or slightly bloody, and it won't stop.
+
+Your waters breaking is a natural part of labour. It can be one of the first signs labour is about to start, but it may only happen when your contractions are much stronger.
+
+Your waters are the liquid your baby floats around in inside your uterus (womb). This liquid comes out of your vagina when the sac around your baby breaks open. This usually happens when your body is getting ready to give birth.
+
+👇 If you think your waters have broken, here's what to do…",,,Tell me more,"""next_message""",,,,,,,,,,,,,,,Tell me more,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me more"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me more"", ""slug"": """"}]",English,MARKETING
+95,,,mnch_signs_of_labour_waters_break,,,,,,"*What to do when your waters break*
+
+Keep calm and take these steps.
+
+· Take note of the time your waters broke.
+
+· Use a sanitary pad to catch some of the liquid.
+
+· Check the colour of the liquid and how much there is.
+
+Go to the clinic immediately if:
+· your waters break before 37 weeks
+· the liquid is brown, green or smells bad
+
+👇 Want to know how long before labour starts?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+96,,,mnch_signs_of_labour_waters_break,,,,,,"*What now?*
+
+Sometimes, your waters break before you feel any contractions. It might be a few hours before you feel anything else happen.
+
+This is normal, so don’t worry. Use the time to get everything ready for the birth or your trip to the hospital.
+
+If it takes too long after your waters break to go into labour, you could get an infection. To prevent this:
+· Change your pads regularly
+· Don’t have sex
+· Don’t go swimming or have a bath
+· Shower to stay clean
+· Avoid using tampons or putting anything else in your vagina
+
+👇 Want to know if there’s a problem and you need to go to the hospital?",,,When must I go?,"""next_message""",,,,,,,,,,,,,,,When must I go?,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""When must I go?"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""When must I go?"", ""slug"": """"}]",English,MARKETING
+97,,,mnch_signs_of_labour_waters_break,,,,,,"*When to go to the clinic*
+
+
+Go to the clinic if:
+· your contractions don’t start within 24 hours
+· you get a fever or other signs of infection
+· your vagina smells bad
+· there is any brown or green liquid or discharge from your vagina.
+
+Your health worker may suggest you start labour (induction) to protect you and your baby.
+
+👇 Wondering how you might feel when your waters break?",,,Yes,"""next_message""",,,,,,,,,,,,,,,Yes,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes"", ""slug"": """"}]",English,MARKETING
+98,,,mnch_signs_of_labour_waters_break,,,,,,"*When your waters break you may feel nervous, excited or worried. That's normal. Talk to your partner, a family member, or a friend for support.*
+
+⭐ More info on giving birth:",,,Stages of labour,"""go_to_page""",Contractions,Time for hospital,,,,,,,,,,,,,Stages of labour,mnch_labour_stages_of_labour,Contractions,mnch_signs_of_labour_contractions,Time for hospital,mnch_delivery_time_for_hospital,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Stages of labour"", ""slug"": ""mnch_labour_stages_of_labour""}","{""type"": ""go_to_page"",""title"": ""Contractions"", ""slug"": ""mnch_signs_of_labour_contractions""}","{""type"": ""go_to_page"",""title"": ""Time for hospital"", ""slug"": ""mnch_delivery_time_for_hospital""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Stages of labour"", ""slug"": ""mnch_labour_stages_of_labour""},{""type"": ""go_to_page"",""title"": ""Contractions"", ""slug"": ""mnch_signs_of_labour_contractions""},{""type"": ""go_to_page"",""title"": ""Time for hospital"", ""slug"": ""mnch_delivery_time_for_hospital""}]",English,MARKETING
+99,Contractions,mnch_signs_of_labour_contractions,mnch_signs_of_labour_contractions,mnch,,Contractions,,,"*What are contractions?*
+
+Contractions happen when the muscles of your uterus (womb) tighten and then relax – your tummy will go hard then softer again.
+
+Contractions help to move your baby from your tummy into the birth canal (your vagina) and then out into the world.
+
+It's normal to feel excited and nervous when you feel your first contractions. They are usually one of the first signs of labour. But you can get false contractions earlier in your pregnancy
+
+👇 Interested to know about different kinds of contractions?",,,Go on..,"""next_message""",,,,,,,,,,,,,,,Go on..,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Go on.."", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Go on.."", ""slug"": """"}]",English,MARKETING
+100,,,mnch_signs_of_labour_contractions,,,,,,"*False labour contractions*
+
+You may get contractions as early as 16 weeks. These are called Braxton Hicks or false labour contractions.
+
+They can make you think you're starting labour.
+But Braxton Hicks contractions aren't regular and they don't get closer over time.
+
+They can be uncomfortable but aren’t normally too painful. Usually they stop when you move or change how you're sitting or lying.
+
+Real labour contractions don't stop, even when you move. They become more regular and get stronger.
+
+👇 Want to know what real contractions feel like?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+101,,,mnch_signs_of_labour_contractions,,,,,,"*Contractions at the start of labour*
+
+Early contractions often feel like the cramps you get with your period or like a tight belt around your tummy. You might also have pain in your lower back.
+
+These early contractions probably won’t have a regular pattern and could be 10 minutes apart or even a bit more.
+
+They are a signal to tell you your baby is on her way. They are your body getting ready for the birth.
+
+Keep track of how long each contraction lasts and how much time there is between them.
+
+👇 Want to know how contractions change as things move along?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+102,,,mnch_signs_of_labour_contractions,,,,,,"*Contractions get stronger and longer*
+
+The contractions should get longer and the time between them shorter as you get closer to giving birth. At the same time they will get stronger.
+
+As your cervix (the opening to your uterus) opens more and more, you will have contractions every 3 to 5 minutes. Each contraction can last for about a minute. And each one brings you closer to meeting your baby!
+
+Go to the clinic when your contractions:
+• are about 5 minutes apart
+• last for about 1 minute each
+• have been like this for an hour.
+
+If this is not your first baby, go when your contractions are 7 to 10 minutes apart.
+
+👇 What are contractions like towards the end of labour?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+103,,,mnch_signs_of_labour_contractions,,,,,,"*Contractions when your body is ready to give birth*
+
+Once your cervix is fully open (fully dilated) your contractions will come one right after the other.
+
+Each contraction can last up to one-and-a-half minutes. It might feel as if there is no gap in between them.
+
+This is a sign that it’s almost time to start pushing. The contractions are helping your baby through the birth canal. This final bit can be tough, but it usually doesn’t last too long.
+
+Try to keep taking deep breaths, and lean on the people around you for support. You're nearly there.
+
+👇 What about after my baby is born?",,,Tell me more,"""next_message""",,,,,,,,,,,,,,,Tell me more,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me more"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me more"", ""slug"": """"}]",English,MARKETING
+104,,,mnch_signs_of_labour_contractions,,,,,,"*Contractions after the birth*
+
+After your baby has been born, you will still have some contractions until the placenta comes out. These will not be as strong.
+
+You may still get contractions for up to 3 days after your baby is born. These help your uterus (womb) get smaller again.
+
+👇 One more important thing…",,,"OK, tell me","""next_message""",,,,,,,,,,,,,,,"OK, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK, tell me"", ""slug"": """"}]",English,MARKETING
+105,,,mnch_signs_of_labour_contractions,,,,,,"*Remember, real contractions are regular and get longer over time. If you are worried about any unusual sharp pains in your tummy, speak to a health worker or go to the clinic.*
+
+⭐ Explore more pregnancy info:",,,Practice contraction,"""go_to_page""",Time for hospital,Stages of labour,,,,,,,,,,,,,Practice contraction,mnch_pregnancy_practice_contraction,Time for hospital,mnch_delivery_time_for_hospital,Stages of labour,mnch_labour_stages_of_labour,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Practice contraction"", ""slug"": ""mnch_pregnancy_practice_contraction""}","{""type"": ""go_to_page"",""title"": ""Time for hospital"", ""slug"": ""mnch_delivery_time_for_hospital""}","{""type"": ""go_to_page"",""title"": ""Stages of labour"", ""slug"": ""mnch_labour_stages_of_labour""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Practice contraction"", ""slug"": ""mnch_pregnancy_practice_contraction""},{""type"": ""go_to_page"",""title"": ""Time for hospital"", ""slug"": ""mnch_delivery_time_for_hospital""},{""type"": ""go_to_page"",""title"": ""Stages of labour"", ""slug"": ""mnch_labour_stages_of_labour""}]",English,MARKETING
+106,What not to eat,mnch_healthy_eating_what_not_to_eat,mnch_healthy_eating_what_not_to_eat,mnch,,What not to eat,,,"*Things to avoid when you are pregnant*
+
+Your baby gets all the nutrients she needs to grow from what you eat and drink. But some things you eat, drink or breathe can pass through the placenta and harm your baby,
+
+To protect your baby, avoid:
+• alcohol
+• drugs
+• smoking cigarettes or marijuana
+• being around cigarette or marijuana smoke
+• nicotine (found in tobacco and vapes)
+• some medicines
+• some traditional remedies
+• eating soil or clay
+
+These can be dangerous for your baby. They can affect her health for her whole life.
+
+👇 Want to know what problems these cause?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+107,,,mnch_healthy_eating_what_not_to_eat,,,,,,"*Risks to you and your baby*
+
+These substances can cause serious health problems for your baby, such as:
+• low birth weight
+• mouth or lip defects
+• poor brain development
+• behaviour and learning difficulties
+• breathing problems
+
+They can also increase the risk of:
+• stillbirth
+• early labour
+• death of the baby in the first few months of life
+
+👇 Get more information about a healthy pregnancy",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+108,,,mnch_healthy_eating_what_not_to_eat,,,,,,"*The dangers of alcohol*
+
+Even a few drinks when you are pregnant can seriously harm your baby.
+
+Babies whose mothers drink alcohol can develop foetal alcohol syndrome (FAS). This is when alcohol passing from the mother to the baby causes brain damage. It also affects how the baby looks.
+
+Babies with FAS have:
+
+• behaviour and learning difficulties
+• changes to their faces
+• problems with vision and hearing
+• small heads and smaller brains
+• heart problems
+• kidney problems
+• deformed joints
+
+
+👇 Get more information about avoiding things that can harm your baby",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+109,,,mnch_healthy_eating_what_not_to_eat,,,,,,"*Remember: Don’t use alcohol and drugs or smoke while you are pregnant. And check any medicine before you take it. Even small amounts of the wrong things can cause serious harm.*
+
+Learn more about getting help to make healthy choices while you are pregnant:",,,Medicines,"""go_to_page""",Vitamins/supplements,Quit,,,,,,,,,,,,,Medicines,mnch_tips_to_stay_healthy_medicines,Vitamins/supplements,mnch_tips_to_stay_healthy_vitaminssupplements,Quit,mnch_tips_to_stay_healthy_quit,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Medicines"", ""slug"": ""mnch_tips_to_stay_healthy_medicines""}","{""type"": ""go_to_page"",""title"": ""Vitamins/supplements"", ""slug"": ""mnch_tips_to_stay_healthy_vitaminssupplements""}","{""type"": ""go_to_page"",""title"": ""Quit"", ""slug"": ""mnch_tips_to_stay_healthy_quit""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Medicines"", ""slug"": ""mnch_tips_to_stay_healthy_medicines""},{""type"": ""go_to_page"",""title"": ""Vitamins/supplements"", ""slug"": ""mnch_tips_to_stay_healthy_vitaminssupplements""},{""type"": ""go_to_page"",""title"": ""Quit"", ""slug"": ""mnch_tips_to_stay_healthy_quit""}]",English,MARKETING
+110,Stages of labour,mnch_labour_stages_of_labour,mnch_labour_stages_of_labour,mnch,,Stages of labour,,,"*The 3 stages of labour* 
+
+Labour is the natural process of giving birth. Knowing what happens in labour can help you feel calmer. 
+
+You can think about labour in 3 separate stages. 
+Dilation and early contractions
+
+Pushing and birth
+
+Delivering the placenta
+
+
+👇 Let's go through what to expect at each stage",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+111,,,mnch_labour_stages_of_labour,,,,,,"*Dilation and early contractions*
+
+Labour starts with your body preparing to give birth. 
+
+During early labour your cervix (the opening of the uterus) starts dilating (opening) to allow the baby to be born. 
+
+You will feel your tummy tightening and then relaxing. These are early contractions. They may be irregular and far apart but will get closer together and more regular as time goes on. 
+
+If this is your first baby, it may still be 24 hours before your baby is born. For second babies labour can be much quicker. 
+
+Make yourself comfortable, try to relax and get ready for what's next. 
+
+👇 What does happen next?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+112,,,mnch_labour_stages_of_labour,,,,,,"*Contractions get stronger* 
+
+As your cervix opens wider, your contractions will get stronger and longer and your waters may break. 
+
+The contractions will also get closer together. When each contraction lasts up to 1 minute each it’s called active labour.
+
+When your cervix is fully dilated (10cm wide), your baby is ready to be born. 
+
+👇 What happens now?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+113,,,mnch_labour_stages_of_labour,,,,,,"*Time to have your baby*
+
+Now your baby starts moving down the birth canal (vagina). Your contractions will be strong and feel like there’s no break between them. 
+
+You may feel a pressure in your pervis, as if you need to have a poo. This is your baby coming. 
+
+This part can be hard, but you can do it. Now your birth attendant will ask you to push during each contraction to help move your baby down the birth canal. It won’t be long now.
+
+As soon as your baby is born, she will be put naked on your chest. You can breastfeed almost immediately and enjoy skin-to-skin contact. This is really good for both of you.
+
+👇 There’s one last thing…",,,What’s that?,"""next_message""",,,,,,,,,,,,,,,What’s that?,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""What’s that?"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""What’s that?"", ""slug"": """"}]",English,MARKETING
+114,,,mnch_labour_stages_of_labour,,,,,,"*Delivering the placenta*
+
+After your baby is born, the placenta (afterbirth) needs to come out. You may still have contractions, but these won’t be as strong.
+
+Delivering the placenta can take up to an hour. During this time you can breastfeed and cuddle your baby for the very first time.
+
+👇 So now you know what to expect. Want to know more?",,,"OK, let’s hear more","""next_message""",,,,,,,,,,,,,,,"OK, let’s hear more",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK, let’s hear more"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK, let’s hear more"", ""slug"": """"}]",English,MARKETING
+115,,,mnch_labour_stages_of_labour,,,,,,"*Ask your health worker if you have any questions. Knowing what to expect can help you feel calmer during labour.*
+
+⭐️ You can also find out more about:",,,Time for hospital,"""go_to_page""",Managing labour pain,What to pack,,,,,,,,,,,,,Time for hospital,mnch_delivery_time_for_hospital,Managing labour pain,mnch_labour_managing_labour_pain,What to pack,mnch_preparing_for_birth_what_to_pack,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Time for hospital"", ""slug"": ""mnch_delivery_time_for_hospital""}","{""type"": ""go_to_page"",""title"": ""Managing labour pain"", ""slug"": ""mnch_labour_managing_labour_pain""}","{""type"": ""go_to_page"",""title"": ""What to pack"", ""slug"": ""mnch_preparing_for_birth_what_to_pack""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Time for hospital"", ""slug"": ""mnch_delivery_time_for_hospital""},{""type"": ""go_to_page"",""title"": ""Managing labour pain"", ""slug"": ""mnch_labour_managing_labour_pain""},{""type"": ""go_to_page"",""title"": ""What to pack"", ""slug"": ""mnch_preparing_for_birth_what_to_pack""}]",English,MARKETING
+116,Home birth,mnch_delivery_home_birth,mnch_delivery_home_birth,mnch,,Home birth,,,"*Having your baby at home*
+
+Many women have their babies safely at home. If you have your baby at home, it’s important to be prepared and to have a skilled birth attendant with you. 
+
+Even if you want a home birth, sometimes it’s safer for you and the baby to go to the hospital or clinic. 
+
+👇 Want to know if a home birth is the best choice for you?",,,"Yes, tell me","""next_message""",,,,,,,,,,,,,,,"Yes, tell me",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, tell me"", ""slug"": """"}]",English,MARKETING
+117,,,mnch_delivery_home_birth,,,,,,"*Is a home birth right for you?*
+
+A home birth could be for you if: 
+• you and your baby are healthy
+• you have had a problem-free pregnancy
+• you are only having 1 baby
+• the baby is in a good position, ready to come out head first.
+ 
+Chat to your health worker about it at your next pregnancy check-up. 
+
+👇 Let’s look at what you need to do to prepare for a home birth",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+118,,,mnch_delivery_home_birth,,,,,,"*Prepare for a home birth*
+
+The more prepared you are, the less you will have to worry about when the time comes. 
+
+*Find out what to expect* 
+Learn what you can about the stages of labour and natural birth. There’s lots of info here on [Service Name], and you can ask your health worker too. 
+
+*Learn about managing labour pain* 
+There are things you can do to help manage your pain at home. Find info here on [Service Name].
+
+*Get a support team*
+Decide who you are going to call when labour starts. Talk to them about what you will need from them and how they can help. 
+
+*Organise a birth attendant* 
+Speak to your health worker about who would be best to help you when you go into labour. It’s safest to have someone who knows what to do if a birth gets complicated. 
+
+*Decide where you want to give birth* 
+Pick a comfortable place in your home and clear it of extra things. 
+
+*Get everything you need ready*
+Make sure you have lots of clean towels, extra sheets, maternity pads, nappies and clothes for the baby. On the day you will need clean boiled water. 
+
+👇 What to do if things don’t go smoothly…",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+119,,,mnch_delivery_home_birth,,,,,,"*Make a plan in case something goes wrong*
+
+Most births are straightforward, but things can go wrong. Be prepared to go to the clinic or hospital if you have to. 
+
+• Keep emergency numbers close.
+• Plan how you will get to the hospital.
+• Charge your phone and get extra airtime.
+• Pack an emergency bag for the hospital. 
+
+You and your baby's safety are the most important thing. [Service Name] is here if you need us.
+
+👇 What to remember during the birth",,,Remind me,"""next_message""",,,,,,,,,,,,,,,Remind me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Remind me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Remind me"", ""slug"": """"}]",English,MARKETING
+120,,,mnch_delivery_home_birth,,,,,,"*Labour at home*
+
+The good thing about a home birth is that you have more freedom to move around and do things your way. 
+
+Moving around and changing your position can help you with the pain. See what works for you.
+
+Labour can take a long time, so it’s important to drink lots of water and eat to keep your energy up. Nap if you can.
+
+Talk to your birth attendant or health worker about different positions for giving birth.
+
+👇 What are the signs you need to get urgent medical help?",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+121,,,mnch_delivery_home_birth,,,,,,"*When to go to the clinic*
+
+Go to the clinic or hospital urgently if your birth attendant advises you to or if: 
+
+• You are less than 37 weeks pregnant when your labour starts.
+
+• Your waters break and the liquid is green or brown. It should be clear or pale.
+
+• Your baby’s movements or heart beat changes.
+
+• You start bleeding heavily from your vagina. 
+
+• Your waters have broken but contractions haven’t started within 24 hours.
+
+• You have a fever.
+
+• You have signs of a stroke (trouble speaking, walking or seeing, numbness or weakness in your face, arms or legs on one or both sides, a very sudden, bad headache.)
+
+
+👇 What to do after the birth",,,Give me more info,"""next_message""",,,,,,,,,,,,,,,Give me more info,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Give me more info"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Give me more info"", ""slug"": """"}]",English,MARKETING
+122,,,mnch_delivery_home_birth,,,,,,"*After your baby is born*
+
+The birth attendant will check the baby and make sure you are both fine. 
+
+Straight after the birth, ask to hold your baby on your chest and try to breastfeed. 
+
+Skin-to-skin contact and breastfeeding within an hour of the birth are very good for your baby. 
+
+👇 What else you need to do after the birth",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+123,,,mnch_delivery_home_birth,,,,,,"*Things to remember to do*
+
+When your baby is born at home there are a few important things you need to remember to do afterwards. 
+
+It can be easy to forget when you have a new baby in your home, but these are important for the health of you both.
+
+• See a health worker within 24 hours of the birth if you haven’t seen one.
+
+• Go to the clinic as soon as you can to get your baby his vaccinations for  [TB / hepatitis B / polio]. 
+
+• At the clinic ask for a [child health record] for your baby. This is important to track how he grows and develops. 
+
+• Remember to register the birth within [30] days. [Get the form you need from your birth attendant.]
+
+
+👇 Almost done…",,,OK,"""next_message""",,,,,,,,,,,,,,,OK,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""OK"", ""slug"": """"}]",English,MARKETING
+124,,,mnch_delivery_home_birth,,,,,,"*If you’re planning a home birth, know what to expect and be prepared. This will help things go smoothly*
+
+⭐ These topics can help you prepare for your home birth",,,Clinic visits,"""go_to_page""",After natural birth,Bleeding after birth,,,,,,,,,,,,,Clinic visits,mnch_babys_health_clinic_visits,After natural birth,mnch_after_birth_after_natural_birth,Bleeding after birth,mnch_after_birth_bleeding_after_birth,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""}","{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""}","{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""},{""type"": ""go_to_page"",""title"": ""After natural birth"", ""slug"": ""mnch_after_birth_after_natural_birth""},{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}]",English,MARKETING
+125,Having a C-section,mnch_delivery_having_a_csection,mnch_delivery_having_a_csection,mnch,,Having a C-section,,,"*What is a C-section?*
+
+A C-section is an operation to deliver a baby through a cut in your tummy. 
+
+Often C-sections are done in an emergency, but there are other important reasons for having a planned C-section.
+
+Knowing more about a C-section can help you feel less worried about it. 
+
+👇 Do you want to know more about C-sections now?",,,"Yes, I do","""next_message""",,,,,,,,,,,,,,,"Yes, I do",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, I do"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, I do"", ""slug"": """"}]",English,MARKETING
+126,,,mnch_delivery_having_a_csection,,,,,,"*What happens in a C-section?*
+
+If you need a C-section, you will be given an injection (anaesthetic) to make you go numb. 
+
+During the operation, you are awake. You feel some pressure and movement, but you won’t feel any pain.
+
+The doctor will make a cut across your tummy and lift your baby out into the world. 
+
+Usually after the baby is born and the doctor has checked everything is fine, they put your baby on your chest. If you can, breastfeed your baby immediately. 
+
+👇 What about after the operation?",,,Share what happens next,"""next_message""",,,,,,,,,,,,,,,Share what happens next,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Share what happens next"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Share what happens next"", ""slug"": """"}]",English,MARKETING
+127,,,mnch_delivery_having_a_csection,,,,,,"*Healing after a C-section*
+
+If you’ve had a C-section, it takes some time to recover. 
+
+You will need to stay in the hospital for a few days until you can sit up and move around. To recover fully it takes most women at least 6 weeks.
+
+The health worker will give you pain medicine and instructions on how to care for the wound (the cut) before you go home. 
+
+If your wound becomes red, swollen or oozes, or if you have a fever after you leave, go back to the clinic. 
+
+👇 Need home recovery tips?",,,"Yes, please","""next_message""",,,,,,,,,,,,,,,"Yes, please",,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Yes, please"", ""slug"": """"}]",English,MARKETING
+128,,,mnch_delivery_having_a_csection,,,,,,"*Home recovery tips*
+
+• Avoid driving or lifting anything heavy until the wound is healed. 
+
+• Keep your wound clean and dry. Clean and dry it gently. Speak to a health worker if it looks red or feels hot.
+
+• Take pain medication as your doctor has prescribed. 
+
+• Stay active by walking. This helps healing and stops blood clots.
+
+• Eat food with lots of iron and drink plenty of water. Eat fibre to avoid constipation.
+
+• Talk to someone about your C-section if you need to. It can leave some women feeling sad and upset, especially if it was an emergency. 
+
+👇 Wondering about breastfeeding after a C-section?",,,Tell me about it,"""next_message""",,,,,,,,,,,,,,,Tell me about it,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me about it"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me about it"", ""slug"": """"}]",English,MARKETING
+129,,,mnch_delivery_having_a_csection,,,,,,"*Breastfeeding after a C-section*
+
+You can usually breastfeed immediately after a C-section. 
+
+Try different positions, like tucking your baby under your arm or lying on your side. This can be more comfortable and protect your wound.
+
+If you need help, ask the health workers for advice.
+
+👇 One last thing to remember",,,Tell me,"""next_message""",,,,,,,,,,,,,,,Tell me,,,,,,,,,,,,,,,,,,,,"{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}",,,,,,,,,,"[{""type"": ""next_message"",""title"": ""Tell me"", ""slug"": """"}]",English,MARKETING
+130,,,mnch_delivery_having_a_csection,,,,,,"*If your wound becomes red, swollen or oozes, or if you have a fever, go to the clinic straight away.
+
+⭐ Explore more topics now:",,,After a c-section,"""go_to_page""",Bleeding after birth,Clinic visits,,,,,,,,,,,,,After a c-section,mnch_after_birth_after_a_csection,Bleeding after birth,mnch_after_birth_bleeding_after_birth,Clinic visits,mnch_babys_health_clinic_visits,,,,,,,,,,,,,,,"{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""}","{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""}","{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""}",,,,,,,,"[{""type"": ""go_to_page"",""title"": ""After a c-section"", ""slug"": ""mnch_after_birth_after_a_csection""},{""type"": ""go_to_page"",""title"": ""Bleeding after birth"", ""slug"": ""mnch_after_birth_bleeding_after_birth""},{""type"": ""go_to_page"",""title"": ""Clinic visits"", ""slug"": ""mnch_babys_health_clinic_visits""}]",English,MARKETING
