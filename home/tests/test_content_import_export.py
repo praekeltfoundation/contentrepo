@@ -1083,7 +1083,6 @@ class TestImportExport:
         assert e.value.row_num == 3
         assert e.value.message == ["Bad JSON button, you have: Broken Button"]
 
-
     def test_max_char_button(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with a button chars greater than the limit should return a detailed error message
