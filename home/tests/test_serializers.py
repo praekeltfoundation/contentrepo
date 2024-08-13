@@ -170,6 +170,45 @@ def create_form_with_fields() -> Assessment:
     return form
 
 
+def create_form_with_imported_fields() -> Assessment:
+    """
+    Create form with fields ommitted during import and pass it
+    through the serializer
+    """
+
+    form = Assessment.objects.create(
+        title="test page",
+        slug="test-page",
+        version="v1.0",
+        locale=Locale.objects.get(language_code="en"),
+        high_result_page=ContentPage.objects.get(slug="high-inflection"),
+        high_inflection=3,
+        medium_result_page=ContentPage.objects.get(slug="medium-score"),
+        medium_inflection=2,
+        low_result_page=ContentPage.objects.get(slug="low-score"),
+        skip_threshold=2,
+        skip_high_result_page=ContentPage.objects.get(slug="skip-score"),
+        generic_error="error",
+        questions=[
+            {
+                "type": "categorical_question",
+                "value": {
+                    "question": "test question",
+                    "explainer": "We need to know this",
+                    "error": "test error",
+                    "semantic_id": "test-semantic-id",
+                    "answers": [
+                        {"score": 2.0, "answer": "A"},
+                        {"score": 1.0, "answer": "B"},
+                        {"score": 2.0, "answer": "C"},
+                    ],
+                },
+            }
+        ],
+    )
+    return form
+
+
 def create_form_with_missing_fields() -> Assessment:
     """
     Create form without an explainer field and pass it
@@ -484,6 +523,32 @@ class TestAssessmentSerializer:
         Test form with all fields
         """
         page = create_form_with_fields()
+        form_page = QuestionField()
+        result = form_page.to_representation(page)
+        expected_result = [
+            {
+                "question_type": "categorical_question",
+                "question": "test question",
+                "explainer": "We need to know this",
+                "error": "test error",
+                "min": None,
+                "max": None,
+                "semantic_id": "test-semantic-id",
+                "answers": [
+                    {"score": 2.0, "answer": "A"},
+                    {"score": 1.0, "answer": "B"},
+                    {"score": 2.0, "answer": "C"},
+                ],
+            }
+        ]
+        result[0].pop("id")
+        assert result == expected_result
+
+    def test_form_with_imported_fields(self) -> None:
+        """
+        Test form with all fields
+        """
+        page = create_form_with_imported_fields()
         form_page = QuestionField()
         result = form_page.to_representation(page)
         expected_result = [
