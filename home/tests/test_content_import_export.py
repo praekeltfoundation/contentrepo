@@ -427,6 +427,19 @@ class ImportExport:
             print("-^-CONTENT-^-")
         return content
 
+    def export_ordered_content(self, locale: str | None = None) -> bytes:
+        """
+        Export ordered content in the configured format.
+        """
+        url = f"/admin/snippets/home/orderedcontentset/={self.format}"
+        content = self.admin_client.get(url).content
+
+        if self.format == "csv":
+            print("-v-CONTENT-v-")
+            print(content.decode())
+            print("-^-CONTENT-^-")
+        return content
+
     def import_content(self, content_bytes: bytes, **kw: Any) -> None:
         """
         Import given content in the configured format with the configured importer.
@@ -1302,6 +1315,29 @@ class TestExport:
     NOTE: This is not a Django (or even unittest) TestCase. It's just a
         container for related tests.
     """
+
+    def test_ordered_content_set_export(self, impexp: ImportExport) -> None:
+        """
+        Ordered Content Sets should export all pages correctly
+        """
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+
+        content = impexp.export_ordered_content()
+        # Export should succeed
+        assert content is not None
+
+    def test_ordered_content_XLSX_export(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Ordered Content Sets should export in XLSX format correctly
+        """
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+
+        # exports in xlsx format
+        content = xlsx_impexp.export_ordered_content()
+
+        assert content is not None
 
     def test_export_wa_with_image(self, impexp: ImportExport) -> None:
         img_path = Path("home/tests/test_static") / "test.jpeg"

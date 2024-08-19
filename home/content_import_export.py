@@ -37,6 +37,25 @@ def export_csv_content(queryset: PageQuerySet, response: HttpResponse) -> None:
     ExportWriter(export_rows).write_csv(response)
 
 
+"""Ordered Content Sets Imports/Export"""
+
+
+def export_xlsx_ordered_content(queryset: PageQuerySet, response: HttpResponse) -> None:
+    from .export_ordered_sets import OrderedSetExporter, OrderedSetsExportWriter
+
+    exporter = OrderedSetExporter(queryset)
+    export_rows = exporter.perform_export()
+    OrderedSetsExportWriter(export_rows).write_xlsx(response)
+
+
+def export_csv_ordered_content(queryset: PageQuerySet, response: HttpResponse) -> None:
+    from .export_ordered_sets import OrderedSetExporter, OrderedSetsExportWriter
+
+    exporter = OrderedSetExporter(queryset)
+    export_rows = exporter.perform_export()
+    OrderedSetsExportWriter(export_rows).write_csv(response)
+
+
 def import_ordered_sets(file, filetype, progress_queue, purge=False):
     def create_ordered_set_from_row(row):
         set_name = row["Name"]
