@@ -251,6 +251,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
         "locale",
         "status",
         "submission_status",
+        "submission_result",
     )
     list_filter = ("locale",)
 

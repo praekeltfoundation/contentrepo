@@ -1558,7 +1558,7 @@ class WhatsAppTemplate(
         max_length=30,
         choices=SubmissionStatus.choices,
         blank=True,
-        default=SubmissionStatus.NOT_SUBMITTED_YET,
+        default="",
     )
 
     submission_result = models.TextField(
@@ -1629,6 +1629,8 @@ class WhatsAppTemplate(
             return revision
 
         self.template_name = self.create_whatsapp_template_name()
+        self.submission_status = ""
+        self.submission_result = ""
         try:
             response_json = create_standalone_whatsapp_template(
                 name=self.template_name,
@@ -1639,22 +1641,32 @@ class WhatsAppTemplate(
                 image_obj=self.image,
                 example_values=[v["value"] for v in self.example_values.raw_data],
             )
-            revision.content["name"] = self.name
-            revision.content["submission_name"] = self.template_name
-            revision.content["submission_status"] = self.SubmissionStatus.SUBMITTED
-            revision.content["submission_result"] = (
-                f"Success! Template ID = {response_json['id']}"
-            )
+            self.submission_status = _(self.SubmissionStatus.SUBMITTED)
+            self.submission_result = f"Success! Template ID = {response_json['id']}"
+
         except TemplateSubmissionException as e:
             # The submission failed
-            revision.content["name"] = self.name
-            revision.content["submission_name"] = self.template_name
-            revision.content["submission_status"] = self.SubmissionStatus.FAILED
-            revision.content["submission_result"] = (
+            self.submission_status = _(self.SubmissionStatus.FAILED)
+            self.submission_result = (
                 f"Error! {e.response_json['error']['error_user_msg']} "
             )
 
+        revision.content["name"] = self.name
+        revision.content["submission_name"] = self.template_name
+        revision.content["submission_status"] = self.submission_status
+        revision.content["submission_result"] = self.submission_result
+
         revision.save(update_fields=["content"])
+        # TODO this publish is a workaround for now, as described in ticket Delta-877
+        revision.publish()
+
+        # Update the submissions status fields for all revisions, regardless of Draft vs Live status
+        revisions = self.revisions
+        for r in revisions:
+            r.content["submission_name"] = self.template_name
+            r.content["submission_status"] = self.submission_status
+            r.content["submission_result"] = self.submission_result
+            r.save()
         return revision
 
     def clean(self):
