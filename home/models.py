@@ -1681,7 +1681,8 @@ class WhatsAppTemplate(
 
         message = self.message
 
-        # TODO: Explain what this does, or find a cleaner implementation
+        if len(message) > 1024:
+            errors["message"] = ValidationError("Message cannot exceed 1024 characters")
 
         # Checks for mismatches in the number of opening and closing brackets.  First from right to left, then from left to right
         # TODO: Currently "{1}" is allowed to pass and throws an error.  Add a check for this, or redo this section in a cleaner way

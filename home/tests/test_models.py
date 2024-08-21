@@ -801,6 +801,24 @@ class TestWhatsAppTemplate:
             ],
         }
 
+    def test_message_max_char_count(self) -> None:
+        """
+        Template message field cannot exceed 1024.
+        """
+
+        with pytest.raises(ValidationError) as err_info:
+            wat = WhatsAppTemplate(
+                name="wa_title",
+                message="a" * 1025,
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            )
+            wat.full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": ["Message cannot exceed 1024 characters"],
+        }
+
     @override_settings(WHATSAPP_CREATE_TEMPLATES=False)
     @responses.activate
     def test_template_is_not_submitted_if_template_creation_is_disabled(self) -> None:
