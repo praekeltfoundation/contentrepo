@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.template.defaultfilters import truncatechars
@@ -5,18 +6,24 @@ from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel, TitleFieldPanel
+from wagtail.admin.widgets.slug import SlugInput
+from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
-from wagtail_modeladmin.options import ModelAdmin, modeladmin_register
 
-from .models import ContentPage, OrderedContentSet
+from .models import Assessment, ContentPage, OrderedContentSet, WhatsAppTemplate
 
 from .views import (  # isort:skip
     ContentPageReportView,
     CustomIndexView,
+    CustomIndexViewAssessment,
     OrderedContentSetUploadView,
     PageViewReportView,
     ContentUploadView,
+    AssessmentUploadView,
+    CustomIndexViewWhatsAppTemplate,
+    WhatsAppTemplateUploadView,
 )
 
 
@@ -24,8 +31,7 @@ from .views import (  # isort:skip
 def before_delete_page(request, page):
     if page.content_type.name != ContentPage._meta.verbose_name:
         return
-
-    page_links, orderedcontentset_links = page.get_all_links()
+    page_links, orderedcontentset_links, wat_links = page.get_all_links()
 
     if page_links or orderedcontentset_links:
         msg_parts = ["You can't delete this page while it is linked."]
@@ -52,6 +58,16 @@ def register_import_urls():
             "import_orderedcontentset/",
             OrderedContentSetUploadView.as_view(),
             name="import_orderedcontentset",
+        ),
+        path(
+            "import_assessment/",
+            AssessmentUploadView.as_view(),
+            name="import_assessment",
+        ),
+        path(
+            "import_whatsapptemplate/",
+            WhatsAppTemplateUploadView.as_view(),
+            name="import_whatsapptemplate",
         ),
     ]
 
@@ -131,6 +147,7 @@ class ContentPageAdmin(ModelAdmin):
         "parental",
     )
     list_filter = ("locale",)
+
     search_fields = (
         "title",
         "body",
@@ -219,6 +236,101 @@ class OrderedContentSetViewSet(SnippetViewSet):
     search_fields = ("name", "profile_fields")
 
 
-register_snippet(OrderedContentSetViewSet)
+class WhatsAppTemplateAdmin(SnippetViewSet):
+    model = WhatsAppTemplate
+    body_truncate_size = 200
+    icon = "order"
+    menu_order = 200
+    add_to_admin_menu = True
+    add_to_settings_menu = False
+    exclude_from_explorer = False
+    list_export = "name"
+    list_display = (
+        "name",
+        "category",
+        "locale",
+        "status",
+        "submission_status",
+    )
+    list_filter = ("locale",)
+
+    search_fields = (
+        "name",
+        "category",
+        "message",
+        "locale",
+    )
+
+    index_view_class = CustomIndexViewWhatsAppTemplate
+
+    panels = [
+        MultiFieldPanel(
+            [
+                FieldPanel("name"),
+                FieldPanel("category"),
+                FieldPanel("image"),
+                FieldPanel("message"),
+                FieldPanel("quick_replies", heading="Quick Replies"),
+                FieldPanel("locale"),
+                FieldPanel("example_values"),
+                FieldPanel("submission_name", read_only=True),
+                FieldPanel("submission_status", read_only=True),
+                FieldPanel("submission_result", read_only=True),
+            ],
+            heading="Whatsapp Template",
+        ),
+    ]
+
+
+class AssessmentAdmin(SnippetViewSet):
+    model = Assessment
+    add_to_admin_menu = True
+    list_display = ("title", "slug", "version", "locale")
+    search_fields = ("title", "slug", "version")
+    list_filter = ("locale",)
+    icon = "circle-check"
+    menu_order = 300
+    list_export = "title"
+    index_view_class = CustomIndexViewAssessment
+
+    panels = [
+        MultiFieldPanel(
+            [
+                TitleFieldPanel("title"),
+                FieldPanel("slug", widget=SlugInput()),
+                FieldPanel("version"),
+                FieldPanel("locale"),
+                FieldPanel("tags"),
+            ],
+            heading="Identifiers",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("high_result_page"),
+                FieldPanel("high_inflection"),
+                FieldPanel("medium_result_page"),
+                FieldPanel("medium_inflection"),
+                FieldPanel("low_result_page"),
+                FieldPanel("skip_threshold"),
+                FieldPanel("skip_high_result_page"),
+            ],
+            heading="Results",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("generic_error"),
+                FieldPanel("questions"),
+            ],
+            heading="Questions",
+        ),
+    ]
+
+
 # Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
+register_snippet(AssessmentAdmin)
+register_snippet(OrderedContentSetViewSet)
+modeladmin_register(ContentPageAdmin)
+# Flag for turning on Standalone Whatsapp Templates, still in development
+if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
+    register_snippet(WhatsAppTemplateAdmin)

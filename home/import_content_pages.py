@@ -2,24 +2,36 @@ import contextlib
 import csv
 import json
 from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
+from json.decoder import JSONDecodeError
 from queue import Queue
 from typing import Any
 from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
+from django.forms import model_to_dict  # type: ignore
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
-from wagtail.blocks import StructValue  # type: ignore
+from wagtail.admin.rich_text.converters.contentstate import (  # type: ignore
+    ContentstateConverter,  # type: ignore
+)
+from wagtail.blocks import (  # type: ignore
+    StreamBlockValidationError,  # type: ignore
+    StreamValue,  # type: ignore
+    StructValue,  # type: ignore
+)
+from wagtail.blocks.list_block import ListValue  # type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
+from wagtail.test.utils.form_data import nested_form_data, streamfield  # type: ignore
 
-from home.models import (
+from .models import (
     ContentPage,
     ContentPageIndex,
     ContentQuickReply,
@@ -31,6 +43,7 @@ from home.models import (
     ViberBlock,
     WhatsappBlock,
 )
+from .xlsx_helpers import get_active_sheet
 
 PageId = tuple[str, Locale]
 
@@ -42,13 +55,13 @@ class ImportException(Exception):
 
     def __init__(
         self,
-        message: str,
+        message: str | list[str],
         row_num: int | None = None,
         slug: str | None = None,
         locale: Locale | None = None,
     ):
         self.row_num = row_num
-        self.message = message
+        self.message = [message] if isinstance(message, str) else message
         self.slug = slug
         self.locale = locale
         super().__init__()
@@ -209,8 +222,10 @@ class ContentImporter:
         return self.parse_csv()
 
     def parse_excel(self) -> list["ContentRow"]:
-        workbook = load_workbook(BytesIO(self.file_content), read_only=True)
-        worksheet = workbook.worksheets[0]
+        workbook = load_workbook(
+            BytesIO(self.file_content), read_only=True, data_only=True
+        )
+        worksheet = get_active_sheet(workbook)
 
         def clean_excel_cell(cell_value: str | float | datetime | None) -> str:
             return str(cell_value).replace("_x000D", "")
@@ -218,17 +233,20 @@ class ContentImporter:
         first_row = next(worksheet.iter_rows(max_row=1, values_only=True))
         header = [clean_excel_cell(cell) if cell else None for cell in first_row]
         rows: list[ContentRow] = []
+        i = 2
         for row in worksheet.iter_rows(min_row=2, values_only=True):
             r = {}
             for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
                 if name and cell:
                     r[name] = clean_excel_cell(cell)
-            rows.append(ContentRow.from_flat(r))
+            if r:
+                rows.append(ContentRow.from_flat(r, i))
+                i += 1
         return rows
 
     def parse_csv(self) -> list["ContentRow"]:
         reader = csv.DictReader(StringIO(self.file_content.decode()))
-        return [ContentRow.from_flat(row) for row in reader]
+        return [ContentRow.from_flat(row, i) for i, row in enumerate(reader, start=2)]
 
     def set_progress(self, message: str, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
@@ -265,9 +283,13 @@ class ContentImporter:
             with contextlib.suppress(NodeAlreadySaved):
                 self.home_page(locale).add_child(instance=index)
             index.save_revision().publish()
-        except ValidationError as err:
-            # FIXME: Find a better way to represent this.
-            raise ImportException(f"Validation error: {err}")
+        except ValidationError as errors:
+            err = []
+            for error in errors:
+                field_name = error[0]
+                for msg in error[1]:
+                    err.append(f"{field_name} - {msg}")
+            raise ImportException([f"Validation error: {msg}" for msg in err])
 
     def create_shadow_content_page_from_row(
         self, row: "ContentRow", row_num: int
@@ -287,13 +309,6 @@ class ContentImporter:
             parent=row.parent,
             related_pages=row.related_pages,
         )
-
-        if len(row.footer) > 60:
-            raise ImportException(f"footer too long: {row.footer}", row.page_id)
-
-        for list_item in row.list_items:
-            if len(list_item) > 24:
-                raise ImportException(f"list_items too long: {list_item}", row.page_id)
 
         self.shadow_pages[(row.slug, locale)] = page
 
@@ -337,6 +352,7 @@ class ContentImporter:
                 f"This is a variation for the content page with slug '{row.slug}' and locale '{locale}', but no such page exists"
             )
         whatsapp_block = page.whatsapp_body[-1]
+
         whatsapp_block.variation_messages.append(
             ShadowVariationBlock(
                 message=row.variation_body, variation_restrictions=row.variation_title
@@ -394,6 +410,40 @@ class ContentImporter:
             page.viber_body.append(ShadowViberBlock(message=row.viber_body))
 
 
+def wagtail_to_formdata(val: Any) -> Any:
+    """
+    Convert a model dict field that may be a nested streamfield (or associated
+    type) into something we can turn into form data.
+    """
+    match val:
+        case StreamValue():  # type: ignore[misc] # No type info
+            return streamfield(
+                [(b.block_type, wagtail_to_formdata(b.value)) for b in val]
+            )
+        case StructValue():  # type: ignore[misc] # No type info
+            return {k: wagtail_to_formdata(v) for k, v in val.items()}
+        case ListValue():  # type: ignore[misc] # No type info
+            # Wagtail doesn't have an equivalent of streamfield() for
+            # listvalue, so we have to do it by hand.
+            list_val: dict[str, Any] = {
+                str(i): {
+                    "deleted": "",
+                    "order": str(i),
+                    "value": wagtail_to_formdata(v),
+                }
+                for i, v in enumerate(val)
+            }
+            list_val["count"] = str(len(val))
+            return list_val
+        case RichText():  # type: ignore[misc] # No type info
+            # FIXME: The only RichTextBlock() we currently have is in the web
+            #        body and we don't appear to do any validation on it.
+            #        There's probably a better way to convert and/or ignore these.
+            return ContentstateConverter([]).from_database_format(val.source)
+        case _:
+            return val
+
+
 # Since wagtail page models are so difficult to create and modify programatically,
 # we instead store all the pages as these shadow objects, which we can then at the end
 # do a single write to the database from, and encapsulate all that complexity
@@ -431,6 +481,89 @@ class ShadowContentPage:
     triggers: list[str] = field(default_factory=list)
     related_pages: list[str] = field(default_factory=list)
 
+    # FIXME: collect errors across all fields
+    def validate_page_using_form(self, page: Page) -> None:
+        edit_handler = page.edit_handler.bind_to_model(ContentPage)
+        form_class = edit_handler.get_form_class()
+
+        form_data = nested_form_data(
+            {k: wagtail_to_formdata(v) for k, v in model_to_dict(page).items()}
+        )
+
+        form = form_class(form_data)
+        if not form.is_valid():
+            errs = form.errors.as_data()
+            if "slug" in errs:
+                errs["slug"] = [
+                    err for err in errs["slug"] if err.code != "slug-in-use"
+                ]
+                if not errs["slug"]:
+                    del errs["slug"]
+            # TODO: better error stuff
+            if errs:
+                errors = []
+                error_message = self.errors_to_list(errs)
+                for err in error_message:
+                    errors.append(f"Validation error: {err}")
+                raise ImportException(errors, self.row_num)
+
+    # The error messages are processed and parsed into a list of messages we return to the user
+    def errors_to_list(self, errs: dict[str, list[str]]) -> str | list[str]:
+
+        def _extract_errors(
+            data: dict[str | int, Any] | list[str]
+        ) -> Iterator[tuple[list[str], str]]:
+            if isinstance(data, dict):
+                items = list(data.items())
+            elif isinstance(data, list):
+                items = list(enumerate(data))
+
+            for key, value in items:
+                key = str(key)
+                if isinstance(value, dict | list):
+                    for child_keys, child_value in _extract_errors(value):
+                        yield [key] + child_keys, child_value
+                else:
+                    yield [key], value
+
+        def extract_errors(data: dict[str | int, Any] | list[str]) -> dict[str, str]:
+            return {"-".join(key): value for key, value in _extract_errors(data)}
+
+        errors = errs[next(iter(errs))][0]
+
+        if isinstance(errors, dict):
+            error_message = {
+                key: self.errors_to_list(value) for key, value in errs.items()
+            }
+        elif isinstance(errors, list):
+            error_message = [self.errors_to_list(value) for value in errs]
+
+        elif isinstance(errors, StreamBlockValidationError):
+            json_data_errors = errors.as_json_data()
+            if isinstance(json_data_errors["blockErrors"], dict):
+                error_level = list(json_data_errors["blockErrors"].keys())[0]
+                field_name = list(
+                    json_data_errors["blockErrors"][error_level]["blockErrors"].keys()
+                )[0]
+            error_messages = []
+            for val in json_data_errors["blockErrors"][error_level][
+                "blockErrors"
+            ].values():
+                messages = list(extract_errors(val).values())
+
+            error_messages.extend(messages)
+
+            error_message = [f"{field_name} - {msg}" for msg in error_messages]
+
+        elif isinstance(errors, ValidationError):
+            field_name = list(errs.keys())[0]
+            error_messages = errors.messages[0]
+            error_message = [f"{field_name} - {error_messages}"]
+        else:
+            pass
+
+        return error_message
+
     def save(self, parent: Page) -> None:
         try:
             page = ContentPage.objects.get(slug=self.slug, locale=self.locale)
@@ -446,14 +579,22 @@ class ShadowContentPage:
         self.add_tags_to_page(page)
         self.add_quick_replies_to_page(page)
         self.add_triggers_to_page(page)
+        self.validate_page_using_form(page)
 
         try:
             with contextlib.suppress(NodeAlreadySaved):
                 parent.add_child(instance=page)
             page.save_revision().publish()
-        except ValidationError as err:
-            # FIXME: Find a better way to represent this.
-            raise ImportException(f"Validation error: {err}", self.row_num)
+
+        except ValidationError as errors:
+            err = []
+            for error in errors:
+                field_name = error[0]
+                for msg in error[1]:
+                    err.append(f"{field_name} - {msg}")
+            raise ImportException(
+                [f"Validation error: {msg}" for msg in err], self.row_num
+            )
 
     def add_web_to_page(self, page: ContentPage) -> None:
         page.enable_web = self.enable_web
@@ -684,14 +825,15 @@ class ContentRow:
     footer: str = ""
 
     @classmethod
-    def from_flat(cls, row: dict[str, str]) -> "ContentRow":
+    def from_flat(cls, row: dict[str, str], row_num: int) -> "ContentRow":
         class_fields = {field.name for field in fields(cls)}
         row = {
             key.strip(): value.strip()
             for key, value in row.items()
             if value and key in class_fields
         }
-
+        if "slug" not in row:
+            raise ImportException("Missing slug value", row_num)
         return cls(
             page_id=int(row.pop("page_id")) if row.get("page_id") else None,
             variation_title=deserialise_dict(row.pop("variation_title", "")),
@@ -700,7 +842,11 @@ class ContentRow:
             triggers=deserialise_list(row.pop("triggers", "")),
             related_pages=deserialise_list(row.pop("related_pages", "")),
             example_values=deserialise_list(row.pop("example_values", "")),
-            buttons=json.loads(row.pop("buttons", "")) if row.get("buttons") else [],
+            buttons=(
+                JSON_loader(row_num, row.pop("buttons", ""))
+                if row.get("buttons")
+                else []
+            ),
             list_items=deserialise_list(row.pop("list_items", "")),
             footer=row.pop("footer") if row.get("footer") else "",
             **row,
@@ -769,3 +915,15 @@ def deserialise_list(value: str) -> list[str]:
 
     items = list(csv.reader([value]))[0]
     return [item.strip() for item in items]
+
+
+def JSON_loader(row_num: int, value: str) -> list[dict[str, Any]]:
+    if not value:
+        return []
+
+    try:
+        button = json.loads(value)
+    except JSONDecodeError:
+        raise ImportException(f"Bad JSON button, you have: {value}", row_num)
+
+    return button

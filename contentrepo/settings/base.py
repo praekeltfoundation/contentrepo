@@ -13,6 +13,7 @@ BASE_DIR = PROJECT_DIR.parent
 DEFAULT_SECRET_KEY = "please-change-me"
 SECRET_KEY = os.environ.get("SECRET_KEY") or DEFAULT_SECRET_KEY
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost"])
+WAGTAILDOCS_EXTENSIONS = ["doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf", "txt"]
 
 INSTALLED_APPS = [
     "home",
@@ -264,3 +265,8 @@ EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", False)
 EMAIL_SSL_CERTFILE = env.str("EMAIL_SSL_CERTFILE", None)
 EMAIL_SSL_KEYFILE = env.str("EMAIL_SSL_KEYFILE", None)
 EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", None)
+
+# Flag for turning on Standalone Whatsapp Templates, still in development
+ENABLE_STANDALONE_WHATSAPP_TEMPLATES = env.bool(
+    "ENABLE_STANDALONE_WHATSAPP_TEMPLATES", False
+)

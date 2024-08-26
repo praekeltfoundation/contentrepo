@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
+from modelcluster.models import ClusterableModel
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
 from wagtail.admin.panels import (
@@ -28,6 +29,7 @@ from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import (
     DraftStateMixin,
+    Locale,
     LockableMixin,
     Page,
     ReferenceIndex,
@@ -40,7 +42,14 @@ from wagtail.search import index
 from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
-from .constants import (
+from .panels import PageRatingPanel
+from .whatsapp import (
+    TemplateSubmissionException,
+    create_standalone_whatsapp_template,
+    create_whatsapp_template,
+)
+
+from .constants import (  # isort:skip
     AGE_CHOICES,
     GENDER_CHOICES,
     RELATIONSHIP_STATUS_CHOICES,
@@ -79,10 +88,13 @@ class UniqueSlugMixin:
             page = Page.objects.get(locale=self.locale, slug=self.slug)
             raise ValidationError(
                 {
-                    "slug": _(
-                        "The slug '%(page_slug)s' is already in use at '%(page_url)s'"
+                    "slug": ValidationError(
+                        _(
+                            "The slug '%(page_slug)s' is already in use at '%(page_url)s'"
+                        ),
+                        params={"page_slug": self.slug, "page_url": page.url},
+                        code="slug-in-use",
                     )
-                    % {"page_slug": self.slug, "page_url": page.url}
                 }
             )
 
@@ -312,12 +324,15 @@ class WhatsappBlock(blocks.StructBlock):
         for item in list_items:
             if len(item) > 24:
                 errors["list_items"] = ValidationError(
-                    "List item title maximum charactor is 24 "
+                    f"List item ({item}) has exceeded maximum character limit of 24"
                 )
 
-        if len(list_items) > 10:
-            errors["list_items"] = ValidationError("List item can only add 10 items")
-
+        variation_messages = result["variation_messages"]
+        for message in variation_messages:
+            if len(message) > 4096:
+                errors["variation_messages"] = ValidationError(
+                    f"Ensure this variation message has at most 4096 characters, it has {len(message)} characters"
+                )
         if errors:
             raise StructBlockValidationError(errors)
         return result
@@ -807,7 +822,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             return
         if not self.is_whatsapp_template:
             return
-
         # If there are any missing fields in the previous revision, then carry on
         try:
             previous_revision = previous_revision.as_object()
@@ -838,6 +852,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     def get_all_links(self):
         page_links = []
         orderedcontentset_links = []
+        whatsapp_template_links = []
 
         usage = ReferenceIndex.get_references_to(self).group_by_source_object()
         for ref in usage:
@@ -860,10 +875,17 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                         args=(link.object_id,),
                     )
                     orderedcontentset_links.append((url, orderedcontentset.name))
+                elif link.model_name == "WhatsApp Template":
+                    whatsapp_template = WhatsAppTemplate.objects.get(id=link.object_id)
+                    url = reverse(
+                        "wagtailsnippets_home_whatsapptemplate:edit",
+                        args=(link.object_id,),
+                    )
+                    whatsapp_template_links.append((url, whatsapp_template.name))
                 else:
                     raise Exception("Unknown model link")
 
-        return page_links, orderedcontentset_links
+        return page_links, orderedcontentset_links, whatsapp_template_links
 
     def save_revision(
         self,
@@ -1150,12 +1172,24 @@ class OrderedContentSet(
 
     num_pages.short_description = "Number of Pages"
 
-    def status(self):
-        return (
-            "Live + Draft"
-            if self.live and self.has_unpublished_changes
-            else "Live" if self.live else "Draft"
-        )
+    def status(self) -> str:
+        workflow_state = self.workflow_states.last()
+        workflow_state_status = workflow_state.status if workflow_state else None
+
+        if self.live:
+            if workflow_state_status == "in_progress":
+                status = "Live + In Moderation"
+            elif self.has_unpublished_changes:
+                status = "Live + Draft"
+            else:
+                status = "Live"
+        else:
+            if workflow_state_status == "in_progress":
+                status = "In Moderation"
+            else:
+                status = "Draft"
+
+        return status
 
     panels = [
         FieldPanel("name"),
@@ -1214,3 +1248,439 @@ class PageView(models.Model):
     )
     message = models.IntegerField(blank=True, default=None, null=True)
     data = models.JSONField(default=dict, blank=True, null=True)
+
+
+class AnswerBlock(blocks.StructBlock):
+    answer = blocks.TextBlock(help_text="The choice shown to the user for this option")
+    score = blocks.FloatBlock(
+        help_text="How much to add to the total score if this answer is chosen"
+    )
+    semantic_id = blocks.TextBlock(help_text="Semantic ID for this answer")
+
+
+class BaseQuestionBlock(blocks.StructBlock):
+    question = blocks.TextBlock(help_text="The question to ask the user")
+    explainer = blocks.TextBlock(
+        required=False,
+        help_text="Explainer message which tells the user why we need this question",
+    )
+    error = blocks.TextBlock(
+        required=False,
+        help_text="Error message for this question if we don't understand the input",
+    )
+    semantic_id = blocks.TextBlock(help_text="Semantic ID for this question")
+
+
+class CategoricalQuestionBlock(BaseQuestionBlock):
+    answers = blocks.ListBlock(AnswerBlock())
+
+
+class AgeQuestionBlock(BaseQuestionBlock):
+    answers = None
+
+
+class MultiselectQuestionBlock(BaseQuestionBlock):
+    answers = blocks.ListBlock(AnswerBlock())
+
+
+class FreeTextQuestionBlock(BaseQuestionBlock):
+    answers = None
+    error = None
+
+
+class IntegerQuestionBlock(BaseQuestionBlock):
+    min = blocks.IntegerBlock(
+        help_text="The minimum value that can be entered",
+        default=None,
+    )
+    max = blocks.IntegerBlock(
+        help_text="The maximum value that can be entered",
+        default=None,
+    )
+    answers = None
+
+    def clean(self, value):
+        result = super().clean(value)
+        min = result["min"]
+        max = result["max"]
+        if min < 0 or max < 0:
+            raise ValidationError("min and max cannot be less than zero")
+        if min == max:
+            raise ValidationError("min and max values need to be different")
+        if min > max:
+            raise ValidationError("min cannot be greater than max")
+
+        return result
+
+
+class YearofBirthQuestionBlock(BaseQuestionBlock):
+    answers = None
+
+
+class AssessmentTag(TaggedItemBase):
+    content_object = ParentalKey(
+        "Assessment", on_delete=models.CASCADE, related_name="tagged_items"
+    )
+
+
+from home.serializers import ContentPageSerializer  # noqa: E402, I001
+
+
+class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(
+        max_length=255, help_text="A unique identifier for this assessment"
+    )
+    version = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="A version number for the question set",
+    )
+    locale = models.ForeignKey(to=Locale, on_delete=models.CASCADE)
+    tags = ClusterTaggableManager(through=AssessmentTag, blank=True)
+    high_result_page = models.ForeignKey(
+        ContentPage,
+        related_name="assessment_high",
+        on_delete=models.CASCADE,
+        help_text="The page to show the user if they score high",
+        blank=True,
+        null=True,
+    )
+    high_inflection = models.FloatField(
+        help_text="Any score equal to or above this amount is considered high. Note that this is a percentage-based number.",
+        blank=True,
+        null=True,
+    )
+    medium_result_page = models.ForeignKey(
+        ContentPage,
+        related_name="assessment_medium",
+        on_delete=models.CASCADE,
+        help_text="The page to show the user if they score medium",
+        blank=True,
+        null=True,
+    )
+    medium_inflection = models.FloatField(
+        help_text="Any score equal to or above this amount, but lower than the high "
+        "inflection, is considered medium. Any score below this amount is considered "
+        "low. Note that this is a percentage-based number.",
+        blank=True,
+        null=True,
+    )
+    low_result_page = models.ForeignKey(
+        ContentPage,
+        related_name="assessment_low",
+        on_delete=models.CASCADE,
+        help_text="The page to show the user if they score low",
+        blank=True,
+        null=True,
+    )
+    skip_threshold = models.FloatField(
+        help_text="If a user skips equal to or greater than this many questions they will be presented with the skip page",
+        default=0,
+    )
+    skip_high_result_page = models.ForeignKey(
+        ContentPage,
+        related_name="assessment_high_skip",
+        on_delete=models.CASCADE,
+        help_text="The page to show a user if they skip a question",
+        blank=True,
+        null=True,
+    )
+    generic_error = models.TextField(
+        help_text="If no error is specified for a question, then this is used as the "
+        "fallback"
+    )
+
+    questions = StreamField(
+        [
+            ("categorical_question", CategoricalQuestionBlock()),
+            ("age_question", AgeQuestionBlock()),
+            ("multiselect_question", MultiselectQuestionBlock()),
+            ("freetext_question", FreeTextQuestionBlock()),
+            ("integer_question", IntegerQuestionBlock()),
+            ("year_of_birth_question", YearofBirthQuestionBlock()),
+        ],
+        use_json_field=True,
+    )
+    _revisions = GenericRelation(
+        "wagtailcore.Revision", related_query_name="assessment"
+    )
+
+    search_fields = [
+        index.SearchField("title"),
+        index.AutocompleteField("title"),
+        index.SearchField("slug"),
+        index.AutocompleteField("slug"),
+        index.SearchField("version"),
+        index.AutocompleteField("version"),
+        index.FilterField("locale"),
+    ]
+
+    api_fields = [
+        APIField("title"),
+        APIField("slug"),
+        APIField("version"),
+        APIField("high_result_page", serializer=ContentPageSerializer()),  # noqa: F821
+        APIField("high_inflection"),
+        APIField("medium_result_page", serializer=ContentPageSerializer()),
+        APIField("medium_inflection"),
+        APIField("low_result_page", serializer=ContentPageSerializer()),
+        APIField("skip_threshold"),
+        APIField("skip_high_result_page", serializer=ContentPageSerializer()),
+        APIField("generic_error"),
+        APIField("questions"),
+    ]
+
+    def __str__(self):
+        return self.title
+
+
+class TemplateContentQuickReply(TagBase):
+
+    class Meta:
+        verbose_name = "quick reply"
+        verbose_name_plural = "quick replies"
+
+
+class TemplateQuickReplyContent(ItemBase):
+    tag = models.ForeignKey(
+        TemplateContentQuickReply,
+        related_name="template_quick_reply_content",
+        on_delete=models.CASCADE,
+    )
+    content_object = ParentalKey(
+        to="home.WhatsAppTemplate",
+        on_delete=models.CASCADE,
+        related_name="template_quick_reply_items",
+    )
+
+
+class WhatsAppTemplate(
+    DraftStateMixin, ClusterableModel, RevisionMixin, index.Indexed, models.Model
+):
+    class Meta:  # noqa
+        verbose_name = "WhatsApp Template"
+        verbose_name_plural = "WhatsApp Templates"
+
+    class Category(models.TextChoices):
+        UTILITY = "UTILITY", _("Utility")
+        MARKETING = "MARKETING", _("Marketing")
+
+    class SubmissionStatus(models.TextChoices):
+        NOT_SUBMITTED_YET = "NOT_SUBMITTED_YET", _("Not Submitted Yet")
+        SUBMITTED = "SUBMITTED", _("Submitted")
+        FAILED = "FAILED", _("Failed")
+
+    name = models.CharField(max_length=512, blank=True, default="")
+    category = models.CharField(
+        max_length=14,
+        choices=Category.choices,
+        default=Category.MARKETING,
+    )
+    quick_replies = ClusterTaggableManager(
+        through="home.TemplateQuickReplyContent", blank=True
+    )
+
+    locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
+
+    image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="image",
+    )
+    message = models.TextField(
+        help_text="each template message cannot exceed 1024 characters",
+        max_length=1024,
+    )
+
+    example_values = StreamField(
+        [("example_values", blocks.CharBlock(label="Example Value"))],
+        blank=True,
+        null=True,
+        use_json_field=True,
+    )
+
+    submission_status = models.CharField(
+        max_length=30,
+        choices=SubmissionStatus.choices,
+        blank=True,
+        default=SubmissionStatus.NOT_SUBMITTED_YET,
+    )
+
+    submission_result = models.TextField(
+        help_text="The result of submitting the template",
+        blank=True,
+        max_length=4096,
+        default="",
+    )
+    submission_name = models.TextField(
+        help_text="The name of the template that was submitted",
+        blank=True,
+        max_length=1024,
+        default="",
+    )
+
+    search_fields = [
+        index.SearchField("locale"),
+    ]
+
+    @property
+    def quick_reply_buttons(self):
+        return self.template_quick_reply_items.all().values_list("tag__name", flat=True)
+
+    @property
+    def prefix(self):
+        return self.name.lower().replace(" ", "_")
+
+    def status(self):
+        return "Live" if self.live else "Draft"
+
+    def __str__(self):
+        """String repr of this snippet."""
+        return self.name
+
+    def save_revision(
+        self,
+        user=None,
+        submitted_for_moderation=False,
+        approved_go_live_at=None,
+        changed=True,
+        log_action=False,
+        previous_revision=None,
+        clean=True,
+    ):
+
+        previous_revision = self.get_latest_revision()
+        revision = super().save_revision(
+            user,
+            submitted_for_moderation,
+            approved_go_live_at,
+            changed,
+            log_action,
+            previous_revision,
+            clean,
+        )
+
+        if not settings.WHATSAPP_CREATE_TEMPLATES:
+            return revision
+
+        # If there are any missing fields in the previous revision, then carry on
+        if previous_revision:
+            previous_revision = previous_revision.as_object()
+            previous_revision_fields = previous_revision.fields
+        else:
+            previous_revision_fields = ()
+
+        if self.fields == previous_revision_fields:
+            return revision
+
+        self.template_name = self.create_whatsapp_template_name()
+        try:
+            response_json = create_standalone_whatsapp_template(
+                name=self.template_name,
+                message=self.message,
+                category=self.category,
+                locale=self.locale,
+                quick_replies=sorted(self.quick_reply_buttons),
+                image_obj=self.image,
+                example_values=[v["value"] for v in self.example_values.raw_data],
+            )
+            revision.content["name"] = self.name
+            revision.content["submission_name"] = self.template_name
+            revision.content["submission_status"] = self.SubmissionStatus.SUBMITTED
+            revision.content["submission_result"] = (
+                f"Success! Template ID = {response_json['id']}"
+            )
+        except TemplateSubmissionException as e:
+            # The submission failed
+            revision.content["name"] = self.name
+            revision.content["submission_name"] = self.template_name
+            revision.content["submission_status"] = self.SubmissionStatus.FAILED
+            revision.content["submission_result"] = (
+                f"Error! {e.response_json['error']['error_user_msg']} "
+            )
+
+        revision.save(update_fields=["content"])
+        return revision
+
+    def clean(self):
+        result = super().clean()
+        errors = {}
+
+        # The name is needed for all templates to generate a name for the template
+        if not self.name:
+            errors.setdefault("name", []).append(
+                ValidationError("All WhatsApp templates need a name.")
+            )
+
+        message = self.message
+
+        # TODO: Explain what this does, or find a cleaner implementation
+
+        # Checks for mismatches in the number of opening and closing brackets.  First from right to left, then from left to right
+        # TODO: Currently "{1}" is allowed to pass and throws an error.  Add a check for this, or redo this section in a cleaner way
+        right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
+        left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
+        mismatches = right_mismatch + left_mismatch
+
+        example_values = self.example_values.raw_data
+        for ev in example_values:
+            if "," in ev["value"]:
+                errors["example_values"] = ValidationError(
+                    "Example values cannot contain commas"
+                )
+
+        if mismatches:
+            errors.setdefault("message", []).append(
+                ValidationError(
+                    f"Please provide variables with matching braces. You provided {mismatches}."
+                )
+            )
+
+        vars_in_msg = re.findall(r"{{(.*?)}}", message)
+        non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
+
+        if non_digit_variables:
+            errors.setdefault("message", []).append(
+                ValidationError(
+                    f"Please provide numeric variables only. You provided {non_digit_variables}."
+                )
+            )
+        # TODO: Add tests for these checks
+        # Check variable order
+        actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
+        expected_variables = [str(j + 1) for j in range(len(actual_digit_variables))]
+        if actual_digit_variables != expected_variables:
+            errors.setdefault("message", []).append(
+                {
+                    "message": ValidationError(
+                        f'Variables must be sequential, starting with "{{1}}". You provided "{actual_digit_variables}"'
+                    )
+                }
+            )
+
+        if errors:
+            raise ValidationError(errors)
+
+        return result
+
+    @property
+    def fields(self):
+        """
+        Returns a tuple of fields that can be used to determine template equality
+        """
+        return (
+            self.name,
+            self.message,
+            self.category,
+            self.locale,
+            sorted(self.quick_reply_buttons),
+            self.image,
+            self.example_values,
+        )
+
+    def create_whatsapp_template_name(self) -> str:
+        return f"{self.prefix}_{self.get_latest_revision().pk}"

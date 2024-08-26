@@ -1,7 +1,11 @@
+import json
 from io import StringIO
 from unittest import mock
 
 import pytest
+import responses
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -11,6 +15,8 @@ from wagtail.images import get_image_model
 from wagtail.models import (
     Locale,  # type: ignore
     Page,
+    Workflow,
+    WorkflowState,
 )
 from wagtail.test.utils import WagtailPageTests
 
@@ -19,22 +25,31 @@ from home.models import (
     ContentPageIndex,
     GoToPageButton,
     HomePage,
+    IntegerQuestionBlock,
     NextMessageButton,
     OrderedContentSet,
     PageView,
     SMSBlock,
+    TemplateContentQuickReply,
     USSDBlock,
     WhatsappBlock,
+    WhatsAppTemplate,
 )
 
 from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
 
 
+def create_user():
+    user = User.objects.create(username="testuser", email="testuser@example.com")
+    return user
+
+
 class MyPageTests(WagtailPageTests):
     def test_contentpage_structure(self):
         """
-        A ContentPage can only be created under a ContentPageIndex or another ContentPage. A ContentIndexPage can only be created under the HomePage.
+        A ContentPage can only be created under a ContentPageIndex or another ContentPage.
+        A ContentIndexPage can only be created under the HomePage.
         """
         self.assertCanNotCreateAt(Page, ContentPage)
         self.assertCanNotCreateAt(HomePage, ContentPage)
@@ -80,19 +95,20 @@ class ContentPageTests(TestCase):
         mock_create_whatsapp_template.assert_not_called()
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_on_save(self, mock_create_whatsapp_template):
+    @responses.activate
+    def test_template_create_on_save(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
         page = create_page(is_whatsapp_template=True)
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_with(
-            f"wa_title_{page.get_latest_revision().id}",
-            "Test WhatsApp Message 1",
-            "UTILITY",
-            en,
-            [],
-            None,
-            [],
-        )
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
+            "language": "en_US",
+            "name": f"wa_title_{page.get_latest_revision().id}",
+        }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
@@ -403,7 +419,7 @@ class ContentPageTests(TestCase):
         ocs.save()
         ocs.save_revision().publish()
 
-        page_links, ocs_links = test_page.get_all_links()
+        page_links, ocs_links, wat_links = test_page.get_all_links()
 
         self.assertListEqual(
             [
@@ -433,7 +449,7 @@ class ContentPageTests(TestCase):
             parent=main_menu, slug="page1", title="Page1", bodies=[]
         )
 
-        page_links, ocs_links = test_page.get_all_links()
+        page_links, ocs_links, wat_links = test_page.get_all_links()
 
         self.assertListEqual([], page_links)
         self.assertListEqual([], ocs_links)
@@ -460,17 +476,26 @@ class ContentPageTests(TestCase):
 
 class OrderedContentSetTests(TestCase):
     def test_get_gender_none(self):
+        """
+        Ordered Content Sets without a gender selected should return None
+        """
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.save()
         self.assertIsNone(ordered_content_set.get_gender())
 
     def test_get_gender(self):
+        """
+        Ordered Content Sets with a gender selected should return the appropriate gender
+        """
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.get_gender(), "female")
 
     def test_status_draft(self):
+        """
+        Draft Ordered Content Sets should return a draft status
+        """
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save()
@@ -478,17 +503,112 @@ class OrderedContentSetTests(TestCase):
         self.assertEqual(ordered_content_set.status(), "Draft")
 
     def test_status_live(self):
+        """
+        Live Ordered Content Sets should return a live status
+        """
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.status(), "Live")
 
     def test_status_live_plus_draft(self):
+        """
+        An Ordered Content Sets that is published and being drafted should return a live and draft status
+        """
         ordered_content_set = OrderedContentSet(name="Test Title")
         ordered_content_set.save()
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save_revision()
         self.assertEqual(ordered_content_set.status(), "Live + Draft")
+
+    def test_get_relationship(self):
+        """
+        Ordered Content Sets with a relationship selected should return the appropriate relationship
+        """
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("relationship", "single"))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.get_relationship(), "single")
+
+    def test_get_age(self):
+        """
+        Ordered Content Sets with an age selected should return the choosen age
+        """
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.profile_fields.append(("age", "15-18"))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.get_age(), "15-18")
+
+    def test_get_page(self):
+        """
+        Ordered Content Sets with an page selected should return a list of the choosen page. We compare
+        the unique slug of a page
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[],
+        )
+        page2 = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="page2-menu",
+            title="page2 menu",
+            bodies=[],
+        )
+        page.save_revision()
+
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.pages.append(("pages", {"contentpage": page}))
+        ordered_content_set.pages.append(("pages", {"contentpage": page2}))
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.page(), ["ha-menu", "page2-menu"])
+
+    def test_get_none_page(self):
+        """
+        Ordered Content Sets with no page selected should return the default value -
+        """
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+        self.assertEqual(ordered_content_set.page(), ["-"])
+
+    def test_status_live_plus_in_moderation(self):
+        requested_by = create_user()
+        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set.save()
+        workflow = Workflow.objects.create(name="Test Workflow", active="t")
+        content_type = ContentType.objects.get_for_model(ordered_content_set)
+        WorkflowState.objects.create(
+            content_type=content_type,
+            object_id=ordered_content_set.id,
+            workflow_id=workflow.id,
+            status="in_progress",
+            requested_by=requested_by,
+            current_task_state=None,
+            base_content_type=content_type,
+        )
+
+        assert ordered_content_set.status() == "Live + In Moderation"
+
+    def test_status_in_moderation(self):
+        requested_by = create_user()
+        ordered_content_set = OrderedContentSet(name="Test Title", live=False)
+        ordered_content_set.save()
+        workflow = Workflow.objects.create(name="Test Workflow", active="t")
+        content_type = ContentType.objects.get_for_model(ordered_content_set)
+        WorkflowState.objects.create(
+            content_type=content_type,
+            object_id=ordered_content_set.id,
+            workflow_id=workflow.id,
+            status="in_progress",
+            requested_by=requested_by,
+            current_task_state=None,
+            base_content_type=content_type,
+        )
+
+        assert ordered_content_set.status() == "In Moderation"
 
 
 class WhatsappBlockTests(TestCase):
@@ -642,3 +762,242 @@ class SMSBlockTests(TestCase):
         with self.assertRaises(StructBlockValidationError) as e:
             SMSBlock().clean(self.create_message_value(message="a" * 460))
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
+
+
+@pytest.mark.django_db
+class TestWhatsAppTemplate:
+
+    def test_variables_are_numeric(self) -> None:
+        """
+        Template variables are numeric.
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="non-numeric-variable",
+                message="{{foo}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": ["Please provide numeric variables only. You provided ['foo']."],
+        }
+
+    def test_variables_are_ordered(self) -> None:
+        """
+        Template variables are ordered.
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="misordered-variables",
+                message="{{2}} {{1}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Variables must be sequential, starting with \"{1}\". You provided \"['2', '1']\""
+            ],
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=False)
+    @responses.activate
+    def test_template_is_not_submitted_if_template_creation_is_disabled(self) -> None:
+        """
+        Submitting a template does nothing if WHATSAPP_CREATE_TEMPLATES is set
+        to False.
+
+        TODO: Should this be an error when template submission is its own
+            separate action?
+        """
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        wat.save_revision()
+
+        assert len(responses.calls) == 0
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_simple_template_submission(self) -> None:
+        """
+        A simple template with no variables, media, etc. is successfully submitted.
+        """
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={"id": "123456789"})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        wat.save_revision()
+
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    # TODO: Find a better way to test quick replies
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_with_buttons(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={"id": "123456789"})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button1")
+        wat.quick_replies.add(created_qr)
+        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button2")
+        wat.quick_replies.add(created_qr)
+        wat.save()
+        wat.save_revision().publish()
+
+        wat_from_db = WhatsAppTemplate.objects.last()
+
+        assert wat_from_db.submission_status == "SUBMITTED"
+        assert "Success! Template ID " in wat_from_db.submission_result
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {"text": "Test WhatsApp Message 1", "type": "BODY"},
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"text": "Button1", "type": "QUICK_REPLY"},
+                        {"text": "Button2", "type": "QUICK_REPLY"},
+                    ],
+                },
+            ],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_with_example_values(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={"id": "123456789"})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[
+                ("example_values", "Ev1"),
+                ("example_values", "Ev2"),
+            ],
+        )
+        wat.save()
+        wat.save_revision()
+
+        request = responses.calls[0].request
+
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {
+                    "text": "Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+                    "type": "BODY",
+                    "example": {"body_text": [["Ev1", "Ev2"]]},
+                },
+            ],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_failed(self):
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        error_response = {
+            "error": {
+                "code": 100,
+                "message": "Invalid parameter",
+                "type": "OAuthException",
+                "error_user_msg": "There is already English (US) content for this template. You can create a new template and try again.",
+                "error_user_title": "Content in This Language Already Exists",
+            }
+        }
+        responses.add(responses.POST, url, json=error_response, status=400)
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        wat.save_revision().publish()
+
+        wat_from_db = WhatsAppTemplate.objects.last()
+        assert wat_from_db.submission_status == "FAILED"
+        assert "Error" in wat_from_db.submission_result
+
+
+class IntegerQuestionBlockTests(TestCase):
+    def create_min_max_value(
+        self,
+        min,
+        max,
+    ):
+        return {
+            "min": min,
+            "max": max,
+        }
+
+    def test_clean_identical_min_max(self):
+        """Min and Max values must not be the same"""
+        IntegerQuestionBlock().clean(self.create_min_max_value(min=40, max=50))
+
+        with self.assertRaises(ValidationError) as e:
+            IntegerQuestionBlock().clean(self.create_min_max_value(min=50, max=50))
+        self.assertEqual(
+            "min and max values need to be different",
+            e.exception.message,
+        )
+        with self.assertRaises(ValidationError) as e:
+            IntegerQuestionBlock().clean(self.create_min_max_value(min=50, max=40))
+        self.assertEqual(
+            "min cannot be greater than max",
+            e.exception.message,
+        )
+        with self.assertRaises(ValidationError) as e:
+            IntegerQuestionBlock().clean(self.create_min_max_value(min=-50, max=40))
+        self.assertEqual(
+            "min and max cannot be less than zero",
+            e.exception.message,
+        )
+        with self.assertRaises(ValidationError) as e:
+            IntegerQuestionBlock().clean(self.create_min_max_value(min=50, max=-40))
+        self.assertEqual(
+            "min and max cannot be less than zero",
+            e.exception.message,
+        )
+        with self.assertRaises(ValidationError) as e:
+            IntegerQuestionBlock().clean(self.create_min_max_value(min=-60, max=-50))
+        self.assertEqual(
+            "min and max cannot be less than zero",
+            e.exception.message,
+        )

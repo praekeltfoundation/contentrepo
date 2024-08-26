@@ -7,17 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--
 ## Unreleased
+- Add skip threshold and skip high result page
+- Add semantic_id for questions
+- Removed word embeddings search (`s` query parameter in API)
+-->
 
+## v1.2.0
 ### Fixed
+- Page not found api status change to 404 from 400
+- Use cache for data when importing assessments with xlsx
+- Better error handling for missing when importing content
 
 ### Added
+- content page import validation using the model
+- Add Age question type for forms
+- Add Multiselect question type for forms
+- Add Semantic ID for form answers
+- Add version number to distinguish question sets
+- Add Freetext question type for forms
+- Add Integer question with min and max values
+- Add Year of Birth type question type
 
 ### Changed
 - Increased SMS limit to 459 characters
-- Validate character limit fir footer and list items when importing 
-- Removed word embeddings search (`s` query parameter in API)
+- Validate character limit fir footer and list items when importing
+- Add Document upload extension validation
+- Update tests to use model validations and update test data
+- updated ordered content set status to include In Moderation and Live + In Moderation
+- Remove pagination on page view report
+- Add tests for the pageview report filters
+- Make inflection points and results pages optional
+- Make min and max fields mandatory for integer question type
+- Custom model validation for IntegerQuestionBlock min and max
+- Custom model validation for min and max values to only be positive
 
--->
 ## v1.1.0
 ### Fixed
 - Autofill for empty slug

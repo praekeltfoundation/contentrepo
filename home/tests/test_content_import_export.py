@@ -29,7 +29,7 @@ from home.models import (
     HomePage,
     OrderedContentSet,
 )
-from home.tests.utils import unwagtail
+from home.xlsx_helpers import get_active_sheet
 
 from .helpers import set_profile_field_options
 from .page_builder import (
@@ -48,6 +48,7 @@ from .page_builder import (
     WABlk,
     WABody,
 )
+from .utils import unwagtail
 
 IMP_EXP_DATA_BASE = Path("home/tests/import-export-data")
 
@@ -387,7 +388,7 @@ class ImportExport:
 
     def _filter_export_XLSX(self, content: bytes, locale: str | None) -> bytes:
         workbook = load_workbook(BytesIO(content))
-        worksheet = workbook.worksheets[0]
+        worksheet = get_active_sheet(workbook)
         header = next(worksheet.iter_rows(max_row=1, values_only=True))
 
         rows_to_remove: list[int] = []
@@ -666,13 +667,41 @@ class TestImportExport:
         csv_bytes = csv_impexp.import_file("content2.csv")
 
         # This CSV doesn't have any of the fields we expect.
-        with pytest.raises((KeyError, TypeError)):
+        with pytest.raises((KeyError, TypeError, ImportException)):
             csv_impexp.import_file("broken.csv")
 
         # The export should match the existing content.
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
+
+    def test_missing_slug(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing pages without slugs causes a validation error.
+
+        (This uses missing-slug.csv.)
+        """
+
+        # One of the content page rows doesn't have a slug.
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("missing-slug.csv")
+
+        assert e.value.row_num == 3
+        assert e.value.message == ["Missing slug value"]
+
+    def test_missing_slug_on_index_page(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing index pages without slugs causes a validation error.
+
+        (This uses missing-slug-index.csv.)
+        """
+
+        # One of the index page rows doesn't have a slug.
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("missing-slug-index.csv")
+
+        assert e.value.row_num == 2
+        assert e.value.message == ["Missing slug value"]
 
     def test_no_translation_key_default(self, csv_impexp: ImportExport) -> None:
         """
@@ -708,18 +737,20 @@ class TestImportExport:
             csv_impexp.import_file("no-translation-key-cpi.csv")
 
         assert e.value.row_num == 4
-        # FIXME: Find a better way to represent this.
-        assert "translation_key" in e.value.message
-        assert "“” is not a valid UUID." in e.value.message
+
+        assert e.value.message == [
+            "Validation error: translation_key - “” is not a valid UUID."
+        ]
 
         # A ContentPage without a translation key fails
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("no-translation-key-cp.csv")
 
         assert e.value.row_num == 5
-        # FIXME: Find a better way to represent this.
-        assert "translation_key" in e.value.message
-        assert "“” is not a valid UUID." in e.value.message
+
+        assert e.value.message == [
+            "Validation error: translation_key - “” is not a valid UUID."
+        ]
 
     def test_invalid_locale_name(self, csv_impexp: ImportExport) -> None:
         """
@@ -730,7 +761,7 @@ class TestImportExport:
             csv_impexp.import_file("invalid-locale-name.csv")
 
         assert e.value.row_num == 2
-        assert e.value.message == "Language not found: NotEnglish"
+        assert e.value.message == ["Language not found: NotEnglish"]
 
     def test_multiple_locales_for_name(
         self, csv_impexp: ImportExport, settings: SettingsWrapper
@@ -747,10 +778,9 @@ class TestImportExport:
             csv_impexp.import_file("invalid-locale-name.csv")
 
         assert e.value.row_num == 2
-        assert (
-            e.value.message
-            == "Multiple codes for language: NotEnglish -> ['en1', 'en2']"
-        )
+        assert e.value.message == [
+            "Multiple codes for language: NotEnglish -> ['en1', 'en2']"
+        ]
 
     def test_locale_HomePage_DNE(self, csv_impexp: ImportExport) -> None:
         """
@@ -761,10 +791,9 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("content_without_locale_homepage.csv")
         assert e.value.row_num == 13
-        assert (
-            e.value.message
-            == "You are trying to add a child page to a 'Portuguese' HomePage that does not exist. Please create the 'Portuguese' HomePage first"
-        )
+        assert e.value.message == [
+            "You are trying to add a child page to a 'Portuguese' HomePage that does not exist. Please create the 'Portuguese' HomePage first"
+        ]
 
     def test_missing_parent(self, csv_impexp: ImportExport) -> None:
         """
@@ -775,11 +804,10 @@ class TestImportExport:
             csv_impexp.import_file("missing-parent.csv")
 
         assert e.value.row_num == 2
-        assert (
-            e.value.message
-            == "Cannot find parent page with title 'missing-parent' and locale "
+        assert e.value.message == [
+            "Cannot find parent page with title 'missing-parent' and locale "
             "'English'"
-        )
+        ]
 
     def test_multiple_parents(self, csv_impexp: ImportExport) -> None:
         """
@@ -795,11 +823,10 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("missing-parent.csv", purge=False)
         assert e.value.row_num == 2
-        assert (
-            e.value.message
-            == "Multiple pages with title 'missing-parent' and locale 'English' for "
+        assert e.value.message == [
+            "Multiple pages with title 'missing-parent' and locale 'English' for "
             "parent page: ['missing-parent1', 'missing-parent2']"
-        )
+        ]
 
     def test_message_for_missing_page(self, csv_impexp: ImportExport) -> None:
         """
@@ -815,11 +842,10 @@ class TestImportExport:
             csv_impexp.import_file("message-row-missing-page.csv")
 
         assert e.value.row_num == 4
-        assert (
-            e.value.message
-            == "This is a message for page with slug 'not-cp-import-export' and locale "
+        assert e.value.message == [
+            "This is a message for page with slug 'not-cp-import-export' and locale "
             "'English', but no such page exists"
-        )
+        ]
 
     def test_variation_for_missing_page(self, csv_impexp: ImportExport) -> None:
         """
@@ -835,11 +861,10 @@ class TestImportExport:
             csv_impexp.import_file("variation-row-missing-page.csv")
 
         assert e.value.row_num == 4
-        assert (
-            e.value.message
-            == "This is a variation for the content page with slug 'not-cp-import-export' and locale "
+        assert e.value.message == [
+            "This is a variation for the content page with slug 'not-cp-import-export' and locale "
             "'English', but no such page exists"
-        )
+        ]
 
     def test_go_to_page_button_missing_page(self, csv_impexp: ImportExport) -> None:
         """
@@ -850,11 +875,10 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("missing-gotopage.csv")
         assert e.value.row_num == 2
-        assert (
-            e.value.message
-            == "No pages found with slug 'missing' and locale 'English' for go_to_page "
+        assert e.value.message == [
+            "No pages found with slug 'missing' and locale 'English' for go_to_page "
             "button 'Missing' on page 'ma_import-export'"
-        )
+        ]
 
     def test_missing_related_pages(self, csv_impexp: ImportExport) -> None:
         """
@@ -865,11 +889,10 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("missing-related-page.csv")
         assert e.value.row_num == 2
-        assert (
-            e.value.message
-            == "Cannot find related page with slug 'missing related' and locale "
+        assert e.value.message == [
+            "Cannot find related page with slug 'missing related' and locale "
             "'English'"
-        )
+        ]
 
     def test_invalid_wa_template_category(self, csv_impexp: ImportExport) -> None:
         """
@@ -881,10 +904,11 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'whatsapp_template_category': [\"Value 'Marketing' is not a valid choice.\"]}"
-        )
+
+        # print(e.value.message)
+        assert e.value.message == [
+            "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices."
+        ]
 
     def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
         """
@@ -896,10 +920,9 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
-        )
+        assert e.value.message == [
+            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
+        ]
 
     def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
         """
@@ -917,10 +940,9 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'whatsapp_body': ['Validation error in StreamBlock']}"
-        )
+        assert e.value.message == [
+            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
+        ]
 
     def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
         """
@@ -933,10 +955,9 @@ class TestImportExport:
 
         assert e.value.row_num == 2
         # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
-        )
+        assert e.value.message == [
+            "Validation error: translation_key - “BADUUID” is not a valid UUID."
+        ]
 
     def test_cpi_validation_failure_update(self, csv_impexp: ImportExport) -> None:
         """
@@ -952,10 +973,9 @@ class TestImportExport:
 
         assert e.value.row_num == 2
         # FIXME: Find a better way to represent this.
-        assert (
-            e.value.message
-            == "Validation error: {'translation_key': ['“BADUUID” is not a valid UUID.']}"
-        )
+        assert e.value.message == [
+            "Validation error: translation_key - “BADUUID” is not a valid UUID."
+        ]
 
     def test_ContentPageIndex_required_fields(self, csv_impexp: ImportExport) -> None:
         """
@@ -1001,24 +1021,130 @@ class TestImportExport:
 
     def test_footer_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with list_items and and footer characters exceeding maximum charactercount
+        Importing an CSV file with footer and and footer characters exceeding maximum charactercount
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp_footer_max_characters.csv")
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
+        assert e.value.message == [
+            "Validation error: footer - Ensure this value has at most 60 characters (it has 110)."
+        ]
+
+    def test_list_items_maximum_num(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an CSV file with list_items and and list items characters exceeding maximum charactercount
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp_list_items_max_num.csv")
+
+        assert isinstance(e.value, ImportException)
+        assert e.value.row_num == 4
+        assert e.value.message == [
+            "Validation error: list_items - The maximum number of items is 10"
+        ]
 
     def test_list_items_maximum_characters(self, csv_impexp: ImportExport) -> None:
         """
-        Importing an CSV file with list_items and and list items characters exceeding maximum charactercount
+        Importing an CSV file with list_items and and list items characters exceeding maximum character count
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp_list_items_max_characters.csv")
 
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
-        assert e.value.message == "list_items too long: Item 123456789101234567890"
+        assert e.value.message == [
+            "Validation error: list_items - List item (Item no 5 a very long list item) has exceeded maximum character limit of 24"
+        ]
+
+    def test_max_char_variation(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a file with the variation message greater than 4096 characters should
+        return a validation error to the user
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("max_char_variation.csv")
+
+        assert e.value.row_num == 4
+        assert e.value.message == [
+            "Validation error: variation_messages - The minimum number of items is 1",
+            "Validation error: variation_messages - Ensure this value has at most 4096 characters (it has 4097).",
+        ]
+
+    def test_invalid_JSON_button(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file with an invalid JSON value for the button should return a detailed error message
+        to the user
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("broken_button.csv")
+
+        assert e.value.row_num == 3
+        assert e.value.message == ["Bad JSON button, you have: Broken Button"]
+
+    def test_invalid_JSON_button_xlsx(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing a XLSX file with an invalid JSON value for the button should return a detailed error message
+        to the user
+        """
+        with pytest.raises(ImportException) as e:
+            xlsx_impexp.import_file("broken_button.xlsx", purge=True)
+        assert e.value.row_num == 3
+        assert e.value.message == ["Bad JSON button, you have: Broken button"]
+
+    def test_max_char_button(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file with a button chars greater than the limit should return a detailed error message
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("max-chars-button.csv")
+
+        assert e.value.row_num == 15
+        assert e.value.message == [
+            "Validation error: buttons - Ensure this value has at most 20 characters (it has 23)."
+        ]
+
+    def test_max_varation_xlsx(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing a XLSX file with the variation message greater than 4096 characters should
+        return a validation error to the user.
+        """
+        with pytest.raises(ImportException) as e:
+            xlsx_impexp.import_file("max_char_variation.xlsx", purge=True)
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Validation error: variation_messages - The minimum number of items is 1",
+            "Validation error: variation_messages - Ensure this value has at most 4096 characters (it has 4319).",
+        ]
+
+    def test_max_WA_body_xlsx(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing a XLSX file with the whatsapp body message greater than 4096 characters should
+        return a validation error to the user.
+        """
+        with pytest.raises(ImportException) as e:
+            xlsx_impexp.import_file("max_char_WA_body.xlsx", purge=True)
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Validation error: message - The minimum number of items is 1",
+            "Validation error: message - Ensure this value has at most 4096 characters (it has 4319).",
+        ]
+
+    @pytest.mark.xfail(reason="Form creation during import needs to be fixed.")
+    def test_multiple_field_errors(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a file with multiple errors for different fields should return errors for each of those fields,
+        at the same time, for the same row
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("multiple-validation-errors.csv")
+
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (2)",
+            "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices.",
+        ]
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
@@ -1109,10 +1235,63 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("changed_parent.csv", purge=False)
         assert e.value.row_num == 5
-        assert (
-            e.value.message
-            == "Changing the parent from 'Home' to 'Main Menu' for the page with title 'self-help' during import is not allowed. Please use the UI"
+        assert e.value.message == [
+            "Changing the parent from 'Home' to 'Main Menu' for the page with title 'self-help' during import is not allowed. Please use the UI"
+        ]
+
+    def test_import_pages_xlsx(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing an XLSX file with content pages should not break
+        """
+        xlsx_impexp.import_file("content_pages.xlsx", purge=False)
+        content_pages = ContentPage.objects.all()
+        assert len(content_pages) > 0
+
+    def test_invalid_page(self, csv_impexp: ImportExport) -> None:
+        """
+        Import an invalid page that matches a valid page already in the db
+        """
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="main-menu-first-time-user",
+            title="main menu first time user",
+            bodies=[
+                WABody("HA menu", [WABlk("Welcome M")]),
+            ],
         )
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("broken_button.csv")
+
+        assert e.value.row_num == 3
+        assert e.value.message == ["Bad JSON button, you have: Broken Button"]
+
+    def test_invalid_page_already_in_db(self, csv_impexp: ImportExport) -> None:
+        """
+        Import an invalid page that matches an invalid page already in the db
+        """
+
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        wa_block = [WABlk("Vars {1} {2} {3}", example_values=["Example value 1"])]
+        _ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="main-menu-first-time-user",
+            title="main menu first time user",
+            bodies=[WABody("HA menu ", wa_block)],
+        )
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("bad-whatsapp-template-vars.csv")
+
+        assert e.value.row_num == 3
+        # FIXME: Find a better way to represent this.
+        assert e.value.message == [
+            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
+        ]
 
 
 @pytest.mark.django_db
@@ -1423,20 +1602,18 @@ class TestExportImportRoundtrip:
         home_page = HomePage.objects.first()
         imp_exp = PageBuilder.build_cpi(home_page, "import-export", "Import Export")
 
-        m1vars = [
-            VarMsg("Single male", gender="male", relationship="single"),
-            VarMsg("Complicated male", gender="male", relationship="complicated"),
-        ]
-
         cp_imp_exp_wablks = [
             WABlk(
                 "Message 1",
                 next_prompt="Next message",
                 buttons=[NextBtn("Next message")],
-                variation_messages=m1vars,
+                variation_messages=[
+                    VarMsg("Var'n for Single", relationship="single"),
+                    VarMsg("Var'n for Complicated", relationship="complicated"),
+                ],
             ),
             WABlk(
-                "Message 2, variable placeholders as well {{0}}",
+                "Message 2",
                 buttons=[PageBtn("Import Export", page=imp_exp)],
                 variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
             ),
@@ -1448,6 +1625,7 @@ class TestExportImportRoundtrip:
             title="CP-Import/export",
             bodies=[WABody("WA import export data", cp_imp_exp_wablks)],
         )
+
         # Save and publish cp_imp_exp again so the revision numbers match up after import.
         rev = cp_imp_exp.save_revision()
         rev.publish()

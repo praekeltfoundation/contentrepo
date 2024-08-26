@@ -5,17 +5,34 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
+from taggit.models import Tag  # type: ignore
+from wagtail import blocks
 from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Workflow, WorkflowContentType
+from wagtail.models.sites import Site  # type: ignore
 from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content
-from home.models import ContentPage, HomePage, OrderedContentSet, PageView
+from home.models import (
+    AgeQuestionBlock,
+    AnswerBlock,
+    Assessment,
+    CategoricalQuestionBlock,
+    ContentPage,
+    FreeTextQuestionBlock,
+    HomePage,
+    IntegerQuestionBlock,
+    MultiselectQuestionBlock,
+    OrderedContentSet,
+    PageView,
+    YearofBirthQuestionBlock,
+)
 
 from .page_builder import (
     MBlk,
@@ -351,7 +368,7 @@ class TestContentPageAPI:
         page.save_revision().publish()
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=True")
-        assert response.content == b""
+        assert response.status_code == 404
 
     def test_message_number_specified_whatsapp(self, uclient):
         """
@@ -456,7 +473,7 @@ class TestContentPageAPI:
         page = self.create_content_page()
         page = self.create_content_page(page, title="Content Page 1")
         uclient.get("/api/v2/pages/")
-        with django_assert_num_queries(8):
+        with django_assert_num_queries(16):
             uclient.get("/api/v2/pages/")
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)
@@ -555,6 +572,23 @@ class TestContentPageAPI:
         assert body["text"]["type"] == "Whatsapp_Message"
         assert body["text"]["value"]["message"] == "*Default whatsapp Content 1* 🏥"
 
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
+    def test_detail_view_platform_enabled_no_message(self, uclient, platform):
+        """
+        Fetching a detail page and selecting the <platform> content returns a
+        400 when <platform> is enabled but there are no <platform> messages in
+        the body.
+        """
+        page = self.create_content_page(body_type=platform, body_count=0)
+        setattr(page, f"enable_{platform}", True)
+        page.save()
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=true")
+        content = response.json()
+
+        assert response.status_code == 400
+        assert content == ["The requested message does not exist"]
+
     @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     def test_detail_view_platform_message(self, uclient, platform):
         """
@@ -588,15 +622,10 @@ class TestContentPageAPI:
     def test_detail_view_no_content_page(self, uclient):
         """
         We get a validation error if we request a page that doesn't exist.
-
-        FIXME:
-         * Is 400 (ValidationError) really an appropriate response code for
-           this? 404 seems like a better fit for failing to find a page we're
-           looking up by id.
         """
         # it should return the validation error for content page that doesn't exist
         response = uclient.get("/api/v2/pages/1/")
-        assert response.status_code == 400
+        assert response.status_code == 404
 
         content = response.json()
         assert content == {"page": ["Page matching query does not exist."]}
@@ -1235,3 +1264,874 @@ class TestOrderedContentSetAPI:
         content_str = response.content.decode("utf-8")
         assert "/admin/snippets/home/orderedcontentset/" in content_str
         assert response.status_code == 200
+
+    def test_valid_document_extension(self):
+        """
+        Upload an invalid document type
+        """
+        document = Document.objects.create(
+            title="Example Document", file="invalid_file.exe"
+        )
+
+        with pytest.raises(ValidationError) as validation_error:
+            document.full_clean()
+
+        assert (
+            validation_error.value.messages[0]
+            == "File extension “exe” is not allowed. Allowed extensions are: doc, docx, xls, xlsx, ppt, pptx, pdf, txt."
+        )
+
+
+@pytest.mark.django_db
+class TestAssessmentAPI:
+    @pytest.fixture(autouse=True)
+    def create_test_data(self):
+        """
+        Create the content that all the tests in this class will use.
+        """
+        self.assessment = Assessment(title="Test Assessment", slug="test-assessment")
+        self.high_result_page = ContentPage(
+            title="high result",
+            slug="high-result",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {"type": "next_message", "value": {"title": "Tell me more"}}
+                        ],
+                    },
+                }
+            ],
+        )
+        self.medium_result_page = ContentPage(
+            title="medium result",
+            slug="medium-result",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {"type": "next_message", "value": {"title": "Tell me more"}}
+                        ],
+                    },
+                }
+            ],
+        )
+        self.low_result_page = ContentPage(
+            title="low result",
+            slug="low-result",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {"type": "next_message", "value": {"title": "Tell me more"}}
+                        ],
+                    },
+                }
+            ],
+        )
+        self.skip_high_result_page = ContentPage(
+            title="skip result",
+            slug="skip-result",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {
+                                "type": "next_message",
+                                "value": {"title": "You skipped a question"},
+                            }
+                        ],
+                    },
+                }
+            ],
+        )
+        homepage = HomePage.objects.first()
+        homepage.add_child(instance=self.high_result_page)
+        homepage.add_child(instance=self.medium_result_page)
+        homepage.add_child(instance=self.low_result_page)
+        homepage.add_child(instance=self.skip_high_result_page)
+        self.high_result_page.save_revision().publish()
+        self.medium_result_page.save_revision().publish()
+        self.low_result_page.save_revision().publish()
+        self.skip_high_result_page.save_revision().publish()
+        site = Site.objects.get(is_default_site=True)
+        tag, _ = Tag.objects.get_or_create(name="tag1")
+        self.assessment.tags.add(tag)
+        tag, _ = Tag.objects.get_or_create(name="tag2")
+        self.assessment.tags.add(tag)
+        self.assessment.locale = site.root_page.locale
+        self.assessment.high_result_page = self.high_result_page
+        self.assessment.high_inflection = 5.0
+        self.assessment.medium_result_page = self.medium_result_page
+        self.assessment.medium_inflection = 2.0
+        self.assessment.low_result_page = self.low_result_page
+        self.assessment.skip_threshold = 3.0
+        self.assessment.skip_high_result_page = self.skip_high_result_page
+        self.assessment.generic_error = "This is a generic error"
+        answers_block = blocks.ListBlock(AnswerBlock())
+        answers_block_value = answers_block.to_python(
+            [
+                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
+            ]
+        )
+        categorical_question_block = CategoricalQuestionBlock()
+        categorical_question_block_value = categorical_question_block.to_python(
+            {
+                "question": "What is the best chocolate?",
+                "error": "Invalid answer",
+                "answers": answers_block_value,
+                "semantic_id": "best_chocolate",
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "categorical_question",
+                categorical_question_block_value,
+            )
+        )
+        age_question_block = AgeQuestionBlock()
+        age_question_block_value = age_question_block.to_python(
+            {
+                "question": "How old are you?",
+                "error": "Invalid answer",
+                "answers": None,
+                "semantic_id": "age",
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "age_question",
+                age_question_block_value,
+            )
+        )
+        multiselect_question_block = MultiselectQuestionBlock()
+        multiselect_question_block_value = multiselect_question_block.to_python(
+            {
+                "question": "Which chocolates are yummy?",
+                "error": "Invalid answer",
+                "answers": answers_block_value,
+                "semantic_id": "yummy_chocolates",
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "multiselect_question",
+                multiselect_question_block_value,
+            )
+        )
+        freetext_question_block = FreeTextQuestionBlock()
+        freetext_question_block_value = freetext_question_block.to_python(
+            {
+                "question": "How useful is this information?",
+                "answers": None,
+                "semantic_id": "usefulness",
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "freetext_question",
+                freetext_question_block_value,
+            )
+        )
+        integer_question_block = IntegerQuestionBlock()
+        integer_question_block_value = integer_question_block.to_python(
+            {
+                "question": "What's your weight in kilograms?",
+                "error": "Your weight should be between 40 and 500kg",
+                "min": 40,
+                "max": 500,
+                "answers": None,
+                "semantic_id": "weight",
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "integer_question",
+                integer_question_block_value,
+            )
+        )
+        year_of_birth_question_block = YearofBirthQuestionBlock()
+        year_of_birth_question_block_value = year_of_birth_question_block.to_python(
+            {
+                "question": "What's your year of birth?",
+                "error": "You entered an invalid year of birth",
+                "explainer": "We need to know some things",
+                "answers": None,
+                "semantic_id": "year_of_birth",
+            }
+        )
+        self.assessment.questions.append(
+            (
+                "year_of_birth_question",
+                year_of_birth_question_block_value,
+            )
+        )
+        self.assessment.save()
+
+    def test_assessment_endpoint(self, uclient):
+        response = uclient.get("/api/v2/assessment/")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        assert content["results"][0]["title"] == self.assessment.title
+        assert content["results"][0]["locale"] == self.assessment.locale.language_code
+        assert content["results"][0]["slug"] == self.assessment.slug
+        assert content["results"][0]["version"] == self.assessment.version
+        assert sorted(content["results"][0]["tags"]) == sorted(
+            [tag.name for tag in self.assessment.tags.all()]
+        )
+        assert content["results"][0]["generic_error"] == self.assessment.generic_error
+
+        meta = content["results"][0]["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["high_inflection"] == 5.0
+
+        meta = content["results"][0]["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["medium_inflection"] == 2.0
+
+        meta = content["results"][0]["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+
+        meta = content["results"][0]["skip_high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.skip_high_result_page.slug
+        assert meta["parent"]["id"] == self.skip_high_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["skip_high_result_page"] == {
+            "id": self.skip_high_result_page.id,
+            "title": self.skip_high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["skip_threshold"] == 3.0
+
+        assert content["results"][0]["questions"][0] == {
+            "id": self.assessment.questions[0].id,
+            "question_type": "categorical_question",
+            "question": "What is the best chocolate?",
+            "explainer": None,
+            "error": "Invalid answer",
+            "min": None,
+            "max": None,
+            "answers": [
+                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
+            ],
+            "semantic_id": "best_chocolate",
+        }
+        assert content["results"][0]["questions"][1] == {
+            "id": self.assessment.questions[1].id,
+            "question_type": "age_question",
+            "question": "How old are you?",
+            "explainer": None,
+            "error": "Invalid answer",
+            "min": None,
+            "max": None,
+            "answers": [],
+            "semantic_id": "age",
+        }
+        assert content["results"][0]["questions"][2] == {
+            "id": self.assessment.questions[2].id,
+            "question_type": "multiselect_question",
+            "question": "Which chocolates are yummy?",
+            "explainer": None,
+            "error": "Invalid answer",
+            "min": None,
+            "max": None,
+            "answers": [
+                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
+            ],
+            "semantic_id": "yummy_chocolates",
+        }
+        assert content["results"][0]["questions"][3] == {
+            "id": self.assessment.questions[3].id,
+            "question_type": "freetext_question",
+            "question": "How useful is this information?",
+            "explainer": None,
+            "error": None,
+            "min": None,
+            "max": None,
+            "answers": [],
+            "semantic_id": "usefulness",
+        }
+        assert content["results"][0]["questions"][4] == {
+            "id": self.assessment.questions[4].id,
+            "question_type": "integer_question",
+            "question": "What's your weight in kilograms?",
+            "explainer": None,
+            "error": "Your weight should be between 40 and 500kg",
+            "min": 40,
+            "max": 500,
+            "answers": [],
+            "semantic_id": "weight",
+        }
+        assert content["results"][0]["questions"][5] == {
+            "id": self.assessment.questions[5].id,
+            "question_type": "year_of_birth_question",
+            "question": "What's your year of birth?",
+            "explainer": "We need to know some things",
+            "error": "You entered an invalid year of birth",
+            "min": None,
+            "max": None,
+            "answers": [],
+            "semantic_id": "year_of_birth",
+        }
+
+    def test_assessment_detail_endpoint(self, uclient):
+        response = uclient.get(f"/api/v2/assessment/{self.assessment.id}/")
+        content = json.loads(response.content)
+        assert content["title"] == self.assessment.title
+        assert content["locale"] == self.assessment.locale.language_code
+        assert content["slug"] == self.assessment.slug
+        assert content["version"] == self.assessment.version
+        assert sorted(content["tags"]) == sorted(
+            [tag.name for tag in self.assessment.tags.all()]
+        )
+        assert content["generic_error"] == self.assessment.generic_error
+
+        meta = content["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["high_inflection"] == 5.0
+
+        meta = content["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["medium_inflection"] == 2.0
+
+        meta = content["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+
+    def test_assessment_endpoint_with_drafts(self, uclient):
+        """
+        Unpublished assessments are returned if the qa param is set.
+        """
+        self.assessment.unpublish()
+        url = "/api/v2/assessment/?qa=True"
+        # it should return a list of assessments with the unpublished one included
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the assessment is not live but content is returned
+        assert not self.assessment.live
+        assert content["count"] == 1
+        assert content["results"][0]["title"] == self.assessment.title
+
+        meta = content["results"][0]["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["high_inflection"] == 5.0
+
+        meta = content["results"][0]["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["medium_inflection"] == 2.0
+
+        meta = content["results"][0]["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+
+    def test_assessment_endpoint_without_drafts(self, uclient):
+        """
+        Unpublished assessments are not returned if the qa param is not set.
+        """
+        self.assessment.unpublish()
+        url = "/api/v2/assessment/"
+        # it should return nothing
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the assessment is not live
+        assert not self.assessment.live
+        assert content["count"] == 0
+
+    def test_assessment_detail_endpoint_with_drafts(self, uclient):
+        """
+        Unpublished assessments are returned if the qa param is set.
+        """
+        self.assessment.unpublish()
+        url = f"/api/v2/assessment/{self.assessment.id}/?qa=True"
+        # it should return specific assessment that is in draft
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        # the assessment is not live but content is returned
+        assert not self.assessment.live
+        assert content["title"] == self.assessment.title
+
+        meta = content["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["high_inflection"] == 5.0
+
+        meta = content["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["medium_inflection"] == 2.0
+
+        meta = content["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+
+    # TODO: Add this test in once we've merged with main - there's some code in there that makes following the redirect work
+    # def test_assessment_detail_endpoint_without_drafts(self, uclient, settings):
+    #     """
+    #     Unpublished assessments are not returned if the qa param is not set.
+    #     """
+    #     settings.STATIC_ROOT = Path("home/tests/test_static")
+    #     self.assessment.unpublish()
+    #     url = f"/api/v2/assessment/{self.assessment.id}"
+
+    #     response = uclient.get(url, follow=True)
+
+    #     assert response.status_code == 404
+
+    def test_assessment_new_draft(self, uclient):
+        """
+        New revisions are returned if the qa param is set
+        """
+        high_result_page = ContentPage(
+            title="new high result",
+            slug="new-high-result",
+            enable_whatsapp=True,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "test message",
+                        "buttons": [
+                            {"type": "next_message", "value": {"title": "Tell me more"}}
+                        ],
+                    },
+                }
+            ],
+        )
+        homepage = HomePage.objects.first()
+        homepage.add_child(instance=high_result_page)
+        high_result_page.save_revision().publish()
+        self.assessment.high_result_page = high_result_page
+        self.assessment.high_inflection = 15.0
+        self.assessment.medium_inflection = 12.0
+
+        self.assessment.save_revision()
+
+        response = uclient.get("/api/v2/assessment/")
+        content = json.loads(response.content)
+
+        assert self.assessment.live
+
+        assert content["results"][0]["title"] == self.assessment.title
+
+        meta = content["results"][0]["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["high_inflection"] == 5.0
+
+        meta = content["results"][0]["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["medium_inflection"] == 2.0
+
+        meta = content["results"][0]["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+
+        response = uclient.get("/api/v2/assessment/?qa=True")
+        content = json.loads(response.content)
+        assert content["results"][0]["title"] == self.assessment.title
+
+        meta = content["results"][0]["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == high_result_page.slug
+        assert meta["parent"]["id"] == high_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["high_result_page"] == {
+            "id": high_result_page.id,
+            "title": high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["high_inflection"] == 15.0
+
+        meta = content["results"][0]["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["medium_inflection"] == 12.0
+
+        meta = content["results"][0]["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+
+    def test_assessment_endpoint_filter_by_tag(self, uclient):
+        response = uclient.get("/api/v2/assessment/?tag=tag1")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        assert content["results"][0]["title"] == self.assessment.title
+
+        meta = content["results"][0]["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["high_inflection"] == 5.0
+
+        meta = content["results"][0]["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["results"][0]["medium_inflection"] == 2.0
+
+        meta = content["results"][0]["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["results"][0]["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+
+        response = uclient.get("/api/v2/assessment/?tag=tag3")
+        content = json.loads(response.content)
+        assert content["count"] == 0
+
+    def test_assessment_detail_endpoint_filter_by_tag(self, uclient):
+        response = uclient.get(f"/api/v2/assessment/{self.assessment.id}/?tag=tag1")
+        content = json.loads(response.content)
+        assert content["title"] == self.assessment.title
+
+        meta = content["high_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.high_result_page.slug
+        assert meta["parent"]["id"] == self.high_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["high_result_page"] == {
+            "id": self.high_result_page.id,
+            "title": self.high_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["high_inflection"] == 5.0
+
+        meta = content["medium_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.medium_result_page.slug
+        assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["medium_result_page"] == {
+            "id": self.medium_result_page.id,
+            "title": self.medium_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+        assert content["medium_inflection"] == 2.0
+
+        meta = content["low_result_page"].pop("meta")
+        assert meta["type"] == "home.ContentPage"
+        assert meta["slug"] == self.low_result_page.slug
+        assert meta["parent"]["id"] == self.low_result_page.get_parent().id
+        assert meta["locale"] == "en"
+        assert content["low_result_page"] == {
+            "id": self.low_result_page.id,
+            "title": self.low_result_page.title,
+            "body": {"text": []},
+            "has_children": False,
+            "related_pages": [],
+            "subtitle": "",
+            "quick_replies": [],
+            "tags": [],
+            "triggers": [],
+        }
+
+        response = uclient.get("/api/v2/assessment/?tag=tag3")
+        content = json.loads(response.content)
+        assert content["count"] == 0

@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 
 import requests
 from django.conf import settings  # type: ignore
-from wagtail.images import get_image_model  # type: ignore
+from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
 from .constants import WHATSAPP_LANGUAGE_MAPPING
@@ -99,75 +99,10 @@ class WhatsAppLanguage(Enum):
         return cls[lc]
 
 
-def create_whatsapp_template(
-    name: str,
-    body: str,
-    category: str,
-    locale: Locale,
-    quick_replies: Iterable[str] = (),
-    image_id: int | None = None,
-    example_values: Iterable[str] | None = None,
-) -> None:
+def get_upload_session_id(image_obj: Image) -> dict[str, Any]:
     """
-    Create a WhatsApp template through the WhatsApp Business API.
-
+    Gets a session ID from the Turn API, to use with an image upload
     """
-    url = urljoin(
-        settings.WHATSAPP_API_URL,
-        f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
-    )
-    headers = {
-        "Authorization": f"Bearer {settings.WHATSAPP_ACCESS_TOKEN}",
-        "Content-Type": "application/json",
-    }
-
-    components: list[dict[str, Any]] = []
-    if example_values:
-        components.append(
-            {
-                "type": "BODY",
-                "text": body,
-                "example": {
-                    "body_text": [example_values],
-                },
-            }
-        )
-    else:
-        components.append({"type": "BODY", "text": body})
-
-    if quick_replies:
-        buttons = []
-        for button in quick_replies:
-            buttons.append({"type": "QUICK_REPLY", "text": button})
-        components.append({"type": "BUTTONS", "buttons": buttons})
-
-    if image_id:
-        image_handle = upload_image(image_id)
-        components.append(
-            {
-                "type": "HEADER",
-                "format": "IMAGE",
-                "example": {"header_handle": [image_handle]},
-            }
-        )
-
-    data = {
-        "category": category,
-        "name": name,
-        "language": WhatsAppLanguage.from_locale(locale).value,
-        "components": components,
-    }
-    response = requests.post(
-        url,
-        headers=headers,
-        data=json.dumps(data, indent=4),
-    )
-
-    # Check if an error has occurred
-    response.raise_for_status()
-
-
-def get_upload_session_id(image_id: int) -> dict[str, Any]:
     url = urljoin(
         settings.WHATSAPP_API_URL,
         "graph/v14.0/app/uploads",
@@ -175,10 +110,8 @@ def get_upload_session_id(image_id: int) -> dict[str, Any]:
     headers = {
         "Content-Type": "application/json",
     }
-
-    img_obj = get_image_model().objects.get(id=image_id)
-    mime_type = mimetypes.guess_type(img_obj.file.name)[0]
-    file_size = img_obj.file.size
+    mime_type = mimetypes.guess_type(image_obj.file.name)[0]
+    file_size = image_obj.file.size
 
     data = {
         "file_length": file_size,
@@ -186,24 +119,25 @@ def get_upload_session_id(image_id: int) -> dict[str, Any]:
         "access_token": settings.WHATSAPP_ACCESS_TOKEN,
         "number": settings.FB_BUSINESS_ID,
     }
-
     response = requests.post(
         url,
         headers=headers,
         data=json.dumps(data, indent=4),
     )
-
+    response.raise_for_status()
     upload_details = {
         "upload_session_id": response.json()["id"],
-        "upload_file": img_obj.file,
+        "upload_file": image_obj.file,
     }
 
-    response.raise_for_status()
     return upload_details
 
 
-def upload_image(image_id: int) -> str:
-    upload_details = get_upload_session_id(image_id)
+def upload_image(image_obj: Image) -> str:
+    """
+    Uploads an image to the Turn API, and returns an image handle reference to use in the template
+    """
+    upload_details = get_upload_session_id(image_obj)
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/{upload_details['upload_session_id']}",
@@ -222,3 +156,209 @@ def upload_image(image_id: int) -> str:
     response = requests.post(url=url, headers=headers, files=files_data, data=form_data)
     response.raise_for_status()
     return response.json()["h"]
+
+
+def create_whatsapp_template_image(image_obj: Image) -> dict[str, Any]:
+    image_handle = upload_image(image_obj)
+
+    return {
+        "type": "HEADER",
+        "format": "IMAGE",
+        "example": {"header_handle": [image_handle]},
+    }
+
+
+def submit_whatsapp_template(
+    name: str,
+    category: str,
+    locale: Locale,
+    components: list[dict[str, Any]],
+) -> dict[str, str]:
+
+    url = urljoin(
+        settings.WHATSAPP_API_URL,
+        f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
+    )
+    headers = {
+        "Authorization": f"Bearer {settings.WHATSAPP_ACCESS_TOKEN}",
+        "Content-Type": "application/json",
+    }
+
+    data = {
+        "category": category,
+        "name": name,
+        "language": WhatsAppLanguage.from_locale(locale).value,
+        "components": components,
+    }
+    response = requests.post(
+        url,
+        headers=headers,
+        data=json.dumps(data, indent=4),
+    )
+
+    if response.ok:
+        return response.json()
+    else:
+        # TODO: Add better error handling to differentiate between user error or server error
+        raise TemplateSubmissionException(response.json())
+
+
+class TemplateSubmissionException(Exception):
+    def __init__(self, response_json: dict[str, Any]):
+        self.response_json = response_json
+        super().__init__(f"Error. {response_json['error']['error_user_msg']}")
+
+
+###### ALL CODE ABOVE THIS LINE IS SHARED BY THE OLD CONTENTPAGE EMBEDDED TEMPLATES, AS WELL AS THE NEW STANDALONE TEMPLATES ######
+
+###### OLD CONTENTPAGE EMBEDDED TEMPLATE CODE BELOW ######
+
+
+def create_whatsapp_template(
+    name: str,
+    body: str,
+    category: str,
+    locale: Locale,
+    quick_replies: Iterable[str] = (),
+    image_id: int | None = None,
+    example_values: Iterable[str] | None = None,
+) -> None:
+    """
+    Create a WhatsApp template through the WhatsApp Business API.
+
+    """
+
+    components = create_whatsapp_template_submission(
+        body, quick_replies, example_values
+    )
+    if image_id is not None:
+        image_obj = Image.objects.get(id=image_id)
+        components.append(create_whatsapp_template_image(image_obj))
+    submit_whatsapp_template(
+        name=name, category=category, locale=locale, components=components
+    )
+
+
+def create_whatsapp_template_submission(
+    body_text: str,
+    quick_replies: Iterable[str] = (),
+    example_values: Iterable[str] | None = None,
+) -> list[dict[str, Any]]:
+    """
+    Create the body and buttons components of a WhatsApp template submission
+    request, but not the images because those need to be uploaded separately.
+    """
+
+    # body: dict[str, Any] = {"type": "BODY", "text": body_text}
+
+    components: list[dict[str, Any]] = []
+
+    if example_values:
+        components.append(
+            {
+                "type": "BODY",
+                "text": body_text,
+                "example": {
+                    "body_text": [example_values],
+                },
+            }
+        )
+    else:
+        components.append({"type": "BODY", "text": body_text})
+
+    if quick_replies:
+
+        buttons = []
+        for button in quick_replies:
+            buttons.append({"type": "QUICK_REPLY", "text": button})
+        components.append({"type": "BUTTONS", "buttons": buttons})
+
+    return components
+
+
+###### OLD CONTENTPAGE EMBEDDED TEMPLATE CODE ABOVE ######
+###### NEW STANDALONE TEMPLATE CODE BELOW ######
+
+
+def create_standalone_template_body_components(
+    message: str,
+    quick_replies: Iterable[str] = (),
+    example_values: Iterable[str] | None = None,
+) -> list[dict[str, Any]]:
+    """
+    Create the body and buttons components of a WhatsApp template submission
+    request, but not the images because those need to be uploaded separately.
+    """
+
+    # body: dict[str, Any] = {"type": "BODY", "text": body_text}
+
+    components: list[dict[str, Any]] = []
+
+    if example_values:
+        components.append(
+            {
+                "type": "BODY",
+                "text": message,
+                "example": {
+                    "body_text": [example_values],
+                },
+            }
+        )
+    else:
+        components.append({"type": "BODY", "text": message})
+
+    if quick_replies:
+
+        buttons = []
+        for button in quick_replies:
+            buttons.append({"type": "QUICK_REPLY", "text": button})
+        components.append({"type": "BUTTONS", "buttons": buttons})
+
+    return components
+
+
+def create_standalone_template_header_components(
+    image_obj: Image | None = None,
+) -> list[dict[str, Any]]:
+    components: list[dict[str, Any]] = []
+    image_handle = upload_image(image_obj)
+    components.append(
+        {
+            "type": "HEADER",
+            "format": "IMAGE",
+            "example": {"header_handle": [image_handle]},
+        }
+    )
+    return components
+
+
+def create_standalone_whatsapp_template(
+    name: str,
+    message: str,
+    category: str,
+    locale: Locale,
+    quick_replies: Iterable[str] = (),
+    image_obj: Image | None = None,
+    example_values: Iterable[str] | None = None,
+) -> dict[str, str]:
+    """
+    Create a WhatsApp template through the WhatsApp Business API.
+
+    """
+
+    components: list[dict[str, Any]] = []
+
+    if image_obj:
+        components.extend(
+            create_standalone_template_header_components(image_obj=image_obj)
+        )
+
+    components.extend(
+        create_standalone_template_body_components(
+            message=message,
+            quick_replies=quick_replies,
+            example_values=example_values,
+        )
+    )
+
+    return submit_whatsapp_template(name, category, locale, components)
