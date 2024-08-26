@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--
 ## Unreleased
-- Add skip threshold and skip high result page
-- Add semantic_id for questions
 - Removed word embeddings search (`s` query parameter in API)
 -->
+
+## v1.2.1
+### Added
+- Forms: Add skip threshold and skip high result page
+- Forms: Add semantic_id for questions
 
 ## v1.2.0
 ### Fixed
