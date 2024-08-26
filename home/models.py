@@ -54,8 +54,6 @@ from .constants import (  # isort:skip
     GENDER_CHOICES,
     RELATIONSHIP_STATUS_CHOICES,
 )
-from .panels import PageRatingPanel
-from .whatsapp import create_whatsapp_template
 
 logger = logging.getLogger(__name__)
 
