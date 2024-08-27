@@ -75,7 +75,6 @@ def test_build_simple_pages() -> None:
     assert unwagtail(ha_menu.body) == []
     assert ha_menu.depth == 4
     assert ha_menu.draft_title == "HealthAlert menu"
-    assert ha_menu.embedding is None
     assert ha_menu.enable_messenger is True
     assert ha_menu.enable_viber is True
     assert ha_menu.enable_web is False
@@ -158,7 +157,6 @@ def test_build_web_content() -> None:
     ]
     assert ha_menu.depth == 4
     assert ha_menu.draft_title == "HealthAlert menu"
-    assert ha_menu.embedding is None
     assert ha_menu.enable_messenger is False
     assert ha_menu.enable_viber is False
     assert ha_menu.enable_web is True
@@ -270,7 +268,6 @@ def test_build_variations() -> None:
     assert unwagtail(cp_imp_exp.body) == []
     assert cp_imp_exp.depth == 4
     assert cp_imp_exp.draft_title == "CP-Import/export"
-    assert cp_imp_exp.embedding is None
     assert cp_imp_exp.enable_messenger is False
     assert cp_imp_exp.enable_viber is False
     assert cp_imp_exp.enable_web is False

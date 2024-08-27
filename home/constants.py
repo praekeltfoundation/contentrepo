@@ -1,8 +1,6 @@
 # Define constants for use throughout the application
 from types import MappingProxyType
 
-from django.conf import settings
-
 GENDER_CHOICES = [
     ("male", "Male"),
     ("female", "Female"),
@@ -31,11 +29,3 @@ WHATSAPP_LANGUAGE_MAPPING = MappingProxyType(
         "pt": "pt_PT",  # FIXME: Should this perhaps be pt_BR instead?
     }
 )
-
-# The model used to identify embeddings in content
-# When changing this consider running update_content_embeddings management cmd
-model = None
-if settings.LOAD_TRANSFORMER_MODEL:
-    from sentence_transformers import SentenceTransformer
-
-    model = SentenceTransformer("all-mpnet-base-v2")

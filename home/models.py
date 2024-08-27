@@ -6,8 +6,6 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.db import models
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
 from django.forms import CheckboxSelectMultiple
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -16,6 +14,13 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
+from wagtail.admin.panels import (
+    FieldPanel,
+    MultiFieldPanel,
+    ObjectList,
+    TabbedInterface,
+    TitleFieldPanel,
+)
 from wagtail.api import APIField
 from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
@@ -48,14 +53,6 @@ from .constants import (  # isort:skip
     AGE_CHOICES,
     GENDER_CHOICES,
     RELATIONSHIP_STATUS_CHOICES,
-    model,
-)
-from wagtail.admin.panels import (  # isort:skip
-    FieldPanel,
-    MultiFieldPanel,
-    ObjectList,
-    TabbedInterface,
-    TitleFieldPanel,
 )
 
 logger = logging.getLogger(__name__)
@@ -511,8 +508,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         use_json_field=True,
     )
     include_in_footer = models.BooleanField(default=False)
-
-    embedding = models.JSONField(blank=True, null=True)
 
     # Web panels
     web_panels = [
@@ -999,54 +994,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             raise ValidationError(errors)
 
         return result
-
-
-@receiver(pre_save, sender=ContentPage)
-def update_contentpage_embedding(sender, instance, *args, **kwargs):
-    from .word_embedding import preprocess_content_for_embedding
-
-    if not model:
-        return
-
-    embedding = {}
-    if instance.enable_web:
-        content = []
-        for block in instance.body:
-            content.append(block.value.source)
-        body = preprocess_content_for_embedding("/n/n".join(content))
-        embedding["web"] = {"values": [float(i) for i in model.encode(body)]}
-    if instance.enable_whatsapp:
-        content = []
-        for block in instance.whatsapp_body:
-            content.append(block.value["message"])
-        body = preprocess_content_for_embedding("/n/n".join(content))
-        embedding["whatsapp"] = {"values": [float(i) for i in model.encode(body)]}
-    if instance.enable_sms:
-        content = []
-        for block in instance.sms_body:
-            content.append(block.value["message"])
-        body = preprocess_content_for_embedding("/n/n".join(content))
-        embedding["sms"] = {"values": [float(i) for i in model.encode(body)]}
-    if instance.enable_ussd:
-        content = []
-        for block in instance.ussd_body:
-            content.append(block.value["message"])
-        body = preprocess_content_for_embedding("/n/n".join(content))
-        embedding["ussd"] = {"values": [float(i) for i in model.encode(body)]}
-    if instance.enable_messenger:
-        content = []
-        for block in instance.messenger_body:
-            content.append(block.value["message"])
-        body = preprocess_content_for_embedding("/n/n".join(content))
-        embedding["messenger"] = {"values": [float(i) for i in model.encode(body)]}
-    if instance.enable_viber:
-        content = []
-        for block in instance.viber_body:
-            content.append(block.value["message"])
-        body = preprocess_content_for_embedding("/n/n".join(content))
-        embedding["viber"] = {"values": [float(i) for i in model.encode(body)]}
-
-    instance.embedding = embedding
 
 
 class OrderedContentSet(
@@ -1735,22 +1682,3 @@ class WhatsAppTemplate(
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.prefix}_{self.get_latest_revision().pk}"
-
-
-@receiver(pre_save, sender=WhatsAppTemplate)
-def update_whatsapp_template_embedding(sender, instance, *args, **kwargs):
-
-    from .word_embedding import preprocess_content_for_embedding
-
-    if not model:
-        return
-
-    embedding = {}
-
-    content = []
-    for block in instance.body:
-        content.append(block.value["message"])
-    body = preprocess_content_for_embedding("/n/n".join(content))
-    embedding["whatsapp"] = {"values": [float(i) for i in model.encode(body)]}
-
-    instance.embedding = embedding

@@ -266,10 +266,6 @@ EMAIL_SSL_CERTFILE = env.str("EMAIL_SSL_CERTFILE", None)
 EMAIL_SSL_KEYFILE = env.str("EMAIL_SSL_KEYFILE", None)
 EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", None)
 
-# Flag for turning on the transformation model
-# When changing this consider running update_content_embeddings management cmd
-LOAD_TRANSFORMER_MODEL = env.bool("LOAD_TRANSFORMER_MODEL", False)
-
 # Flag for turning on Standalone Whatsapp Templates, still in development
 ENABLE_STANDALONE_WHATSAPP_TEMPLATES = env.bool(
     "ENABLE_STANDALONE_WHATSAPP_TEMPLATES", False
