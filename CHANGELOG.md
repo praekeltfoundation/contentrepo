@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 - Updated sentry-sdk from 1.44.1 to 2.8.0
+- Updated wagtail from 5.2.4 to 5.2.6
 -->
 
 ## v1.2.1
