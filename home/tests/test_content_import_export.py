@@ -9,7 +9,6 @@ from pathlib import Path
 from queue import Queue
 from typing import Any
 
-import pandas as pd
 import pytest
 from django.core import serializers  # type: ignore
 from django.core.files.base import File  # type: ignore
@@ -126,12 +125,19 @@ def csv2dicts(csv_bytes: bytes) -> ExpDicts:
 
 
 def xlsx2dicts(xlsx_bytes: bytes) -> ExpDicts:
-    # Read the Excel file from bytes into a pandas DataFrame
+    # Load the Excel file from bytes
     excel_file = BytesIO(xlsx_bytes)
-    df = pd.read_excel(excel_file)
+    workbook = load_workbook(excel_file)
 
-    # Convert the DataFrame into a list of dictionaries
-    return df.to_dict(orient="records")
+    # Assume the data is in the first sheet
+    sheet = workbook.active
+
+    # Get the headers from the first row
+    headers = [cell.value for cell in sheet[1]]
+
+    # Iterate over the remaining rows and convert each row to a dictionary
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        yield {headers[i]: row[i] for i in range(len(headers))}
 
 
 DbDict = dict[str, Any]
