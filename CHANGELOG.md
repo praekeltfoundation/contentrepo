@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated djangorestframework from 3.15.1 to 3.15.2
 - Updated urllib3 from 2.2.1 to 2.2.2
 - Updated requests from 2.31.0 to 2.32.2
+- Updated idna from 3.6 to 3.7
 -->
 
 ## v1.2.1
