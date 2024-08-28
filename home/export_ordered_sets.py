@@ -1,16 +1,15 @@
 import copy
 import csv
-import io
 from collections.abc import Iterable
 from dataclasses import asdict, astuple, dataclass, fields
 from math import ceil
 
 from django.http import HttpResponse
-from openpyxl.styles import Border, Font, NamedStyle, Side
+from openpyxl.styles import Font, NamedStyle
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from wagtail.query import PageQuerySet  # type: ignore  # No typing available
+from wagtail.query import QuerySet  # type: ignore  # No typing available
 
 
 @dataclass
@@ -22,7 +21,7 @@ class ExportRow:
     name: str
     profile_field: str
     page_slugs: str
-    page: str | None
+    time: int | None
     unit: str | None
     before_or_after: str | None
     contact_field: str | None
@@ -44,7 +43,7 @@ class ExportRow:
 class OrderedSetExporter:
     rows: list[ExportRow]
 
-    def __init__(self, queryset: PageQuerySet):
+    def __init__(self, queryset: QuerySet):
         self.queryset = queryset
         self.rows = []
 
@@ -54,21 +53,11 @@ class OrderedSetExporter:
                 name=item.name,
                 profile_field=item.profile_field,
                 page_slugs=item.page_slugs,
-                page=item.page,
+                time=item.time,
                 unit=item.unit,
                 before_or_after=str(item.before_or_after),
                 contact_field=item.contact_field,
             )
-
-
-def serialize_list(items: Iterable[str]) -> str:
-    """
-    Uses CSV formatting to seralize a list of strings, handling escaping
-    """
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(items)
-    return output.getvalue().rstrip("\r\n")
 
 
 class OrderedSetsExportWriter:
@@ -104,29 +93,13 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
 
     # Set columns based on best size
     column_widths_in_pts = {
-        "title": 110,
-        "question_type": 110,
-        "tags": 110,
-        "slug": 110,
-        "version": 90,
-        "locale": 50,
-        "high_result_page": 110,
-        "high_inflection": 110,
-        "medium_result_page": 120,
-        "medium_inflection": 110,
-        "low_result_page": 110,
-        "skip_threshold": 110,
-        "skip_high_result_page": 110,
-        "generic_error": 370,
-        "question": 370,
-        "explainer": 370,
-        "error": 370,
-        "min": 110,
-        "max": 110,
-        "answers": 370,
-        "scores": 110,
-        "answer_semantic_ids": 110,
-        "question_semantic_id": 110,
+        "name": 130,
+        "profile_field": 110,
+        "page_slugs": 100,
+        "time": 100,
+        "unit": 110,
+        "before_or_after": 120,
+        "contact_field": 100,
     }
     for column in sheet.iter_cols(max_row=1):
         [cell] = column
@@ -134,13 +107,6 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         sheet.column_dimensions[get_column_letter(cell.col_idx)].width = ceil(
             width / adjustment
         )
-
-    # Freeze heading row and side panel, 1 added because it freezes before the column
-    panel_column = get_column_letter(5)
-    sheet.freeze_panes = sheet[f"{panel_column}2"]
-
-    # Borders
-    left_border = Border(left=Side(border_style="thin", color="FF000000"))
 
     # Named Styles
     header_style = NamedStyle(name="header_style")
@@ -155,10 +121,6 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
     for row in sheet["1:2"]:
         for cell in row:
             cell.style = header_style
-
-    # Set dividing border for side panel
-    for cell in sheet[f"{panel_column}:{panel_column}"]:
-        cell.border = left_border
 
     # set font on all cells initially to 10pt and row height
     general_font = Font(size=10)
