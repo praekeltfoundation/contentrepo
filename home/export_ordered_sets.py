@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from dataclasses import asdict, astuple, dataclass, fields
 from math import ceil
 
-from django.http import HttpResponse  # type: ignore 
+from django.http import HttpResponse  # type: ignore
 from openpyxl.styles import Font, NamedStyle
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
