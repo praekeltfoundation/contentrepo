@@ -505,6 +505,42 @@ class TestContentPageAPI:
             "has_children": False,
         }
 
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
+    def test_detail_view_meta(self, uclient, platform):
+        """
+        Fetching the detail view of a page returns the page metadata.
+        """
+        page = self.create_content_page(tags=["self_help"], body_type=platform)
+        response = uclient.get(f"/api/v2/pages/{page.id}/")
+        content = response.json()
+
+        # There's a lot of metadata, so only check selected fields.
+        meta = content.pop("meta")
+        parent = page.get_parent()
+
+        assert meta == {
+            "type": "home.ContentPage",
+            "detail_url": f"http://localhost/api/v2/pages/{page.id}/",
+            "html_url": page.get_full_url(),
+            "slug": page.slug,
+            "show_in_menus": "false",
+            "seo_title": page.seo_title,
+            "search_description": page.search_description,
+            "first_published_at": page.first_published_at.strftime(
+                "%Y-%m-%dT%H:%M:%S.%fZ"
+            ),
+            "alias_of": page.alias_of,
+            "parent": {
+                "id": parent.id,
+                "meta": {
+                    "type": "home.ContentPageIndex",
+                    "html_url": parent.get_full_url(),
+                },
+                "title": parent.title,
+            },
+            "locale": "en",
+        }
+
     def test_detail_view_increments_count(self, uclient):
         """
         Fetching the detail view of a page increments the view count.
