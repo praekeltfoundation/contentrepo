@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Removed
 - Removed word embeddings search (`s` query parameter in API)
+### Fixed
+- API: Fix detail URL in Pages API
 -->
 
 ## v1.2.1
