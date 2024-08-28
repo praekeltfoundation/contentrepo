@@ -125,18 +125,13 @@ def csv2dicts(csv_bytes: bytes) -> ExpDicts:
 
 
 def xlsx2dicts(xlsx_bytes: bytes) -> ExpDicts:
-    # Load the Excel file from bytes
-    excel_file = BytesIO(xlsx_bytes)
-    workbook = load_workbook(excel_file)
 
-    # Assume the data is in the first sheet
-    sheet = workbook.active
+    workbook = load_workbook(BytesIO(xlsx_bytes))
+    worksheet = get_active_sheet(workbook)
+    header = next(worksheet.iter_rows(max_row=1, values_only=True))
+    headers = [str(cell) if cell is not None else "" for cell in header]
 
-    # Get the headers from the first row
-    headers = [cell.value for cell in sheet[1]]
-
-    # Iterate over the remaining rows and convert each row to a dictionary
-    for row in sheet.iter_rows(min_row=2, values_only=True):
+    for row in worksheet.iter_rows(values_only=True):  # type: ignore
         yield {headers[i]: row[i] for i in range(len(headers))}
 
 
