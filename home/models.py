@@ -1321,9 +1321,6 @@ class AssessmentTag(TaggedItemBase):
     )
 
 
-from home.serializers import ContentPageSerializer  # noqa: E402, I001
-
-
 class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel):
     title = models.CharField(max_length=255)
     slug = models.SlugField(
@@ -1419,13 +1416,13 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
         APIField("title"),
         APIField("slug"),
         APIField("version"),
-        APIField("high_result_page", serializer=ContentPageSerializer()),  # noqa: F821
+        APIField("high_result_page"),  # noqa: F821
         APIField("high_inflection"),
-        APIField("medium_result_page", serializer=ContentPageSerializer()),
+        APIField("medium_result_page"),
         APIField("medium_inflection"),
-        APIField("low_result_page", serializer=ContentPageSerializer()),
+        APIField("low_result_page"),
         APIField("skip_threshold"),
-        APIField("skip_high_result_page", serializer=ContentPageSerializer()),
+        APIField("skip_high_result_page"),
         APIField("generic_error"),
         APIField("questions"),
     ]

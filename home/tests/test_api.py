@@ -491,6 +491,7 @@ class TestContentPageAPI:
         assert meta["slug"] == page.slug
         assert meta["parent"]["id"] == page.get_parent().id
         assert meta["locale"] == "en"
+        assert meta["detail_url"] == f"http://localhost/api/v2/pages/{page.id}/"
 
         assert content == {
             "id": page.id,
@@ -540,6 +541,7 @@ class TestContentPageAPI:
         assert meta["slug"] == page.slug
         assert meta["parent"]["id"] == page.get_parent().id
         assert meta["locale"] == "en"
+        assert meta["detail_url"] == f"http://localhost/api/v2/pages/{page.id}/"
 
         assert content["has_children"] is True
 
@@ -559,6 +561,7 @@ class TestContentPageAPI:
         assert meta["slug"] == page.slug
         assert meta["parent"]["id"] == page.get_parent().id
         assert meta["locale"] == "en"
+        assert meta["detail_url"] == f"http://localhost/api/v2/pages/{page.id}/"
 
         assert content["id"] == page.id
         assert content["title"] == "default page"
@@ -605,6 +608,7 @@ class TestContentPageAPI:
         assert meta["slug"] == page.slug
         assert meta["parent"]["id"] == page.get_parent().id
         assert meta["locale"] == "en"
+        assert meta["detail_url"] == f"http://localhost/api/v2/pages/{page.id}/"
 
         assert content["id"] == page.id
         assert content["title"] == "default page"
@@ -1499,6 +1503,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.high_result_page.slug
         assert meta["parent"]["id"] == self.high_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.high_result_page.id}/"
+        )
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -1517,6 +1525,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.medium_result_page.slug
         assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.medium_result_page.id}/"
+        )
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1535,6 +1547,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.low_result_page.slug
         assert meta["parent"]["id"] == self.low_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.low_result_page.id}/"
+        )
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -1552,6 +1568,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.skip_high_result_page.slug
         assert meta["parent"]["id"] == self.skip_high_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.skip_high_result_page.id}/"
+        )
         assert content["results"][0]["skip_high_result_page"] == {
             "id": self.skip_high_result_page.id,
             "title": self.skip_high_result_page.title,
@@ -1655,6 +1675,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.high_result_page.slug
         assert meta["parent"]["id"] == self.high_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.high_result_page.id}/"
+        )
         assert content["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -1673,6 +1697,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.medium_result_page.slug
         assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.medium_result_page.id}/"
+        )
         assert content["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1691,6 +1719,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.low_result_page.slug
         assert meta["parent"]["id"] == self.low_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.low_result_page.id}/"
+        )
         assert content["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -1723,6 +1755,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.high_result_page.slug
         assert meta["parent"]["id"] == self.high_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.high_result_page.id}/"
+        )
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -1741,6 +1777,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.medium_result_page.slug
         assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.medium_result_page.id}/"
+        )
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1759,6 +1799,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.low_result_page.slug
         assert meta["parent"]["id"] == self.low_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.low_result_page.id}/"
+        )
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -1804,6 +1848,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.high_result_page.slug
         assert meta["parent"]["id"] == self.high_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.high_result_page.id}/"
+        )
         assert content["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -1822,6 +1870,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.medium_result_page.slug
         assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.medium_result_page.id}/"
+        )
         assert content["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1840,6 +1892,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.low_result_page.slug
         assert meta["parent"]["id"] == self.low_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.low_result_page.id}/"
+        )
         assert content["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -1852,18 +1908,17 @@ class TestAssessmentAPI:
             "triggers": [],
         }
 
-    # TODO: Add this test in once we've merged with main - there's some code in there that makes following the redirect work
-    # def test_assessment_detail_endpoint_without_drafts(self, uclient, settings):
-    #     """
-    #     Unpublished assessments are not returned if the qa param is not set.
-    #     """
-    #     settings.STATIC_ROOT = Path("home/tests/test_static")
-    #     self.assessment.unpublish()
-    #     url = f"/api/v2/assessment/{self.assessment.id}"
+    def test_assessment_detail_endpoint_without_drafts(self, uclient, settings):
+        """
+        Unpublished assessments are not returned if the qa param is not set.
+        """
+        settings.STATIC_ROOT = Path("home/tests/test_static")
+        self.assessment.unpublish()
+        url = f"/api/v2/assessment/{self.assessment.id}"
 
-    #     response = uclient.get(url, follow=True)
+        response = uclient.get(url, follow=True)
 
-    #     assert response.status_code == 404
+        assert response.status_code == 404
 
     def test_assessment_new_draft(self, uclient):
         """
@@ -1906,6 +1961,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.high_result_page.slug
         assert meta["parent"]["id"] == self.high_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.high_result_page.id}/"
+        )
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -1924,6 +1983,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.medium_result_page.slug
         assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.medium_result_page.id}/"
+        )
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1942,6 +2005,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.low_result_page.slug
         assert meta["parent"]["id"] == self.low_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.low_result_page.id}/"
+        )
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -1963,6 +2030,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == high_result_page.slug
         assert meta["parent"]["id"] == high_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{high_result_page.id}/"
+        )
         assert content["results"][0]["high_result_page"] == {
             "id": high_result_page.id,
             "title": high_result_page.title,
@@ -1981,6 +2052,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.medium_result_page.slug
         assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.medium_result_page.id}/"
+        )
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -1999,6 +2074,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.low_result_page.slug
         assert meta["parent"]["id"] == self.low_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.low_result_page.id}/"
+        )
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -2022,6 +2101,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.high_result_page.slug
         assert meta["parent"]["id"] == self.high_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.high_result_page.id}/"
+        )
         assert content["results"][0]["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -2040,6 +2123,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.medium_result_page.slug
         assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.medium_result_page.id}/"
+        )
         assert content["results"][0]["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -2058,6 +2145,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.low_result_page.slug
         assert meta["parent"]["id"] == self.low_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.low_result_page.id}/"
+        )
         assert content["results"][0]["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,
@@ -2084,6 +2175,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.high_result_page.slug
         assert meta["parent"]["id"] == self.high_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.high_result_page.id}/"
+        )
         assert content["high_result_page"] == {
             "id": self.high_result_page.id,
             "title": self.high_result_page.title,
@@ -2102,6 +2197,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.medium_result_page.slug
         assert meta["parent"]["id"] == self.medium_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.medium_result_page.id}/"
+        )
         assert content["medium_result_page"] == {
             "id": self.medium_result_page.id,
             "title": self.medium_result_page.title,
@@ -2120,6 +2219,10 @@ class TestAssessmentAPI:
         assert meta["slug"] == self.low_result_page.slug
         assert meta["parent"]["id"] == self.low_result_page.get_parent().id
         assert meta["locale"] == "en"
+        assert (
+            meta["detail_url"]
+            == f"http://localhost/api/v2/pages/{self.low_result_page.id}/"
+        )
         assert content["low_result_page"] == {
             "id": self.low_result_page.id,
             "title": self.low_result_page.title,

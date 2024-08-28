@@ -2,7 +2,12 @@ from collections import OrderedDict
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from wagtail.api.v2.serializers import BaseSerializer, PageLocaleField, PageSerializer
+from wagtail.api.v2.serializers import (
+    BaseSerializer,
+    PageLocaleField,
+    PageSerializer,
+)
+from wagtail.api.v2.utils import get_object_detail_url
 
 from home.models import ContentPage, ContentPageRating, PageView
 
@@ -340,16 +345,12 @@ class ContentPageSerializer(PageSerializer):
     has_children = HasChildrenField(read_only=True)
     related_pages = RelatedPagesField(read_only=True)
 
-    class Meta:
-        model = ContentPage
-        fields = "__all__"
-        read_only_fields = ("id", "timestamp")
-
     def to_representation(self, page):
         request = self.context["request"]
+        router = self.context["router"]
         return {
             "id": page.id,
-            "meta": metadata_field_representation(page, request),
+            "meta": metadata_field_representation(page, request, router),
             "title": title_field_representation(page, request),
             "subtitle": subtitle_field_representation(page),
             "body": body_field_representation(page, request),
@@ -361,9 +362,10 @@ class ContentPageSerializer(PageSerializer):
         }
 
 
-def metadata_field_representation(page, request):
+def metadata_field_representation(page, request, router):
     parent = {}
     page_parent = page.get_parent()
+    detail_url = get_object_detail_url(router, request, type(page), page.pk)
     if page_parent:
         parent = {
             "id": page_parent.id,
@@ -379,7 +381,7 @@ def metadata_field_representation(page, request):
         "type": page.cached_content_type.app_label
         + "."
         + page.cached_content_type.model_class()._meta.object_name,
-        "detail_url": request.build_absolute_uri(),
+        "detail_url": detail_url,
         "html_url": page.get_full_url(),
         "slug": page.slug,
         "show_in_menus": "true" if page.show_in_menus else "false",
