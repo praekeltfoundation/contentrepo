@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated certifi from 2024.2.2 to 2024.7.4
 - Updated django from 4.2.11 to 4.2.15
 - Updated sqlparse from 0.4.4 to 0.5.0
+- Updated djangorestframework from 3.15.1 to 3.15.2
 -->
 
 ## v1.2.1
