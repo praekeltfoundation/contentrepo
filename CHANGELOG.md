@@ -9,8 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Removed
 - Removed word embeddings search (`s` query parameter in API)
+
 ### Fixed
 - API: Fix detail URL in Pages API
+
+### Security
+- Updated sentry-sdk from 1.44.1 to 2.8.0
+- Updated wagtail from 5.2.4 to 5.2.6
+- Updated certifi from 2024.2.2 to 2024.7.4
+- Updated django from 4.2.11 to 4.2.15
+- Updated sqlparse from 0.4.4 to 0.5.0
+- Updated djangorestframework from 3.15.1 to 3.15.2
+- Updated urllib3 from 2.2.1 to 2.2.2
+- Updated requests from 2.31.0 to 2.32.2
+- Updated idna from 3.6 to 3.7
 -->
 
 ## v1.2.1

@@ -124,6 +124,17 @@ def csv2dicts(csv_bytes: bytes) -> ExpDicts:
     return list(csv.DictReader(StringIO(csv_bytes.decode())))
 
 
+def xlsx2dicts(xlsx_bytes: bytes) -> ExpDicts:
+
+    workbook = load_workbook(BytesIO(xlsx_bytes))
+    worksheet = get_active_sheet(workbook)
+    header = next(worksheet.iter_rows(max_row=1, values_only=True))
+    headers = [str(cell) if cell is not None else "" for cell in header]
+
+    for row in worksheet.iter_rows(values_only=True):  # type: ignore
+        yield {headers[i]: row[i] for i in range(len(headers))}
+
+
 DbDict = dict[str, Any]
 DbDicts = Iterable[DbDict]
 
@@ -133,11 +144,14 @@ def _models2dicts(model_instances: Any) -> DbDicts:
 
 
 def get_page_json() -> DbDicts:
-    page_objs = Page.objects.type(ContentPage, ContentPageIndex).all()
+    page_objs = Page.objects.type(
+        ContentPage, ContentPageIndex, OrderedContentSet
+    ).all()
     pages = {p["pk"]: p["fields"] for p in _models2dicts(page_objs)}
     content_pages = [
         *_models2dicts(ContentPage.objects.all()),
         *_models2dicts(ContentPageIndex.objects.all()),
+        *_models2dicts(OrderedContentSet.objects.all()),
     ]
     return [p | {"fields": {**pages[p["pk"]], **p["fields"]}} for p in content_pages]
 
@@ -427,6 +441,16 @@ class ImportExport:
             print("-^-CONTENT-^-")
         return content
 
+    def export_ordered_content(self) -> bytes:
+        """
+        Export ordered content in the configured format.
+        """
+        url = f"/admin/snippets/home/orderedcontentset/?export={self.format}"
+
+        stream = self.admin_client.get(url)
+        content = b"".join(stream.streaming_content)
+        return content
+
     def import_content(self, content_bytes: bytes, **kw: Any) -> None:
         """
         Import given content in the configured format with the configured importer.
@@ -447,6 +471,16 @@ class ImportExport:
         """
         content = self.read_bytes(path_str, path_base)
         self.import_content(content, **kw)
+        return content
+
+    def import_ordered_file(
+        self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE, **kw: Any
+    ) -> bytes:
+        """
+        Import given ordered content file in the configured format with the configured importer.
+        """
+        content = self.read_bytes(path_str, path_base)
+        self.import_ordered_sets(content, **kw)
         return content
 
     def export_reimport(self) -> None:
@@ -471,6 +505,11 @@ class ImportExport:
     def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
         src = csv2dicts(src_bytes)
         dst = csv2dicts(dst_bytes)
+        return filter_exports(src, dst)
+
+    def xlsxs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
+        src = xlsx2dicts(src_bytes)
+        dst = xlsx2dicts(dst_bytes)
         return filter_exports(src, dst)
 
 
@@ -1302,6 +1341,34 @@ class TestExport:
     NOTE: This is not a Django (or even unittest) TestCase. It's just a
         container for related tests.
     """
+
+    def test_ordered_content_set_export(self, csv_impexp: ImportExport) -> None:
+        """
+        Ordered Content Sets should export all pages correctly
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        imported_content = csv_impexp.import_ordered_file("ordered_content.csv")
+
+        exported_content = csv_impexp.export_ordered_content()
+
+        src, dst = csv_impexp.csvs2dicts(imported_content, exported_content)
+        assert src == dst
+
+    def test_ordered_content_XLSX_export(
+        self, xlsx_impexp: ImportExport, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Ordered Content Sets should export in XLSX format correctly
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        imported_content = xlsx_impexp.import_ordered_file("ordered_content.xlsx")
+
+        exported_content = xlsx_impexp.export_ordered_content()
+
+        src, dst = csv_impexp.xlsxs2dicts(imported_content, exported_content)
+        assert src == dst
 
     def test_export_wa_with_image(self, impexp: ImportExport) -> None:
         img_path = Path("home/tests/test_static") / "test.jpeg"
