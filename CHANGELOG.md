@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Removed word embeddings search (`s` query parameter in API)
 
+### Fixed
+- API: Fix detail URL in Pages API
+
 ### Security
 - Updated sentry-sdk from 1.44.1 to 2.8.0
 - Updated wagtail from 5.2.4 to 5.2.6
