@@ -247,11 +247,12 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
     list_export = "name"
     list_display = (
         "name",
-        "category",
+        "get_category_display",
         "locale",
         "status",
-        "submission_status",
+        "get_submission_status_display",
     )
+
     list_filter = ("locale",)
 
     search_fields = (
