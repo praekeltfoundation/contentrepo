@@ -1656,8 +1656,7 @@ class WhatsAppTemplate(
             revision.content["submission_name"] = self.template_name
             revision.content["submission_status"] = self.SubmissionStatus.SUBMITTED
             revision.content["submission_result"] = (
-                # f"Success! Template ID = {response_json['id']}"
-                "Success! Template ID = some_id"
+                f"Success! Template ID = {response_json['id']}"
             )
         except TemplateSubmissionException as e:
             # The submission failed
