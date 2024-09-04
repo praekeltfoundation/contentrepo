@@ -1523,12 +1523,25 @@ class WhatsAppTemplate(
         SUBMITTED = "SUBMITTED", _("Submitted")
         FAILED = "FAILED", _("Failed")
 
+    def get_submission_status_display(self):
+        return self.SubmissionStatus(self.submission_status).label
+
+    get_submission_status_display.admin_order_field = "submission status"
+    get_submission_status_display.short_description = "Submission status"
+
     name = models.CharField(max_length=512, blank=True, default="")
     category = models.CharField(
         max_length=14,
         choices=Category.choices,
         default=Category.MARKETING,
     )
+
+    def get_category_display(self):
+        return self.Category(self.category).label
+
+    get_category_display.admin_order_field = "category"
+    get_category_display.short_description = "Category"
+
     quick_replies = ClusterTaggableManager(
         through="home.TemplateQuickReplyContent", blank=True
     )
@@ -1643,7 +1656,8 @@ class WhatsAppTemplate(
             revision.content["submission_name"] = self.template_name
             revision.content["submission_status"] = self.SubmissionStatus.SUBMITTED
             revision.content["submission_result"] = (
-                f"Success! Template ID = {response_json['id']}"
+                # f"Success! Template ID = {response_json['id']}"
+                "Success! Template ID = some_id"
             )
         except TemplateSubmissionException as e:
             # The submission failed
