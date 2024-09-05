@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated idna from 3.6 to 3.7
 -->
 
+## v1.2.2
+### Added
+- Standalone Whatsapp Templates: Fixed list display column titles and values
+
+
 ## v1.2.1
 ### Added
 - Forms: Add skip threshold and skip high result page
