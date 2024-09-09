@@ -331,7 +331,6 @@ class AssessmentAdmin(SnippetViewSet):
 modeladmin_register(ContentPageAdmin)
 register_snippet(AssessmentAdmin)
 register_snippet(OrderedContentSetViewSet)
-modeladmin_register(ContentPageAdmin)
 # Flag for turning on Standalone Whatsapp Templates, still in development
 if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
     register_snippet(WhatsAppTemplateAdmin)
