@@ -175,9 +175,7 @@ class AssessmentImporter:
             )
 
         answers = [
-            ShadowAnswerBlock(
-                answer=answer, score=score, answer_semantic_id=semantic_id
-            )
+            ShadowAnswerBlock(answer=answer, score=score, semantic_id=semantic_id)
             for (answer, score, semantic_id) in zip(
                 row.answers, row.scores, row.answer_semantic_ids, strict=False
             )
@@ -190,7 +188,7 @@ class AssessmentImporter:
             answers=answers,
             type=row.question_type,
             explainer=row.explainer,
-            question_semantic_id=row.question_semantic_id,
+            semantic_id=row.question_semantic_id,
         )
         assessment.questions.append(question)
 
@@ -202,7 +200,7 @@ class AssessmentImporter:
 class ShadowAnswerBlock:
     answer: str
     score: float
-    answer_semantic_id: str
+    semantic_id: str
 
 
 @dataclass(slots=True)
@@ -214,7 +212,7 @@ class ShadowQuestionBlock:
     min: str = ""
     max: str = ""
     type: str = ""
-    question_semantic_id: str = ""
+    semantic_id: str = ""
 
 
 @dataclass(slots=True)
@@ -311,7 +309,7 @@ class ShadowAssessment:
                 {
                     "answer": answer.answer,
                     "score": answer.score,
-                    "answer_semantic_id": answer.answer_semantic_id,
+                    "semantic_id": answer.semantic_id,
                 }
                 for answer in question.answers
             ]
@@ -325,7 +323,7 @@ class ShadowAssessment:
                         "error": question.error,
                         "min": question.min,
                         "max": question.max,
-                        "question_semantic_id": question.question_semantic_id,
+                        "semantic_id": question.semantic_id,
                     },
                 }
             )

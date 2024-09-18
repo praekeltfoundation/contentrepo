@@ -91,7 +91,7 @@ def validate_using_form(edit_handler: Any, model: Model, row_num: int) -> None:
             errors = []
             error_message = errors_to_list(errs)
             for err in error_message:
-                errors.append(f"Validation error at row {row_num}: {err}")
+                errors.append(f"Validation error: {err}")
             raise ImportException(errors, row_num)
 
 

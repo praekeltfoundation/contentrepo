@@ -70,7 +70,7 @@ class AssessmentExporter:
                 answers = [a["answer"] for a in question.value.get("answers", [])]
                 scores = [a["score"] for a in question.value.get("answers", [])]
                 answer_semantic_ids = [
-                    a["answer_semantic_id"] for a in question.value.get("answers", [])
+                    a["semantic_id"] for a in question.value.get("answers", [])
                 ]
                 yield ExportRow(
                     title=item.title,
@@ -99,7 +99,7 @@ class AssessmentExporter:
                     answers=serialize_list(answers),
                     scores=serialize_list(scores),
                     answer_semantic_ids=serialize_list(answer_semantic_ids),
-                    question_semantic_id=question.value.get("question_semantic_id"),
+                    question_semantic_id=question.value.get("semantic_id"),
                 )
 
 

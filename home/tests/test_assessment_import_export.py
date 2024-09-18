@@ -394,12 +394,12 @@ class TestImportExportRoundtrip:
                     "value": {
                         "question": "test question",
                         "error": "test error",
-                        "question_semantic_id": "unique_id",
+                        "semantic_id": "unique_id",
                         "answers": [
                             {
                                 "answer": "test answer",
                                 "score": 2.0,
-                                "answer_semantic_id": "unique_id",
+                                "semantic_id": "unique_id",
                             }
                         ],
                     },
