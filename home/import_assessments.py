@@ -10,7 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: 
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
-from wagtail.admin.panels import get_edit_handler
+from wagtail.admin.panels import get_edit_handler  # type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 

@@ -3,16 +3,19 @@ from collections.abc import Iterator
 from typing import Any
 
 from django.core.exceptions import ValidationError  # type: ignore
-from django.forms import model_to_dict
-from wagtail.admin.rich_text.converters.contentstate import ContentstateConverter
+from django.db.models import Model  # type: ignore
+from django.forms import model_to_dict  # type: ignore
+from wagtail.admin.rich_text.converters.contentstate import (
+    ContentstateConverter,  # type: ignore
+)
 from wagtail.blocks import (  # type: ignore
     StreamBlockValidationError,
     StreamValue,
     StructValue,  # type: ignore
 )
-from wagtail.blocks.list_block import ListValue
-from wagtail.models import Locale
-from wagtail.rich_text import RichText
+from wagtail.blocks.list_block import ListValue  # type: ignore
+from wagtail.models import Locale  # type: ignore
+from wagtail.rich_text import RichText  # type: ignore
 from wagtail.test.utils.form_data import nested_form_data, streamfield  # type: ignore
 
 
@@ -69,7 +72,7 @@ def wagtail_to_formdata(val: Any) -> Any:
             return val
 
 
-def validate_using_form(edit_handler, model, row_num):
+def validate_using_form(edit_handler: Any, model: Model, row_num: int) -> None:
     form_class = edit_handler.get_form_class()
 
     form_data = nested_form_data(
@@ -123,7 +126,7 @@ def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
     elif isinstance(errors, StreamBlockValidationError):
         json_data_errors = errors.as_json_data()
         error_messages = []
-        error_message = "An unknown error occurred"
+        error_message = ["An unknown error occurred"]
         if isinstance(json_data_errors["blockErrors"], dict):
             error_level = list(json_data_errors["blockErrors"].keys())[0]
 
