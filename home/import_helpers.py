@@ -5,7 +5,7 @@ from typing import Any
 from django.core.exceptions import ValidationError  # type: ignore
 from django.db.models import Model  # type: ignore
 from django.forms import model_to_dict  # type: ignore
-from wagtail.admin.rich_text.converters.contentstate import (
+from wagtail.admin.rich_text.converters.contentstate import (  # type: ignore
     ContentstateConverter,  # type: ignore
 )
 from wagtail.blocks import (  # type: ignore
