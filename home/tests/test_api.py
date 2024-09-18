@@ -1423,8 +1423,8 @@ class TestAssessmentAPI:
         answers_block = blocks.ListBlock(AnswerBlock())
         answers_block_value = answers_block.to_python(
             [
-                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
-                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
+                {"answer": "Crunchie", "score": "5", "answer_semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "answer_semantic_id": "flake"},
             ]
         )
         categorical_question_block = CategoricalQuestionBlock()
@@ -1433,7 +1433,7 @@ class TestAssessmentAPI:
                 "question": "What is the best chocolate?",
                 "error": "Invalid answer",
                 "answers": answers_block_value,
-                "semantic_id": "best_chocolate",
+                "question_semantic_id": "best_chocolate",
             }
         )
         self.assessment.questions.append(
@@ -1448,7 +1448,7 @@ class TestAssessmentAPI:
                 "question": "How old are you?",
                 "error": "Invalid answer",
                 "answers": None,
-                "semantic_id": "age",
+                "question_semantic_id": "age",
             }
         )
         self.assessment.questions.append(
@@ -1463,7 +1463,7 @@ class TestAssessmentAPI:
                 "question": "Which chocolates are yummy?",
                 "error": "Invalid answer",
                 "answers": answers_block_value,
-                "semantic_id": "yummy_chocolates",
+                "question_semantic_id": "yummy_chocolates",
             }
         )
         self.assessment.questions.append(
@@ -1477,7 +1477,7 @@ class TestAssessmentAPI:
             {
                 "question": "How useful is this information?",
                 "answers": None,
-                "semantic_id": "usefulness",
+                "question_semantic_id": "usefulness",
             }
         )
         self.assessment.questions.append(
@@ -1494,7 +1494,7 @@ class TestAssessmentAPI:
                 "min": 40,
                 "max": 500,
                 "answers": None,
-                "semantic_id": "weight",
+                "question_semantic_id": "weight",
             }
         )
         self.assessment.questions.append(
@@ -1510,7 +1510,7 @@ class TestAssessmentAPI:
                 "error": "You entered an invalid year of birth",
                 "explainer": "We need to know some things",
                 "answers": None,
-                "semantic_id": "year_of_birth",
+                "question_semantic_id": "year_of_birth",
             }
         )
         self.assessment.questions.append(
@@ -1630,10 +1630,10 @@ class TestAssessmentAPI:
             "min": None,
             "max": None,
             "answers": [
-                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
-                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
+                {"answer": "Crunchie", "score": "5", "answer_semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "answer_semantic_id": "flake"},
             ],
-            "semantic_id": "best_chocolate",
+            "question_semantic_id": "best_chocolate",
         }
         assert content["results"][0]["questions"][1] == {
             "id": self.assessment.questions[1].id,
@@ -1644,7 +1644,7 @@ class TestAssessmentAPI:
             "min": None,
             "max": None,
             "answers": [],
-            "semantic_id": "age",
+            "question_semantic_id": "age",
         }
         assert content["results"][0]["questions"][2] == {
             "id": self.assessment.questions[2].id,
@@ -1655,10 +1655,10 @@ class TestAssessmentAPI:
             "min": None,
             "max": None,
             "answers": [
-                {"answer": "Crunchie", "score": "5", "semantic_id": "crunchie"},
-                {"answer": "Flake", "score": "3", "semantic_id": "flake"},
+                {"answer": "Crunchie", "score": "5", "answer_semantic_id": "crunchie"},
+                {"answer": "Flake", "score": "3", "answer_semantic_id": "flake"},
             ],
-            "semantic_id": "yummy_chocolates",
+            "question_semantic_id": "yummy_chocolates",
         }
         assert content["results"][0]["questions"][3] == {
             "id": self.assessment.questions[3].id,
@@ -1669,7 +1669,7 @@ class TestAssessmentAPI:
             "min": None,
             "max": None,
             "answers": [],
-            "semantic_id": "usefulness",
+            "question_semantic_id": "usefulness",
         }
         assert content["results"][0]["questions"][4] == {
             "id": self.assessment.questions[4].id,
@@ -1680,7 +1680,7 @@ class TestAssessmentAPI:
             "min": 40,
             "max": 500,
             "answers": [],
-            "semantic_id": "weight",
+            "question_semantic_id": "weight",
         }
         assert content["results"][0]["questions"][5] == {
             "id": self.assessment.questions[5].id,
@@ -1691,7 +1691,7 @@ class TestAssessmentAPI:
             "min": None,
             "max": None,
             "answers": [],
-            "semantic_id": "year_of_birth",
+            "question_semantic_id": "year_of_birth",
         }
 
     def test_assessment_detail_endpoint(self, uclient):

@@ -10,9 +10,11 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: 
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
+from wagtail.admin.panels import get_edit_handler
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 
+from home.import_helpers import ImportException, validate_using_form
 from home.models import Assessment, ContentPage, HomePage  # type: ignore
 
 AssessmentId = tuple[str, Locale]
@@ -173,7 +175,9 @@ class AssessmentImporter:
             )
 
         answers = [
-            ShadowAnswerBlock(answer=answer, score=score, semantic_id=semantic_id)
+            ShadowAnswerBlock(
+                answer=answer, score=score, answer_semantic_id=semantic_id
+            )
             for (answer, score, semantic_id) in zip(
                 row.answers, row.scores, row.answer_semantic_ids, strict=False
             )
@@ -186,7 +190,7 @@ class AssessmentImporter:
             answers=answers,
             type=row.question_type,
             explainer=row.explainer,
-            semantic_id=row.question_semantic_id,
+            question_semantic_id=row.question_semantic_id,
         )
         assessment.questions.append(question)
 
@@ -198,7 +202,7 @@ class AssessmentImporter:
 class ShadowAnswerBlock:
     answer: str
     score: float
-    semantic_id: str
+    answer_semantic_id: str
 
 
 @dataclass(slots=True)
@@ -210,7 +214,7 @@ class ShadowQuestionBlock:
     min: str = ""
     max: str = ""
     type: str = ""
-    semantic_id: str = ""
+    question_semantic_id: str = ""
 
 
 @dataclass(slots=True)
@@ -231,19 +235,33 @@ class ShadowAssessment:
     questions: list[ShadowQuestionBlock] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
 
+    # FIXME: collect errors across all fields
+    def validate_snippet_using_form(self, model: Assessment) -> None:
+
+        edit_handler = get_edit_handler(Assessment)
+        validate_using_form(edit_handler, model, self.row_num)
+
     def save(self, parent: Page) -> None:
         try:
             assessment = Assessment.objects.get(slug=self.slug, locale=self.locale)
         except Assessment.DoesNotExist:
             assessment = Assessment(slug=self.slug, locale=self.locale)
-        self.add_field_values_to_assessment(assessment)
-        self.add_tags_to_assessment(assessment)
+
         try:
+            self.add_field_values_to_assessment(assessment)
+            self.add_tags_to_assessment(assessment)
+            self.validate_snippet_using_form(assessment)
             with contextlib.suppress(NodeAlreadySaved):
                 parent.add_child(instance=assessment)
             assessment.save_revision().publish()
         except ValidationError as err:
             raise ImportAssessmentException(f"Validation error: {err}", self.row_num)
+        except ImportException as e:
+            e.row_num = self.row_num
+            e.slug = assessment.slug
+            e.locale = assessment.locale
+            print(f"{e.row_num}: {e.message}")
+            raise e
 
     def add_field_values_to_assessment(self, assessment: Assessment) -> None:
         assessment.slug = self.slug
@@ -293,7 +311,7 @@ class ShadowAssessment:
                 {
                     "answer": answer.answer,
                     "score": answer.score,
-                    "semantic_id": answer.semantic_id,
+                    "answer_semantic_id": answer.answer_semantic_id,
                 }
                 for answer in question.answers
             ]
@@ -307,7 +325,7 @@ class ShadowAssessment:
                         "error": question.error,
                         "min": question.min,
                         "max": question.max,
-                        "semantic_id": question.semantic_id,
+                        "question_semantic_id": question.question_semantic_id,
                     },
                 }
             )
