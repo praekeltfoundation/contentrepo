@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - API: Fix detail URL in Pages API
+- Forms: Added model import validation so that required fields are flagged on import
 
 ### Security
 - Updated sentry-sdk from 1.44.1 to 2.8.0
