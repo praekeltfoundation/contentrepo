@@ -32,7 +32,7 @@ from .assessment_import_export import import_assessment
 from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
 from .import_assessments import ImportAssessmentException
-from .import_content_pages import ImportException
+from .import_helpers import ImportException
 from .mixins import (
     SpreadsheetExportMixin,
     SpreadsheetExportMixinAssessment,
@@ -213,6 +213,16 @@ class AssessmentUploadThread(UploadThread):
                 (
                     messages.ERROR,
                     f"Assessment import failed: {e.message}",
+                )
+            )
+        except ImportException as e:
+            self.result_queue.put(
+                (
+                    messages.ERROR,
+                    [
+                        f"Assessment import failed on row {e.row_num}: {msg}"
+                        for msg in e.message
+                    ],
                 )
             )
         except Exception:

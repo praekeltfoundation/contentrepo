@@ -10,9 +10,11 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: 
 from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
+from wagtail.admin.panels import get_edit_handler  # type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 
+from home.import_helpers import ImportException, validate_using_form
 from home.models import Assessment, ContentPage, HomePage  # type: ignore
 
 AssessmentId = tuple[str, Locale]
@@ -231,19 +233,33 @@ class ShadowAssessment:
     questions: list[ShadowQuestionBlock] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
 
+    # FIXME: collect errors across all fields
+    def validate_snippet_using_form(self, model: Assessment) -> None:
+
+        edit_handler = get_edit_handler(Assessment)
+        validate_using_form(edit_handler, model, self.row_num)
+
     def save(self, parent: Page) -> None:
         try:
             assessment = Assessment.objects.get(slug=self.slug, locale=self.locale)
         except Assessment.DoesNotExist:
             assessment = Assessment(slug=self.slug, locale=self.locale)
-        self.add_field_values_to_assessment(assessment)
-        self.add_tags_to_assessment(assessment)
+
         try:
+            self.add_field_values_to_assessment(assessment)
+            self.add_tags_to_assessment(assessment)
+            self.validate_snippet_using_form(assessment)
             with contextlib.suppress(NodeAlreadySaved):
                 parent.add_child(instance=assessment)
             assessment.save_revision().publish()
         except ValidationError as err:
             raise ImportAssessmentException(f"Validation error: {err}", self.row_num)
+        except ImportException as e:
+            e.row_num = self.row_num
+            e.slug = assessment.slug
+            e.locale = assessment.locale
+            print(f"{e.row_num}: {e.message}")
+            raise e
 
     def add_field_values_to_assessment(self, assessment: Assessment) -> None:
         assessment.slug = self.slug

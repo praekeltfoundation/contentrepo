@@ -21,7 +21,7 @@ from wagtail.models import Locale, Page  # type: ignore
 from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content, import_ordered_sets
-from home.import_content_pages import ImportException
+from home.import_helpers import ImportException
 from home.models import (
     ContentPage,
     ContentPageIndex,

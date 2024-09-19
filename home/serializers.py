@@ -543,6 +543,7 @@ class QuestionField(serializers.Field):
         "id": "f8f4c0d8-5e5e-4b5e-9b5e-5e5e8f4c0d8",
         "question_type": "categorical_question",
         "question": "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
+        "semantic_id": "wood-woodchuck"
         "explainer": None,
         "error": "Unknown answer given",
         "min": 100,

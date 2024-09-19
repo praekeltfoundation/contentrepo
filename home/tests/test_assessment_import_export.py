@@ -394,6 +394,7 @@ class TestImportExportRoundtrip:
                     "value": {
                         "question": "test question",
                         "error": "test error",
+                        "semantic_id": "unique_id",
                         "answers": [
                             {
                                 "answer": "test answer",
