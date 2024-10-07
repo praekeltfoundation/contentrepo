@@ -106,7 +106,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
             queryset = queryset.filter(enable_viber=True)
 
         tag = self.request.query_params.get("tag")
-        if tag is not None:
+        if tag:
             ids = []
             for t in ContentPageTag.objects.filter(tag__name__iexact=tag):
                 ids.append(t.content_object_id)
