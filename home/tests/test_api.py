@@ -274,6 +274,11 @@ class TestContentPageAPI:
         content = json.loads(response.content)
         assert content["count"] == 2
 
+        # it should return all pages for no tag, excluding home pages and index pages
+        response = uclient.get("/api/v2/pages/?tag=")
+        content = json.loads(response.content)
+        assert content["count"] == 3
+
     def test_platform_filtering(self, uclient):
         """
         If a platform filter is provided, only pages with content for that
