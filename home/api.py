@@ -199,6 +199,7 @@ class AssessmentViewSet(BaseAPIViewSet):
         [
             "tag",
             "qa",
+            "page",
         ]
     )
     model = Assessment

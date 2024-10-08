@@ -1526,6 +1526,11 @@ class TestAssessmentAPI:
         )
         self.assessment.save()
 
+    def test_assessment_endpoint_with_page_keyword(self, uclient):
+        response = uclient.get("/api/v2/assessment/?page=1")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+
     def test_assessment_endpoint(self, uclient):
         response = uclient.get("/api/v2/assessment/")
         content = json.loads(response.content)
