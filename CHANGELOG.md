@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API: Fix detail URL in Pages API
 - Forms: Added model import validation so that required fields are flagged on import
 - API: Return all pages if tag keyword is specified without tags
+- API: Added page keyword to Assessments API
 
 ### Security
 - Updated sentry-sdk from 1.44.1 to 2.8.0
