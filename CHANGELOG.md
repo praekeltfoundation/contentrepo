@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Forms: Added model import validation so that required fields are flagged on import
 - API: Return all pages if tag keyword is specified without tags
 - API: Added page keyword to Assessments API
+- Ordered Content Sets: Import now allows for CSV values in time, unit, before or after, and contact field
 
 ### Security
 - Updated sentry-sdk from 1.44.1 to 2.8.0
