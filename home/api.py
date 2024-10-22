@@ -23,6 +23,8 @@ from .models import (  # isort:skip
     WhatsAppTemplate,
 )
 
+from django.db.models import Q
+
 
 class ContentPagesViewSet(PagesAPIViewSet):
     base_serializer_class = ContentPageSerializer
@@ -135,13 +137,18 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
         "profile_fields",
         "pages",
     ]
-    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["page", "qa"])
+    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(
+        ["page", "qa", "gender", "age", "relationship"]
+    )
     pagination_class = PageNumberPagination
     search_fields = ["name", "profile_fields"]
     filter_backends = (SearchFilter,)
 
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
+        gender = self.request.query_params.get("gender", "")
+        age = self.request.query_params.get("age", "")
+        relationship = self.request.query_params.get("relationship", "")
 
         if qa:
             # return the latest revision for each OrderedContentSet
@@ -155,8 +162,17 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
                     ocs.profile_fields = latest_revision.profile_fields
 
         else:
-            queryset = OrderedContentSet.objects.filter(live=True).order_by(
-                "last_published_at"
+            queryset = (
+                OrderedContentSet.objects.filter(
+                    (Q(profile_fields__type="gender") & Q(profile_fields__value=gender))
+                    | (Q(profile_fields__type="age") & Q(profile_fields__value=age))
+                    | (
+                        Q(profile_fields__type="relationship")
+                        & Q(profile_fields__value=relationship)
+                    )
+                )
+                .filter(live=True)
+                .order_by("last_published_at")
             )
         return queryset
 

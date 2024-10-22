@@ -1171,6 +1171,18 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
 
+    def test_orderedcontent_endpoint_filter_on_gender_profile_field(self, uclient):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        url = "/api/v2/orderedcontent/?gender=Male"
+        # it should return no content because there is no content matching this filter
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 0
+
     def test_orderedcontent_endpoint_without_drafts(self, uclient):
         """
         Unpublished ordered content sets are not returned if the qa param is not set.
