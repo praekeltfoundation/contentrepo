@@ -1185,6 +1185,21 @@ class TestImportExport:
             "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices.",
         ]
 
+    def test_import_ordered_content_sets_error(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a broken CSV for ordered content sets shoud throw an exception
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        with pytest.raises(ImportException) as e:
+            content = csv_impexp.read_bytes("ordered_content_broken.csv")
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.row_num == 0
+        assert e.value.message == [
+            "Row Test Set has 2 times, 2 units, 3 before_or_afters, 3 page_slugs and 3 contact_fields and they should all be equal."
+        ]
+
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with ordered content sets should not break
@@ -1197,12 +1212,27 @@ class TestImportExport:
 
         assert ordered_set.name == "Test Set"
         pages = unwagtail(ordered_set.pages)
-        assert len(pages) == 1
+        assert len(pages) == 3
+
         page = pages[0][1]
         assert page["contentpage"].slug == "first_time_user"
         assert page["time"] == "2"
         assert page["unit"] == "days"
         assert page["before_or_after"] == "before"
+        assert page["contact_field"] == "edd"
+
+        page = pages[1][1]
+        assert page["contentpage"].slug == "first_time_user"
+        assert page["time"] == "3"
+        assert page["unit"] == "months"
+        assert page["before_or_after"] == "before"
+        assert page["contact_field"] == "edd"
+
+        page = pages[2][1]
+        assert page["contentpage"].slug == "first_time_user"
+        assert page["time"] == "4"
+        assert page["unit"] == "years"
+        assert page["before_or_after"] == "after"
         assert page["contact_field"] == "edd"
         assert unwagtail(ordered_set.profile_fields) == [
             ("gender", "male"),
@@ -1348,7 +1378,9 @@ class TestExport:
         """
         csv_impexp.import_file("contentpage_required_fields.csv")
 
-        imported_content = csv_impexp.import_ordered_file("ordered_content.csv")
+        imported_content = csv_impexp.import_ordered_file(
+            "ordered_content_multiple_contact_fields.csv"
+        )
 
         exported_content = csv_impexp.export_ordered_content()
 
