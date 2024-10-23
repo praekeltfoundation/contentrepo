@@ -23,8 +23,6 @@ from .models import (  # isort:skip
     WhatsAppTemplate,
 )
 
-from django.db.models import Q
-
 
 class ContentPagesViewSet(PagesAPIViewSet):
     base_serializer_class = ContentPageSerializer
@@ -144,6 +142,61 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
     search_fields = ["name", "profile_fields"]
     filter_backends = (SearchFilter,)
 
+    def _filter_queryset_by_profile_fields(
+        self, ocs, gender_value, age_value, relationship_value
+    ):
+        pf_gender = ocs.profile_fields.blocks_by_name("gender")
+        pf_age = ocs.profile_fields.blocks_by_name("age")
+        pf_relationship = ocs.profile_fields.blocks_by_name("relationship")
+
+        pf_gender = pf_gender[0] if len(pf_gender) > 0 else None
+        pf_age = pf_age[0] if len(pf_age) > 0 else None
+        pf_relationship = pf_relationship[0] if len(pf_relationship) > 0 else None
+
+        if gender_value and age_value and relationship_value:
+            if (
+                pf_gender
+                and pf_gender.value == gender_value
+                and pf_age
+                and pf_age.value == age_value
+                and pf_relationship
+                and pf_relationship.value == relationship_value
+            ):
+                return ocs.id
+        elif gender_value and age_value:
+            if (
+                pf_gender
+                and pf_gender.value == gender_value
+                and pf_age
+                and pf_age.value == age_value
+            ):
+                return ocs.id
+        elif gender_value and relationship_value:
+            if (
+                pf_gender
+                and pf_gender.value == gender_value
+                and pf_relationship
+                and pf_relationship.value == relationship_value
+            ):
+                return ocs.id
+        elif age_value and relationship_value:
+            if (
+                pf_age
+                and pf_age.value == age_value
+                and pf_relationship
+                and pf_relationship.value == relationship_value
+            ):
+                return ocs.id
+        elif gender_value:
+            if pf_gender and pf_gender.value == gender_value:
+                return ocs.id
+        elif age_value:
+            if pf_age and pf_age.value == age_value:
+                return ocs.id
+        elif relationship_value:
+            if pf_relationship and pf_relationship.value == relationship_value:
+                return ocs.id
+
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
         gender = self.request.query_params.get("gender", "")
@@ -162,18 +215,25 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
                     ocs.profile_fields = latest_revision.profile_fields
 
         else:
-            queryset = (
-                OrderedContentSet.objects.filter(
-                    (Q(profile_fields__type="gender") & Q(profile_fields__value=gender))
-                    | (Q(profile_fields__type="age") & Q(profile_fields__value=age))
-                    | (
-                        Q(profile_fields__type="relationship")
-                        & Q(profile_fields__value=relationship)
-                    )
+            if gender or age or relationship:
+                # it looks like you can't use advanced queries to filter on StreamFields
+                # so we have to do it like this.``
+                queryset = OrderedContentSet.objects.filter(
+                    live=True,
                 )
-                .filter(live=True)
-                .order_by("last_published_at")
-            )
+                filter_ids = [
+                    self._filter_queryset_by_profile_fields(
+                        x, gender, age, relationship
+                    )
+                    for x in queryset
+                ]
+                queryset = OrderedContentSet.objects.filter(id__in=filter_ids).order_by(
+                    "last_published_at"
+                )
+            else:
+                queryset = OrderedContentSet.objects.filter(
+                    live=True,
+                ).order_by("last_published_at")
         return queryset
 
 
