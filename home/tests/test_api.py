@@ -1171,6 +1171,268 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
 
+    def test_orderedcontent_endpoint_filter_male_on_gender_profile_field(self, uclient):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        url = "/api/v2/orderedcontent/?gender=male"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 0
+
+    def test_orderedcontent_endpoint_filter_female_on_gender_profile_field(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("gender", "male"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?gender=female"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 2
+
+    def test_orderedcontent_endpoint_filter_on_age_profile_field(self, uclient):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("age", "18 - 25"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?age=18 - 25"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 1
+
+    def test_orderedcontent_endpoint_filter_incorrect_age_profile_field(self, uclient):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("age", "18 - 25"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?age=7 - 8"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 0
+
+    def test_orderedcontent_endpoint_filter_on_relationship_profile_field(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("relationship", "single"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?relationship=single"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 1
+
+    def test_orderedcontent_endpoint_filter_incorrect_relationship_profile_field(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("relationship", "single"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?relationship=in a relationship"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 0
+
+    def test_orderedcontent_endpoint_filter_gender_age_profile_field(self, uclient):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("age", "18 - 25"))
+        ordered_content_set.profile_fields.append(("gender", "male"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?gender=male&age=18 - 25"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 1
+
+    def test_orderedcontent_endpoint_filter_incorrect_gender_age_profile_field(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("age", "18 - 25"))
+        ordered_content_set.profile_fields.append(("gender", "male"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?gender=male&age=4 - 5"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 0
+
+    def test_orderedcontent_endpoint_filter_gender_relationship_profile_field(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("relationship", "single"))
+        ordered_content_set.profile_fields.append(("gender", "male"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?gender=male&relationship=single"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 1
+
+    def test_orderedcontent_endpoint_filter_incorrect_gender_relationship_profile_field(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("relationship", "single"))
+        ordered_content_set.profile_fields.append(("gender", "male"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?gender=male&relationship=in a relationship"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 0
+
+    def test_orderedcontent_endpoint_filter_age_relationship_profile_field(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("relationship", "single"))
+        ordered_content_set.profile_fields.append(("age", "18 - 25"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?age=18 - 25&relationship=single"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 1
+
+    def test_orderedcontent_endpoint_filter_incorrect_age_relationship_profile_field(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("relationship", "single"))
+        ordered_content_set.profile_fields.append(("age", "4 - 5"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?age=4 - 5&relationship=in a relationship"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 0
+
+    def test_orderedcontent_endpoint_filter_gender_age_relationship_profile_field(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("gender", "male"))
+        ordered_content_set.profile_fields.append(("relationship", "single"))
+        ordered_content_set.profile_fields.append(("age", "18 - 25"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?gender=male&age=18 - 25&relationship=single"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 1
+
+    def test_orderedcontent_endpoint_filter_incorrect_gender_age_relationship_profile_field(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        ordered_content_set = OrderedContentSet(name="Test set")
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("gender", "male"))
+        ordered_content_set.profile_fields.append(("relationship", "single"))
+        ordered_content_set.profile_fields.append(("age", "4 - 5"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?gender=female&age=4 - 5&relationship=in a relationship"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 0
+
     def test_orderedcontent_endpoint_without_drafts(self, uclient):
         """
         Unpublished ordered content sets are not returned if the qa param is not set.
