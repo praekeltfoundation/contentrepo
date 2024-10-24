@@ -32,7 +32,7 @@ class OrderedContentSetImporter:
         self.progress_queue = progress_queue
 
     def _get_or_init_ordered_content_set(
-        self, row: dict, set_name: str
+        self, row: dict[str, str], set_name: str
     ) -> OrderedContentSet:
         """
         Get or initialize an instance of OrderedContentSet from a row of a CSV file.
@@ -67,12 +67,12 @@ class OrderedContentSetImporter:
     def _validate_extracted_values(
         self,
         index: int,
-        row: dict,
-        times: list,
-        units: list,
-        before_or_afters: list,
-        page_slugs: list,
-        contact_fields: list,
+        row: dict[str, str],
+        times: list[str],
+        units: list[str],
+        before_or_afters: list[str],
+        page_slugs: list[str],
+        contact_fields: list[str],
     ) -> None:
         """
         Validate that the extracted values (times, units, before_or_afters, page_slugs, contact_fields) from a row of the file have the same length.
@@ -94,11 +94,11 @@ class OrderedContentSetImporter:
     def _create_pages(
         self,
         ordered_set: OrderedContentSet,
-        times: list,
-        units: list,
-        before_or_afters: list,
-        page_slugs: list,
-        contact_fields: list,
+        times: list[str],
+        units: list[str],
+        before_or_afters: list[str],
+        page_slugs: list[str],
+        contact_fields: list[str],
     ) -> None:
         """
         Given the extracted values from a row of the file, create the corresponding ordered content set pages.
@@ -136,7 +136,9 @@ class OrderedContentSetImporter:
             else:
                 logger.warning(f"Content page not found for slug '{page_slug}'")
 
-    def _create_ordered_set_from_row(self, index: int, row: dict) -> OrderedContentSet:
+    def _create_ordered_set_from_row(
+        self, index: int, row: dict[str, str]
+    ) -> OrderedContentSet:
         """
         Create an ordered content set from a single row of the file.
 
@@ -170,7 +172,7 @@ class OrderedContentSetImporter:
         ordered_set.save()
         return ordered_set
 
-    def perform_import(self):
+    def perform_import(self) -> None:
         """
         Import ordered content sets from a file.
 
