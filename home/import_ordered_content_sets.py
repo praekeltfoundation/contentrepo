@@ -172,6 +172,9 @@ class OrderedContentSetImporter:
         ordered_set.save()
         return ordered_set
 
+    def _set_progress(self, progress: int) -> None:
+        self.progress_queue.put_nowait(progress)
+
     def perform_import(self) -> None:
         """
         Import ordered content sets from a file.
@@ -214,11 +217,11 @@ class OrderedContentSetImporter:
                 lines.append(dictionary)
 
         # 10% progress for loading file
-        self.progress_queue.put_nowait(10)
+        self._set_progress(10)
 
-        for index, row in enumerate(lines):
-            os = self._create_ordered_set_from_row(index, row)
+        for index, row in enumerate(lines):  # type: ignore
+            os = self._create_ordered_set_from_row(index, row)  # type: ignore
             if not os:
                 print(f"Ordered Content Set not created for row {index + 1}")
             # 10-100% for loading ordered content sets
-            self.progress_queue.put_nowait(10 + index * 90 / len(lines))
+            self._set_progress(10 + index * 90 // len(lines))
