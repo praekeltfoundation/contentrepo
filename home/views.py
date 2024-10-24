@@ -241,12 +241,20 @@ class OrderedContentSetUploadThread(UploadThread):
 
     def run(self):
         try:
-            import_ordered_sets(
-                self.file, self.file_type, self.progress_queue, self.purge
-            )
+            import_ordered_sets(self.file, self.file_type, self.progress_queue)
         except Exception:
             self.result_queue.put((messages.ERROR, "Ordered content set import failed"))
             logger.exception("Ordered content set import failed")
+        except ImportException as e:
+            self.result_queue.put(
+                (
+                    messages.ERROR,
+                    [
+                        f"Ordered content set import failed on row {e.row_num}: {msg}"
+                        for msg in e.message
+                    ],
+                )
+            )
         else:
             self.result_queue.put(
                 (messages.SUCCESS, "Ordered content set import successful")
