@@ -13,6 +13,22 @@ from home.models import ContentPage, OrderedContentSet
 logger = getLogger(__name__)
 
 
+class OrderedContentSetPage:
+    def __init__(
+        self,
+        time: str,
+        unit: str,
+        before_or_after: str,
+        page_slug: str,
+        contact_field: str,
+    ):
+        self.times = time
+        self.units = unit
+        self.before_or_afters = before_or_after
+        self.page_slugs = page_slug
+        self.contact_fields = contact_field
+
+
 class OrderedContentSetImporter:
     def __init__(
         self,
@@ -45,6 +61,17 @@ class OrderedContentSetImporter:
         if not ordered_set:
             ordered_set = OrderedContentSet(name=set_name)
 
+        return ordered_set
+
+    def _add_profile_fields(
+        self, ordered_set: OrderedContentSet, row: dict[str, str]
+    ) -> None:
+        """
+        Add profile fields to an instance of OrderedContentSet from a row of a CSV file.
+
+        :param ordered_set: An instance of OrderedContentSet.
+        :param row: The row of the CSV file, as a dict.
+        """
         ordered_set.profile_fields = []
         for field in [f.strip() for f in (row["Profile Fields"] or "").split(",")]:
             if not field or field == "-":
@@ -52,32 +79,20 @@ class OrderedContentSetImporter:
             [field_name, field_value] = field.split(":")
             ordered_set.profile_fields.append((field_name, field_value))
 
-        ordered_set.pages = []
-        return ordered_set
-
-    def _csv_to_list(self, column: str) -> list[str]:
-        """
-        Return a list of strings parsed from a column of a CSV row.
-
-        :param column: The column to parse.
-        :return: A list of strings, split from the value of row[column].
-        """
-        return [p.strip() for p in column.split(",")]
-
-    def _validate_extracted_values(
-        self,
-        index: int,
-        row: dict[str, str],
-        times: list[str],
-        units: list[str],
-        before_or_afters: list[str],
-        page_slugs: list[str],
-        contact_fields: list[str],
-    ) -> None:
-        """
-        Validate that the extracted values (times, units, before_or_afters, page_slugs, contact_fields) from a row of the file have the same length.
-        If not, raise an ImportException.
-        """
+    def _extract_ordered_content_set_pages(
+        self, row: dict[str, str], index: int
+    ) -> list[OrderedContentSetPage]:
+        times = self._csv_to_list(row["Time"])
+        units = self._csv_to_list(row["Unit"])
+        before_or_afters = self._csv_to_list(row["Before Or After"])
+        page_slugs = self._csv_to_list(row["Page Slugs"])
+        # backwards compatiblilty if there's only one contact field
+        contact_fields = row["Contact Field"].split(",")
+        contact_fields = (
+            [p.strip() for p in contact_fields]
+            if len(contact_fields) > 1
+            else [contact_fields[0]] * len(times)
+        )
 
         if (
             len(times) != 0
@@ -91,14 +106,32 @@ class OrderedContentSetImporter:
                 index,
             )
 
-    def _create_pages(
+        return [
+            OrderedContentSetPage(
+                time=time,
+                unit=unit,
+                before_or_after=before_or_after,
+                page_slug=page_slug,
+                contact_field=contact_field,
+            )
+            for time, unit, before_or_after, page_slug, contact_field in zip(
+                times, units, before_or_afters, page_slugs, contact_fields, strict=False
+            )
+        ]
+
+    def _csv_to_list(self, column: str) -> list[str]:
+        """
+        Return a list of strings parsed from a column of a CSV row.
+
+        :param column: The column to parse.
+        :return: A list of strings, split from the value of row[column].
+        """
+        return [p.strip() for p in column.split(",")]
+
+    def _add_pages(
         self,
         ordered_set: OrderedContentSet,
-        times: list[str],
-        units: list[str],
-        before_or_afters: list[str],
-        page_slugs: list[str],
-        contact_fields: list[str],
+        pages: list[OrderedContentSetPage],
     ) -> None:
         """
         Given the extracted values from a row of the file, create the corresponding ordered content set pages.
@@ -106,35 +139,28 @@ class OrderedContentSetImporter:
         Note that this adds the pages to the OrderedContentSet object, hence there is no return value.
 
         :param ordered_set: The ordered content set to add the pages to.
-        :param times: The times extracted from the row.
-        :param units: The units extracted from the row.
-        :param before_or_afters: The before or afters extracted from the row.
-        :param page_slugs: The page slugs extracted from the row.
-        :param contact_fields: The contact fields extracted from the row.
+        :param pages: A list of OrderedContentSetPage objects.
         """
-        for idx, page_slug in enumerate(page_slugs):
-            if not page_slug or page_slug == "-":
+        ordered_set.pages = []
+        for page in pages:
+            if not page.page_slug or page.page_slug == "-":
                 continue
-            page = ContentPage.objects.filter(slug=page_slug).first()
-            time = times[idx]
-            unit = units[idx]
-            before_or_after = before_or_afters[idx]
-            contact_field = contact_fields[idx]
+            content_page = ContentPage.objects.filter(slug=page.page_slug).first()
             if page:
                 ordered_set.pages.append(
                     (
                         "pages",
                         {
-                            "contentpage": page,
-                            "time": time or "",
-                            "unit": unit or "",
-                            "before_or_after": before_or_after or "",
-                            "contact_field": contact_field or "",
+                            "contentpage": content_page,
+                            "time": page.time or "",
+                            "unit": page.unit or "",
+                            "before_or_after": page.before_or_after or "",
+                            "contact_field": page.contact_field or "",
                         },
                     )
                 )
             else:
-                logger.warning(f"Content page not found for slug '{page_slug}'")
+                logger.warning(f"Content page not found for slug '{page.page_slug}'")
 
     def _create_ordered_set_from_row(
         self, index: int, row: dict[str, str]
@@ -148,32 +174,59 @@ class OrderedContentSetImporter:
         :raises ImportException: If time, units, before_or_afters, page_slugs and contact_fields are not all equal length.
         """
         ordered_set = self._get_or_init_ordered_content_set(row, row["Name"])
+        self._add_profile_fields(ordered_set, row)
 
-        times = self._csv_to_list(row["Time"])
-        units = self._csv_to_list(row["Unit"])
-        before_or_afters = self._csv_to_list(row["Before Or After"])
-        page_slugs = self._csv_to_list(row["Page Slugs"])
-        # backwards compatiblilty if there's only one contact field
-        contact_fields = row["Contact Field"].split(",")
-        contact_fields = (
-            [p.strip() for p in contact_fields]
-            if len(contact_fields) > 1
-            else [contact_fields[0]] * len(times)
-        )
+        pages = self._extract_ordered_content_set_pages(row, index)
 
-        self._validate_extracted_values(
-            index, row, times, units, before_or_afters, page_slugs, contact_fields
-        )
-
-        self._create_pages(
-            ordered_set, times, units, before_or_afters, page_slugs, contact_fields
-        )
+        self._add_pages(ordered_set, pages)
 
         ordered_set.save()
         return ordered_set
 
     def _set_progress(self, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
+
+    def _get_xlsx_rows(self, file) -> list[dict[str, str]]:
+        """
+        Return a list of dictionaries representing the rows in the XLSX file.
+
+        :return: A list of dictionaries representing the rows in the XLSX file.
+        """
+        lines = []
+        wb = load_workbook(filename=BytesIO(file))
+        ws = wb.worksheets[0]
+        ws.delete_rows(1)
+        for row in ws.iter_rows(values_only=True):
+            row_dict = {
+                "Name": row[0],
+                "Profile Fields": row[1],
+                "Page Slugs": row[2],
+                "Time": row[3],
+                "Unit": row[4],
+                "Before Or After": row[5],
+                "Contact Field": row[6],
+            }
+            lines.append(row_dict)
+        return lines
+
+    def _get_csv_rows(self, file) -> list[dict[str, str]]:
+        """
+        Return a list of dictionaries representing the rows in the CSV file.
+
+        :return: A list of dictionaries representing the rows in the CSV file.
+        """
+        lines = []
+        if isinstance(file, bytes):
+            try:
+                file = file.decode("utf-8")
+            except UnicodeDecodeError:
+                file = file.decode("latin-1")
+
+        reader = csv.DictReader(io.StringIO(file))
+        for dictionary in reader:
+            lines.append(dictionary)
+
+        return lines
 
     def perform_import(self) -> None:
         """
@@ -189,39 +242,19 @@ class OrderedContentSetImporter:
             row while creating ordered content sets.
         """
         file = self.file.read()
-        lines = []
-        if self.filetype == "XLSX":
-            wb = load_workbook(filename=BytesIO(file))
-            ws = wb.worksheets[0]
-            ws.delete_rows(1)
-            for row in ws.iter_rows(values_only=True):
-                row_dict = {
-                    "Name": row[0],
-                    "Profile Fields": row[1],
-                    "Page Slugs": row[2],
-                    "Time": row[3],
-                    "Unit": row[4],
-                    "Before Or After": row[5],
-                    "Contact Field": row[6],
-                }
-                lines.append(row_dict)
-        else:
-            if isinstance(file, bytes):
-                try:
-                    file = file.decode("utf-8")
-                except UnicodeDecodeError:
-                    file = file.decode("latin-1")
 
-            reader = csv.DictReader(io.StringIO(file))
-            for dictionary in reader:
-                lines.append(dictionary)
+        rows = (
+            self._get_xlsx_rows(file)
+            if self.filetype == "XLSX"
+            else self._get_csv_rows(file)
+        )
 
         # 10% progress for loading file
         self._set_progress(10)
 
-        for index, row in enumerate(lines):  # type: ignore
+        for index, row in enumerate(rows):  # type: ignore
             os = self._create_ordered_set_from_row(index, row)  # type: ignore
             if not os:
-                print(f"Ordered Content Set not created for row {index + 1}")
+                raise ImportException("Ordered Content Set not created", index)
             # 10-100% for loading ordered content sets
-            self._set_progress(10 + index * 90 // len(lines))
+            self._set_progress(10 + index * 90 // len(rows))

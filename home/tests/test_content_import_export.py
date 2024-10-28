@@ -1187,7 +1187,7 @@ class TestImportExport:
 
     def test_import_ordered_content_sets_error(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a broken CSV for ordered content sets shoud throw an exception
+        Importing a broken CSV for ordered content sets shoud throw an exception and give a detailed error message
         """
         csv_impexp.import_file("contentpage_required_fields.csv")
 
