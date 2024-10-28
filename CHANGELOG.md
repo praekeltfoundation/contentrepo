@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--
 ## Unreleased
+### Added
+- Filter ordered content sets by profile field values.
+
 ### Removed
 - Removed word embeddings search (`s` query parameter in API)
 
@@ -16,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API: Return all pages if tag keyword is specified without tags
 - API: Added page keyword to Assessments API
 - Ordered Content Sets: Import now allows for CSV values in time, unit, before or after, and contact field
+- Importing certain ContentPage fields with whitespace-only values will no longer throw unhandled exceptions
 
 ### Security
 - Updated sentry-sdk from 1.44.1 to 2.8.0
