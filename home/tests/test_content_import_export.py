@@ -1071,7 +1071,6 @@ class TestImportExport:
             "Validation error: footer - Ensure this value has at most 60 characters (it has 110)."
         ]
 
-    @pytest.mark.xfail(reason="TODO: Fix this.")
     def test_fields_containing_only_whitespace(self, csv_impexp: ImportExport) -> None:
         """
         A page_id or footer containing only whitespace is not an error.
