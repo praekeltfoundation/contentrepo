@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--
 ## Unreleased
+### Added
+- Filter ordered content sets by profile field values.
+
 ### Removed
 - Removed word embeddings search (`s` query parameter in API)
 
@@ -14,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API: Fix detail URL in Pages API
 - Forms: Added model import validation so that required fields are flagged on import
 - API: Return all pages if tag keyword is specified without tags
+- API: Added page keyword to Assessments API
 - Importing certain ContentPage fields with whitespace-only values will no longer throw unhandled exceptions
 
 ### Security
