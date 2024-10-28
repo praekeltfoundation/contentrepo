@@ -47,10 +47,9 @@ class OrderedContentSetImporter:
 
         ordered_set.profile_fields = []
         for field in [f.strip() for f in (row["Profile Fields"] or "").split(",")]:
-            if not field or field == "-":
-                continue
-            [field_name, field_value] = field.split(":")
-            ordered_set.profile_fields.append((field_name, field_value))
+            if field and field != "-":
+                [field_name, field_value] = field.split(":")
+                ordered_set.profile_fields.append((field_name, field_value))
 
         ordered_set.pages = []
         return ordered_set
