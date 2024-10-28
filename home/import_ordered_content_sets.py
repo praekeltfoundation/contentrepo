@@ -22,11 +22,11 @@ class OrderedContentSetPage:
         page_slug: str,
         contact_field: str,
     ):
-        self.times = time
-        self.units = unit
-        self.before_or_afters = before_or_after
-        self.page_slugs = page_slug
-        self.contact_fields = contact_field
+        self.time = time
+        self.unit = unit
+        self.before_or_after = before_or_after
+        self.page_slug = page_slug
+        self.contact_field = contact_field
 
 
 class OrderedContentSetImporter:
@@ -185,7 +185,7 @@ class OrderedContentSetImporter:
     def _set_progress(self, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
 
-    def _get_xlsx_rows(self, file) -> list[dict[str, str]]:
+    def _get_xlsx_rows(self, file: File) -> list[dict[str, str]]:
         """
         Return a list of dictionaries representing the rows in the XLSX file.
 
@@ -197,18 +197,18 @@ class OrderedContentSetImporter:
         ws.delete_rows(1)
         for row in ws.iter_rows(values_only=True):
             row_dict = {
-                "Name": row[0],
-                "Profile Fields": row[1],
-                "Page Slugs": row[2],
-                "Time": row[3],
-                "Unit": row[4],
-                "Before Or After": row[5],
-                "Contact Field": row[6],
+                "Name": str(row[0]),
+                "Profile Fields": str(row[1]),
+                "Page Slugs": str(row[2]),
+                "Time": str(row[3]),
+                "Unit": str(row[4]),
+                "Before Or After": str(row[5]),
+                "Contact Field": str(row[6]),
             }
             lines.append(row_dict)
         return lines
 
-    def _get_csv_rows(self, file) -> list[dict[str, str]]:
+    def _get_csv_rows(self, file: File) -> list[dict[str, str]]:
         """
         Return a list of dictionaries representing the rows in the CSV file.
 
