@@ -696,7 +696,7 @@ class ContentRow:
         #   duplicates for keys with whitespace differences.
         # * It's also important to strip whitespace in both the output dict and
         #   the emptiness check, otherwise whitespace-only fields will be
-        #   non-mpty here but empty below.
+        #   non-empty here but empty below.
         # * We need to check `value` before `value.strip()` because we may get
         #   `None` values for missing fields.
         row = {
