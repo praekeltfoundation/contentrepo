@@ -689,15 +689,25 @@ class ContentRow:
     @classmethod
     def from_flat(cls, row: dict[str, str], row_num: int) -> "ContentRow":
         class_fields = {field.name for field in fields(cls)}
+        # NOTES:
+        # * We strip leading and trailing whitespace off the field values
+        #   because that lets us be a little more permissive with inputs, but
+        #   we leave the field keys as-is because otherwise we may end up with
+        #   duplicates for keys with whitespace differences.
+        # * It's also important to strip whitespace in both the output dict and
+        #   the emptiness check, otherwise whitespace-only fields will be
+        #   non-empty here but empty below.
+        # * We need to check `value` before `value.strip()` because we may get
+        #   `None` values for missing fields.
         row = {
-            key.strip(): value.strip()
+            key: value.strip()
             for key, value in row.items()
-            if value and key in class_fields
+            if key in class_fields and value and value.strip()
         }
         if "slug" not in row:
             raise ImportException("Missing slug value", row_num)
         return cls(
-            page_id=int(row.pop("page_id")) if row.get("page_id") else None,
+            page_id=to_int_or_none(row.pop("page_id", None)),
             variation_title=deserialise_dict(row.pop("variation_title", "")),
             tags=deserialise_list(row.pop("tags", "")),
             quick_replies=deserialise_list(row.pop("quick_replies", "")),
@@ -710,7 +720,7 @@ class ContentRow:
                 else []
             ),
             list_items=deserialise_list(row.pop("list_items", "")),
-            footer=row.pop("footer") if row.get("footer") else "",
+            footer=row.pop("footer", ""),
             **row,
         )
 
@@ -789,3 +799,7 @@ def JSON_loader(row_num: int, value: str) -> list[dict[str, Any]]:
         raise ImportException(f"Bad JSON button, you have: {value}", row_num)
 
     return button
+
+
+def to_int_or_none(val: str | None) -> int | None:
+    return int(val) if val else None
