@@ -1071,6 +1071,14 @@ class TestImportExport:
             "Validation error: footer - Ensure this value has at most 60 characters (it has 110)."
         ]
 
+    def test_fields_containing_only_whitespace(self, csv_impexp: ImportExport) -> None:
+        """
+        A page_id or footer containing only whitespace is not an error.
+
+        NOTE: This test passes if no exception is raised.
+        """
+        csv_impexp.import_file("whitespace-only-fields.csv")
+
     def test_list_items_maximum_num(self, csv_impexp: ImportExport) -> None:
         """
         Importing an CSV file with list_items and and list items characters exceeding maximum charactercount
