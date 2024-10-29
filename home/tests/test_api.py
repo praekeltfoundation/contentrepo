@@ -815,6 +815,7 @@ class TestWhatsAppMessages:
     def create_content_page(
         self,
         buttons=None,
+        list_button_title=None,
         list_items=None,
         next_prompt=None,
         footer=None,
@@ -830,6 +831,8 @@ class TestWhatsAppMessages:
         ----------
         buttons : [NextBtn | PageBtn]
             List of buttons to add to the content page.
+        list_button_title : str
+            Title of the list button to add to the content page.
         list_items : [str]
             List of list items to add to the content page.
         next_prompt : str
@@ -860,6 +863,7 @@ class TestWhatsAppMessages:
                         WABlk(
                             "Test WhatsApp Message 1",
                             buttons=buttons or [],
+                            list_button_title=list_button_title or "",
                             list_items=list_items or [],
                             next_prompt=next_prompt or "",
                             footer=footer or "",
@@ -947,7 +951,9 @@ class TestWhatsAppMessages:
         """
         test that list items are present in the whatsapp message
         """
-        page = self.create_content_page(list_items=["list item 1", "list item 2"])
+        page = self.create_content_page(
+            list_button_title="List Button", list_items=["list item 1", "list item 2"]
+        )
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
         content = response.json()
@@ -956,6 +962,7 @@ class TestWhatsAppMessages:
         item_1.pop("id")
         item_2.pop("id")
 
+        assert content["body"]["text"]["value"]["list_button_title"] == "List Button"
         assert item_1 == {"type": "item", "value": "list item 1"}
         assert item_2 == {"type": "item", "value": "list item 2"}
 
@@ -1003,6 +1010,7 @@ class TestWhatsAppMessages:
             "buttons": [],
             "message": "Test WhatsApp Message 1",
             "document": None,
+            "list_button_title": "",
             "list_items": [],
             "next_prompt": "",
             "example_values": [],

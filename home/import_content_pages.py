@@ -364,6 +364,7 @@ class ContentImporter:
                     example_values=row.example_values,
                     buttons=buttons,
                     footer=row.footer,
+                    list_button_title=row.list_button_title,
                     list_items=row.list_items,
                 )
             )
@@ -580,6 +581,7 @@ class ShadowWhatsappBlock:
     buttons: list[dict[str, Any]] = field(default_factory=list)
     example_values: list[str] = field(default_factory=list)
     variation_messages: list["ShadowVariationBlock"] = field(default_factory=list)
+    list_button_title: str = ""
     list_items: list[str] = field(default_factory=list)
     footer: str = ""
 
@@ -593,6 +595,7 @@ class ShadowWhatsappBlock:
             "example_values": self.example_values,
             "buttons": self.buttons,
             "variation_messages": [m.wagtail_format for m in self.variation_messages],
+            "list_button_title": self.list_button_title,
             "list_items": self.list_items,
             "footer": self.footer,
         }
@@ -664,6 +667,7 @@ class ContentRow:
     example_values: list[str] = field(default_factory=list)
     variation_title: dict[str, str] = field(default_factory=dict)
     variation_body: str = ""
+    list_button_title: str = ""
     list_items: list[str] = field(default_factory=list)
     sms_title: str = ""
     sms_body: str = ""
@@ -719,6 +723,7 @@ class ContentRow:
                 if row.get("buttons")
                 else []
             ),
+            list_button_title=row.pop("list_button_title", ""),
             list_items=deserialise_list(row.pop("list_items", "")),
             footer=row.pop("footer", ""),
             **row,

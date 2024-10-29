@@ -110,6 +110,7 @@ def test_build_simple_pages() -> None:
             {
                 "document": None,
                 "image": None,
+                "list_button_title": "",
                 "list_items": [],
                 "media": None,
                 "message": "*Welcome to HealthAlert* WA",
@@ -298,6 +299,7 @@ def test_build_variations() -> None:
             {
                 "document": None,
                 "image": None,
+                "list_button_title": "",
                 "list_items": [],
                 "media": None,
                 "example_values": None,
