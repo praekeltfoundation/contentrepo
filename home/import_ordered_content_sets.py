@@ -1,5 +1,6 @@
 import csv
 import io
+from dataclasses import dataclass
 from io import BytesIO
 from logging import getLogger
 from queue import Queue
@@ -13,20 +14,13 @@ from home.models import ContentPage, OrderedContentSet
 logger = getLogger(__name__)
 
 
+@dataclass
 class OrderedContentSetPage:
-    def __init__(
-        self,
-        time: str,
-        unit: str,
-        before_or_after: str,
-        page_slug: str,
-        contact_field: str,
-    ):
-        self.time = time
-        self.unit = unit
-        self.before_or_after = before_or_after
-        self.page_slug = page_slug
-        self.contact_field = contact_field
+    time: str
+    unit: str
+    before_or_after: str
+    page_slug: str
+    contact_field: str
 
 
 class OrderedContentSetImporter:
