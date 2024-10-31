@@ -112,7 +112,7 @@ class WABlk(ContentBlock):
     variation_messages: list[VarMsg] = field(default_factory=list)
     example_values: list[str] = field(default_factory=list)
     buttons: list[Btn] = field(default_factory=list)
-    list_button_title: str = ""
+    list_title: str = ""
     list_items: list[str] = field(default_factory=list)
     media: int | None = None
     document: str | None = None
