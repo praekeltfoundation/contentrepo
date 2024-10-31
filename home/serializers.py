@@ -129,7 +129,7 @@ def format_whatsapp_message(message_index, content_page, platform):
         )
     text["value"]["variation_messages"] = new_var_messages
     # TODO: fix this
-    # if text["value"]["list_items"]:
+
     # The old format appears to be
     # "list_items": [
     #                 {
@@ -137,10 +137,14 @@ def format_whatsapp_message(message_index, content_page, platform):
     #                     "type": "item",
     #                     "value": "English"
     #                 },
-    #     text["value"]["list_items_v2"] = text["value"].get("list_items", [])
+    # if text["value"]["list_items"]:
+    #     text["value"]["list_items_v2"] = text["value"]["list_items"]
 
     #     current_list_items = text["value"]["list_items"]
-    #     list_items = ",".join([item["value"] for item in current_list_items])
+    #     list_items = [
+    #         {"id": item["id"], "type": "item", "value": item["value"]}
+    #         for item in current_list_items
+    #     ]
     #     text["value"]["list_items"] = list_items
 
     return text

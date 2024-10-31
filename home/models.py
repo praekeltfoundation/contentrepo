@@ -277,11 +277,7 @@ class WhatsappBlock(blocks.StructBlock):
         help_text="List title, up to 24 characters.",
         max_length=24,
     )
-    list_items = blocks.ListBlock(
-        blocks.CharBlock(label="Title"),
-    )
-    # TODO: fix this
-    list_items_2 = blocks.StreamBlock(
+    list_items = blocks.StreamBlock(
         [("next_message", NextMessageOption()), ("go_to_page", GoToPageOption())],
         default=[],
         help_text="List item title, up to 24 characters.",

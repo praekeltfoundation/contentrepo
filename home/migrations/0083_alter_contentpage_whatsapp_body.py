@@ -14,14 +14,15 @@ def migrate_list_items(ContentPage):
     Migrate the list items in the whatsapp_body field to the new format
     """
     for page in ContentPage.objects.filter(is_whatsapp_template=True):
-        if not page.whatsapp_body.raw_data[0]["value"]["list_items"]:
-            continue
-        list_items = [
-            {"type": "next_message", "value": {"title": item["value"]}}
-            for item in page.whatsapp_body.raw_data[0]["value"]["list_items"]
-        ]
-        page.whatsapp_body.raw_data[0]["value"]["list_items"] = list_items
-        page.save()
+        for message in page.whatsapp_body:
+            if not message["value"]["list_items"]:
+                continue
+            list_items = [
+                {"type": "next_message", "value": {"title": item["value"]}}
+                for item in message["value"]["list_items"]
+            ]
+            message["value"]["list_items"] = list_items
+        page.save(update_fields=["whatsapp_body"])
 
 
 def run_migration(apps, schema_editor):
