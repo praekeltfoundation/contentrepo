@@ -59,7 +59,7 @@ class ExportRow:
     example_values: str = ""
     variation_title: str = ""
     variation_body: str = ""
-    list_button_title: str = ""
+    list_title: str = ""
     list_items: str = ""
     sms_title: str = ""
     sms_body: str = ""
@@ -139,8 +139,8 @@ class ExportRow:
                 self.example_values = ", ".join(whatsapp.value["example_values"])
             if "footer" in whatsapp.value:
                 self.footer = whatsapp.value["footer"]
-            if "list_button_title" in whatsapp.value:
-                self.list_button_title = whatsapp.value["list_button_title"]
+            if "list_title" in whatsapp.value:
+                self.list_title = whatsapp.value["list_title"]
             if "list_items" in whatsapp.value:
                 output = io.StringIO()
                 writer = csv.writer(output)

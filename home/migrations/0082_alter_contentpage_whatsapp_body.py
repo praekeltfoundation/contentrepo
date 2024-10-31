@@ -178,9 +178,9 @@ class Migration(migrations.Migration):
                                     ),
                                 ),
                                 (
-                                    "list_button_title",
+                                    "list_title",
                                     wagtail.blocks.CharBlock(
-                                        help_text="List button title, up to 24 characters.",
+                                        help_text="List title, up to 24 characters.",
                                         max_length=24,
                                         required=False,
                                     ),
