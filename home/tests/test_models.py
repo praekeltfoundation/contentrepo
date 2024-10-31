@@ -23,10 +23,10 @@ from wagtail.test.utils import WagtailPageTests
 from home.models import (
     ContentPage,
     ContentPageIndex,
-    GoToPageButton,
+    GoToPageOption,
     HomePage,
     IntegerQuestionBlock,
-    NextMessageButton,
+    NextMessageOption,
     OrderedContentSet,
     PageView,
     SMSBlock,
@@ -682,15 +682,15 @@ class WhatsappBlockTests(TestCase):
 
     def test_buttons_char_limit(self):
         """WhatsApp button labels have a character limit"""
-        NextMessageButton().clean({"title": "test"})
-        GoToPageButton().clean({"title": "test", "page": 1})
+        NextMessageOption().clean({"title": "test"})
+        GoToPageOption().clean({"title": "test", "page": 1})
 
         with self.assertRaises(StructBlockValidationError) as e:
-            NextMessageButton().clean({"title": "a" * 21})
+            NextMessageOption().clean({"title": "a" * 21})
         self.assertEqual(list(e.exception.block_errors.keys()), ["title"])
 
         with self.assertRaises(StructBlockValidationError) as e:
-            GoToPageButton().clean({"title": "a" * 21})
+            GoToPageOption().clean({"title": "a" * 21})
         self.assertEqual(list(e.exception.block_errors.keys()), ["title"])
 
     def test_list_items_limit(self):

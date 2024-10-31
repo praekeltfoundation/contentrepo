@@ -25,7 +25,7 @@ from home.import_helpers import ImportException
 from home.models import (
     ContentPage,
     ContentPageIndex,
-    GoToPageButton,
+    GoToPageOption,
     HomePage,
     OrderedContentSet,
 )
@@ -1513,7 +1513,7 @@ def mk_doc(doc_path: Path, title: str) -> Document:
 
 
 def add_go_to_page_button(whatsapp_block: Any, button: PageBtn) -> None:
-    button_val = GoToPageButton().to_python(button.value_dict())
+    button_val = GoToPageOption().to_python(button.value_dict())
     whatsapp_block.value["buttons"].append(("go_to_page", button_val))
 
 

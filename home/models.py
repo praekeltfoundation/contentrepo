@@ -226,19 +226,19 @@ class VariationBlock(blocks.StructBlock):
     )
 
 
-class NextMessageButton(blocks.StructBlock):
+class NextMessageOption(blocks.StructBlock):
     title = blocks.CharBlock(
-        help_text="text for the button, up to 20 characters.",
+        help_text="Text for the button / list item, up to 20 characters.",
         validators=(MaxLengthValidator(20),),
     )
 
 
-class GoToPageButton(blocks.StructBlock):
+class GoToPageOption(blocks.StructBlock):
     title = blocks.CharBlock(
-        help_text="text for the button, up to 20 characters.",
+        help_text="Text for the button / list item, up to 20 characters.",
         validators=(MaxLengthValidator(20),),
     )
-    page = blocks.PageChooserBlock(help_text="page the button should go to")
+    page = blocks.PageChooserBlock(help_text="Page the button / list item should go to")
 
 
 class WhatsappBlock(blocks.StructBlock):
@@ -268,7 +268,7 @@ class WhatsappBlock(blocks.StructBlock):
         validators=(MaxLengthValidator(20),),
     )
     buttons = blocks.StreamBlock(
-        [("next_message", NextMessageButton()), ("go_to_page", GoToPageButton())],
+        [("next_message", NextMessageOption()), ("go_to_page", GoToPageOption())],
         required=False,
         max_num=3,
     )
@@ -279,13 +279,15 @@ class WhatsappBlock(blocks.StructBlock):
     )
     list_items = blocks.ListBlock(
         blocks.CharBlock(label="Title"),
+    )
+    # TODO: fix this
+    list_items_2 = blocks.StreamBlock(
+        [("next_message", NextMessageOption()), ("go_to_page", GoToPageOption())],
         default=[],
         help_text="List item title, up to 24 characters.",
         required=False,
         max_num=10,
-        validators=(MaxLengthValidator(24)),
     )
-
     footer = blocks.CharBlock(
         help_text="Footer cannot exceed 60 characters.",
         required=False,
