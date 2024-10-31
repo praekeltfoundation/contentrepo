@@ -272,6 +272,11 @@ class WhatsappBlock(blocks.StructBlock):
         required=False,
         max_num=3,
     )
+    list_title = blocks.CharBlock(
+        required=False,
+        help_text="List title, up to 24 characters.",
+        max_length=24,
+    )
     list_items = blocks.ListBlock(
         blocks.CharBlock(label="Title"),
         default=[],

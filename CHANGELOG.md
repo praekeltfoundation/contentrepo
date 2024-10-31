@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Filter ordered content sets by profile field values.
+- Add list_button_title to Whatsapp messages.
 
 ### Removed
 - Removed word embeddings search (`s` query parameter in API)
