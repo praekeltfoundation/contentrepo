@@ -1195,7 +1195,7 @@ class TestImportExport:
 
     def test_import_ordered_content_sets_error(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a broken CSV for ordered content sets shoud throw an exception and give a detailed error message
+        Importing a broken CSV for ordered content sets should throw an exception and give a detailed error message
         """
         csv_impexp.import_file("contentpage_required_fields.csv")
 
@@ -1207,6 +1207,18 @@ class TestImportExport:
         assert e.value.message == [
             "Row Test Set has 2 times, 2 units, 3 before_or_afters, 3 page_slugs and 3 contact_fields and they should all be equal."
         ]
+
+    def test_import_ordered_content_sets_no_page_error(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing CSV for ordered content sets without pages should throw an error.
+        """
+        with pytest.raises(ImportException) as e:
+            content = csv_impexp.read_bytes("ordered_content.csv")
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.message == ["Content page not found for slug 'first_time_user'"]
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """

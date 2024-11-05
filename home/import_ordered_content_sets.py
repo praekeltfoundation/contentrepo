@@ -88,11 +88,19 @@ class OrderedContentSetImporter:
         )
 
         if (
-            len(times) != 0
-            and len(times) != len(units)
-            or len(times) != len(before_or_afters)
-            or len(times) != len(page_slugs)
-            or len(times) != len(contact_fields)
+            len(
+                {
+                    len(item)
+                    for item in [
+                        times,
+                        units,
+                        before_or_afters,
+                        page_slugs,
+                        contact_fields,
+                    ]
+                }
+            )
+            != 1
         ):
             raise ImportException(
                 f"Row {row['Name']} has {len(times)} times, {len(units)} units, {len(before_or_afters)} before_or_afters, {len(page_slugs)} page_slugs and {len(contact_fields)} contact_fields and they should all be equal.",
@@ -136,24 +144,25 @@ class OrderedContentSetImporter:
         """
         ordered_set.pages = []
         for page in pages:
-            if not page.page_slug or page.page_slug == "-":
-                continue
-            content_page = ContentPage.objects.filter(slug=page.page_slug).first()
-            if page:
-                ordered_set.pages.append(
-                    (
-                        "pages",
-                        {
-                            "contentpage": content_page,
-                            "time": page.time or "",
-                            "unit": page.unit or "",
-                            "before_or_after": page.before_or_after or "",
-                            "contact_field": page.contact_field or "",
-                        },
+            if page.page_slug and page.page_slug != "-":
+                content_page = ContentPage.objects.filter(slug=page.page_slug).first()
+                if content_page:
+                    ordered_set.pages.append(
+                        (
+                            "pages",
+                            {
+                                "contentpage": content_page,
+                                "time": page.time or "",
+                                "unit": page.unit or "",
+                                "before_or_after": page.before_or_after or "",
+                                "contact_field": page.contact_field or "",
+                            },
+                        )
                     )
-                )
-            else:
-                logger.warning(f"Content page not found for slug '{page.page_slug}'")
+                else:
+                    raise ImportException(
+                        f"Content page not found for slug '{page.page_slug}'"
+                    )
 
     def _create_ordered_set_from_row(
         self, index: int, row: dict[str, str]
