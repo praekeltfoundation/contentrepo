@@ -25,7 +25,7 @@ from home.import_helpers import ImportException
 from home.models import (
     ContentPage,
     ContentPageIndex,
-    GoToPageOption,
+    GoToPageButton,
     HomePage,
     OrderedContentSet,
 )
@@ -535,8 +535,7 @@ class TestImportExportRoundtrip:
 
     def test_simple(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a simple CSV file and then exporting it produces a duplicate
-        of the original file.
+        Importing a simple CSV file and then exporting it produces the correct new export format.
 
         (This uses content2.csv from test_api.py.)
 
@@ -661,28 +660,39 @@ class TestImportExportRoundtrip:
 
     def test_list_items_values(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a CSV file containing list items of each type for a
-        page and then exporting it produces a duplicate of the original file.
+        Importing a CSV file containing a string of list items of each type for a
+        page and then exporting it produces the correct new export format.
 
-        (This uses list_items.csv.)
+        (This uses list_items.csv and list_items_output.csv.)
         """
         set_profile_field_options()
-        csv_bytes = csv_impexp.import_file("list_items.csv")
+        csv_impexp.import_file("list_items.csv")
         content = csv_impexp.export_content()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        new_export_content = csv_impexp.read_bytes(
+            "list_items_output.csv", IMP_EXP_DATA_BASE
+        )
+
+        src, dst = csv_impexp.csvs2dicts(new_export_content, content)
         assert dst == src
 
     def test_list_items_values_with_comma(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a CSV file containing list items that has a comma
-        page and then exporting it produces a duplicate of the original file.
+        Importing a CSV file containing a string of list items that has a comma
+        page and then exporting it produces the correct new export format.
 
-        (This uses list_items_with_comma.csv.)
+        (This uses list_items_with_comma.csv list_items_with_comma_output.csv.)
         """
         set_profile_field_options()
-        csv_bytes = csv_impexp.import_file("list_items_with_comma.csv")
+        csv_impexp.import_file("list_items_with_comma.csv")
         content = csv_impexp.export_content()
-        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        new_export_content = csv_impexp.read_bytes(
+            "list_items_with_comma_output.csv", IMP_EXP_DATA_BASE
+        )
+
+        src, dst = csv_impexp.csvs2dicts(new_export_content, content)
+
         assert dst == src
 
 
@@ -1102,7 +1112,7 @@ class TestImportExport:
         assert isinstance(e.value, ImportException)
         assert e.value.row_num == 4
         assert e.value.message == [
-            "Validation error: list_items - List item (Item no 5 a very long list item) has exceeded maximum character limit of 24"
+            "Validation error: list_items - Ensure this value has at most 24 characters (it has 31)."
         ]
 
     def test_max_char_variation(self, csv_impexp: ImportExport) -> None:
@@ -1513,7 +1523,7 @@ def mk_doc(doc_path: Path, title: str) -> Document:
 
 
 def add_go_to_page_button(whatsapp_block: Any, button: PageBtn) -> None:
-    button_val = GoToPageOption().to_python(button.value_dict())
+    button_val = GoToPageButton().to_python(button.value_dict())
     whatsapp_block.value["buttons"].append(("go_to_page", button_val))
 
 
@@ -2281,7 +2291,10 @@ class TestExportImportRoundtrip:
             bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
         )
 
-        list_items = ["Item 1", "Item 2"]
+        list_items = [
+            {"type": "next_message", "value": {"title": "Item 1"}},
+            {"type": "next_message", "value": {"title": "Item 2"}},
+        ]
         _health_info = PageBuilder.build_cp(
             parent=ha_menu,
             slug="health-info",

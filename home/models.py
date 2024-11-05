@@ -226,19 +226,34 @@ class VariationBlock(blocks.StructBlock):
     )
 
 
-class NextMessageOption(blocks.StructBlock):
+class NextMessageButton(blocks.StructBlock):
     title = blocks.CharBlock(
-        help_text="Text for the button / list item, up to 20 characters.",
+        help_text="Text for the button, up to 20 characters.",
         validators=(MaxLengthValidator(20),),
     )
 
 
-class GoToPageOption(blocks.StructBlock):
+class GoToPageButton(blocks.StructBlock):
     title = blocks.CharBlock(
-        help_text="Text for the button / list item, up to 20 characters.",
+        help_text="Text for the button, up to 20 characters.",
         validators=(MaxLengthValidator(20),),
     )
-    page = blocks.PageChooserBlock(help_text="Page the button / list item should go to")
+    page = blocks.PageChooserBlock(help_text="Page the button should go to")
+
+
+class NextMessageListItem(blocks.StructBlock):
+    title = blocks.CharBlock(
+        help_text="Text for the list item, up to 24 characters.",
+        validators=(MaxLengthValidator(24),),
+    )
+
+
+class GoToPageListItem(blocks.StructBlock):
+    title = blocks.CharBlock(
+        help_text="Text for the list item, up to 24 characters.",
+        validators=(MaxLengthValidator(24),),
+    )
+    page = blocks.PageChooserBlock(help_text="Page the list item should go to")
 
 
 class WhatsappBlock(blocks.StructBlock):
@@ -268,7 +283,7 @@ class WhatsappBlock(blocks.StructBlock):
         validators=(MaxLengthValidator(20),),
     )
     buttons = blocks.StreamBlock(
-        [("next_message", NextMessageOption()), ("go_to_page", GoToPageOption())],
+        [("next_message", NextMessageButton()), ("go_to_page", GoToPageButton())],
         required=False,
         max_num=3,
     )
@@ -278,8 +293,7 @@ class WhatsappBlock(blocks.StructBlock):
         max_length=24,
     )
     list_items = blocks.StreamBlock(
-        [("next_message", NextMessageOption()), ("go_to_page", GoToPageOption())],
-        default=[],
+        [("next_message", NextMessageListItem()), ("go_to_page", GoToPageListItem())],
         help_text="List item title, up to 24 characters.",
         required=False,
         max_num=10,
@@ -321,7 +335,7 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{len(result['message'])} characters long"
             )
 
-        list_items = result["list_items"]
+        list_items = [item.value["title"] for item in result["list_items"]]
         for item in list_items:
             if len(item) > 24:
                 errors["list_items"] = ValidationError(

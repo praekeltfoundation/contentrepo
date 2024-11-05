@@ -23,10 +23,10 @@ from wagtail.test.utils import WagtailPageTests
 from home.models import (
     ContentPage,
     ContentPageIndex,
-    GoToPageOption,
+    GoToPageButton,
     HomePage,
     IntegerQuestionBlock,
-    NextMessageOption,
+    NextMessageButton,
     OrderedContentSet,
     PageView,
     SMSBlock,
@@ -682,21 +682,26 @@ class WhatsappBlockTests(TestCase):
 
     def test_buttons_char_limit(self):
         """WhatsApp button labels have a character limit"""
-        NextMessageOption().clean({"title": "test"})
-        GoToPageOption().clean({"title": "test", "page": 1})
+        NextMessageButton().clean({"title": "test"})
+        GoToPageButton().clean({"title": "test", "page": 1})
 
         with self.assertRaises(StructBlockValidationError) as e:
-            NextMessageOption().clean({"title": "a" * 21})
+            NextMessageButton().clean({"title": "a" * 21})
         self.assertEqual(list(e.exception.block_errors.keys()), ["title"])
 
         with self.assertRaises(StructBlockValidationError) as e:
-            GoToPageOption().clean({"title": "a" * 21})
+            GoToPageButton().clean({"title": "a" * 21})
         self.assertEqual(list(e.exception.block_errors.keys()), ["title"])
 
     def test_list_items_limit(self):
         """WhatsApp messages can only have up to 10 list items"""
         list_item = WhatsappBlock().child_blocks["list_items"]
-        items = list_item.to_python([f"test {_}" for _ in range(12)])
+        items = list_item.to_python(
+            [
+                {"type": "next_message", "value": {"title": f"test {_}"}}
+                for _ in range(12)
+            ]
+        )
 
         with self.assertRaises(StructBlockValidationError) as e:
             WhatsappBlock().clean(
@@ -708,18 +713,26 @@ class WhatsappBlockTests(TestCase):
         """WhatsApp list item title can only have up to 24 char"""
         list_item = WhatsappBlock().child_blocks["list_items"]
 
-        WhatsappBlock().clean(
-            self.create_message_value(
-                message="a",
-                list_items=[
-                    "test more that max char",
-                ],
-            )
+        items = list_item.to_python(
+            [
+                {
+                    "type": "next_message",
+                    "value": {"title": "test more that max char"},
+                },
+            ]
         )
+
+        WhatsappBlock().clean(self.create_message_value(message="a", list_items=items))
 
         with self.assertRaises(StructBlockValidationError) as e:
             items = list_item.to_python(
-                ["test limit", "it should fail as the title is above max"]
+                [
+                    {"type": "next_message", "value": {"title": "test limit"}},
+                    {
+                        "type": "next_message",
+                        "value": {"title": "it should fail as the title is above max"},
+                    },
+                ]
             )
             WhatsappBlock().clean(
                 self.create_message_value(message="a", list_items=items)

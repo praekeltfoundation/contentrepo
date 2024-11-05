@@ -128,24 +128,33 @@ def format_whatsapp_message(message_index, content_page, platform):
             }
         )
     text["value"]["variation_messages"] = new_var_messages
-    # TODO: fix this
 
-    # The old format appears to be
-    # "list_items": [
-    #                 {
-    #                     "id": "8db577c1-67ab-49e1-825a-960b891374f4",
-    #                     "type": "item",
-    #                     "value": "English"
-    #                 },
-    # if text["value"]["list_items"]:
-    #     text["value"]["list_items_v2"] = text["value"]["list_items"]
+    # For backwards compatibility we are exposing the new format under list_items_v2, and maintaining list_items the way it was.
+    # For example:
+    # New Format:
+    # {
+    #     "id": "179bf4be-2bea-49db-8558-51f7da8b888f",
+    #     "type": "next_message",
+    #     "value": {
+    #         "title": "English"
+    #     }
+    # }
+    #
+    # Old Format:
+    # {
+    #     "id": "8db577c1-67ab-49e1-825a-960b891374f4",
+    #     "type": "item",
+    #     "value": "English"
+    # }
+    if text["value"]["list_items"]:
+        text["value"]["list_items_v2"] = text["value"]["list_items"]
 
-    #     current_list_items = text["value"]["list_items"]
-    #     list_items = [
-    #         {"id": item["id"], "type": "item", "value": item["value"]}
-    #         for item in current_list_items
-    #     ]
-    #     text["value"]["list_items"] = list_items
+        current_list_items = text["value"]["list_items"]
+        list_items = [
+            {"id": item["id"], "type": "item", "value": item["value"]["title"]}
+            for item in current_list_items
+        ]
+        text["value"]["list_items"] = list_items
 
     return text
 

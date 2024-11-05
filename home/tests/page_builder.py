@@ -113,7 +113,7 @@ class WABlk(ContentBlock):
     example_values: list[str] = field(default_factory=list)
     buttons: list[Btn] = field(default_factory=list)
     list_title: str = ""
-    list_items: list[str] = field(default_factory=list)
+    list_items: list[dict[str, Any]] = field(default_factory=list)
     media: int | None = None
     document: str | None = None
     footer: str = ""
