@@ -732,9 +732,9 @@ class ContentRow:
             row_list_items = row.pop("list_items", "")
             list_items = JSON_loader(row_num, row_list_items)
         except ImportException:
-            list_items = deserialise_list(row_list_items)
             list_items = [
-                {"type": "next_message", "title": item} for item in list_items
+                {"type": "next_message", "title": item}
+                for item in deserialise_list(row_list_items)
             ]
         return cls(
             page_id=to_int_or_none(row.pop("page_id", None)),
