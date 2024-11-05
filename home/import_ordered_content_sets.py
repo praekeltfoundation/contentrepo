@@ -79,13 +79,10 @@ class OrderedContentSetImporter:
         units = self._csv_to_list(row["Unit"])
         before_or_afters = self._csv_to_list(row["Before Or After"])
         page_slugs = self._csv_to_list(row["Page Slugs"])
+        contact_fields = self._csv_to_list(row["Contact Field"])
         # backwards compatiblilty if there's only one contact field
-        contact_fields = row["Contact Field"].split(",")
-        contact_fields = (
-            [p.strip() for p in contact_fields]
-            if len(contact_fields) > 1
-            else [contact_fields[0]] * len(times)
-        )
+        if len(contact_fields) == 1:
+            contact_fields = [contact_fields[0]] * len(times)
 
         if (
             len(
