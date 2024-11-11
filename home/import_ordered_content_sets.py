@@ -144,18 +144,14 @@ class OrderedContentSetImporter:
             if page.page_slug and page.page_slug != "-":
                 content_page = ContentPage.objects.filter(slug=page.page_slug).first()
                 if content_page:
-                    ordered_set.pages.append(
-                        (
-                            "pages",
-                            {
-                                "contentpage": content_page,
-                                "time": page.time or "",
-                                "unit": page.unit or "",
-                                "before_or_after": page.before_or_after or "",
-                                "contact_field": page.contact_field or "",
-                            },
-                        )
-                    )
+                    os_page = {
+                        "contentpage": content_page,
+                        "time": page.time or "",
+                        "unit": page.unit or "",
+                        "before_or_after": page.before_or_after or "",
+                        "contact_field": page.contact_field or "",
+                    }
+                    ordered_set.pages.append(("pages", os_page))
                 else:
                     raise ImportException(
                         f"Content page not found for slug '{page.page_slug}'"
