@@ -84,21 +84,8 @@ class OrderedContentSetImporter:
         if len(contact_fields) == 1:
             contact_fields = [contact_fields[0]] * len(times)
 
-        if (
-            len(
-                {
-                    len(item)
-                    for item in [
-                        times,
-                        units,
-                        before_or_afters,
-                        page_slugs,
-                        contact_fields,
-                    ]
-                }
-            )
-            != 1
-        ):
+        fields = [times, units, before_or_afters, page_slugs, contact_fields]
+        if len({len(item) for item in fields}) != 1:
             raise ImportException(
                 f"Row {row['Name']} has {len(times)} times, {len(units)} units, {len(before_or_afters)} before_or_afters, {len(page_slugs)} page_slugs and {len(contact_fields)} contact_fields and they should all be equal.",
                 index,
