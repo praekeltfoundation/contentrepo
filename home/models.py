@@ -294,7 +294,7 @@ class WhatsappBlock(blocks.StructBlock):
     )
     list_items = blocks.StreamBlock(
         [("next_message", NextMessageListItem()), ("go_to_page", GoToPageListItem())],
-        help_text="List item title, up to 24 characters.",
+        help_text="Items to appear in the list message",
         required=False,
         max_num=10,
     )
