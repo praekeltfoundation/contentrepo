@@ -684,6 +684,8 @@ class TestImportExportRoundtrip:
         (This uses list_items_with_comma.csv list_items_with_comma_output.csv.)
         """
         set_profile_field_options()
+        # We import list_items.csv so that we can use the page as a reference in the
+        csv_impexp.import_file("list_items.csv")
         csv_impexp.import_file("list_items_with_comma.csv")
         content = csv_impexp.export_content()
 

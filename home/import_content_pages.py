@@ -93,6 +93,7 @@ class ContentImporter:
         self.save_pages()
         self.link_related_pages()
         self.add_go_to_page_buttons()
+        self.add_go_to_page_list_items()
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         # Non-page rows don't have a locale, so we need to remember the last
@@ -190,6 +191,30 @@ class ContentImporter:
                         )
                     page.whatsapp_body[message_index].value["buttons"].append(
                         ("go_to_page", {"page": related_page, "title": title})
+                    )
+            page.save_revision().publish()
+
+    def add_go_to_page_list_items(self) -> None:
+        for (slug, locale), messages in self.go_to_page_list_items.items():
+            page = ContentPage.objects.get(slug=slug, locale=locale)
+            for message_index, list_items in messages.items():
+                for item in list_items:
+                    title = item["title"]
+                    try:
+                        related_page = Page.objects.get(
+                            slug=item["slug"], locale=locale
+                        )
+                    except Page.DoesNotExist:
+                        row = self.shadow_pages[(slug, locale)]
+                        raise ImportException(
+                            f"No pages found with slug '{item['slug']}' and locale "
+                            f"'{locale}' for go_to_page list item '{item['title']}' on "
+                            f"page '{slug}'",
+                            row.row_num,
+                        )
+                    page.whatsapp_body[message_index].value["list_items"].insert(
+                        item["index"],
+                        ("go_to_page", {"page": related_page, "title": title}),
                     )
             page.save_revision().publish()
 
@@ -361,7 +386,7 @@ class ContentImporter:
                     page_gtps = self.go_to_page_buttons[(row.slug, locale)]
                     page_gtps[len(page.whatsapp_body)].append(button)
             list_items = []
-            for item in row.list_items:
+            for index, item in enumerate(row.list_items):
                 if item["type"] == "next_message":
                     list_items.append(
                         {
@@ -371,6 +396,7 @@ class ContentImporter:
                         }
                     )
                 elif item["type"] == "go_to_page":
+                    item["index"] = index
                     page_gtpli = self.go_to_page_list_items[(row.slug, locale)]
                     page_gtpli[len(page.whatsapp_body)].append(item)
             page.whatsapp_body.append(
