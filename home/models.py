@@ -335,13 +335,6 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{len(result['message'])} characters long"
             )
 
-        list_items = [item.value["title"] for item in result["list_items"]]
-        for item in list_items:
-            if len(item) > 24:
-                errors["list_items"] = ValidationError(
-                    f"List item ({item}) has exceeded maximum character limit of 24"
-                )
-
         variation_messages = result["variation_messages"]
         for message in variation_messages:
             if len(message) > 4096:
