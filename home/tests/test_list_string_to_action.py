@@ -8,7 +8,7 @@ list_string_to_action = importlib.import_module(
 
 
 class ListStringToActionMigrationTests(TestCase):
-    def test_list_string_to_action(self):
+    def test_list_string_to_action(self) -> None:
         """
         Converts old list items (strings) to new list items (dicts)
         """
