@@ -1,6 +1,6 @@
 import importlib
 
-from django.test import TestCase
+from django.test import TestCase  # type: ignore
 
 list_string_to_action = importlib.import_module(
     "home.migrations.0083_alter_contentpage_whatsapp_body"
