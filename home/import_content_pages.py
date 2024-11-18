@@ -62,6 +62,9 @@ class ContentImporter:
         self.go_to_page_buttons: dict[PageId, dict[int, list[dict[str, Any]]]] = (
             defaultdict(lambda: defaultdict(list))
         )
+        self.go_to_page_list_items: dict[PageId, dict[int, list[dict[str, Any]]]] = (
+            defaultdict(lambda: defaultdict(list))
+        )
 
     def locale_from_display_name(self, langname: str) -> Locale:
         if langname not in self.locale_map:
@@ -90,6 +93,7 @@ class ContentImporter:
         self.save_pages()
         self.link_related_pages()
         self.add_go_to_page_buttons()
+        self.add_go_to_page_list_items()
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         # Non-page rows don't have a locale, so we need to remember the last
@@ -187,6 +191,30 @@ class ContentImporter:
                         )
                     page.whatsapp_body[message_index].value["buttons"].append(
                         ("go_to_page", {"page": related_page, "title": title})
+                    )
+            page.save_revision().publish()
+
+    def add_go_to_page_list_items(self) -> None:
+        for (slug, locale), messages in self.go_to_page_list_items.items():
+            page = ContentPage.objects.get(slug=slug, locale=locale)
+            for message_index, list_items in messages.items():
+                for item in list_items:
+                    title = item["title"]
+                    try:
+                        related_page = Page.objects.get(
+                            slug=item["slug"], locale=locale
+                        )
+                    except Page.DoesNotExist:
+                        row = self.shadow_pages[(slug, locale)]
+                        raise ImportException(
+                            f"No pages found with slug '{item['slug']}' and locale "
+                            f"'{locale}' for go_to_page list item '{item['title']}' on "
+                            f"page '{slug}'",
+                            row.row_num,
+                        )
+                    page.whatsapp_body[message_index].value["list_items"].insert(
+                        item["index"],
+                        ("go_to_page", {"page": related_page, "title": title}),
                     )
             page.save_revision().publish()
 
@@ -357,6 +385,20 @@ class ContentImporter:
                 elif button["type"] == "go_to_page":
                     page_gtps = self.go_to_page_buttons[(row.slug, locale)]
                     page_gtps[len(page.whatsapp_body)].append(button)
+            list_items = []
+            for index, item in enumerate(row.list_items):
+                if item["type"] == "next_message":
+                    list_items.append(
+                        {
+                            "id": str(uuid4()),
+                            "type": item["type"],
+                            "value": {"title": item["title"]},
+                        }
+                    )
+                elif item["type"] == "go_to_page":
+                    item["index"] = index
+                    page_gtpli = self.go_to_page_list_items[(row.slug, locale)]
+                    page_gtpli[len(page.whatsapp_body)].append(item)
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
                     message=row.whatsapp_body,
@@ -365,7 +407,7 @@ class ContentImporter:
                     buttons=buttons,
                     footer=row.footer,
                     list_title=row.list_title,
-                    list_items=row.list_items,
+                    list_items=list_items,
                 )
             )
         if row.is_sms_message:
@@ -582,7 +624,7 @@ class ShadowWhatsappBlock:
     example_values: list[str] = field(default_factory=list)
     variation_messages: list["ShadowVariationBlock"] = field(default_factory=list)
     list_title: str = ""
-    list_items: list[str] = field(default_factory=list)
+    list_items: list[dict[str, Any]] = field(default_factory=list)
     footer: str = ""
 
     @property
@@ -668,7 +710,7 @@ class ContentRow:
     variation_title: dict[str, str] = field(default_factory=dict)
     variation_body: str = ""
     list_title: str = ""
-    list_items: list[str] = field(default_factory=list)
+    list_items: list[dict[str, Any]] = field(default_factory=list)
     sms_title: str = ""
     sms_body: str = ""
     ussd_title: str = ""
@@ -710,6 +752,16 @@ class ContentRow:
         }
         if "slug" not in row:
             raise ImportException("Missing slug value", row_num)
+
+        list_items = []
+        try:
+            row_list_items = row.pop("list_items", "")
+            list_items = JSON_loader(row_num, row_list_items)
+        except ImportException:
+            list_items = [
+                {"type": "next_message", "title": item}
+                for item in deserialise_list(row_list_items)
+            ]
         return cls(
             page_id=to_int_or_none(row.pop("page_id", None)),
             variation_title=deserialise_dict(row.pop("variation_title", "")),
@@ -724,7 +776,7 @@ class ContentRow:
                 else []
             ),
             list_title=row.pop("list_title", ""),
-            list_items=deserialise_list(row.pop("list_items", "")),
+            list_items=list_items,
             footer=row.pop("footer", ""),
             **row,
         )

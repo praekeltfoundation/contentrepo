@@ -228,17 +228,32 @@ class VariationBlock(blocks.StructBlock):
 
 class NextMessageButton(blocks.StructBlock):
     title = blocks.CharBlock(
-        help_text="text for the button, up to 20 characters.",
+        help_text="Text for the button, up to 20 characters.",
         validators=(MaxLengthValidator(20),),
     )
 
 
 class GoToPageButton(blocks.StructBlock):
     title = blocks.CharBlock(
-        help_text="text for the button, up to 20 characters.",
+        help_text="Text for the button, up to 20 characters.",
         validators=(MaxLengthValidator(20),),
     )
-    page = blocks.PageChooserBlock(help_text="page the button should go to")
+    page = blocks.PageChooserBlock(help_text="Page the button should go to")
+
+
+class NextMessageListItem(blocks.StructBlock):
+    title = blocks.CharBlock(
+        help_text="Text for the list item, up to 24 characters.",
+        validators=(MaxLengthValidator(24),),
+    )
+
+
+class GoToPageListItem(blocks.StructBlock):
+    title = blocks.CharBlock(
+        help_text="Text for the list item, up to 24 characters.",
+        validators=(MaxLengthValidator(24),),
+    )
+    page = blocks.PageChooserBlock(help_text="Page the list item should go to")
 
 
 class WhatsappBlock(blocks.StructBlock):
@@ -277,15 +292,12 @@ class WhatsappBlock(blocks.StructBlock):
         help_text="List title, up to 24 characters.",
         max_length=24,
     )
-    list_items = blocks.ListBlock(
-        blocks.CharBlock(label="Title"),
-        default=[],
-        help_text="List item title, up to 24 characters.",
+    list_items = blocks.StreamBlock(
+        [("next_message", NextMessageListItem()), ("go_to_page", GoToPageListItem())],
+        help_text="Items to appear in the list message",
         required=False,
         max_num=10,
-        validators=(MaxLengthValidator(24)),
     )
-
     footer = blocks.CharBlock(
         help_text="Footer cannot exceed 60 characters.",
         required=False,
@@ -322,13 +334,6 @@ class WhatsappBlock(blocks.StructBlock):
                 f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
                 f"{len(result['message'])} characters long"
             )
-
-        list_items = result["list_items"]
-        for item in list_items:
-            if len(item) > 24:
-                errors["list_items"] = ValidationError(
-                    f"List item ({item}) has exceeded maximum character limit of 24"
-                )
 
         variation_messages = result["variation_messages"]
         for message in variation_messages:

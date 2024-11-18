@@ -6,7 +6,7 @@ This is a messaging service created by the _*World Health Organization*_ *(WHO)*
 
 _You can return to this main menu at any time by replying *0*_ 🏠
 
-Choose what you'd like to know more about by tapping a button below ⬇️",,UTILITY,[],,,,,,,,,main menu first time user,"Welcome to HealthAlert 🌍
+Choose what you'd like to know more about by tapping a button below ⬇️",,UTILITY,[],,,,[],,,,,main menu first time user,"Welcome to HealthAlert 🌍
 
 This is a messaging service created by the World Health Organization (WHO) that provides information on COVID-19 as well as emergency resources for disease outbreaks, natural, and man-made disasters.
 
@@ -15,7 +15,7 @@ You can return to this main menu at any time by replying 🏠
 Choose what you'd like to know more about by tapping a button below ⬇️",,,5892bccd-8025-419d-9a8e-a6a37b755dbf,menu,"Self-help🌬️, Settings⚙️, Health Info🏥",Main menu🏠,English,,[],,,,,
 Sub 1.1.1,1,6,health-info,main menu first time user,health info,,,health info,"*Health information* 🏥
 
-Get information and advice from WHO by tapping on a button below ⬇️",,UTILITY,[],,,,,Health Info SMS Title,*Health Info SMS Body*,Health Info USSD Title,*Health Info USSD Body*,health info,"*Health information* 🏥
+Get information and advice from WHO by tapping on a button below ⬇️",,UTILITY,[],,,,[],Health Info SMS Title,*Health Info SMS Body*,Health Info USSD Title,*Health Info USSD Body*,health info,"*Health information* 🏥
 
 Get information and advice from WHO by tapping on a button below ⬇️",,,c9d6309e-173f-4c1d-bbaf-440b1fd4415f,health_info,,,English,,[],,,,,
 Sub 1.1.2,1,7,self-help,main menu first time user,self-help,,,self-help,"*Self-help programs* 🌬️
@@ -25,7 +25,7 @@ Reply with a number to take part in a *free* self-help program created by WHO.
 1. Quit tobacco 🚭
 _Stop smoking with the help of a guided, 42-day program._
 2. Manage your stress 🧘🏽‍♀️
-_Learn how to cope with stress and improve your wellbeing._",,UTILITY,[],,,,,,,,,self-help,"*Self-help programs* 🌬️
+_Learn how to cope with stress and improve your wellbeing._",,UTILITY,[],,,,[],,,,,self-help,"*Self-help programs* 🌬️
 
 Reply with a number to take part in a *free* self-help program created by WHO.
 
