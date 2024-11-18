@@ -176,19 +176,29 @@ class ContentPageAdmin(ModelAdmin):
     tag.short_description = "Tags"
 
     def wa_body(self, obj):
-        body = "\n".join(m.value["message"] for m in obj.whatsapp_body)
+        body = (
+            "\n".join(m.value["message"] for m in obj.whatsapp_body)
+            if obj.whatsapp_body
+            else ""
+        )
         return truncatechars(str(body), self.body_truncate_size)
 
     wa_body.short_description = "Whatsapp Body"
 
     def sms_body(self, obj):
-        body = "\n".join(m.value["message"] for m in obj.sms_body)
+        body = (
+            "\n".join(m.value["message"] for m in obj.sms_body) if obj.sms_body else ""
+        )
         return truncatechars(str(body), self.body_truncate_size)
 
     sms_body.short_description = "SMS Body"
 
     def ussd_body(self, obj):
-        body = "\n".join(m.value["message"] for m in obj.ussd_body)
+        body = (
+            "\n".join(m.value["message"] for m in obj.ussd_body)
+            if obj.ussd_body
+            else ""
+        )
         return truncatechars(str(body), self.body_truncate_size)
 
     ussd_body.short_description = "USSD Body"
