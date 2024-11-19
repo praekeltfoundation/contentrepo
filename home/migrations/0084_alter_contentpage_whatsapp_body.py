@@ -3,34 +3,22 @@
 
 from wagtail.blocks.migrations.migrate_operation import MigrateStreamData
 from wagtail.blocks.migrations.operations import BaseBlockOperation
-from wagtail.blocks.migrations.utils import formatted_list_child_generator
 from django.db import migrations
 
 
-def list_string_to_action(block_value):
-    # formatted_list_child_generator requires at least one item
+def list_items_to_empty(block_value):
     if not block_value:
         return []
-    new_list = []
-    for list_item in formatted_list_child_generator(block_value):
-        print(f"list_item {list_item}")
-        new_list.append(
-            {
-                "type": "next_message",
-                "id": list_item["id"],
-                "value": {"title": list_item["value"]},
-            }
-        )
-    return new_list
+    return block_value
 
 
 class ListItemsToEmptyOperation(BaseBlockOperation):
     def apply(self, block_value):
-        return list_string_to_action(block_value)
+        return list_items_to_empty(block_value)
 
     @property
     def operation_name_fragment(self):
-        return "convert_list_string_to_action_2"
+        return "convert_list_items_to_empty"
 
 
 class Migration(migrations.Migration):
