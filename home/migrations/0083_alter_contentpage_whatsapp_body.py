@@ -31,7 +31,7 @@ def list_string_to_action(block_value):
 
 class ListStringToActionOperation(BaseBlockOperation):
     def apply(self, block_value):
-        list_string_to_action(block_value)
+        list_string_to_action(block_value)  # this is wrong, there should be a return
 
     @property
     def operation_name_fragment(self):
