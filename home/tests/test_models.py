@@ -140,7 +140,10 @@ class ContentPageTests(TestCase):
                     [
                         WABlk(
                             "Page2 WA Body",
-                            buttons=[PageBtn("Import Export", page=main_menu)],
+                            buttons=[
+                                PageBtn("Menu", page=main_menu),
+                                PageBtn("Button 2", page=main_menu)
+                            ],
                         )
                     ],
                 )
@@ -150,11 +153,11 @@ class ContentPageTests(TestCase):
         )
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
-            f"wa_title_{page_with_button.get_latest_revision().id}",
-            "Test WhatsApp Message 1",
+            f"page2_{page_with_button.get_latest_revision().id}",
+            "Page2 WA Body",
             "UTILITY",
             en,
-            ["button 1", "button 2"],
+            ["Menu", "Button 2"],
             None,
             [],
         )
