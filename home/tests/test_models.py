@@ -112,7 +112,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_with_quick_reply_buttons_on_save(self, mock_create_whatsapp_template):
+    def test_template_create_with_quick_reply_buttons_on_save(
+        self, mock_create_whatsapp_template
+    ):
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         page_with_button = PageBuilder.build_cp(
@@ -122,13 +124,11 @@ class ContentPageTests(TestCase):
             bodies=[
                 WABody(
                     "Page2",
-                    [
-                        WABlk("Page2 WA Body")
-                    ],
+                    [WABlk("Page2 WA Body")],
                 )
             ],
             whatsapp_template_name="page2-template",
-            quick_replies = ["Menu", "Button 2"]
+            quick_replies=["Menu", "Button 2"],
         )
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
@@ -143,7 +143,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_with_proper_buttons_on_save(self, mock_create_whatsapp_template):
+    def test_template_create_with_proper_buttons_on_save(
+        self, mock_create_whatsapp_template
+    ):
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         page_with_button = PageBuilder.build_cp(
@@ -158,14 +160,14 @@ class ContentPageTests(TestCase):
                             "Page2 WA Body",
                             buttons=[
                                 PageBtn("Menu", page=main_menu),
-                                PageBtn("Button 2", page=main_menu)
+                                PageBtn("Button 2", page=main_menu),
                             ],
                         )
                     ],
                 )
             ],
             whatsapp_template_name="page2-template",
-            whatsapp_template_category="UTILITY"
+            whatsapp_template_category="UTILITY",
         )
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
@@ -180,7 +182,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_created_with_proper_buttons_not_quick_replies(self, mock_create_whatsapp_template):
+    def test_template_created_with_proper_buttons_not_quick_replies(
+        self, mock_create_whatsapp_template
+    ):
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         page_with_button = PageBuilder.build_cp(
@@ -195,14 +199,14 @@ class ContentPageTests(TestCase):
                             "Page2 WA Body",
                             buttons=[
                                 PageBtn("Home", page=main_menu),
-                                PageBtn("Button 1", page=main_menu)
+                                PageBtn("Button 1", page=main_menu),
                             ],
                         )
                     ],
                 )
             ],
             whatsapp_template_name="page2-template",
-            quick_replies = ["Menu", "Button 2"]
+            quick_replies=["Menu", "Button 2"],
         )
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
