@@ -1229,6 +1229,9 @@ class OrderedContentSet(
     def clean(self):
         return super().clean(OrderedContentSet)
 
+    def language_code(self):
+        return self.locale.language_code
+
 
 class ContentPageRating(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)

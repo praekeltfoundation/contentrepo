@@ -7,8 +7,9 @@ from queue import Queue
 
 from django.core.files.base import File  # type: ignore
 from openpyxl import load_workbook
+from wagtail.models import Locale
 
-from home.import_helpers import ImportException, LocaleHelper
+from home.import_helpers import ImportException
 from home.models import ContentPage, OrderedContentSet
 
 logger = getLogger(__name__)
@@ -40,7 +41,6 @@ class OrderedContentSetImporter:
         self.file = file
         self.filetype = file_type
         self.progress_queue = progress_queue
-        self.locale_helper = LocaleHelper()
 
     def _get_or_init_ordered_content_set(
         self, row: dict[str, str], set_slug: str, set_locale: str
@@ -53,7 +53,7 @@ class OrderedContentSetImporter:
         :param set_locale: The locale of the ordered content set.
         :return: An instance of OrderedContentSet.
         """
-        locale = self.locale_helper.locale_from_display_name(set_locale)
+        locale = Locale.objects.get(language_code=set_locale)
         ordered_set = OrderedContentSet.objects.filter(
             slug=set_slug, locale=locale
         ).first()
