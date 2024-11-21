@@ -1,7 +1,7 @@
 import importlib
 
-from django.test import TestCase
-from wagtail.models import Locale, Page, Site
+from django.test import TestCase  # type: ignore
+from wagtail.models import Locale, Page, Site  # type: ignore
 
 from home.models import ContentPage, OrderedContentSet
 
@@ -19,7 +19,7 @@ set_locale_from_instance = importlib.import_module(
 
 
 class MigrationTests(TestCase):
-    def test_deduplictes_page_slugs(self):
+    def test_deduplictes_page_slugs(self) -> None:
         """
         Renames all pages with duplicate slugs, so that there are no two pages with the
         same slug.
@@ -44,7 +44,7 @@ class MigrationTests(TestCase):
             ],
         )
 
-    def test_deduplicates_orderedcontentset_slugs(self):
+    def test_deduplicates_orderedcontentset_slugs(self) -> None:
         """
         Renames all ordered content sets with duplicate slugs, so that there are no two
         ordered content sets with the same slug.
@@ -78,7 +78,7 @@ class MigrationTests(TestCase):
             ],
         )
 
-    def test_set_locale_from_instance_with_pages(self):
+    def test_set_locale_from_instance_with_pages(self) -> None:
         """
         When an OrderedContentSet has pages, it should get its locale from the first page
         in its pages list.
@@ -108,7 +108,7 @@ class MigrationTests(TestCase):
         ordered_content_set.refresh_from_db()
         self.assertEqual(ordered_content_set.locale, content_page.locale)
 
-    def test_set_locale_from_instance_without_pages(self):
+    def test_set_locale_from_instance_without_pages(self) -> None:
         """
         When an OrderedContentSet has no pages, it should get its locale from the default
         site's root page locale.

@@ -44,7 +44,7 @@ class LocaleHelper:
     Helper class to map language names to locales
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.locale_map: dict[str, Locale] = {}
 
     def locale_from_display_name(self, langname: str) -> Locale:
