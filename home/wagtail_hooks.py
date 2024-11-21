@@ -242,6 +242,8 @@ class OrderedContentSetViewSet(SnippetViewSet):
         "unit",
         "before_or_after",
         "contact_field",
+        "slug",
+        "locale",
     )
     search_fields = ("name", "profile_fields")
 

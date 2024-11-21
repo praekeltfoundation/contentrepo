@@ -1055,13 +1055,20 @@ class TestOrderedContentSetAPI:
         with path.open(mode="rb") as f:
             import_content(f, "CSV", queue.Queue())
         self.page1 = ContentPage.objects.first()
-        self.ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        self.ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-1", locale=site.root_page.locale
+        )
         self.ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         self.ordered_content_set.profile_fields.append(("gender", "female"))
         self.ordered_content_set.save()
         self.ordered_content_set.save_revision().publish()
 
-        self.ordered_content_set_timed = OrderedContentSet(name="Test set timed")
+        self.ordered_content_set_timed = OrderedContentSet(
+            name="Test set timed",
+            slug="ordered-set-timed-1",
+            locale=site.root_page.locale,
+        )
         self.ordered_content_set_timed.pages.append(
             (
                 "pages",
@@ -1222,7 +1229,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("gender", "male"))
         ordered_content_set.save()
@@ -1239,7 +1249,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("age", "18 - 25"))
         ordered_content_set.save()
@@ -1256,7 +1269,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("age", "18 - 25"))
         ordered_content_set.save()
@@ -1275,7 +1291,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("relationship", "single"))
         ordered_content_set.save()
@@ -1294,7 +1313,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("relationship", "single"))
         ordered_content_set.save()
@@ -1311,7 +1333,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("age", "18 - 25"))
         ordered_content_set.profile_fields.append(("gender", "male"))
@@ -1331,7 +1356,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("age", "18 - 25"))
         ordered_content_set.profile_fields.append(("gender", "male"))
@@ -1351,7 +1379,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("relationship", "single"))
         ordered_content_set.profile_fields.append(("gender", "male"))
@@ -1371,7 +1402,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("relationship", "single"))
         ordered_content_set.profile_fields.append(("gender", "male"))
@@ -1391,7 +1425,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("relationship", "single"))
         ordered_content_set.profile_fields.append(("age", "18 - 25"))
@@ -1411,7 +1448,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("relationship", "single"))
         ordered_content_set.profile_fields.append(("age", "4 - 5"))
@@ -1431,7 +1471,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("gender", "male"))
         ordered_content_set.profile_fields.append(("relationship", "single"))
@@ -1452,7 +1495,10 @@ class TestOrderedContentSetAPI:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
-        ordered_content_set = OrderedContentSet(name="Test set")
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         ordered_content_set.profile_fields.append(("gender", "male"))
         ordered_content_set.profile_fields.append(("relationship", "single"))
@@ -1588,7 +1634,10 @@ class TestOrderedContentSetAPI:
             content_type_id=content_type.id, workflow_id=workflow.id
         )
 
-        ordered_content_set_instance = OrderedContentSet()
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set_instance = OrderedContentSet(
+            slug="ordered-set-2", locale=site.root_page.locale
+        )
         ordered_content_set_default_workflow = (
             ordered_content_set_instance.get_default_workflow()
         )

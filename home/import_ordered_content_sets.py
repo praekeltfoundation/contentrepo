@@ -8,7 +8,7 @@ from queue import Queue
 from django.core.files.base import File  # type: ignore
 from openpyxl import load_workbook
 
-from home.import_helpers import ImportException
+from home.import_helpers import ImportException, LocaleHelper
 from home.models import ContentPage, OrderedContentSet
 
 logger = getLogger(__name__)
@@ -40,20 +40,25 @@ class OrderedContentSetImporter:
         self.file = file
         self.filetype = file_type
         self.progress_queue = progress_queue
+        self.locale_helper = LocaleHelper()
 
     def _get_or_init_ordered_content_set(
-        self, row: dict[str, str], set_name: str
+        self, row: dict[str, str], set_slug: str, set_locale: str
     ) -> OrderedContentSet:
         """
         Get or initialize an instance of OrderedContentSet from a row of a CSV file.
 
         :param row: The row of the CSV file, as a dict.
-        :param set_name: The name of the ordered content set.
+        :param set_slug: The slug of the ordered content set.
+        :param set_locale: The locale of the ordered content set.
         :return: An instance of OrderedContentSet.
         """
-        ordered_set = OrderedContentSet.objects.filter(name=set_name).first()
+        locale = self.locale_helper.locale_from_display_name(set_locale)
+        ordered_set = OrderedContentSet.objects.filter(
+            slug=set_slug, locale=locale
+        ).first()
         if not ordered_set:
-            ordered_set = OrderedContentSet(name=set_name)
+            ordered_set = OrderedContentSet(slug=set_slug, locale=locale)
 
         return ordered_set
 
@@ -155,7 +160,10 @@ class OrderedContentSetImporter:
         :return: An instance of OrderedContentSet.
         :raises ImportException: If time, units, before_or_afters, page_slugs and contact_fields are not all equal length.
         """
-        ordered_set = self._get_or_init_ordered_content_set(row, row["Name"])
+        ordered_set = self._get_or_init_ordered_content_set(
+            row, row["Slug"], row["Locale"]
+        )
+        ordered_set.name = row["Name"]
         self._add_profile_fields(ordered_set, row)
 
         pages = self._extract_ordered_content_set_pages(row, index)
@@ -187,6 +195,8 @@ class OrderedContentSetImporter:
                 "Unit": str(row[4]),
                 "Before Or After": str(row[5]),
                 "Contact Field": str(row[6]),
+                "Slug": str(row[7]),
+                "Locale": str(row[8]),
             }
             lines.append(row_dict)
         return lines

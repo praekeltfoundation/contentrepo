@@ -1240,7 +1240,10 @@ class TestImportExport:
         content = csv_impexp.read_bytes("ordered_content.csv")
         csv_impexp.import_ordered_sets(content)
 
-        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
+        locale = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            name="Test Set", slug="test_set", locale=locale
+        ).first()
 
         assert ordered_set.name == "Test Set"
         pages = unwagtail(ordered_set.pages)
@@ -1281,7 +1284,10 @@ class TestImportExport:
         content = csv_impexp.read_bytes("ordered_content_no_profile_fields.csv")
         csv_impexp.import_ordered_sets(content)
 
-        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
+        locale = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            name="Test Set", slug="test_set", locale=locale
+        ).first()
 
         assert ordered_set.name == "Test Set"
         pages = unwagtail(ordered_set.pages)
@@ -1304,9 +1310,14 @@ class TestImportExport:
         content = xlsx_impexp.read_bytes("ordered_content.xlsx")
         xlsx_impexp.import_ordered_sets(content)
 
-        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
+        locale = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            name="Test Set", slug="test-set", locale=locale
+        ).first()
 
         assert ordered_set.name == "Test Set"
+        assert ordered_set.slug == "test-set"
+        assert ordered_set.locale == locale
         pages = unwagtail(ordered_set.pages)
         assert len(pages) == 1
         page = pages[0][1]

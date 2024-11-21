@@ -414,7 +414,9 @@ class ContentPageTests(TestCase):
         )
         page_with_links = PageBuilder.link_related(page_with_links, [test_page])
 
-        ocs = OrderedContentSet(name="Test set")
+        ocs = OrderedContentSet(
+            name="Test set", slug="test", locale=Locale.objects.get(language_code="en")
+        )
         ocs.pages.append(("pages", {"contentpage": test_page}))
         ocs.save()
         ocs.save_revision().publish()
@@ -479,7 +481,11 @@ class OrderedContentSetTests(TestCase):
         """
         Ordered Content Sets without a gender selected should return None
         """
-        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            slug="ordered-set-2",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.save()
         self.assertIsNone(ordered_content_set.get_gender())
 
@@ -487,7 +493,11 @@ class OrderedContentSetTests(TestCase):
         """
         Ordered Content Sets with a gender selected should return the appropriate gender
         """
-        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            slug="ordered-set-2",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.get_gender(), "female")
@@ -496,7 +506,11 @@ class OrderedContentSetTests(TestCase):
         """
         Draft Ordered Content Sets should return a draft status
         """
-        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            slug="ordered-set-2",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save()
         ordered_content_set.unpublish()
@@ -506,7 +520,11 @@ class OrderedContentSetTests(TestCase):
         """
         Live Ordered Content Sets should return a live status
         """
-        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            slug="ordered-set-2",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.status(), "Live")
@@ -515,7 +533,11 @@ class OrderedContentSetTests(TestCase):
         """
         An Ordered Content Sets that is published and being drafted should return a live and draft status
         """
-        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            slug="ordered-set-2",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.save()
         ordered_content_set.profile_fields.append(("gender", "female"))
         ordered_content_set.save_revision()
@@ -525,7 +547,11 @@ class OrderedContentSetTests(TestCase):
         """
         Ordered Content Sets with a relationship selected should return the appropriate relationship
         """
-        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            slug="ordered-set-2",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.profile_fields.append(("relationship", "single"))
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.get_relationship(), "single")
@@ -534,7 +560,11 @@ class OrderedContentSetTests(TestCase):
         """
         Ordered Content Sets with an age selected should return the choosen age
         """
-        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            slug="ordered-set-2",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.profile_fields.append(("age", "15-18"))
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.get_age(), "15-18")
@@ -560,7 +590,11 @@ class OrderedContentSetTests(TestCase):
         )
         page.save_revision()
 
-        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            slug="ordered-set-2",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.pages.append(("pages", {"contentpage": page}))
         ordered_content_set.pages.append(("pages", {"contentpage": page2}))
         ordered_content_set.save()
@@ -570,13 +604,21 @@ class OrderedContentSetTests(TestCase):
         """
         Ordered Content Sets with no page selected should return the default value -
         """
-        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            slug="ordered-set-2",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.page(), ["-"])
 
     def test_status_live_plus_in_moderation(self):
         requested_by = create_user()
-        ordered_content_set = OrderedContentSet(name="Test Title")
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            slug="test",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.save()
         workflow = Workflow.objects.create(name="Test Workflow", active="t")
         content_type = ContentType.objects.get_for_model(ordered_content_set)
@@ -594,7 +636,12 @@ class OrderedContentSetTests(TestCase):
 
     def test_status_in_moderation(self):
         requested_by = create_user()
-        ordered_content_set = OrderedContentSet(name="Test Title", live=False)
+        ordered_content_set = OrderedContentSet(
+            name="Test Title",
+            live=False,
+            slug="test",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ordered_content_set.save()
         workflow = Workflow.objects.create(name="Test Workflow", active="t")
         content_type = ContentType.objects.get_for_model(ordered_content_set)

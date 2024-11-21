@@ -63,27 +63,27 @@ class UniqueSlugMixin:
     Ensures that slugs are unique per locale
     """
 
-    def is_slug_available(self, slug):
-        pages = Page.objects.filter(
+    def is_slug_available(self, slug, PO=Page):
+        pages = PO.objects.filter(
             locale=self.locale_id or self.get_default_locale(), slug=slug
         )
         if self.pk is not None:
             pages = pages.exclude(pk=self.pk)
         return not pages.exists()
 
-    def get_unique_slug(self, slug):
+    def get_unique_slug(self, slug, PO):
         suffix = 1
         candidate_slug = slug
-        while not self.is_slug_available(candidate_slug):
+        while not self.is_slug_available(candidate_slug, PO):
             suffix += 1
             candidate_slug = f"{slug}-{suffix}"
         return candidate_slug
 
-    def clean(self):
+    def clean(self, PO=Page):
         super().clean()
 
-        if not self.is_slug_available(self.slug):
-            page = Page.objects.get(locale=self.locale, slug=self.slug)
+        if not self.is_slug_available(self.slug, PO):
+            page = PO.objects.get(locale=self.locale, slug=self.slug)
             raise ValidationError(
                 {
                     "slug": ValidationError(
@@ -931,7 +931,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         return revision
 
     def clean(self):
-        result = super().clean()
+        result = super().clean(Page)
         errors = {}
 
         # The WA title is needed for all templates to generate a name for the template
@@ -1007,6 +1007,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
 
 class OrderedContentSet(
+    UniqueSlugMixin,
     WorkflowMixin,
     DraftStateMixin,
     LockableMixin,
@@ -1014,6 +1015,12 @@ class OrderedContentSet(
     index.Indexed,
     models.Model,
 ):
+    slug = models.SlugField(
+        max_length=255,
+        help_text="A unique identifier for this ordered content set",
+        default="",
+    )
+    locale = models.ForeignKey(to=Locale, on_delete=models.CASCADE, default="")
     revisions = GenericRelation(
         "wagtailcore.Revision", related_query_name="orderedcontentset"
     )
@@ -1218,6 +1225,9 @@ class OrderedContentSet(
     class Meta:  # noqa
         verbose_name = "Ordered Content Set"
         verbose_name_plural = "Ordered Content Sets"
+
+    def clean(self):
+        return super().clean(OrderedContentSet)
 
 
 class ContentPageRating(models.Model):

@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from wagtail.models import Page
 
 from home.models import ContentPage, HomePage
 
@@ -12,7 +13,7 @@ class UniqueSlugHookTest(TestCase):
         home = HomePage.objects.first()
         home.add_child(instance=ContentPage(title="duplicate", slug="duplicate"))
         home.add_child(instance=ContentPage(title="duplicate", slug="duplicate-2"))
-        slug = ContentPage().get_unique_slug("duplicate")
+        slug = ContentPage().get_unique_slug("duplicate", Page)
         self.assertEqual(slug, "duplicate-3")
 
     def test_duplicate_slug_on_creation(self):
