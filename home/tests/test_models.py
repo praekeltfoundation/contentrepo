@@ -112,11 +112,45 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_with_buttons_on_save(self, mock_create_whatsapp_template):
+    def test_template_create_with_quick_reply_buttons_on_save(self, mock_create_whatsapp_template):
         page = create_page(is_whatsapp_template=True, has_quick_replies=True)
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
             f"wa_title_{page.get_latest_revision().id}",
+            "Test WhatsApp Message 1",
+            "UTILITY",
+            en,
+            ["button 1", "button 2"],
+            None,
+            [],
+        )
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @mock.patch("home.models.create_whatsapp_template")
+    def test_template_create_with_proper_buttons_on_save(self, mock_create_whatsapp_template):
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        page_with_button = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="page2",
+            title="Page2",
+            bodies=[
+                WABody(
+                    "Page2",
+                    [
+                        WABlk(
+                            "Page2 WA Body",
+                            buttons=[PageBtn("Import Export", page=main_menu)],
+                        )
+                    ],
+                )
+            ],
+            whatsapp_template_name="page2-template",
+            whatsapp_template_category="UTILITY"
+        )
+        en = Locale.objects.get(language_code="en")
+        mock_create_whatsapp_template.assert_called_with(
+            f"wa_title_{page_with_button.get_latest_revision().id}",
             "Test WhatsApp Message 1",
             "UTILITY",
             en,
@@ -295,7 +329,7 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_submitted_with_no_title(self, mock_create_whatsapp_template):
+    def test_template_not_submitted_with_no_title(self, mock_create_whatsapp_template):
         """
         If the page is a WA template and how no title, then it shouldn't be submitted
         """
