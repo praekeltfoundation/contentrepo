@@ -7,20 +7,22 @@ import django.db.models.deletion
 
 def rename_duplicate_slugs(OrderedContentSet):
     duplicate_slugs = (
-        OrderedContentSet.objects.values("slug")
+        OrderedContentSet.objects.values("slug", "locale")
         .annotate(count=Count("slug"))
         .order_by("-count")
         .filter(count__gt=1)
-        .values_list("slug", flat=True)
+        .values_list("slug", "locale")
     )
-    for slug in duplicate_slugs:
-        pages = OrderedContentSet.objects.filter(slug=slug)
+    for slug, locale in duplicate_slugs:
+        pages = OrderedContentSet.objects.filter(slug=slug, locale=locale)
         while pages.count() > 1:
             page = pages.first()
 
             suffix = 1
             candidate_slug = slug
-            while OrderedContentSet.objects.filter(slug=candidate_slug).exists():
+            while OrderedContentSet.objects.filter(
+                slug=candidate_slug, locale=locale
+            ).exists():
                 suffix += 1
                 candidate_slug = f"{slug}-{suffix}"
 

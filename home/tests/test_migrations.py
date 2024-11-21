@@ -49,8 +49,9 @@ class MigrationTests(TestCase):
         Renames all ordered content sets with duplicate slugs, so that there are no two
         ordered content sets with the same slug.
         """
-        # Create a default locale for testing
+        # Get a default locale for testing
         default_locale = Locale.objects.get(language_code="en")
+        pt_locale, _created = Locale.objects.get_or_create(language_code="pt")
 
         # Create ordered content sets with duplicate slugs
         OrderedContentSet.objects.create(
@@ -58,6 +59,9 @@ class MigrationTests(TestCase):
         )
         OrderedContentSet.objects.create(
             name="second", slug="duplicate", locale=default_locale
+        )
+        OrderedContentSet.objects.create(
+            name="first_pt", slug="duplicate", locale=pt_locale
         )
         OrderedContentSet.objects.create(
             name="third", slug="duplicate-2", locale=default_locale
@@ -71,6 +75,7 @@ class MigrationTests(TestCase):
         self.assertEqual(
             sorted(OrderedContentSet.objects.values_list("slug", flat=True)),
             [
+                "duplicate",
                 "duplicate",
                 "duplicate-2",
                 "duplicate-3",
