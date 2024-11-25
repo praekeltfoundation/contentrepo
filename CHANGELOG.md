@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ordered Content Sets: Import now allows for CSV values in time, unit, before or after, and contact field
 - Importing certain ContentPage fields with whitespace-only values will no longer throw unhandled exceptions
 
+### Changed
+- Submit WA templates with Buttons if they exist, only submit with Quick Replies if no Buttons
+
 ### Security
 - Updated sentry-sdk from 1.44.1 to 2.8.0
 - Updated wagtail from 5.2.4 to 5.2.6
