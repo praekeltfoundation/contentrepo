@@ -7,7 +7,7 @@ from queue import Queue
 
 from django.core.files.base import File  # type: ignore
 from openpyxl import load_workbook
-from wagtail.models import Locale
+from wagtail.models import Locale  # type: ignore
 
 from home.import_helpers import ImportException
 from home.models import ContentPage, OrderedContentSet
