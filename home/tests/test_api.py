@@ -14,7 +14,7 @@ from taggit.models import Tag  # type: ignore
 from wagtail import blocks
 from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
-from wagtail.models import Workflow, WorkflowContentType
+from wagtail.models import Locale, Workflow, WorkflowContentType
 from wagtail.models.sites import Site  # type: ignore
 from wagtailmedia.models import Media  # type: ignore
 
@@ -1056,8 +1056,9 @@ class TestOrderedContentSetAPI:
             import_content(f, "CSV", queue.Queue())
         self.page1 = ContentPage.objects.first()
         site = Site.objects.get(is_default_site=True)
+        self.default_locale = site.root_page.locale
         self.ordered_content_set = OrderedContentSet(
-            name="Test set", slug="ordered-set-1", locale=site.root_page.locale
+            name="Test set", slug="ordered-set-1", locale=self.default_locale
         )
         self.ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
         self.ordered_content_set.profile_fields.append(("gender", "female"))
@@ -1067,7 +1068,7 @@ class TestOrderedContentSetAPI:
         self.ordered_content_set_timed = OrderedContentSet(
             name="Test set timed",
             slug="ordered-set-timed-1",
-            locale=site.root_page.locale,
+            locale=self.default_locale,
         )
         self.ordered_content_set_timed.pages.append(
             (
@@ -1096,6 +1097,11 @@ class TestOrderedContentSetAPI:
         content = json.loads(response.content)
         assert content["count"] == 2
         assert content["results"][0]["name"] == self.ordered_content_set.name
+        assert content["results"][0]["slug"] == self.ordered_content_set.slug
+        assert (
+            content["results"][0]["locale"]
+            == self.ordered_content_set.locale.language_code
+        )
         assert content["results"][0]["profile_fields"][0] == {
             "profile_field": "gender",
             "value": "female",
@@ -1114,6 +1120,8 @@ class TestOrderedContentSetAPI:
             "profile_field": "gender",
             "value": "female",
         }
+        assert content["slug"] == self.ordered_content_set.slug
+        assert content["locale"] == self.ordered_content_set.locale.language_code
         assert content["pages"][0] == {
             "id": self.page1.id,
             "title": self.page1.title,
@@ -1212,6 +1220,43 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
 
+    def test_orderedcontent_endpoint_filter_on_slug(self, uclient):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        url = "/api/v2/orderedcontent/?slug=ordered-set-1"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 1
+
+        assert content["results"][0]["name"] == self.ordered_content_set.name
+        assert content["results"][0]["profile_fields"][0] == {
+            "profile_field": "gender",
+            "value": "female",
+        }
+
+    def test_orderedcntent_endpoint_filter_on_locale(self, uclient):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=pt
+        )
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("gender", "male"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+
+        url = "/api/v2/orderedcontent/?locale=pt"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 1
+
     def test_orderedcontent_endpoint_filter_male_on_gender_profile_field(self, uclient):
         """
         The correct ordered content sets are returned if the filter is applied.
@@ -1239,6 +1284,29 @@ class TestOrderedContentSetAPI:
         ordered_content_set.save_revision().publish()
 
         url = "/api/v2/orderedcontent/?gender=female"
+        response = uclient.get(url)
+        content = json.loads(response.content)
+
+        assert response.status_code == 200
+        assert content["count"] == 2
+
+    def test_orderedcontent_endpoint_filter_female_on_gender_profile_field_qa_flag_set(
+        self, uclient
+    ):
+        """
+        The correct ordered content sets are returned if the filter is applied.
+        """
+        site = Site.objects.get(is_default_site=True)
+        ordered_content_set = OrderedContentSet(
+            name="Test set", slug="ordered-set-2", locale=site.root_page.locale
+        )
+        ordered_content_set.pages.append(("pages", {"contentpage": self.page1}))
+        ordered_content_set.profile_fields.append(("gender", "male"))
+        ordered_content_set.save()
+        ordered_content_set.save_revision().publish()
+        self.ordered_content_set.unpublish()
+
+        url = "/api/v2/orderedcontent/?qa=true&gender=female"
         response = uclient.get(url)
         content = json.loads(response.content)
 

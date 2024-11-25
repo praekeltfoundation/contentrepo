@@ -122,6 +122,7 @@ class OrderedContentSetImporter:
         self,
         ordered_set: OrderedContentSet,
         pages: list[OrderedContentSetPage],
+        index: int,
     ) -> None:
         """
         Given the extracted values from a row of the file, create the corresponding ordered content set pages.
@@ -146,7 +147,7 @@ class OrderedContentSetImporter:
                     ordered_set.pages.append(("pages", os_page))
                 else:
                     raise ImportException(
-                        f"Content page not found for slug '{page.page_slug}'"
+                        f"Content page not found for slug '{page.page_slug}'", index
                     )
 
     def _create_ordered_set_from_row(
@@ -161,14 +162,14 @@ class OrderedContentSetImporter:
         :raises ImportException: If time, units, before_or_afters, page_slugs and contact_fields are not all equal length.
         """
         ordered_set = self._get_or_init_ordered_content_set(
-            row, row["Slug"], row["Locale"]
+            row, row["Slug"].lower(), row["Locale"]
         )
         ordered_set.name = row["Name"]
         self._add_profile_fields(ordered_set, row)
 
         pages = self._extract_ordered_content_set_pages(row, index)
 
-        self._add_pages(ordered_set, pages)
+        self._add_pages(ordered_set, pages, index)
 
         ordered_set.save()
         return ordered_set

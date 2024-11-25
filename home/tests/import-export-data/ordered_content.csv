@@ -1,2 +1,2 @@
 Name,Profile Fields,Page Slugs,Time,Unit,Before Or After,Contact Field,Slug,Locale
-Test Set,"gender:male, relationship:in_a_relationship","first_time_user, first_time_user, first_time_user","2, 3, 4","days, months, years","before, before, after",edd,test_set,en
+Test Set,"gender:male, relationship:in_a_relationship","first_time_user, first_time_user, first_time_user","2, 3, 4","days, months, years","before, before, after",edd,Test_Set,en

@@ -1207,12 +1207,16 @@ class OrderedContentSet(
         return status
 
     panels = [
+        FieldPanel("slug"),
+        FieldPanel("locale"),
         FieldPanel("name"),
         FieldPanel("profile_fields"),
         FieldPanel("pages"),
     ]
 
     api_fields = [
+        APIField("slug"),
+        APIField("locale"),
         APIField("name"),
         APIField("profile_fields"),
         APIField("pages"),
