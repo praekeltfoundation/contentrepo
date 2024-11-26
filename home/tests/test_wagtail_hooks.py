@@ -1,5 +1,6 @@
 import pytest
 from django.test import TestCase
+from wagtail.models import Locale
 
 from home.models import ContentPage, HomePage, OrderedContentSet
 from home.wagtail_hooks import ContentPageAdmin
@@ -103,7 +104,9 @@ class TestBeforeDeletePageHook:
         page_with_links = PageBuilder.link_related(page_with_links, [page])
         edit_url = f"/admin/pages/{page_with_links.id}/edit/"
 
-        ocs = OrderedContentSet(name="Test set")
+        ocs = OrderedContentSet(
+            name="Test set", slug="test", locale=Locale.objects.get(language_code="en")
+        )
         ocs.pages.append(("pages", {"contentpage": page}))
         ocs.save()
         ocs.save_revision().publish()

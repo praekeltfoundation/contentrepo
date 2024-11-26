@@ -555,8 +555,21 @@ class ProfileFieldsField(serializers.Field):
         return text
 
 
+class OrderedLocaleField(serializers.Field):
+    """
+    Serializes the "locale" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, instance):
+        return instance.locale.language_code
+
+
 class OrderedContentSetSerializer(BaseSerializer):
     name = NameField(read_only=True)
+    locale = OrderedLocaleField(read_only=True)
     pages = OrderedPagesField(read_only=True)
     profile_fields = ProfileFieldsField(read_only=True)
 

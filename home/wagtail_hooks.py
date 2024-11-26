@@ -242,7 +242,13 @@ class OrderedContentSetViewSet(SnippetViewSet):
         "unit",
         "before_or_after",
         "contact_field",
+        "slug",
+        "language_code",
     )
+
+    export_headings = {"language_code": "Locale"}
+
+    list_filter = ("locale",)
     search_fields = ("name", "profile_fields")
 
 

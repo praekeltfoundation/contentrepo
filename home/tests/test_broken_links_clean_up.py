@@ -2,7 +2,7 @@ from io import StringIO
 
 from django.core.management import call_command  # type: ignore
 from django.test import TestCase  # type: ignore
-from wagtail.models import Page  # type: ignore
+from wagtail.models import Locale, Page  # type: ignore
 
 from home.models import HomePage, OrderedContentSet
 
@@ -147,7 +147,11 @@ class TestBrokenLinks(TestCase):
         """
         output = StringIO()
 
-        ocs = OrderedContentSet(name="Test Title")
+        ocs = OrderedContentSet(
+            name="Test Title",
+            slug="test",
+            locale=Locale.objects.get(language_code="en"),
+        )
         ocs.save()
         ocs.save_revision().publish()
 
@@ -165,7 +169,11 @@ class TestBrokenLinks(TestCase):
         test_page = PageBuilder.build_cp(
             parent=self.main_menu, slug="page1", title="Page1", bodies=[]
         )
-        ocs = OrderedContentSet(name="Test Title")
+        ocs = OrderedContentSet(
+            name="Test Title",
+            slug="test",
+            locale=Locale.objects.get(language_code="en"),
+        )
 
         ocs.pages.append(("pages", {"contentpage": test_page}))
         ocs.pages.append(("pages", {"contentpage": index}))

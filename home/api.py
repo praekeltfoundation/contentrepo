@@ -6,6 +6,7 @@ from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
 from wagtail.images.api.v2.views import ImagesAPIViewSet
+from wagtail.models import Locale
 from wagtailmedia.api.views import MediaAPIViewSet
 
 from .models import Assessment, AssessmentTag, OrderedContentSet
@@ -134,9 +135,11 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
         "name",
         "profile_fields",
         "pages",
+        "locale",
+        "slug",
     ]
     known_query_parameters = BaseAPIViewSet.known_query_parameters.union(
-        ["page", "qa", "gender", "age", "relationship"]
+        ["page", "qa", "gender", "age", "relationship", "slug"]
     )
     pagination_class = PageNumberPagination
     search_fields = ["name", "profile_fields"]
@@ -202,10 +205,13 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
         gender = self.request.query_params.get("gender", "")
         age = self.request.query_params.get("age", "")
         relationship = self.request.query_params.get("relationship", "")
+        slug = self.request.query_params.get("slug", "")
+        locale = self.request.query_params.get("locale", "")
 
         if qa:
             # return the latest revision for each OrderedContentSet
             queryset = OrderedContentSet.objects.all().order_by("latest_revision_id")
+
             for ocs in queryset:
                 latest_revision = ocs.revisions.order_by("-created_at").first()
                 if latest_revision:
@@ -213,27 +219,27 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
                     ocs.name = latest_revision.name
                     ocs.pages = latest_revision.pages
                     ocs.profile_fields = latest_revision.profile_fields
+                    ocs.locale = latest_revision.locale
+                    ocs.slug = latest_revision.slug
 
         else:
-            if gender or age or relationship:
-                # it looks like you can't use advanced queries to filter on StreamFields
-                # so we have to do it like this.``
-                queryset = OrderedContentSet.objects.filter(
-                    live=True,
-                )
-                filter_ids = [
-                    self._filter_queryset_by_profile_fields(
-                        x, gender, age, relationship
-                    )
-                    for x in queryset
-                ]
-                queryset = OrderedContentSet.objects.filter(id__in=filter_ids).order_by(
-                    "last_published_at"
-                )
-            else:
-                queryset = OrderedContentSet.objects.filter(
-                    live=True,
-                ).order_by("last_published_at")
+            queryset = OrderedContentSet.objects.filter(
+                live=True,
+            ).order_by("last_published_at")
+
+        if gender or age or relationship:
+            # it looks like you can't use advanced queries to filter on StreamFields
+            # so we have to do it like this.``
+            filter_ids = [
+                self._filter_queryset_by_profile_fields(x, gender, age, relationship)
+                for x in queryset
+            ]
+            queryset = queryset.filter(id__in=filter_ids).order_by("last_published_at")
+        if slug:
+            queryset = queryset.filter(slug=slug)
+        if locale:
+            locale = Locale.objects.get(language_code=locale)
+            queryset = queryset.filter(locale=locale)
         return queryset
 
 
