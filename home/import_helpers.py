@@ -14,7 +14,6 @@ from wagtail.blocks import (  # type: ignore
     StructValue,  # type: ignore
 )
 from wagtail.blocks.list_block import ListValue  # type: ignore
-from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 from wagtail.test.utils.form_data import nested_form_data, streamfield  # type: ignore
@@ -37,40 +36,6 @@ class ImportException(Exception):
         self.slug = slug
         self.locale = locale
         super().__init__()
-
-
-class LocaleHelper:
-    """
-    Helper class to map language names to locales
-    """
-
-    def __init__(self) -> None:
-        self.locale_map: dict[str, Locale] = {}
-
-    def locale_from_display_name(self, langname: str) -> Locale:
-        """
-        Get a locale from its display name.
-
-        If the locale for the given language name does not exist, an exception is raised.
-
-        :param langname: The name of the language.
-        :return: The locale for the given language.
-        :raises ImportException: If the language name is not found or has multiple codes.
-        """
-
-        if langname not in self.locale_map:
-            codes = []
-            for lang_code, lang_dn in get_content_languages().items():
-                if lang_dn == langname:
-                    codes.append(lang_code)
-            if not codes:
-                raise ImportException(f"Language not found: {langname}")
-            if len(codes) > 1:
-                raise ImportException(
-                    f"Multiple codes for language: {langname} -> {codes}"
-                )
-            self.locale_map[langname] = Locale.objects.get(language_code=codes[0])
-        return self.locale_map[langname]
 
 
 def wagtail_to_formdata(val: Any) -> Any:
