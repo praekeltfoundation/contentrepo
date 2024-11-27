@@ -1281,8 +1281,8 @@ class TestImportExport:
         self, csv_impexp: ImportExport
     ) -> None:
         """
-        Importing CSV for ordered content sets with a duplicate name but unique slugs
-        should not throw an error.
+        Importing CSV for ordered content sets with a duplicate and duplicate slugs
+        should update the existing OrderedContentSet to the last one in the CSV.
         """
         csv_impexp.import_file("contentpage_required_fields.csv")
 
