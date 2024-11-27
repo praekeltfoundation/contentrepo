@@ -374,8 +374,6 @@ class AssessmentRow:
 
         high_inflection = row.get("high_inflection")
         medium_inflection = row.get("medium_inflection")
-        # high_exists = high_inflection is not None
-        # medium_exists = medium_inflection is not None
         check_punctuation(high_inflection, medium_inflection)
 
         try:
