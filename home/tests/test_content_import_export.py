@@ -1412,6 +1412,17 @@ class TestImportExport:
         content_pages = ContentPage.objects.all()
         assert len(content_pages) > 0
 
+    def test_import_pages_number_type(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing an XLSX file where number fields have a number cell formatting
+        shouldn't break
+        """
+        home_page = HomePage.objects.first()
+        PageBuilder.build_cpi(home_page, "main-menu", "main menu first time user")
+        xlsx_impexp.import_file("contentpage_number_type.xlsx", purge=False)
+        content_pages = ContentPage.objects.all()
+        assert len(content_pages) > 0
+
     def test_invalid_page(self, csv_impexp: ImportExport) -> None:
         """
         Import an invalid page that matches a valid page already in the db
