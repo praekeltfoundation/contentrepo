@@ -632,6 +632,8 @@ class TestOrderedContentSetViews:
 
         form = soup.find("form")
         assert [heading.text.strip() for heading in form.find_all("h2")] == [
+            "Slug*",
+            "Locale*",
             "Name*",
             "Profile fields",
             "Pages",

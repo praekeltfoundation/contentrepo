@@ -7,6 +7,7 @@ from queue import Queue
 
 from django.core.files.base import File  # type: ignore
 from openpyxl import load_workbook
+from wagtail.models import Locale  # type: ignore
 
 from home.import_helpers import ImportException
 from home.models import ContentPage, OrderedContentSet
@@ -21,6 +22,7 @@ class OrderedContentSetPage:
     before_or_after: str
     page_slug: str
     contact_field: str
+    locale: str
 
 
 class OrderedContentSetImporter:
@@ -42,20 +44,29 @@ class OrderedContentSetImporter:
         self.progress_queue = progress_queue
 
     def _get_or_init_ordered_content_set(
-        self, row: dict[str, str], set_name: str
+        self, index: int, row: dict[str, str], set_slug: str, set_locale: str
     ) -> OrderedContentSet:
         """
         Get or initialize an instance of OrderedContentSet from a row of a CSV file.
 
         :param row: The row of the CSV file, as a dict.
-        :param set_name: The name of the ordered content set.
+        :param set_slug: The slug of the ordered content set.
+        :param set_locale: The locale of the ordered content set.
         :return: An instance of OrderedContentSet.
         """
-        ordered_set = OrderedContentSet.objects.filter(name=set_name).first()
-        if not ordered_set:
-            ordered_set = OrderedContentSet(name=set_name)
+        try:
+            locale = Locale.objects.get(language_code=set_locale)
+            ordered_set = OrderedContentSet.objects.filter(
+                slug=set_slug, locale=locale
+            ).first()
+            if not ordered_set:
+                ordered_set = OrderedContentSet(slug=set_slug, locale=locale)
 
-        return ordered_set
+            return ordered_set
+        except Locale.DoesNotExist:
+            if set_locale:
+                raise ImportException(f"Locale {set_locale} does not exist.", index)
+            raise ImportException("No locale specified.", index)
 
     def _add_profile_fields(
         self, ordered_set: OrderedContentSet, row: dict[str, str]
@@ -98,6 +109,7 @@ class OrderedContentSetImporter:
                 before_or_after=before_or_after,
                 page_slug=page_slug,
                 contact_field=contact_field,
+                locale=row["Locale"],
             )
             for time, unit, before_or_after, page_slug, contact_field in zip(
                 times, units, before_or_afters, page_slugs, contact_fields, strict=False
@@ -117,6 +129,7 @@ class OrderedContentSetImporter:
         self,
         ordered_set: OrderedContentSet,
         pages: list[OrderedContentSetPage],
+        index: int,
     ) -> None:
         """
         Given the extracted values from a row of the file, create the corresponding ordered content set pages.
@@ -126,10 +139,13 @@ class OrderedContentSetImporter:
         :param ordered_set: The ordered content set to add the pages to.
         :param pages: A list of OrderedContentSetPage objects.
         """
+        locale = ordered_set.locale
         ordered_set.pages = []
         for page in pages:
             if page.page_slug and page.page_slug != "-":
-                content_page = ContentPage.objects.filter(slug=page.page_slug).first()
+                content_page = ContentPage.objects.filter(
+                    slug=page.page_slug, locale=locale
+                ).first()
                 if content_page:
                     os_page = {
                         "contentpage": content_page,
@@ -141,7 +157,8 @@ class OrderedContentSetImporter:
                     ordered_set.pages.append(("pages", os_page))
                 else:
                     raise ImportException(
-                        f"Content page not found for slug '{page.page_slug}'"
+                        f"Content page not found for slug '{page.page_slug}' in locale '{locale}'",
+                        index,
                     )
 
     def _create_ordered_set_from_row(
@@ -155,12 +172,15 @@ class OrderedContentSetImporter:
         :return: An instance of OrderedContentSet.
         :raises ImportException: If time, units, before_or_afters, page_slugs and contact_fields are not all equal length.
         """
-        ordered_set = self._get_or_init_ordered_content_set(row, row["Name"])
+        ordered_set = self._get_or_init_ordered_content_set(
+            index, row, row["Slug"].lower(), row["Locale"]
+        )
+        ordered_set.name = row["Name"]
         self._add_profile_fields(ordered_set, row)
 
         pages = self._extract_ordered_content_set_pages(row, index)
 
-        self._add_pages(ordered_set, pages)
+        self._add_pages(ordered_set, pages, index)
 
         ordered_set.save()
         return ordered_set
@@ -187,6 +207,8 @@ class OrderedContentSetImporter:
                 "Unit": str(row[4]),
                 "Before Or After": str(row[5]),
                 "Contact Field": str(row[6]),
+                "Slug": str(row[7]),
+                "Locale": str(row[8]),
             }
             lines.append(row_dict)
         return lines

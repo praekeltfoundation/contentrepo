@@ -1230,17 +1230,54 @@ class TestImportExport:
             content = csv_impexp.read_bytes("ordered_content.csv")
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.message == ["Content page not found for slug 'first_time_user'"]
+        assert e.value.message == [
+            "Content page not found for slug 'first_time_user' in locale 'English'"
+        ]
+
+    def test_import_ordered_content_sets_no_locale_error(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing CSV for ordered content sets without a locale should throw an error.
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        with pytest.raises(ImportException) as e:
+            content = csv_impexp.read_bytes("ordered_content_no_locale.csv")
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.message == ["No locale specified."]
+
+    def test_import_ordered_content_sets_incorrect_locale_error(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing CSV for ordered content sets with an incorrect locale should throw an error.
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        with pytest.raises(ImportException) as e:
+            content = csv_impexp.read_bytes("ordered_content_incorrect_locale.csv")
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.message == ["Locale pt does not exist."]
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with ordered content sets should not break
         """
-        csv_impexp.import_file("contentpage_required_fields.csv")
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        csv_impexp.import_file("contentpage_required_fields_multi_locale.csv")
         content = csv_impexp.read_bytes("ordered_content.csv")
         csv_impexp.import_ordered_sets(content)
 
-        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
+        en = Locale.objects.get(language_code="en")
+
+        ordered_set = OrderedContentSet.objects.filter(
+            slug="test_set", locale=en
+        ).first()
 
         assert ordered_set.name == "Test Set"
         pages = unwagtail(ordered_set.pages)
@@ -1271,6 +1308,25 @@ class TestImportExport:
             ("relationship", "in_a_relationship"),
         ]
 
+        ordered_set_pt = OrderedContentSet.objects.filter(
+            slug="test_set", locale=pt
+        ).first()
+
+        pages = unwagtail(ordered_set_pt.pages)
+        assert len(pages) == 1
+
+        page = pages[0][1]
+        assert page["contentpage"].slug == "first_time_user"
+        assert page["time"] == "2"
+        assert page["unit"] == "days"
+        assert page["before_or_after"] == "before"
+        assert page["contact_field"] == "edd"
+
+        assert unwagtail(ordered_set_pt.profile_fields) == [
+            ("gender", "male"),
+            ("relationship", "in_a_relationship"),
+        ]
+
     def test_import_ordered_sets_no_profile_fields_csv(
         self, csv_impexp: ImportExport
     ) -> None:
@@ -1281,7 +1337,10 @@ class TestImportExport:
         content = csv_impexp.read_bytes("ordered_content_no_profile_fields.csv")
         csv_impexp.import_ordered_sets(content)
 
-        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
+        locale = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            name="Test Set", slug="test_set", locale=locale
+        ).first()
 
         assert ordered_set.name == "Test Set"
         pages = unwagtail(ordered_set.pages)
@@ -1304,9 +1363,14 @@ class TestImportExport:
         content = xlsx_impexp.read_bytes("ordered_content.xlsx")
         xlsx_impexp.import_ordered_sets(content)
 
-        ordered_set = OrderedContentSet.objects.filter(name="Test Set").first()
+        locale = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            name="Test Set", slug="test-set", locale=locale
+        ).first()
 
         assert ordered_set.name == "Test Set"
+        assert ordered_set.slug == "test-set"
+        assert ordered_set.locale == locale
         pages = unwagtail(ordered_set.pages)
         assert len(pages) == 1
         page = pages[0][1]

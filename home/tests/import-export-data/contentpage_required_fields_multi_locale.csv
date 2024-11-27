@@ -1,0 +1,7 @@
+message,slug,parent,web_title,locale,translation_tag
+0,main_menu,,Main Menu,English,9aab62ab-caf7-4606-b9bf-ac3148309319
+1,first_time_user,Main Menu,main menu first time user,English,38a22433-e474-4f5a-b06b-7367d1a7f664
+1,health_info,main menu first time user,health info,English,138da946-ee82-42ac-8e63-720771dfd674
+0,main_menu,,Main Menu,Portuguese,9aab62ab-caf7-4606-b9bf-ac3148309319
+1,first_time_user,Main Menu,main menu first time user,Portuguese,38a22433-e474-4f5a-b06b-7367d1a7f664
+1,health_info,main menu first time user,health info,Portuguese,138da946-ee82-42ac-8e63-720771dfd674
