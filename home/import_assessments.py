@@ -1,5 +1,6 @@
 import contextlib
 import csv
+import re
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
@@ -370,11 +371,24 @@ class AssessmentRow:
         Creates an AssessmentRow instance from a row in the import, deserialising the
         fields.
         """
-        row = {
-            key.strip(): value.strip()
-            for key, value in row.items()
-            if value and key.strip() in cls.fields()
-        }
+
+        high_inflection = row.get("high_inflection")
+        medium_inflection = row.get("medium_inflection")
+        # high_exists = high_inflection is not None
+        # medium_exists = medium_inflection is not None
+        check_punctuation(high_inflection, medium_inflection)
+
+        try:
+            row = {
+                key.strip(): value.strip()
+                for key, value in row.items()
+                if value and key.strip() in cls.fields()
+            }
+        except AttributeError:
+            raise ImportAssessmentException(
+                "Invalid format. Please check that all row values have headers."
+            )
+
         try:
             return cls(
                 tags=deserialise_list(row.pop("tags", "")),
@@ -401,6 +415,33 @@ def get_content_page_id_from_slug(slug: str) -> int:
             "Please create the content page first."
         )
     return page.id
+
+
+def check_punctuation(
+    high_inflection: str | None, medium_inflection: str | None
+) -> None:
+    if high_inflection is not None:
+        try:
+            high_inflection.isdigit()
+        except AttributeError:
+            high_inflection = str(high_inflection)
+        punctuaton = bool(re.search(r",", high_inflection))
+        if punctuaton:
+            raise ImportAssessmentException(
+                "Invalid number format for high inflection. "
+                "Please use '.' instead of ',' for decimals."
+            )
+    if medium_inflection is not None:
+        try:
+            medium_inflection.isdigit()
+        except AttributeError:
+            medium_inflection = str(medium_inflection)
+        punctuation = bool(re.search(r",", medium_inflection))
+        if punctuation:
+            raise ImportAssessmentException(
+                "Invalid number format for medium inflection. "
+                "Please use '.' instead of ',' for decimals."
+            )
 
 
 def deserialise_list(value: str) -> list[str]:

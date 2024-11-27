@@ -1,0 +1,24 @@
+no,slug,parent,web_title,whatsapp_title,Image,whatsapp_body,footer,ButtonA,ButtonB,ButtonC,ListOption,OptionA,OptionB,OptionC,OptionD,OptionE,OptionF,OptionG,OptionH,OptionI,OptionJ,list_items,ButtonA Goto,ButtonB Goto,ButtonC Goto,ButtonA Type,ButtonB Type,ButtonC Type,buttons,locale
+1,mnch_onboarding_dma_results_high,Main Menu,DMA_results_high,DMA_results_high,High_DMA.png,"*Thank you for completing this*
+
+You seem comfortable and confident making decisions about your health.
+
+Keep on doing what you’re doing! 🤩",,Thank you,,,,,,,,,,,,,,#NAME?,,,,next_message,,,"[{""type"": ""next_message"",""title"": ""Thank you"", ""slug"": """"},{""type"":"""",""title"":"""",""slug"":""""},{""type"":"""",""title"":"""",""slug"":""""}]",English
+2,mnch_onboarding_dma_results_medium,Main Menu,DMA_results_medium,DMA_results_medium,Medium_DMA.png,"*Thank you for completing this*
+
+Sometimes you feel that you’re in charge of your health, and sometimes you’re not so sure. 
+
+Stay on your journey with {MyHealth} and take control of your health. ⭐",,Thank you,,,,,,,,,,,,,,#NAME?,,,,next_message,,,"[{""type"": ""next_message"",""title"": ""Thank you"", ""slug"": """"},{""type"":"""",""title"":"""",""slug"":""""},{""type"":"""",""title"":"""",""slug"":""""}]",English
+3,mnch_onboarding_dma_results_low,Main Menu,DMA_results_low,DMA_results_low,Low_DMA.png,"*Thank you for completing this*
+
+Your answers show that you don’t feel very confident making decisions and taking actions about your health. 
+
+Stay on {MyHealth} and see what might change for you. 🧭",,Thank you,,,,,,,,,,,,,,#NAME?,,,,next_message,,,"[{""type"": ""next_message"",""title"": ""Thank you"", ""slug"": """"},{""type"":"""",""title"":"""",""slug"":""""},{""type"":"""",""title"":"""",""slug"":""""}]",English
+4,mnch_onboarding_all_skipped,Main Menu,All_skipped,All_skipped,All_skipped.png,"*You skipped some questions!*
+
+Let’s get back to this some other time when you feel ready. 
+
+Can I remind you to try again tomorrow?",,"Sure, remind me","No, go to main menu",,,,,,,,,,,,,,,,,next_message,next_message,,"[{""type"": ""next_message"",""title"": ""Sure, remind me"", ""slug"": """"},{""type"":""next_message"",""title"":""No, go to main menu"",""slug"":""""},{""type"":"""",""title"":"""",""slug"":""""}]",English
+5,mnch_onboarding_dma_reminder_confirmation,Main Menu,DMA_reminder_confirmation,DMA_reminder_confirmation,,"*All good. I’ll remind you tomorrow.* 🗓️
+
+👇🏽 What do you want to do now?",,Go to main menu,,,,,,,,,,,,,,,,,,next_message,,,"[{""type"": ""next_message"",""title"": ""Go to main menu"", ""slug"": """"},{""type"":"""",""title"":"""",""slug"":""""},{""type"":"""",""title"":"""",""slug"":""""}]",English
