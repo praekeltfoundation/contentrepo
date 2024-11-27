@@ -697,7 +697,6 @@ class ShadowViberBlock:
 @dataclass(slots=True, frozen=True)
 class ContentRow:
     slug: str
-    page_id: int | None = None
     parent: str = ""
     web_title: str = ""
     web_subtitle: str = ""
@@ -763,7 +762,6 @@ class ContentRow:
                 for item in deserialise_list(row_list_items)
             ]
         return cls(
-            page_id=to_int_or_none(row.pop("page_id", None)),
             variation_title=deserialise_dict(row.pop("variation_title", "")),
             tags=deserialise_list(row.pop("tags", "")),
             quick_replies=deserialise_list(row.pop("quick_replies", "")),
