@@ -132,6 +132,10 @@ There is a [docker image](https://github.com/praekeltfoundation/contentrepo/pkgs
 | WHATSAPP_ACCESS_TOKEN | WhatsApp API Token |
 | FB_BUSINESS_ID | Business ID for Meta business manager |
 
+### Versioning
+
+Different projects may use different versions of the CMS. You can usually see which version your application uses by checking the version tag in the manifest file. To switch to a specific version, first pull the latest version, then check out your desired version using git checkout <tag>.
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
