@@ -857,4 +857,11 @@ def JSON_loader(row_num: int, value: str) -> list[dict[str, Any]]:
 
 
 def to_int_or_none(val: str | None) -> int | None:
-    return int(val) if val else None
+    if val is None:
+        return None
+    try:
+        return int(val)
+    except ValueError:
+        # If it's an excel document with number formatting, we get a float
+        # If it's not a valid number, then we let the exception bubble up
+        return int(float(val))

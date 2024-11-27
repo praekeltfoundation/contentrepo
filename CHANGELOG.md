@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--
 ## Unreleased
+### Fixed
+- ContentPage import: Accept xlsx where field formatting is numeric.
 -->
 
 ## v1.3.0
