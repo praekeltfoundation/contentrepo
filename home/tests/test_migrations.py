@@ -54,11 +54,20 @@ class MigrationTests(TestCase):
         pt_locale, _created = Locale.objects.get_or_create(language_code="pt")
 
         # Create ordered content sets with blank slugs
-        OrderedContentSet.objects.create(name="first", slug="", locale=default_locale)
+        OrderedContentSet.objects.create(
+            name="first   ", slug="", locale=default_locale
+        )
         OrderedContentSet.objects.create(name="first", slug="", locale=default_locale)
         OrderedContentSet.objects.create(name="first_pt", slug="", locale=pt_locale)
-        OrderedContentSet.objects.create(name="third", slug="", locale=default_locale)
-        OrderedContentSet.objects.create(name="unique", slug="", locale=default_locale)
+        OrderedContentSet.objects.create(
+            name="third---", slug="", locale=default_locale
+        )
+        OrderedContentSet.objects.create(
+            name="unique  --", slug="", locale=default_locale
+        )
+        OrderedContentSet.objects.create(
+            name="unique-name", slug="", locale=default_locale
+        )
 
         rename_duplicate_slugs_0085(OrderedContentSet)
 
@@ -67,9 +76,10 @@ class MigrationTests(TestCase):
             [
                 "first",
                 "first-1",
-                "first-pt",
+                "first_pt",
                 "third",
                 "unique",
+                "unique-name",
             ],
         )
 

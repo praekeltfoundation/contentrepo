@@ -3,6 +3,7 @@
 from django.db import migrations, models
 from django.db.models import Count
 import django.db.models.deletion
+from django.utils.text import slugify
 import home.models
 
 
@@ -17,9 +18,7 @@ def rename_duplicate_slugs(OrderedContentSet):
     for slug in duplicate_slugs:
         ordered_content_sets = OrderedContentSet.objects.filter(slug=slug)
         for ordered_content_set in ordered_content_sets:
-            slug_from_name = (
-                ordered_content_set.name.lower().replace(" ", "-").replace("_", "-")
-            )
+            slug_from_name = slugify(ordered_content_set.name)
             suffix = 0
             candidate_slug = slug_from_name
             while OrderedContentSet.objects.filter(slug=candidate_slug).exists():
