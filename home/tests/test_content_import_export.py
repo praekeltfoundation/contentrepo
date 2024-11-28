@@ -1230,19 +1230,53 @@ class TestImportExport:
             content = csv_impexp.read_bytes("ordered_content.csv")
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.message == ["Content page not found for slug 'first_time_user'"]
+        assert e.value.message == [
+            "Content page not found for slug 'first_time_user' in locale 'English'"
+        ]
+
+    def test_import_ordered_content_sets_no_locale_error(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing CSV for ordered content sets without a locale should throw an error.
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        with pytest.raises(ImportException) as e:
+            content = csv_impexp.read_bytes("ordered_content_no_locale.csv")
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.message == ["No locale specified."]
+
+    def test_import_ordered_content_sets_incorrect_locale_error(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing CSV for ordered content sets with an incorrect locale should throw an error.
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        with pytest.raises(ImportException) as e:
+            content = csv_impexp.read_bytes("ordered_content_incorrect_locale.csv")
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.message == ["Locale pt does not exist."]
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with ordered content sets should not break
         """
-        csv_impexp.import_file("contentpage_required_fields.csv")
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        csv_impexp.import_file("contentpage_required_fields_multi_locale.csv")
         content = csv_impexp.read_bytes("ordered_content.csv")
         csv_impexp.import_ordered_sets(content)
 
-        locale = Locale.objects.get(language_code="en")
+        en = Locale.objects.get(language_code="en")
+
         ordered_set = OrderedContentSet.objects.filter(
-            name="Test Set", slug="test_set", locale=locale
+            slug="test_set", locale=en
         ).first()
 
         assert ordered_set.name == "Test Set"
@@ -1270,6 +1304,25 @@ class TestImportExport:
         assert page["before_or_after"] == "after"
         assert page["contact_field"] == "edd"
         assert unwagtail(ordered_set.profile_fields) == [
+            ("gender", "male"),
+            ("relationship", "in_a_relationship"),
+        ]
+
+        ordered_set_pt = OrderedContentSet.objects.filter(
+            slug="test_set", locale=pt
+        ).first()
+
+        pages = unwagtail(ordered_set_pt.pages)
+        assert len(pages) == 1
+
+        page = pages[0][1]
+        assert page["contentpage"].slug == "first_time_user"
+        assert page["time"] == "2"
+        assert page["unit"] == "days"
+        assert page["before_or_after"] == "before"
+        assert page["contact_field"] == "edd"
+
+        assert unwagtail(ordered_set_pt.profile_fields) == [
             ("gender", "male"),
             ("relationship", "in_a_relationship"),
         ]
@@ -1356,6 +1409,17 @@ class TestImportExport:
         Importing an XLSX file with content pages should not break
         """
         xlsx_impexp.import_file("content_pages.xlsx", purge=False)
+        content_pages = ContentPage.objects.all()
+        assert len(content_pages) > 0
+
+    def test_import_pages_number_type(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing an XLSX file where number fields have a number cell formatting
+        shouldn't break
+        """
+        home_page = HomePage.objects.first()
+        PageBuilder.build_cpi(home_page, "main-menu", "main menu first time user")
+        xlsx_impexp.import_file("contentpage_number_type.xlsx", purge=False)
         content_pages = ContentPage.objects.all()
         assert len(content_pages) > 0
 

@@ -697,7 +697,6 @@ class ShadowViberBlock:
 @dataclass(slots=True, frozen=True)
 class ContentRow:
     slug: str
-    page_id: int | None = None
     parent: str = ""
     web_title: str = ""
     web_subtitle: str = ""
@@ -763,7 +762,6 @@ class ContentRow:
                 for item in deserialise_list(row_list_items)
             ]
         return cls(
-            page_id=to_int_or_none(row.pop("page_id", None)),
             variation_title=deserialise_dict(row.pop("variation_title", "")),
             tags=deserialise_list(row.pop("tags", "")),
             quick_replies=deserialise_list(row.pop("quick_replies", "")),
@@ -859,4 +857,11 @@ def JSON_loader(row_num: int, value: str) -> list[dict[str, Any]]:
 
 
 def to_int_or_none(val: str | None) -> int | None:
-    return int(val) if val else None
+    if val is None:
+        return None
+    try:
+        return int(val)
+    except ValueError:
+        # If it's an excel document with number formatting, we get a float
+        # If it's not a valid number, then we let the exception bubble up
+        return int(float(val))

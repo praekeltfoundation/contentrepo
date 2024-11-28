@@ -807,13 +807,22 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         return self.quick_reply_items.all().values_list("tag__name", flat=True)
 
     @property
+    def whatsapp_template_buttons(self):
+        # If Buttons and quick replies are present then Buttons are used
+        first_msg = self.whatsapp_body.raw_data[0]["value"]
+        if "buttons" in first_msg and first_msg["buttons"]:
+            buttons = [b["value"]["title"] for b in first_msg["buttons"]]
+            return buttons
+        return sorted(self.quick_reply_buttons)
+
+    @property
     def whatsapp_template_fields(self):
         """
         Returns a tuple of fields that can be used to determine template equality
         """
         return (
             self.whatsapp_template_body,
-            sorted(self.quick_reply_buttons),
+            self.whatsapp_template_buttons,
             self.is_whatsapp_template,
             self.whatsapp_template_image,
             self.whatsapp_template_category,
@@ -850,7 +859,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             self.whatsapp_template_body,
             str(self.whatsapp_template_category),
             self.locale,
-            sorted(self.quick_reply_buttons),
+            self.whatsapp_template_buttons,
             self.whatsapp_template_image,
             self.whatsapp_template_example_values,
         )
