@@ -1262,6 +1262,51 @@ class TestImportExport:
 
         assert e.value.message == ["Locale pt does not exist."]
 
+    def test_import_ordered_content_sets_duplicate_name(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing CSV for ordered content sets with a duplicate name but unique slugs
+        should not throw an error.
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        content = csv_impexp.read_bytes("ordered_content_same_name.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        ordered_sets = OrderedContentSet.objects.all()
+        assert len(ordered_sets) == 2
+
+    def test_import_ordered_content_sets_duplicate_slug(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing CSV for ordered content sets with a duplicate and duplicate slugs
+        should update the existing OrderedContentSet to the last one in the CSV.
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        content = csv_impexp.read_bytes("ordered_content_same_slug.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        ordered_sets = OrderedContentSet.objects.all()
+        assert len(ordered_sets) == 1
+
+        ordered_set = ordered_sets[0]
+        assert ordered_set.name == "Test Set"
+        assert ordered_set.slug == "test_set"
+        assert ordered_set.locale.language_code == "en"
+        assert unwagtail(ordered_set.profile_fields) == [
+            ("gender", "male"),
+            ("relationship", "in_a_relationship"),
+        ]
+
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 1
+
+        page = pages[0][1]
+        assert page["contentpage"].slug == "first_time_user"
+
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with ordered content sets should not break
