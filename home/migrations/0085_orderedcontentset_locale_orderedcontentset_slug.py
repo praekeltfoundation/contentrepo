@@ -3,47 +3,53 @@
 from django.db import migrations, models
 from django.db.models import Count
 import django.db.models.deletion
+import home.models
 
 
 def rename_duplicate_slugs(OrderedContentSet):
     duplicate_slugs = (
-        OrderedContentSet.objects.values("slug", "locale")
+        OrderedContentSet.objects.values("slug")
         .annotate(count=Count("slug"))
         .order_by("-count")
         .filter(count__gt=1)
-        .values_list("slug", "locale")
+        .values_list("slug", flat=True)
     )
-    for slug, locale in duplicate_slugs:
-        pages = OrderedContentSet.objects.filter(slug=slug, locale=locale)
-        while pages.count() > 1:
-            page = pages.first()
-
-            suffix = 1
-            candidate_slug = slug
-            while OrderedContentSet.objects.filter(
-                slug=candidate_slug, locale=locale
-            ).exists():
+    for slug in duplicate_slugs:
+        ordered_content_sets = OrderedContentSet.objects.filter(slug=slug)
+        for ordered_content_set in ordered_content_sets:
+            slug_from_name = (
+                ordered_content_set.name.lower().replace(" ", "-").replace("_", "-")
+            )
+            suffix = 0
+            candidate_slug = slug_from_name
+            while OrderedContentSet.objects.filter(slug=candidate_slug).exists():
                 suffix += 1
-                candidate_slug = f"{slug}-{suffix}"
+                candidate_slug = f"{slug_from_name}-{suffix}"
 
-            page.slug = candidate_slug
-            page.save(update_fields=["slug"])
+            ordered_content_set.slug = candidate_slug
+            ordered_content_set.save(update_fields=["slug"])
 
 
 def set_locale_from_instance(OrderedContentSet, Site):
     site = Site.objects.get(is_default_site=True)
+    default_locale_id = site.root_page.locale_id
+
     for ocs in OrderedContentSet.objects.all():
         if ocs.pages:
             # Get the first page's data
             first_page_data = ocs.pages[0]
-            contentpage = first_page_data.value.get("contentpage")
-            if contentpage:
-                ocs.locale = contentpage.locale
+            if isinstance(first_page_data, tuple):
+                contentpage = first_page_data[1].get("contentpage")
             else:
-                ocs.locale = site.root_page.locale
+                contentpage = first_page_data.value.get("contentpage")
+
+            if contentpage:
+                ocs.locale_id = contentpage.locale_id
+            else:
+                ocs.locale_id = default_locale_id
         else:
-            ocs.locale = site.root_page.locale
-        ocs.save(update_fields=["locale"])
+            ocs.locale_id = default_locale_id
+        ocs.save(update_fields=["locale_id"])
 
 
 def run_migration(apps, schema_editor):
@@ -65,7 +71,7 @@ class Migration(migrations.Migration):
             model_name="orderedcontentset",
             name="locale",
             field=models.ForeignKey(
-                default="",
+                default=home.models._get_default_locale,
                 on_delete=django.db.models.deletion.CASCADE,
                 to="wagtailcore.locale",
             ),
