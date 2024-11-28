@@ -115,18 +115,22 @@ class AssessmentImporter:
         first_row = next(worksheet.iter_rows(max_row=1, values_only=True))
         header = [clean_excel_cell(cell) if cell else None for cell in first_row]
         rows: list[AssessmentRow] = []
+        i = 2
         for row in worksheet.iter_rows(min_row=2, values_only=True):
             r = {}
             for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
                 if name and cell:
                     r[name] = clean_excel_cell(cell)
             if r:
-                rows.append(AssessmentRow.from_flat(r))
+                rows.append(AssessmentRow.from_flat(r, i))
+                i += 1
         return rows
 
     def parse_csv(self) -> list["AssessmentRow"]:
         reader = csv.DictReader(StringIO(self.file_content.decode()))
-        rows = [AssessmentRow.from_flat(row) for row in reader]
+        rows = [
+            AssessmentRow.from_flat(row, i) for i, row in enumerate(reader, start=2)
+        ]
         return rows
 
     def set_progress(self, message: str, progress: int) -> None:
@@ -365,16 +369,27 @@ class AssessmentRow:
         return [field.name for field in fields(cls)]
 
     @classmethod
-    def from_flat(cls, row: dict[str, str]) -> "AssessmentRow":
+    def from_flat(cls, row: dict[str, str], row_num: int) -> "AssessmentRow":
         """
         Creates an AssessmentRow instance from a row in the import, deserialising the
         fields.
         """
-        row = {
-            key.strip(): value.strip()
-            for key, value in row.items()
-            if value and key.strip() in cls.fields()
-        }
+
+        high_inflection = row.get("high_inflection")
+        medium_inflection = row.get("medium_inflection")
+        check_punctuation(high_inflection, medium_inflection, row_num)
+
+        try:
+            row = {
+                key.strip(): value.strip()
+                for key, value in row.items()
+                if value and key.strip() in cls.fields()
+            }
+        except AttributeError:
+            raise ImportAssessmentException(
+                "Invalid format. Please check that all row values have headers."
+            )
+
         try:
             return cls(
                 tags=deserialise_list(row.pop("tags", "")),
@@ -401,6 +416,29 @@ def get_content_page_id_from_slug(slug: str) -> int:
             "Please create the content page first."
         )
     return page.id
+
+
+def check_punctuation(
+    high_inflection: str | None, medium_inflection: str | None, row_num: int
+) -> None:
+    if high_inflection is not None:
+        high_inflection = str(high_inflection)
+        punctuaton = "," in high_inflection
+        if punctuaton:
+            raise ImportAssessmentException(
+                "Invalid number format for high inflection. "
+                "Please use '.' instead of ',' for decimals.",
+                row_num,
+            )
+    if medium_inflection is not None:
+        medium_inflection = str(medium_inflection)
+        punctuation = "," in medium_inflection
+        if punctuation:
+            raise ImportAssessmentException(
+                "Invalid number format for medium inflection. "
+                "Please use '.' instead of ',' for decimals.",
+                row_num,
+            )
 
 
 def deserialise_list(value: str) -> list[str]:

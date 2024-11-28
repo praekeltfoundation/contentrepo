@@ -475,3 +475,73 @@ class TestImportExport:
         xlsx_impexp.import_file("assessment.xlsx", purge=False)
         content_pages = Assessment.objects.all()
         assert len(content_pages) > 0
+
+    def test_invalid_high_inflecton_format(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing an xlsx with a comma in high inflecton value
+        should return a helpful error informing the user
+        where the issue is.
+
+        (This uses high_inflection_invalid_format.xlsx)
+        """
+
+        with pytest.raises(ImportAssessmentException) as e:
+            xlsx_impexp.import_content_file("assessment_results.xlsx", purge=False)
+            xlsx_impexp.import_file("high_inflection_invalid_format.xlsx")
+        assert (
+            e.value.message == "Invalid number format for high inflection. "
+            "Please use '.' instead of ',' for decimals."
+        )
+        assert e.value.row_num == 5
+
+    def test_invalid_medium_inflecton_format(self, xlsx_impexp: ImportExport) -> None:
+        """
+        Importing an xlsx with a comma in medium inflecton value
+        should return a helpful error informing the user
+        where the issue is.
+
+        (This uses medium_inflection_invalid_format.xlsx)
+        """
+
+        with pytest.raises(ImportAssessmentException) as e:
+            xlsx_impexp.import_content_file("assessment_results.xlsx", purge=False)
+            xlsx_impexp.import_file("medium_inflection_invalid_format.xlsx")
+        assert (
+            e.value.message == "Invalid number format for medium inflection. "
+            "Please use '.' instead of ',' for decimals."
+        )
+        assert e.value.row_num == 2
+
+    def test_invalid_high_inflecton_csv_format(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a csv with a comma in high inflecton value
+        should return a helpful error informing the user
+        where the issue is.
+
+        (This uses high_inflection_invalid_format.csv)
+        """
+
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_content_file("assessment_results.csv", purge=False)
+            csv_impexp.import_file("high_inflection_invalid_format.csv")
+        assert (
+            e.value.message == "Invalid number format for high inflection. "
+            "Please use '.' instead of ',' for decimals."
+        )
+        assert e.value.row_num == 2
+
+    def test_extra_columns(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a csv with an extra comma so there are more
+        column values than headers should return an intuitive error message
+
+        (This uses extra_columns.csv)
+        """
+
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_content_file("assessment_results.csv", purge=False)
+            csv_impexp.import_file("extra_columns.csv")
+        assert (
+            e.value.message == "Invalid format. Please check that all row values "
+            "have headers."
+        )
