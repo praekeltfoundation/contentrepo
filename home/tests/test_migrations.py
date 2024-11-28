@@ -68,6 +68,9 @@ class MigrationTests(TestCase):
         OrderedContentSet.objects.create(
             name="unique-name", slug="", locale=default_locale
         )
+        OrderedContentSet.objects.create(
+            name="miXeDcaSe", slug="", locale=default_locale
+        )
 
         rename_duplicate_slugs_0085(OrderedContentSet)
 
@@ -77,6 +80,7 @@ class MigrationTests(TestCase):
                 "first",
                 "first-1",
                 "first_pt",
+                "mixedcase",
                 "third",
                 "unique",
                 "unique-name",
