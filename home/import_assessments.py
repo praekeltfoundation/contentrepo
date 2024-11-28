@@ -1,6 +1,5 @@
 import contextlib
 import csv
-import re
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from io import BytesIO, StringIO
@@ -116,18 +115,22 @@ class AssessmentImporter:
         first_row = next(worksheet.iter_rows(max_row=1, values_only=True))
         header = [clean_excel_cell(cell) if cell else None for cell in first_row]
         rows: list[AssessmentRow] = []
+        i = 2
         for row in worksheet.iter_rows(min_row=2, values_only=True):
             r = {}
             for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
                 if name and cell:
                     r[name] = clean_excel_cell(cell)
             if r:
-                rows.append(AssessmentRow.from_flat(r))
+                rows.append(AssessmentRow.from_flat(r, i))
+                i += 1
         return rows
 
     def parse_csv(self) -> list["AssessmentRow"]:
         reader = csv.DictReader(StringIO(self.file_content.decode()))
-        rows = [AssessmentRow.from_flat(row) for row in reader]
+        rows = [
+            AssessmentRow.from_flat(row, i) for i, row in enumerate(reader, start=2)
+        ]
         return rows
 
     def set_progress(self, message: str, progress: int) -> None:
@@ -366,7 +369,7 @@ class AssessmentRow:
         return [field.name for field in fields(cls)]
 
     @classmethod
-    def from_flat(cls, row: dict[str, str]) -> "AssessmentRow":
+    def from_flat(cls, row: dict[str, str], row_num: int) -> "AssessmentRow":
         """
         Creates an AssessmentRow instance from a row in the import, deserialising the
         fields.
@@ -374,7 +377,7 @@ class AssessmentRow:
 
         high_inflection = row.get("high_inflection")
         medium_inflection = row.get("medium_inflection")
-        check_punctuation(high_inflection, medium_inflection)
+        check_punctuation(high_inflection, medium_inflection, row_num)
 
         try:
             row = {
@@ -416,29 +419,25 @@ def get_content_page_id_from_slug(slug: str) -> int:
 
 
 def check_punctuation(
-    high_inflection: str | None, medium_inflection: str | None
+    high_inflection: str | None, medium_inflection: str | None, row_num: int
 ) -> None:
     if high_inflection is not None:
-        try:
-            high_inflection.isdigit()
-        except AttributeError:
-            high_inflection = str(high_inflection)
-        punctuaton = bool(re.search(r",", high_inflection))
+        high_inflection = str(high_inflection)
+        punctuaton = "," in high_inflection
         if punctuaton:
             raise ImportAssessmentException(
                 "Invalid number format for high inflection. "
-                "Please use '.' instead of ',' for decimals."
+                "Please use '.' instead of ',' for decimals.",
+                row_num,
             )
     if medium_inflection is not None:
-        try:
-            medium_inflection.isdigit()
-        except AttributeError:
-            medium_inflection = str(medium_inflection)
-        punctuation = bool(re.search(r",", medium_inflection))
+        medium_inflection = str(medium_inflection)
+        punctuation = "," in medium_inflection
         if punctuation:
             raise ImportAssessmentException(
                 "Invalid number format for medium inflection. "
-                "Please use '.' instead of ',' for decimals."
+                "Please use '.' instead of ',' for decimals.",
+                row_num,
             )
 
 

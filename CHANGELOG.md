@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--
 ## Unreleased
+- Importing assessments with commas in inflection values will now be caught with a helpful error message
 -->
 
 ## v1.3.0
@@ -29,7 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Importing certain ContentPage fields with whitespace-only values will no longer throw unhandled exceptions
 - UI: ContentPage listed multiple times in sidebar
 - Ordered content set XLSX export
-- Importing assessments with commas in inflection values will now be caught with a helpful error message
 
 ### Changed
 - Submit WA templates with Buttons if they exist, only submit with Quick Replies if no Buttons
