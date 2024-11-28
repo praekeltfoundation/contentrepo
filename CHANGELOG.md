@@ -7,12 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--
 ## Unreleased
-<<<<<<< HEAD
 - Importing assessments with commas in inflection values will now be caught with a helpful error message
 =======
 ### Fixed
 - ContentPage import: Accept xlsx where field formatting is numeric.
->>>>>>> main
 -->
 
 ## v1.3.0
