@@ -10,11 +10,11 @@ rename_duplicate_slugs_0029 = importlib.import_module(
 ).rename_duplicate_slugs
 
 rename_duplicate_slugs_0085 = importlib.import_module(
-    "home.migrations.0085_orderedcontentset_locale_orderedcontentset_slug"
+    "home.migrations.0086_orderedcontentset_set_locale_and_add_slug"
 ).rename_duplicate_slugs
 
 set_locale_from_instance = importlib.import_module(
-    "home.migrations.0085_orderedcontentset_locale_orderedcontentset_slug"
+    "home.migrations.0086_orderedcontentset_set_locale_and_add_slug"
 ).set_locale_from_instance
 
 
