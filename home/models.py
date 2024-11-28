@@ -1015,6 +1015,11 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         return result
 
 
+def _get_default_locale():
+    site = Site.objects.get(is_default_site=True)
+    return site.root_page.locale.id
+
+
 class OrderedContentSet(
     UniqueSlugMixin,
     WorkflowMixin,
@@ -1029,7 +1034,9 @@ class OrderedContentSet(
         help_text="A unique identifier for this ordered content set",
         default="",
     )
-    locale = models.ForeignKey(to=Locale, on_delete=models.CASCADE, default="")
+    locale = models.ForeignKey(
+        to=Locale, on_delete=models.CASCADE, default=_get_default_locale
+    )
     revisions = GenericRelation(
         "wagtailcore.Revision", related_query_name="orderedcontentset"
     )
