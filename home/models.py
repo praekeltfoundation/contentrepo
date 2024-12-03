@@ -84,13 +84,14 @@ class UniqueSlugMixin:
 
         if not self.is_slug_available(self.slug, PO):
             page = PO.objects.get(locale=self.locale, slug=self.slug)
+            page_url = page.url if isinstance(page, Page) else page.name
             raise ValidationError(
                 {
                     "slug": ValidationError(
                         _(
                             "The slug '%(page_slug)s' is already in use at '%(page_url)s'"
                         ),
-                        params={"page_slug": self.slug, "page_url": page.url},
+                        params={"page_slug": self.slug, "page_url": page_url},
                         code="slug-in-use",
                     )
                 }

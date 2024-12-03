@@ -7,9 +7,10 @@ from queue import Queue
 
 from django.core.files.base import File  # type: ignore
 from openpyxl import load_workbook
+from wagtail.admin.panels import get_edit_handler  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
-from home.import_helpers import ImportException
+from home.import_helpers import ImportException, validate_using_form
 from home.models import ContentPage, OrderedContentSet
 
 logger = getLogger(__name__)
@@ -161,6 +162,14 @@ class OrderedContentSetImporter:
                         index,
                     )
 
+    # FIXME: collect errors across all fields
+    def _validate_ordered_set_using_form(
+        self, index: int, model: OrderedContentSet
+    ) -> None:
+
+        edit_handler = get_edit_handler(OrderedContentSet)
+        validate_using_form(edit_handler, model, index)
+
     def _create_ordered_set_from_row(
         self, index: int, row: dict[str, str]
     ) -> OrderedContentSet:
@@ -181,6 +190,8 @@ class OrderedContentSetImporter:
         pages = self._extract_ordered_content_set_pages(row, index)
 
         self._add_pages(ordered_set, pages, index)
+
+        self._validate_ordered_set_using_form(index, ordered_set)
 
         ordered_set.save()
         return ordered_set

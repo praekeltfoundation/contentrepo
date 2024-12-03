@@ -1220,6 +1220,60 @@ class TestImportExport:
             "Row Test Set has 2 times, 2 units, 3 before_or_afters, 3 page_slugs and 3 contact_fields and they should all be equal."
         ]
 
+    def test_import_ordered_content_sets_incorrect_time_values_error(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a broken CSV for ordered content sets should throw an exception and give a detailed error message
+        """
+        set_profile_field_options()
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        with pytest.raises(ImportException) as e:
+            content = csv_impexp.read_bytes("ordered_content_incorrect_time_values.csv")
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.row_num == 0
+        assert e.value.message == ["Validation error: time - Enter a whole number."]
+
+    def test_import_ordered_content_sets_incorrect_unit_values_error(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a broken CSV for ordered content sets should throw an exception and give a detailed error message
+        """
+        set_profile_field_options()
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        with pytest.raises(ImportException) as e:
+            content = csv_impexp.read_bytes("ordered_content_incorrect_unit_values.csv")
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.row_num == 0
+        assert e.value.message == [
+            "Validation error: unit - Select a valid choice. 1 is not one of the available choices."
+        ]
+
+    def test_import_ordered_content_sets_incorrect_before_or_after_values_error(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a broken CSV for ordered content sets should throw an exception and give a detailed error message
+        """
+        set_profile_field_options()
+        csv_impexp.import_file("contentpage_required_fields.csv")
+
+        with pytest.raises(ImportException) as e:
+            content = csv_impexp.read_bytes(
+                "ordered_content_incorrect_before_or_after_values.csv"
+            )
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.row_num == 0
+        assert e.value.message == [
+            "Validation error: before_or_after - Select a valid choice. 1 is not one of the available choices."
+        ]
+
     def test_import_ordered_content_sets_no_page_error(
         self, csv_impexp: ImportExport
     ) -> None:
@@ -1240,6 +1294,7 @@ class TestImportExport:
         """
         Importing CSV for ordered content sets without a locale should throw an error.
         """
+        set_profile_field_options()
         csv_impexp.import_file("contentpage_required_fields.csv")
 
         with pytest.raises(ImportException) as e:
@@ -1254,6 +1309,7 @@ class TestImportExport:
         """
         Importing CSV for ordered content sets with an incorrect locale should throw an error.
         """
+        set_profile_field_options()
         csv_impexp.import_file("contentpage_required_fields.csv")
 
         with pytest.raises(ImportException) as e:
@@ -1269,6 +1325,7 @@ class TestImportExport:
         Importing CSV for ordered content sets with a duplicate name but unique slugs
         should not throw an error.
         """
+        set_profile_field_options()
         csv_impexp.import_file("contentpage_required_fields.csv")
 
         content = csv_impexp.read_bytes("ordered_content_same_name.csv")
@@ -1284,6 +1341,7 @@ class TestImportExport:
         Importing CSV for ordered content sets with a duplicate and duplicate slugs
         should update the existing OrderedContentSet to the last one in the CSV.
         """
+        set_profile_field_options()
         csv_impexp.import_file("contentpage_required_fields.csv")
 
         content = csv_impexp.read_bytes("ordered_content_same_slug.csv")
@@ -1311,6 +1369,7 @@ class TestImportExport:
         """
         Importing a CSV file with ordered content sets should not break
         """
+        set_profile_field_options()
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
 
@@ -1345,7 +1404,7 @@ class TestImportExport:
         page = pages[2][1]
         assert page["contentpage"].slug == "first_time_user"
         assert page["time"] == "4"
-        assert page["unit"] == "years"
+        assert page["unit"] == "minutes"
         assert page["before_or_after"] == "after"
         assert page["contact_field"] == "edd"
         assert unwagtail(ordered_set.profile_fields) == [
@@ -1404,6 +1463,7 @@ class TestImportExport:
         """
         Importing a XLSX file with ordered content sets should not break
         """
+        set_profile_field_options()
         csv_impexp.import_file("contentpage_required_fields.csv")
         content = xlsx_impexp.read_bytes("ordered_content.xlsx")
         xlsx_impexp.import_ordered_sets(content)
@@ -1528,6 +1588,7 @@ class TestExport:
         """
         Ordered Content Sets should export all pages correctly
         """
+        set_profile_field_options()
         csv_impexp.import_file("contentpage_required_fields.csv")
 
         imported_content = csv_impexp.import_ordered_file(
@@ -1545,6 +1606,7 @@ class TestExport:
         """
         Ordered Content Sets should export in XLSX format correctly
         """
+        set_profile_field_options()
         csv_impexp.import_file("contentpage_required_fields.csv")
 
         imported_content = xlsx_impexp.import_ordered_file("ordered_content.xlsx")
