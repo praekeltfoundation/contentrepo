@@ -1,0 +1,10 @@
+title,question_type,tags,slug,version,locale,high_result_page,high_inflection,medium_result_page,medium_inflection,low_result_page,skip_threshold,skip_high_result_page,generic_error,question,explainer,error,min,max,answers,scores,answer_semantic_ids,question_semantic_id
+DMA_Form_01,categorical_question,dma_form,mnch_onboarding_dma_form,v1.0,en,high-inflection,5,medium-score,3,low-score,1,skip-score,Please choose an option that matches your answer,"Thanks, {{name}}
+
+Now please share your view on these statements so that you can get the best support from [MyHealth] for your needs.
+
+To skip any question, reply: Skip
+
+Here’s the first statement:
+
+👤 *I am confident that I can do things to avoid health issues or reduce my symptoms.*",,,,,"Strongly disagree,Disagree,Neutral,Agree,Strongly agree","2.0,1.0,0.0,1.0","dma_form_01_strongly_disagree,dma_form_01_disagree,dma_form_01_neutral,dma_form_01_agree,dma_form_01_strongly_agree",dma-do-things

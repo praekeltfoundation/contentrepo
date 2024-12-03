@@ -545,3 +545,20 @@ class TestImportExport:
             e.value.message == "Invalid format. Please check that all row values "
             "have headers."
         )
+
+    def test_mismatched_length_answers(self, csv_impexp: ImportExport) -> None:
+        """
+        If the amount of answers, scores, and answer semantic ids in a row do not match,
+        then it is an invalid import file and an appropriate error message should be
+        shown.
+
+        (This uses assessment_answers_mismatched_lengths.csv.)
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("assessment_answers_mismatched_lengths.csv")
+        assert (
+            e.value.message
+            == "The amount of answers (5), scores (4), and answer semantic IDs (5) do "
+            "not match."
+        )
+        assert e.value.row_num == 2

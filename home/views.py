@@ -212,7 +212,7 @@ class AssessmentUploadThread(UploadThread):
             self.result_queue.put(
                 (
                     messages.ERROR,
-                    f"Assessment import failed: {e.message}",
+                    f"Assessment import failed on row {e.row_num}: {e.message}",
                 )
             )
         except ImportException as e:
