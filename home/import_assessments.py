@@ -177,11 +177,17 @@ class AssessmentImporter:
                 generic_error=row.generic_error,
                 tags=row.tags,
             )
-
+        if not (len(row.answers) == len(row.scores) == len(row.answer_semantic_ids)):
+            raise ImportAssessmentException(
+                message=f"The amount of answers ({len(row.answers)}), scores "
+                f"({len(row.scores)}), and answer semantic IDs "
+                f"({len(row.answer_semantic_ids)}) do not match.",
+                row_num=row_num,
+            )
         answers = [
             ShadowAnswerBlock(answer=answer, score=score, semantic_id=semantic_id)
             for (answer, score, semantic_id) in zip(
-                row.answers, row.scores, row.answer_semantic_ids, strict=False
+                row.answers, row.scores, row.answer_semantic_ids, strict=True
             )
         ]
         question = ShadowQuestionBlock(
