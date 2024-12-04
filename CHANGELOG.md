@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ContentPage import: Accept xlsx where field formatting is numeric.
 - Validate OrderedContentSets on import
 - Forms import: Error message for differing number of answer items for different fields
+- Imports: consolodate import logic so that all imports use the same code
+- Imports: headers are now case-insensitive
 -->
 
 ## v1.3.0
