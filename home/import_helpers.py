@@ -185,8 +185,13 @@ def parse_file(
 
 
 def read_csv(file_content: bytes) -> Generator[dict[str, Any], None, None]:
-    for row in csv.DictReader(StringIO(file_content.decode())):
-        yield {k.strip().lower(): v for k, v in row.items()}
+    try:
+        for row in csv.DictReader(StringIO(file_content.decode())):
+            yield {k.strip().lower(): v for k, v in row.items()}
+    except AttributeError:
+        raise ImportException(
+            "Invalid format. Please check that all row values have headers."
+        )
 
 
 def read_xlsx(file_content: bytes) -> Generator[dict[str, Any], None, None]:
@@ -194,14 +199,18 @@ def read_xlsx(file_content: bytes) -> Generator[dict[str, Any], None, None]:
     worksheet = get_active_sheet(workbook)
 
     def clean_excel_cell(cell_value: str | float | datetime | None) -> str:
-        return str(cell_value).replace("_x000D", "")
+        return str(cell_value).replace("_x000D", "").strip()
 
     first_row = next(worksheet.iter_rows(max_row=1, values_only=True))
     header = [clean_excel_cell(cell) if cell else None for cell in first_row]
 
     for row in worksheet.iter_rows(min_row=2, values_only=True):
         r = {}
-        for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
+        if len(row) > len(header):
+            raise ImportException(
+                "Invalid format. Please check that all row values have headers."
+            )
+        for name, cell in zip(header, row):  # noqa: B905
             if name and cell:
                 r[name.strip().lower()] = clean_excel_cell(cell)
         if r:

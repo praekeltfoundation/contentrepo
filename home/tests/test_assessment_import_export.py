@@ -15,6 +15,7 @@ from wagtail.models import Locale  # type: ignore
 from home.assessment_import_export import import_assessment
 from home.content_import_export import import_content
 from home.import_assessments import ImportAssessmentException
+from home.import_helpers import ImportException
 from home.models import (
     Assessment,
     ContentPage,
@@ -530,7 +531,7 @@ class TestImportExport:
         )
         assert e.value.row_num == 2
 
-    def test_extra_columns(self, csv_impexp: ImportExport) -> None:
+    def test_extra_columns_csv(self, csv_impexp: ImportExport) -> None:
         """
         Importing a csv with an extra comma so there are more
         column values than headers should return an intuitive error message
@@ -538,13 +539,29 @@ class TestImportExport:
         (This uses extra_columns.csv)
         """
 
-        with pytest.raises(ImportAssessmentException) as e:
+        with pytest.raises(ImportException) as e:
             csv_impexp.import_content_file("assessment_results.csv", purge=False)
             csv_impexp.import_file("extra_columns.csv")
-        assert (
-            e.value.message == "Invalid format. Please check that all row values "
-            "have headers."
-        )
+        assert e.value.message == [
+            "Invalid format. Please check that all row values " "have headers."
+        ]
+
+    def test_extra_columns_xlsx(
+        self, xlsx_impexp: ImportExport, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a xlsx with an extra comma so there are more
+        column values than headers should return an intuitive error message
+
+        (This uses extra_columns.xlsx)
+        """
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_content_file("assessment_results.csv", purge=False)
+            xlsx_impexp.import_file("extra_columns.xlsx")
+        assert e.value.message == [
+            "Invalid format. Please check that all row values " "have headers."
+        ]
 
     def test_mismatched_length_answers(self, csv_impexp: ImportExport) -> None:
         """
