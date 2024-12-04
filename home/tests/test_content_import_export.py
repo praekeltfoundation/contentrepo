@@ -2,7 +2,7 @@ import csv
 import itertools
 import json
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from functools import wraps
 from io import BytesIO, StringIO
@@ -121,7 +121,7 @@ def filter_exports(srcs: ExpDicts, dsts: ExpDicts) -> ExpDictsPair:
     return fsrcs, fdsts
 
 
-def lower_first(iterator):
+def lower_first(iterator: Iterator[Any]) -> Iterable[Any]:
     return itertools.chain([next(iterator).lower()], iterator)
 
 

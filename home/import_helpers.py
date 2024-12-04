@@ -165,7 +165,7 @@ def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
     return error_message
 
 
-def fix_rows(rows: Generator[dict[str, str]]) -> Iterator[dict[str, str]]:
+def fix_rows(rows: Generator[dict[str, str], None, None]) -> Iterator[dict[str, str]]:
     """
     Fix keys for all rows by lowercasing and removing whitespace
     """
