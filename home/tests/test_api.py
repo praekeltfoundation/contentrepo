@@ -38,6 +38,7 @@ from .page_builder import (
     MBlk,
     MBody,
     NextBtn,
+    NextListItem,
     PageBuilder,
     SBlk,
     SBody,
@@ -952,10 +953,7 @@ class TestWhatsAppMessages:
         test that list items are present in the whatsapp message with no title given
         """
         page = self.create_content_page(
-            list_items=[
-                {"type": "next_message", "value": {"title": "list item 1"}},
-                {"type": "next_message", "value": {"title": "list item 2"}},
-            ]
+            list_items=[NextListItem("list item 1"), NextListItem("list item 2")]
         )
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
@@ -975,10 +973,7 @@ class TestWhatsAppMessages:
         """
         page = self.create_content_page(
             list_title="List Title",
-            list_items=[
-                {"type": "next_message", "value": {"title": "list item 1"}},
-                {"type": "next_message", "value": {"title": "list item 2"}},
-            ],
+            list_items=[NextListItem("list item 1"), NextListItem("list item 2")],
         )
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")

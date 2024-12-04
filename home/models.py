@@ -242,12 +242,15 @@ class GoToPageButton(blocks.StructBlock):
     )
     page = blocks.PageChooserBlock(help_text="Page the button should go to")
 
+
 class GoToFormButton(blocks.StructBlock):
     title = blocks.CharBlock(
         help_text="Text for the button, up to 20 characters.",
         validators=(MaxLengthValidator(20),),
     )
-    form = SnippetChooserBlock("home.Assessment", help_text="Form the button should start")
+    form = SnippetChooserBlock(
+        "home.Assessment", help_text="Form the button should start"
+    )
 
 
 class NextMessageListItem(blocks.StructBlock):
@@ -264,12 +267,15 @@ class GoToPageListItem(blocks.StructBlock):
     )
     page = blocks.PageChooserBlock(help_text="Page the list item should go to")
 
+
 class GoToFormListItem(blocks.StructBlock):
     title = blocks.CharBlock(
         help_text="Text for the list item, up to 24 characters.",
         validators=(MaxLengthValidator(24),),
     )
-    form = SnippetChooserBlock("home.Assessment", help_text="Form the list item should start")
+    form = SnippetChooserBlock(
+        "home.Assessment", help_text="Form the list item should start"
+    )
 
 
 class WhatsappBlock(blocks.StructBlock):
@@ -299,7 +305,11 @@ class WhatsappBlock(blocks.StructBlock):
         validators=(MaxLengthValidator(20),),
     )
     buttons = blocks.StreamBlock(
-        [("next_message", NextMessageButton()), ("go_to_page", GoToPageButton()), ("go_to_form", GoToFormButton())],
+        [
+            ("next_message", NextMessageButton()),
+            ("go_to_page", GoToPageButton()),
+            ("go_to_form", GoToFormButton()),
+        ],
         required=False,
         max_num=3,
     )
@@ -309,7 +319,11 @@ class WhatsappBlock(blocks.StructBlock):
         max_length=24,
     )
     list_items = blocks.StreamBlock(
-        [("next_message", NextMessageListItem()), ("go_to_page", GoToPageListItem()), ("go_to_form", GoToFormListItem())],
+        [
+            ("next_message", NextMessageListItem()),
+            ("go_to_page", GoToPageListItem()),
+            ("go_to_form", GoToFormListItem()),
+        ],
         help_text="Items to appear in the list message",
         required=False,
         max_num=10,
