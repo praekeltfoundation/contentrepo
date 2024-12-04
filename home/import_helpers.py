@@ -157,3 +157,15 @@ def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
         pass
 
     return error_message
+
+
+def fix_rows(rows: list[dict[str, str]]) -> Iterator[dict[str, str]]:
+    """
+    Fix keys for all rows by lowercasing and removing whitespace
+    """
+    for row in rows:
+        yield fix_row(row)
+
+
+def fix_row(row: dict[str, str]) -> dict[str, str]:
+    return {k.lower().strip(): v.strip() if v else v for k, v in row.items()}

@@ -1,4 +1,5 @@
 import csv
+import itertools
 import json
 import re
 from collections.abc import Callable, Iterable
@@ -120,8 +121,12 @@ def filter_exports(srcs: ExpDicts, dsts: ExpDicts) -> ExpDictsPair:
     return fsrcs, fdsts
 
 
+def lower_first(iterator):
+    return itertools.chain([next(iterator).lower()], iterator)
+
+
 def csv2dicts(csv_bytes: bytes) -> ExpDicts:
-    return list(csv.DictReader(StringIO(csv_bytes.decode())))
+    return list(csv.DictReader(lower_first(StringIO(csv_bytes.decode()))))
 
 
 def xlsx2dicts(xlsx_bytes: bytes) -> ExpDicts:
