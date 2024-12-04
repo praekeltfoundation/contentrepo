@@ -1,10 +1,14 @@
 # The error messages are processed and parsed into a list of messages we return to the user
-from collections.abc import Iterator
+import csv
+from collections.abc import Generator, Iterator
+from datetime import datetime
+from io import BytesIO, StringIO
 from typing import Any
 
 from django.core.exceptions import ValidationError  # type: ignore
 from django.db.models import Model  # type: ignore
 from django.forms import model_to_dict  # type: ignore
+from openpyxl import load_workbook
 from wagtail.admin.rich_text.converters.contentstate import (  # type: ignore
     ContentstateConverter,  # type: ignore
 )
@@ -17,6 +21,8 @@ from wagtail.blocks.list_block import ListValue  # type: ignore
 from wagtail.models import Locale  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 from wagtail.test.utils.form_data import nested_form_data, streamfield  # type: ignore
+
+from .xlsx_helpers import get_active_sheet
 
 
 class ImportException(Exception):
@@ -159,7 +165,7 @@ def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
     return error_message
 
 
-def fix_rows(rows: list[dict[str, str]]) -> Iterator[dict[str, str]]:
+def fix_rows(rows: Generator[dict[str, str]]) -> Iterator[dict[str, str]]:
     """
     Fix keys for all rows by lowercasing and removing whitespace
     """
@@ -169,3 +175,34 @@ def fix_rows(rows: list[dict[str, str]]) -> Iterator[dict[str, str]]:
 
 def fix_row(row: dict[str, str]) -> dict[str, str]:
     return {k.lower().strip(): v.strip() if v else v for k, v in row.items()}
+
+
+def parse_file(
+    file_content: bytes, file_type: str
+) -> Iterator[tuple[int, dict[str, Any]]]:
+    read_rows = read_xlsx if file_type == "XLSX" else read_csv
+    return enumerate(fix_rows(read_rows(file_content)), start=2)
+
+
+def read_csv(file_content: bytes) -> Generator[dict[str, Any], None, None]:
+    for row in csv.DictReader(StringIO(file_content.decode())):
+        yield {k.strip().lower(): v for k, v in row.items()}
+
+
+def read_xlsx(file_content: bytes) -> Generator[dict[str, Any], None, None]:
+    workbook = load_workbook(BytesIO(file_content), read_only=True, data_only=True)
+    worksheet = get_active_sheet(workbook)
+
+    def clean_excel_cell(cell_value: str | float | datetime | None) -> str:
+        return str(cell_value).replace("_x000D", "")
+
+    first_row = next(worksheet.iter_rows(max_row=1, values_only=True))
+    header = [clean_excel_cell(cell) if cell else None for cell in first_row]
+
+    for row in worksheet.iter_rows(min_row=2, values_only=True):
+        r = {}
+        for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
+            if name and cell:
+                r[name.strip().lower()] = clean_excel_cell(cell)
+        if r:
+            yield r

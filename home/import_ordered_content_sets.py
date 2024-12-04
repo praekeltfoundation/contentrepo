@@ -1,16 +1,13 @@
-import csv
-import io
+import itertools
 from dataclasses import dataclass
-from io import BytesIO
 from logging import getLogger
 from queue import Queue
 
 from django.core.files.base import File  # type: ignore
-from openpyxl import load_workbook
 from wagtail.admin.panels import get_edit_handler  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
-from home.import_helpers import ImportException, fix_rows, validate_using_form
+from home.import_helpers import ImportException, parse_file, validate_using_form
 from home.models import ContentPage, OrderedContentSet
 
 logger = getLogger(__name__)
@@ -199,50 +196,6 @@ class OrderedContentSetImporter:
     def _set_progress(self, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
 
-    def _get_xlsx_rows(self, file: File) -> list[dict[str, str]]:
-        """
-        Return a list of dictionaries representing the rows in the XLSX file.
-
-        :return: A list of dictionaries representing the rows in the XLSX file.
-        """
-        lines = []
-        wb = load_workbook(filename=BytesIO(file))
-        ws = wb.worksheets[0]
-        ws.delete_rows(1)
-        for row in ws.iter_rows(values_only=True):
-            row_dict = {
-                "name": str(row[0]),
-                "profile fields": str(row[1]),
-                "page slugs": str(row[2]),
-                "time": str(row[3]),
-                "unit": str(row[4]),
-                "before or after": str(row[5]),
-                "contact field": str(row[6]),
-                "slug": str(row[7]),
-                "locale": str(row[8]),
-            }
-            lines.append(row_dict)
-        return lines
-
-    def _get_csv_rows(self, file: File) -> list[dict[str, str]]:
-        """
-        Return a list of dictionaries representing the rows in the CSV file.
-
-        :return: A list of dictionaries representing the rows in the CSV file.
-        """
-        lines = []
-        if isinstance(file, bytes):
-            try:
-                file = file.decode("utf-8")
-            except UnicodeDecodeError:
-                file = file.decode("latin-1")
-
-        reader = csv.DictReader(io.StringIO(file))
-        for dictionary in reader:
-            lines.append(dictionary)
-
-        return lines
-
     def perform_import(self) -> None:
         """
         Import ordered content sets from a file.
@@ -258,19 +211,14 @@ class OrderedContentSetImporter:
         """
         file = self.file.read()
 
-        rows = (
-            self._get_xlsx_rows(file)
-            if self.filetype == "XLSX"
-            else self._get_csv_rows(file)
-        )
-
-        num_rows = len(rows)
-        rows = fix_rows(rows)
+        rows = parse_file(file, self.filetype)
+        rows, rows2 = itertools.tee(rows)
+        num_rows = sum(1 for _ in rows2)
 
         # 10% progress for loading file
         self._set_progress(10)
 
-        for index, row in enumerate(rows):  # type: ignore
+        for index, row in rows:  # type: ignore
             os = self._create_ordered_set_from_row(index, row)  # type: ignore
             if not os:
                 raise ImportException("Ordered Content Set not created", index)

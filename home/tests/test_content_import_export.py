@@ -1220,7 +1220,7 @@ class TestImportExport:
             content = csv_impexp.read_bytes("ordered_content_broken.csv")
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.row_num == 0
+        assert e.value.row_num == 2
         assert e.value.message == [
             "Row Test Set has 2 times, 2 units, 3 before_or_afters, 3 page_slugs and 3 contact_fields and they should all be equal."
         ]
@@ -1238,7 +1238,7 @@ class TestImportExport:
             content = csv_impexp.read_bytes("ordered_content_incorrect_time_values.csv")
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.row_num == 0
+        assert e.value.row_num == 2
         assert e.value.message == ["Validation error: time - Enter a whole number."]
 
     def test_import_ordered_content_sets_incorrect_unit_values_error(
@@ -1254,7 +1254,7 @@ class TestImportExport:
             content = csv_impexp.read_bytes("ordered_content_incorrect_unit_values.csv")
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.row_num == 0
+        assert e.value.row_num == 2
         assert e.value.message == [
             "Validation error: unit - Select a valid choice. 1 is not one of the available choices."
         ]
@@ -1274,7 +1274,7 @@ class TestImportExport:
             )
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.row_num == 0
+        assert e.value.row_num == 2
         assert e.value.message == [
             "Validation error: before_or_after - Select a valid choice. 1 is not one of the available choices."
         ]

@@ -3,15 +3,12 @@ import csv
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field, fields
-from datetime import datetime
-from io import BytesIO, StringIO
 from json.decoder import JSONDecodeError
 from queue import Queue
 from typing import Any
 from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
-from openpyxl import load_workbook
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
 from wagtail.blocks import (  # type: ignore
@@ -22,7 +19,7 @@ from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
-from home.import_helpers import ImportException, validate_using_form
+from home.import_helpers import ImportException, parse_file, validate_using_form
 
 from .models import (
     ContentPage,
@@ -36,7 +33,6 @@ from .models import (
     ViberBlock,
     WhatsappBlock,
 )
-from .xlsx_helpers import get_active_sheet
 
 PageId = tuple[str, Locale]
 
@@ -219,36 +215,10 @@ class ContentImporter:
             page.save_revision().publish()
 
     def parse_file(self) -> list["ContentRow"]:
-        if self.file_type == "XLSX":
-            return self.parse_excel()
-        return self.parse_csv()
-
-    def parse_excel(self) -> list["ContentRow"]:
-        workbook = load_workbook(
-            BytesIO(self.file_content), read_only=True, data_only=True
-        )
-        worksheet = get_active_sheet(workbook)
-
-        def clean_excel_cell(cell_value: str | float | datetime | None) -> str:
-            return str(cell_value).replace("_x000D", "")
-
-        first_row = next(worksheet.iter_rows(max_row=1, values_only=True))
-        header = [clean_excel_cell(cell) if cell else None for cell in first_row]
-        rows: list[ContentRow] = []
-        i = 2
-        for row in worksheet.iter_rows(min_row=2, values_only=True):
-            r = {}
-            for name, cell in zip(header, row):  # noqa: B905 (TODO: strict?)
-                if name and cell:
-                    r[name] = clean_excel_cell(cell)
-            if r:
-                rows.append(ContentRow.from_flat(r, i))
-                i += 1
-        return rows
-
-    def parse_csv(self) -> list["ContentRow"]:
-        reader = csv.DictReader(StringIO(self.file_content.decode()))
-        return [ContentRow.from_flat(row, i) for i, row in enumerate(reader, start=2)]
+        return [
+            ContentRow.from_flat(row, i)
+            for i, row in parse_file(self.file_content, self.file_type)
+        ]
 
     def set_progress(self, message: str, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
