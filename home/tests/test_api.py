@@ -35,11 +35,15 @@ from home.models import (
 )
 
 from .page_builder import (
+    FormBtn,
+    FormListItem,
     MBlk,
     MBody,
     NextBtn,
     NextListItem,
+    PageBtn,
     PageBuilder,
+    PageListItem,
     SBlk,
     SBody,
     UBlk,
@@ -881,15 +885,58 @@ class TestWhatsAppMessages:
 
     def test_whatsapp_detail_view_with_button(self, uclient):
         """
-        Next page buttons in WhatsApp messages are present in the message body.
+        Buttons in WhatsApp messages are present in the message body.
         """
-        page = self.create_content_page(buttons=[NextBtn("Tell me more")])
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        target_page = PageBuilder.build_cp(
+            parent=main_menu, slug="target-page", title="Target page", bodies=[]
+        )
+        form = Assessment.objects.create(
+            title="Test form", slug="test-form", locale=target_page.locale
+        )
+
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="page",
+            title="Page",
+            bodies=[
+                WABody(
+                    "Page",
+                    [
+                        WABlk(
+                            "Button message",
+                            buttons=[
+                                NextBtn("Tell me more"),
+                                PageBtn("Go elsewhere", page=target_page),
+                                FormBtn("Start form", form=form),
+                            ],
+                        )
+                    ],
+                )
+            ],
+        )
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true&message=1")
         content = response.json()
-        [button] = content["body"]["text"]["value"]["buttons"]
-        button.pop("id")
-        assert button == {"type": "next_message", "value": {"title": "Tell me more"}}
+        [next_button, page_button, form_button] = content["body"]["text"]["value"][
+            "buttons"
+        ]
+        next_button.pop("id")
+        assert next_button == {
+            "type": "next_message",
+            "value": {"title": "Tell me more"},
+        }
+        page_button.pop("id")
+        assert page_button == {
+            "type": "go_to_page",
+            "value": {"title": "Go elsewhere", "page": target_page.id},
+        }
+        form_button.pop("id")
+        assert form_button == {
+            "type": "go_to_form",
+            "value": {"title": "Start form", "form": form.id},
+        }
 
     def test_whatsapp_template_fields(self, uclient):
         """
@@ -971,21 +1018,62 @@ class TestWhatsAppMessages:
         """
         test that list items are present in the whatsapp message
         """
-        page = self.create_content_page(
-            list_title="List Title",
-            list_items=[NextListItem("list item 1"), NextListItem("list item 2")],
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        target_page = PageBuilder.build_cp(
+            parent=main_menu, slug="target-page", title="Target page", bodies=[]
+        )
+        form = Assessment.objects.create(
+            title="Test form", slug="test-form", locale=target_page.locale
+        )
+
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="page",
+            title="Page",
+            bodies=[
+                WABody(
+                    "list body",
+                    [
+                        WABlk(
+                            "List message",
+                            list_items=[
+                                NextListItem("list item 1"),
+                                PageListItem("list item 2", page=target_page),
+                                FormListItem("list item 3", form=form),
+                            ],
+                        )
+                    ],
+                )
+            ],
         )
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
         content = response.json()
 
-        [item_1, item_2] = content["body"]["text"]["value"]["list_items"]
+        [item_1, item_2, item_3] = content["body"]["text"]["value"]["list_items"]
         item_1.pop("id")
         item_2.pop("id")
+        item_3.pop("id")
 
-        assert content["body"]["text"]["value"]["list_title"] == "List Title"
         assert item_1 == {"type": "item", "value": "list item 1"}
         assert item_2 == {"type": "item", "value": "list item 2"}
+        assert item_3 == {"type": "item", "value": "list item 3"}
+
+        [item_1, item_2, item_3] = content["body"]["text"]["value"]["list_items_v2"]
+        item_1.pop("id")
+        item_2.pop("id")
+        item_3.pop("id")
+
+        assert item_1 == {"type": "next_message", "value": {"title": "list item 1"}}
+        assert item_2 == {
+            "type": "go_to_page",
+            "value": {"title": "list item 2", "page": target_page.id},
+        }
+        assert item_3 == {
+            "type": "go_to_form",
+            "value": {"title": "list item 3", "form": form.id},
+        }
 
     def test_next_prompt(self, uclient):
         """
