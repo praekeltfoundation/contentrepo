@@ -543,7 +543,7 @@ class TestImportExport:
             csv_impexp.import_content_file("assessment_results.csv", purge=False)
             csv_impexp.import_file("extra_columns.csv")
         assert e.value.message == [
-            "Invalid format. Please check that all row values " "have headers."
+            "Invalid format. Please check that all row values have headers."
         ]
 
     def test_extra_columns_xlsx(

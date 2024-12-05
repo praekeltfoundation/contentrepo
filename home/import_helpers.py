@@ -165,16 +165,36 @@ def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
     return error_message
 
 
-def fix_rows(rows: Generator[dict[str, str], None, None]) -> Iterator[dict[str, str]]:
+def fix_rows(
+    rows: Generator[dict[str, str], None, None] | Iterator[dict[str | Any, Any]]
+) -> Iterator[dict[str, str]]:
     """
-    Fix keys for all rows by lowercasing and removing whitespace
+    Fix keys for all rows by lowercasing keys and removing whitespace from keys and values
     """
     for row in rows:
         yield fix_row(row)
 
 
-def fix_row(row: dict[str, str]) -> dict[str, str]:
-    return {k.lower().strip(): v.strip() if v else v for k, v in row.items()}
+def fix_row(row: dict[str, str]) -> dict[str, str | None]:
+    """
+    Fix a single row by lowercasing the key and removing whitespace from the key and value
+    """
+    try:
+        return {_normalise_key(k): _normalise_value(v) for k, v in row.items()}
+    except AttributeError:
+        raise ImportException(
+            "Invalid format. Please check that all row values have headers."
+        )
+
+
+def _normalise_key(key: str | None) -> str:
+    return key.lower().strip()
+
+
+def _normalise_value(value: str | None) -> str:
+    if value is None:
+        return None
+    return value.strip()
 
 
 def parse_file(
@@ -184,14 +204,8 @@ def parse_file(
     return enumerate(fix_rows(read_rows(file_content)), start=2)
 
 
-def read_csv(file_content: bytes) -> Generator[dict[str, Any], None, None]:
-    try:
-        for row in csv.DictReader(StringIO(file_content.decode())):
-            yield {k.strip().lower(): v for k, v in row.items()}
-    except AttributeError:
-        raise ImportException(
-            "Invalid format. Please check that all row values have headers."
-        )
+def read_csv(file_content: bytes) -> csv.DictReader[str]:
+    return csv.DictReader(StringIO(file_content.decode()))
 
 
 def read_xlsx(file_content: bytes) -> Generator[dict[str, Any], None, None]:
@@ -212,6 +226,6 @@ def read_xlsx(file_content: bytes) -> Generator[dict[str, Any], None, None]:
             )
         for name, cell in zip(header, row):  # noqa: B905
             if name and cell:
-                r[name.strip().lower()] = clean_excel_cell(cell)
+                r[name] = clean_excel_cell(cell)
         if r:
             yield r

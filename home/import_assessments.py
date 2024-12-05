@@ -354,9 +354,7 @@ class AssessmentRow:
         check_punctuation(high_inflection, medium_inflection, row_num)
 
         row = {
-            key.strip(): value.strip()
-            for key, value in row.items()
-            if value and key.strip() in cls.fields()
+            key: value for key, value in row.items() if value and key in cls.fields()
         }
 
         try:
