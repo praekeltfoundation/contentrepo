@@ -204,7 +204,7 @@ def parse_file(
     return enumerate(fix_rows(read_rows(file_content)), start=2)
 
 
-def read_csv(file_content: bytes) -> csv.DictReader[Any]:
+def read_csv(file_content: bytes) -> Iterator[dict[str, str | None]]:
     return csv.DictReader(StringIO(file_content.decode()))
 
 
