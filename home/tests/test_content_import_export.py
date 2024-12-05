@@ -1452,8 +1452,6 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.row_num == 0
-
         assert e.value.message == [
             "Invalid format. Please check that there are no duplicate headers."
         ]

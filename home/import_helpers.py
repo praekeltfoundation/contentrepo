@@ -169,23 +169,22 @@ def fix_rows(rows: Iterator[dict[str | Any, Any]]) -> Iterator[dict[str, str | N
     """
     Fix keys for all rows by lowercasing keys and removing whitespace from keys and values
     """
-    for index, row in enumerate(rows):
-        yield fix_row(row, index)
+    first_row = next(rows)
+    if len(first_row) != len(fix_row(first_row)):
+        raise ImportException(
+            "Invalid format. Please check that there are no duplicate headers."
+        )
+    yield fix_row(first_row)
+
+    for row in rows:
+        yield fix_row(row)
 
 
-def fix_row(row: dict[str, str | None], index: int) -> dict[str, str | None]:
+def fix_row(row: dict[str, str | None]) -> dict[str, str | None]:
     """
     Fix a single row by lowercasing the key and removing whitespace from the key and value
     """
     try:
-        if index == 0:
-            keys = [_normalise_key(k) for k, v in row.items()]
-            if len(keys) != len(set(keys)):
-                raise ImportException(
-                    "Invalid format. Please check that there are no duplicate headers.",
-                    row_num=index,
-                )
-
         return {_normalise_key(k): _normalise_value(v) for k, v in row.items()}
     except AttributeError:
         raise ImportException(
