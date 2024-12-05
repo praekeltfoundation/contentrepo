@@ -25,6 +25,7 @@ from wagtail.rich_text import RichText  # type: ignore
 from home.import_helpers import ImportException, validate_using_form
 
 from .models import (
+    Assessment,
     ContentPage,
     ContentPageIndex,
     ContentQuickReply,
@@ -189,10 +190,11 @@ class ContentImporter:
                             f"page '{slug}'",
                             row.row_num,
                         )
-                    page.whatsapp_body[message_index].value["buttons"].append(
-                        ("go_to_page", {"page": related_page, "title": title})
+                    page.whatsapp_body[message_index].value["buttons"].insert(
+                        button["index"],
+                        ("go_to_page", {"page": related_page, "title": title}),
                     )
-            page.save_revision().publish()
+            page.save()
 
     def add_go_to_page_list_items(self) -> None:
         for (slug, locale), messages in self.go_to_page_list_items.items():
@@ -216,7 +218,7 @@ class ContentImporter:
                         item["index"],
                         ("go_to_page", {"page": related_page, "title": title}),
                     )
-            page.save_revision().publish()
+            page.save()
 
     def parse_file(self) -> list["ContentRow"]:
         if self.file_type == "XLSX":
@@ -373,7 +375,7 @@ class ContentImporter:
         if row.is_whatsapp_message:
             page.enable_whatsapp = True
             buttons = []
-            for button in row.buttons:
+            for index, button in enumerate(row.buttons):
                 if button["type"] == "next_message":
                     buttons.append(
                         {
@@ -383,8 +385,28 @@ class ContentImporter:
                         }
                     )
                 elif button["type"] == "go_to_page":
+                    button["index"] = index
                     page_gtps = self.go_to_page_buttons[(row.slug, locale)]
                     page_gtps[len(page.whatsapp_body)].append(button)
+                elif button["type"] == "go_to_form":
+                    try:
+                        form = Assessment.objects.get(
+                            slug=button["slug"], locale=locale
+                        )
+                    except Assessment.DoesNotExist:
+                        raise ImportException(
+                            f"No form found with slug '{button['slug']}' and locale "
+                            f"'{locale}' for go_to_form button '{button['title']}' on "
+                            f"page '{row.slug}'"
+                        )
+                    buttons.append(
+                        {
+                            "id": str(uuid4()),
+                            "type": button["type"],
+                            "value": {"title": button["title"], "form": form.id},
+                        }
+                    )
+
             list_items = []
             for index, item in enumerate(row.list_items):
                 if item["type"] == "next_message":
@@ -399,6 +421,22 @@ class ContentImporter:
                     item["index"] = index
                     page_gtpli = self.go_to_page_list_items[(row.slug, locale)]
                     page_gtpli[len(page.whatsapp_body)].append(item)
+                elif item["type"] == "go_to_form":
+                    try:
+                        form = Assessment.objects.get(slug=item["slug"], locale=locale)
+                    except Assessment.DoesNotExist:
+                        raise ImportException(
+                            f"No form found with slug '{item['slug']}' and locale "
+                            f"'{locale}' for go_to_form list item '{item['title']}' on "
+                            f"page '{row.slug}'"
+                        )
+                    list_items.append(
+                        {
+                            "id": str(uuid4()),
+                            "type": item["type"],
+                            "value": {"title": item["title"], "form": form.id},
+                        }
+                    )
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
                     message=row.whatsapp_body,
