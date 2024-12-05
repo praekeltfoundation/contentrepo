@@ -167,7 +167,7 @@ def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
 
 def fix_rows(
     rows: Generator[dict[str, str], None, None] | Iterator[dict[str | Any, Any]]
-) -> Iterator[dict[str, str]]:
+) -> Iterator[dict[str, str | None]]:
     """
     Fix keys for all rows by lowercasing keys and removing whitespace from keys and values
     """
@@ -187,11 +187,11 @@ def fix_row(row: dict[str, str]) -> dict[str, str | None]:
         )
 
 
-def _normalise_key(key: str | None) -> str:
+def _normalise_key(key: str) -> str:
     return key.lower().strip()
 
 
-def _normalise_value(value: str | None) -> str:
+def _normalise_value(value: str | None) -> str | None:
     if value is None:
         return None
     return value.strip()
