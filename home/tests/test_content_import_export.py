@@ -195,7 +195,6 @@ def _normalise_button_pks(body: DbDict, min_pk: int) -> DbDict:
                 button = button | {"value": v | {"page": v["page"] - min_pk}}
             buttons.append(button)
         value = value | {"buttons": buttons}
-    print("nomralised bttons ", body | {"value": value})
     return body | {"value": value}
 
 
