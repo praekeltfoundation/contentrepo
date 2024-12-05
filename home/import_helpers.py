@@ -1,6 +1,6 @@
 # The error messages are processed and parsed into a list of messages we return to the user
 import csv
-from collections.abc import Generator, Iterator
+from collections.abc import Iterator
 from datetime import datetime
 from io import BytesIO, StringIO
 from typing import Any
@@ -165,21 +165,27 @@ def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
     return error_message
 
 
-def fix_rows(
-    rows: Generator[dict[str, str], None, None] | Iterator[dict[str | Any, Any]]
-) -> Iterator[dict[str, str | None]]:
+def fix_rows(rows: Iterator[dict[str | Any, Any]]) -> Iterator[dict[str, str | None]]:
     """
     Fix keys for all rows by lowercasing keys and removing whitespace from keys and values
     """
-    for row in rows:
-        yield fix_row(row)
+    for index, row in enumerate(rows):
+        yield fix_row(row, index)
 
 
-def fix_row(row: dict[str, str]) -> dict[str, str | None]:
+def fix_row(row: dict[str, str | None], index: int) -> dict[str, str | None]:
     """
     Fix a single row by lowercasing the key and removing whitespace from the key and value
     """
     try:
+        if index == 0:
+            keys = [_normalise_key(k) for k, v in row.items()]
+            if len(keys) != len(set(keys)):
+                raise ImportException(
+                    "Invalid format. Please check that there are no duplicate headers.",
+                    row_num=index,
+                )
+
         return {_normalise_key(k): _normalise_value(v) for k, v in row.items()}
     except AttributeError:
         raise ImportException(
@@ -204,11 +210,11 @@ def parse_file(
     return enumerate(fix_rows(read_rows(file_content)), start=2)
 
 
-def read_csv(file_content: bytes) -> Iterator[dict[str, str | None]]:
+def read_csv(file_content: bytes) -> Iterator[dict[str, Any]]:
     return csv.DictReader(StringIO(file_content.decode()))
 
 
-def read_xlsx(file_content: bytes) -> Generator[dict[str, Any], None, None]:
+def read_xlsx(file_content: bytes) -> Iterator[dict[str, Any]]:
     workbook = load_workbook(BytesIO(file_content), read_only=True, data_only=True)
     worksheet = get_active_sheet(workbook)
 

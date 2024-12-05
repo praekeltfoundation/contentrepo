@@ -1436,6 +1436,28 @@ class TestImportExport:
             ("relationship", "in_a_relationship"),
         ]
 
+    def test_import_ordered_sets_duplicate_header_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV with duplicate headers should throw an error
+        """
+        set_profile_field_options()
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        csv_impexp.import_file("contentpage_required_fields_multi_locale.csv")
+        content = csv_impexp.read_bytes("ordered_content_duplicate_header.csv")
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.row_num == 0
+
+        assert e.value.message == [
+            "Invalid format. Please check that there are no duplicate headers."
+        ]
+
     def test_import_ordered_sets_no_profile_fields_csv(
         self, csv_impexp: ImportExport
     ) -> None:

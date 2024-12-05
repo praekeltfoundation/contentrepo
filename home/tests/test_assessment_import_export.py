@@ -560,7 +560,7 @@ class TestImportExport:
             csv_impexp.import_content_file("assessment_results.csv", purge=False)
             xlsx_impexp.import_file("extra_columns.xlsx")
         assert e.value.message == [
-            "Invalid format. Please check that all row values " "have headers."
+            "Invalid format. Please check that all row values have headers."
         ]
 
     def test_mismatched_length_answers(self, csv_impexp: ImportExport) -> None:
