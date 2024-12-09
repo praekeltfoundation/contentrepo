@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ContentPage import: Accept xlsx where field formatting is numeric.
 - Validate OrderedContentSets on import
 - Forms import: Error message for differing number of answer items for different fields
+### Security
+- Updated django from 4.2.16 to 4.2.17
 -->
 
 ## v1.3.0
