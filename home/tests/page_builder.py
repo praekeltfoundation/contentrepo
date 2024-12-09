@@ -7,6 +7,7 @@ from wagtail.blocks import RichTextBlock, StructBlock  # type: ignore
 from wagtail.models import Page  # type: ignore
 
 from home.models import (
+    Assessment,
     ContentPage,
     ContentPageIndex,
     ContentQuickReply,
@@ -70,6 +71,54 @@ class PageBtn(Btn):
 
 
 @dataclass
+class FormBtn(Btn):
+    BLOCK_TYPE_STR = "go_to_form"
+
+    form: Assessment
+
+    def value_dict(self) -> dict[str, Any]:
+        return asdict(self) | {"form": self.form.id}
+
+
+@dataclass
+class ListItem:
+    BLOCK_TYPE_STR: ClassVar[str]
+
+    title: str
+
+    def value_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": self.BLOCK_TYPE_STR, "value": self.value_dict()}
+
+
+@dataclass
+class NextListItem(ListItem):
+    BLOCK_TYPE_STR = "next_message"
+
+
+@dataclass
+class PageListItem(ListItem):
+    BLOCK_TYPE_STR = "go_to_page"
+
+    page: Page
+
+    def value_dict(self) -> dict[str, Any]:
+        return asdict(self) | {"page": self.page.id}
+
+
+@dataclass
+class FormListItem(ListItem):
+    BLOCK_TYPE_STR = "go_to_form"
+
+    form: Assessment
+
+    def value_dict(self) -> dict[str, Any]:
+        return asdict(self) | {"form": self.form.id}
+
+
+@dataclass
 class ContentBlock:
     BLOCK_TYPE_STR: ClassVar[str]
     BLOCK_TYPE: ClassVar[type[StructBlock]]
@@ -113,7 +162,7 @@ class WABlk(ContentBlock):
     example_values: list[str] = field(default_factory=list)
     buttons: list[Btn] = field(default_factory=list)
     list_title: str = ""
-    list_items: list[dict[str, Any]] = field(default_factory=list)
+    list_items: list[ListItem] = field(default_factory=list)
     media: int | None = None
     document: str | None = None
     footer: str = ""
@@ -121,7 +170,12 @@ class WABlk(ContentBlock):
     def to_dict(self) -> dict[str, Any]:
         varmsgs = [vm.to_dict() for vm in self.variation_messages]
         buttons = [b.to_dict() for b in self.buttons]
-        return super().to_dict() | {"variation_messages": varmsgs, "buttons": buttons}
+        list_items = [li.to_dict() for li in self.list_items]
+        return super().to_dict() | {
+            "variation_messages": varmsgs,
+            "buttons": buttons,
+            "list_items": list_items,
+        }
 
 
 @dataclass

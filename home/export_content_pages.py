@@ -154,6 +154,11 @@ class ExportRow:
                 if button.value.get("page") is None:
                     continue
                 button_dict["slug"] = button.value["page"].slug
+            if button.block_type == "go_to_form":
+                # Exclude buttons that has deleted forms that they are linked to it
+                if button.value.get("form") is None:
+                    continue
+                button_dict["slug"] = button.value["form"].slug
 
             button_dicts.append(button_dict)
         return dumps(button_dicts)
