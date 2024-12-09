@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate OrderedContentSets on import
 - Forms import: Error message for differing number of answer items for different fields
 - Importing assessments with commas in inflection values will now be caught with a helpful error message
+### Security
+- Updated django from 4.2.16 to 4.2.17
 -->
 
 ## v1.3.0
