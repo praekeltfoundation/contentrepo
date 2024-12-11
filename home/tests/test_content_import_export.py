@@ -24,8 +24,11 @@ from wagtailmedia.models import Media  # type: ignore
 from home.content_import_export import import_content, import_ordered_sets
 from home.import_helpers import ImportException
 from home.models import (
+    Assessment,
     ContentPage,
     ContentPageIndex,
+    GoToFormButton,
+    GoToFormListItem,
     GoToPageButton,
     HomePage,
     OrderedContentSet,
@@ -34,11 +37,15 @@ from home.xlsx_helpers import get_active_sheet
 
 from .helpers import set_profile_field_options
 from .page_builder import (
+    FormBtn,
+    FormListItem,
     MBlk,
     MBody,
     NextBtn,
+    NextListItem,
     PageBtn,
     PageBuilder,
+    PageListItem,
     SBlk,
     SBody,
     UBlk,
@@ -196,6 +203,21 @@ def _normalise_button_pks(body: DbDict, min_pk: int) -> DbDict:
     return body | {"value": value}
 
 
+def _normalise_list_pks(body: DbDict, min_pk: int) -> DbDict:
+    value = body["value"]
+    if "list_items" in value:
+        list_items = []
+        for list_item in value["list_items"]:
+            if list_item["type"] == "go_to_page":
+                if list_item.get("value").get("page") is None:
+                    continue
+                v = list_item["value"]
+                list_item = list_item | {"value": v | {"page": v["page"] - min_pk}}
+            list_items.append(list_item)
+        value = value | {"list_items": list_items}
+    return body | {"value": value}
+
+
 def _normalise_pks(page: DbDict, min_pk: int) -> DbDict:
     fields = page["fields"]
     if "related_pages" in fields:
@@ -205,6 +227,7 @@ def _normalise_pks(page: DbDict, min_pk: int) -> DbDict:
         fields = fields | {"related_pages": related_pages}
     if "whatsapp_body" in fields:
         body = [_normalise_button_pks(b, min_pk) for b in fields["whatsapp_body"]]
+        body = [_normalise_list_pks(b, min_pk) for b in body]
         fields = fields | {"whatsapp_body": body}
     return page | {"fields": fields, "pk": page["pk"] - min_pk}
 
@@ -934,6 +957,34 @@ class TestImportExport:
         assert e.value.message == [
             "No pages found with slug 'missing' and locale 'English' for go_to_page "
             "button 'Missing' on page 'ma_import-export'"
+        ]
+
+    def test_go_to_form_button_missing_form(self, csv_impexp: ImportExport) -> None:
+        """
+        Go to form buttons in the import file link to other forms using the slug. But
+        if no form with that slug exists, then we should give the user an error message
+        that tells them where and how to fix it.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("missing-gotoform.csv")
+        assert e.value.row_num == 2
+        assert e.value.message == [
+            "No form found with slug 'missing' and locale 'English' for go_to_form "
+            "button 'Missing' on page 'ma_import-export'"
+        ]
+
+    def test_go_to_form_list_missing_form(self, csv_impexp: ImportExport) -> None:
+        """
+        Go to form list items buttons in the import file link to other forms using the
+        slug. But if no form with that slug exists, then we should give the user an
+        error message that tells them where and how to fix it.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("missing-gotoform-list.csv")
+        assert e.value.row_num == 2
+        assert e.value.message == [
+            "No form found with slug 'missing' and locale 'English' for go_to_form "
+            "list item 'Missing' on page 'ma_import-export'"
         ]
 
     def test_missing_related_pages(self, csv_impexp: ImportExport) -> None:
@@ -1780,6 +1831,16 @@ def add_go_to_page_button(whatsapp_block: Any, button: PageBtn) -> None:
     whatsapp_block.value["buttons"].append(("go_to_page", button_val))
 
 
+def add_go_to_form_button(whatsapp_block: Any, button: FormBtn) -> None:
+    button_val = GoToFormButton().to_python(button.value_dict())
+    whatsapp_block.value["buttons"].append(("go_to_form", button_val))
+
+
+def add_go_to_form_list_item(whatsapp_block: Any, list_item: FormListItem) -> None:
+    list_val = GoToFormListItem().to_python(list_item.value_dict())
+    whatsapp_block.value["list_items"].append(("go_to_form", list_val))
+
+
 @pytest.mark.usefixtures("tmp_media_path")
 @pytest.mark.django_db
 class TestExportImportRoundtrip:
@@ -1957,16 +2018,12 @@ class TestExportImportRoundtrip:
             ),
             WABlk("Message 3 with no variation", next_prompt="Next message"),
         ]
-        cp_imp_exp = PageBuilder.build_cp(
+        _cp_imp_exp = PageBuilder.build_cp(
             parent=imp_exp,
             slug="cp-import-export",
             title="CP-Import/export",
             bodies=[WABody("WA import export data", cp_imp_exp_wablks)],
         )
-
-        # Save and publish cp_imp_exp again so the revision numbers match up after import.
-        rev = cp_imp_exp.save_revision()
-        rev.publish()
 
         orig = impexp.get_page_json()
         impexp.export_reimport()
@@ -2544,9 +2601,13 @@ class TestExportImportRoundtrip:
             bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
         )
 
+        form = Assessment.objects.create(
+            title="Test form", slug="test-form", locale=home_page.locale
+        )
         list_items = [
-            {"type": "next_message", "value": {"title": "Item 1"}},
-            {"type": "next_message", "value": {"title": "Item 2"}},
+            NextListItem("Item 1"),
+            PageListItem("Item 2", page=ha_menu),
+            FormListItem("Item 3", form=form),
         ]
         _health_info = PageBuilder.build_cp(
             parent=ha_menu,
@@ -2597,7 +2658,7 @@ class TestExportImportRoundtrip:
             ],
         )
 
-        self_help = PageBuilder.build_cp(
+        _self_help = PageBuilder.build_cp(
             parent=ha_menu,
             slug="self-help",
             title="self-help",
@@ -2613,9 +2674,6 @@ class TestExportImportRoundtrip:
                 )
             ],
         )
-
-        rev = self_help.save_revision()
-        rev.publish()
 
         orig = impexp.get_page_json()
         impexp.export_reimport()
@@ -2675,3 +2733,104 @@ class TestExportImportRoundtrip:
         updated_json = impexp.get_page_json()
 
         assert orig_json == updated_json
+
+    def test_buttons(self, impexp: ImportExport) -> None:
+        """
+        Content page buttons should import and export
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        form = Assessment.objects.create(
+            title="Test form", slug="test-form", locale=home_page.locale
+        )
+
+        target_page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="target_page",
+            title="Target page",
+            bodies=[WABody("Target", [WABlk("Target page")])],
+        )
+
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody(
+                    "HealthAlert menu",
+                    [
+                        WABlk(
+                            "*Welcome to HealthAlert*",
+                            buttons=[
+                                NextBtn("Go to next page"),
+                                PageBtn("Go to page", page=target_page),
+                                FormBtn("Start form", form=form),
+                            ],
+                        )
+                    ],
+                )
+            ],
+        )
+        orig = impexp.get_page_json()
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    def test_export_import_page_with_missing_form_button(
+        self, impexp: ImportExport
+    ) -> None:
+        """
+        If a go_to_form button links to a delete form, it should be excluded from exports
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert*")])],
+        )
+        orig = impexp.get_page_json()
+
+        # Add another button to the page, then delete the form it links to
+        form = Assessment.objects.create(
+            title="Test form", slug="test-form", locale=home_page.locale
+        )
+        add_go_to_form_button(page.whatsapp_body[0], FormBtn("Go to Btn_2", form=form))
+        form.delete()
+
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
+
+    def test_export_import_page_with_missing_form_list(
+        self, impexp: ImportExport
+    ) -> None:
+        """
+        If a go_to_form list item links to a delete form, it should be excluded from exports
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert*")])],
+        )
+        orig = impexp.get_page_json()
+
+        # Add another button to the page, then delete the form it links to
+        form = Assessment.objects.create(
+            title="Test form", slug="test-form", locale=home_page.locale
+        )
+        add_go_to_form_list_item(
+            page.whatsapp_body[0], FormListItem("Go to Btn_2", form=form)
+        )
+        form.delete()
+
+        impexp.export_reimport()
+        imported = impexp.get_page_json()
+        assert imported == orig
