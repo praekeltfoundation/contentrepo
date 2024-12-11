@@ -1,16 +1,13 @@
-import csv
-import io
+import itertools
 from dataclasses import dataclass
-from io import BytesIO
 from logging import getLogger
 from queue import Queue
 
 from django.core.files.base import File  # type: ignore
-from openpyxl import load_workbook
 from wagtail.admin.panels import get_edit_handler  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
-from home.import_helpers import ImportException, validate_using_form
+from home.import_helpers import ImportException, parse_file, validate_using_form
 from home.models import ContentPage, OrderedContentSet
 
 logger = getLogger(__name__)
@@ -79,7 +76,7 @@ class OrderedContentSetImporter:
         :param row: The row of the CSV file, as a dict.
         """
         ordered_set.profile_fields = []
-        for field in [f.strip() for f in (row["Profile Fields"] or "").split(",")]:
+        for field in [f.strip() for f in (row["profile fields"] or "").split(",")]:
             if field and field != "-":
                 [field_name, field_value] = field.split(":")
                 ordered_set.profile_fields.append((field_name, field_value))
@@ -87,11 +84,11 @@ class OrderedContentSetImporter:
     def _extract_ordered_content_set_pages(
         self, row: dict[str, str], index: int
     ) -> list[OrderedContentSetPage]:
-        times = self._csv_to_list(row["Time"])
-        units = self._csv_to_list(row["Unit"])
-        before_or_afters = self._csv_to_list(row["Before Or After"])
-        page_slugs = self._csv_to_list(row["Page Slugs"])
-        contact_fields = self._csv_to_list(row["Contact Field"])
+        times = self._csv_to_list(row["time"])
+        units = self._csv_to_list(row["unit"])
+        before_or_afters = self._csv_to_list(row["before or after"])
+        page_slugs = self._csv_to_list(row["page slugs"])
+        contact_fields = self._csv_to_list(row["contact field"])
         # backwards compatiblilty if there's only one contact field
         if len(contact_fields) == 1:
             contact_fields = [contact_fields[0]] * len(times)
@@ -99,7 +96,7 @@ class OrderedContentSetImporter:
         fields = [times, units, before_or_afters, page_slugs, contact_fields]
         if len({len(item) for item in fields}) != 1:
             raise ImportException(
-                f"Row {row['Name']} has {len(times)} times, {len(units)} units, {len(before_or_afters)} before_or_afters, {len(page_slugs)} page_slugs and {len(contact_fields)} contact_fields and they should all be equal.",
+                f"Row {row['name']} has {len(times)} times, {len(units)} units, {len(before_or_afters)} before_or_afters, {len(page_slugs)} page_slugs and {len(contact_fields)} contact_fields and they should all be equal.",
                 index,
             )
 
@@ -110,7 +107,7 @@ class OrderedContentSetImporter:
                 before_or_after=before_or_after,
                 page_slug=page_slug,
                 contact_field=contact_field,
-                locale=row["Locale"],
+                locale=row["locale"],
             )
             for time, unit, before_or_after, page_slug, contact_field in zip(
                 times, units, before_or_afters, page_slugs, contact_fields, strict=False
@@ -182,9 +179,9 @@ class OrderedContentSetImporter:
         :raises ImportException: If time, units, before_or_afters, page_slugs and contact_fields are not all equal length.
         """
         ordered_set = self._get_or_init_ordered_content_set(
-            index, row, row["Slug"].lower(), row["Locale"]
+            index, row, row["slug"].lower(), row["locale"]
         )
-        ordered_set.name = row["Name"]
+        ordered_set.name = row["name"]
         self._add_profile_fields(ordered_set, row)
 
         pages = self._extract_ordered_content_set_pages(row, index)
@@ -198,50 +195,6 @@ class OrderedContentSetImporter:
 
     def _set_progress(self, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
-
-    def _get_xlsx_rows(self, file: File) -> list[dict[str, str]]:
-        """
-        Return a list of dictionaries representing the rows in the XLSX file.
-
-        :return: A list of dictionaries representing the rows in the XLSX file.
-        """
-        lines = []
-        wb = load_workbook(filename=BytesIO(file))
-        ws = wb.worksheets[0]
-        ws.delete_rows(1)
-        for row in ws.iter_rows(values_only=True):
-            row_dict = {
-                "Name": str(row[0]),
-                "Profile Fields": str(row[1]),
-                "Page Slugs": str(row[2]),
-                "Time": str(row[3]),
-                "Unit": str(row[4]),
-                "Before Or After": str(row[5]),
-                "Contact Field": str(row[6]),
-                "Slug": str(row[7]),
-                "Locale": str(row[8]),
-            }
-            lines.append(row_dict)
-        return lines
-
-    def _get_csv_rows(self, file: File) -> list[dict[str, str]]:
-        """
-        Return a list of dictionaries representing the rows in the CSV file.
-
-        :return: A list of dictionaries representing the rows in the CSV file.
-        """
-        lines = []
-        if isinstance(file, bytes):
-            try:
-                file = file.decode("utf-8")
-            except UnicodeDecodeError:
-                file = file.decode("latin-1")
-
-        reader = csv.DictReader(io.StringIO(file))
-        for dictionary in reader:
-            lines.append(dictionary)
-
-        return lines
 
     def perform_import(self) -> None:
         """
@@ -258,18 +211,16 @@ class OrderedContentSetImporter:
         """
         file = self.file.read()
 
-        rows = (
-            self._get_xlsx_rows(file)
-            if self.filetype == "XLSX"
-            else self._get_csv_rows(file)
-        )
+        rows = parse_file(file, self.filetype)
+        rows, rows2 = itertools.tee(rows)
+        num_rows = sum(1 for _ in rows2)
 
         # 10% progress for loading file
         self._set_progress(10)
 
-        for index, row in enumerate(rows):  # type: ignore
+        for index, row in rows:  # type: ignore
             os = self._create_ordered_set_from_row(index, row)  # type: ignore
             if not os:
                 raise ImportException("Ordered Content Set not created", index)
             # 10-100% for loading ordered content sets
-            self._set_progress(10 + index * 90 // len(rows))
+            self._set_progress(10 + index * 90 // num_rows)

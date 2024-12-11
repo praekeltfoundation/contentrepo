@@ -1,7 +1,8 @@
 import csv
+import itertools
 import json
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from functools import wraps
 from io import BytesIO, StringIO
@@ -127,8 +128,12 @@ def filter_exports(srcs: ExpDicts, dsts: ExpDicts) -> ExpDictsPair:
     return fsrcs, fdsts
 
 
+def lower_first(iterator: Iterator[Any]) -> Iterable[Any]:
+    return itertools.chain([next(iterator).lower()], iterator)
+
+
 def csv2dicts(csv_bytes: bytes) -> ExpDicts:
-    return list(csv.DictReader(StringIO(csv_bytes.decode())))
+    return list(csv.DictReader(lower_first(StringIO(csv_bytes.decode()))))
 
 
 def xlsx2dicts(xlsx_bytes: bytes) -> ExpDicts:
@@ -1266,7 +1271,7 @@ class TestImportExport:
             content = csv_impexp.read_bytes("ordered_content_broken.csv")
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.row_num == 0
+        assert e.value.row_num == 2
         assert e.value.message == [
             "Row Test Set has 2 times, 2 units, 3 before_or_afters, 3 page_slugs and 3 contact_fields and they should all be equal."
         ]
@@ -1284,7 +1289,7 @@ class TestImportExport:
             content = csv_impexp.read_bytes("ordered_content_incorrect_time_values.csv")
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.row_num == 0
+        assert e.value.row_num == 2
         assert e.value.message == ["Validation error: time - Enter a whole number."]
 
     def test_import_ordered_content_sets_incorrect_unit_values_error(
@@ -1300,7 +1305,7 @@ class TestImportExport:
             content = csv_impexp.read_bytes("ordered_content_incorrect_unit_values.csv")
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.row_num == 0
+        assert e.value.row_num == 2
         assert e.value.message == [
             "Validation error: unit - Select a valid choice. 1 is not one of the available choices."
         ]
@@ -1320,7 +1325,7 @@ class TestImportExport:
             )
             csv_impexp.import_ordered_sets(content)
 
-        assert e.value.row_num == 0
+        assert e.value.row_num == 2
         assert e.value.message == [
             "Validation error: before_or_after - Select a valid choice. 1 is not one of the available choices."
         ]
@@ -1480,6 +1485,26 @@ class TestImportExport:
         assert unwagtail(ordered_set_pt.profile_fields) == [
             ("gender", "male"),
             ("relationship", "in_a_relationship"),
+        ]
+
+    def test_import_ordered_sets_duplicate_header_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV with duplicate headers should throw an error
+        """
+        set_profile_field_options()
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+
+        csv_impexp.import_file("contentpage_required_fields_multi_locale.csv")
+        content = csv_impexp.read_bytes("ordered_content_duplicate_header.csv")
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.message == [
+            "Invalid format. Please check that there are no duplicate headers."
         ]
 
     def test_import_ordered_sets_no_profile_fields_csv(
