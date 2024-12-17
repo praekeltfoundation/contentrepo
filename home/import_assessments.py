@@ -145,17 +145,32 @@ class AssessmentImporter:
                 generic_error=row.generic_error,
                 tags=row.tags,
             )
-        if not (len(row.answers) == len(row.scores) == len(row.answer_semantic_ids)):
+        if not (
+            len(row.answers)
+            == len(row.scores)
+            == len(row.answer_semantic_ids)
+            == len(row.answer_responses)
+        ):
             raise ImportAssessmentException(
                 message=f"The amount of answers ({len(row.answers)}), scores "
-                f"({len(row.scores)}), and answer semantic IDs "
-                f"({len(row.answer_semantic_ids)}) do not match.",
+                f"({len(row.scores)}), answer semantic IDs "
+                f"({len(row.answer_semantic_ids)}), and answer responses "
+                f"({len(row.answer_responses)}) do not match.",
                 row_num=row_num,
             )
         answers = [
-            ShadowAnswerBlock(answer=answer, score=score, semantic_id=semantic_id)
-            for (answer, score, semantic_id) in zip(
-                row.answers, row.scores, row.answer_semantic_ids, strict=True
+            ShadowAnswerBlock(
+                answer=answer,
+                score=score,
+                semantic_id=semantic_id,
+                response=response,
+            )
+            for (answer, score, semantic_id, response) in zip(
+                row.answers,
+                row.scores,
+                row.answer_semantic_ids,
+                row.answer_responses,
+                strict=True,
             )
         ]
         question = ShadowQuestionBlock(
@@ -179,6 +194,7 @@ class ShadowAnswerBlock:
     answer: str
     score: float
     semantic_id: str
+    response: str
 
 
 @dataclass(slots=True)
@@ -288,6 +304,7 @@ class ShadowAssessment:
                     "answer": answer.answer,
                     "score": answer.score,
                     "semantic_id": answer.semantic_id,
+                    "response": answer.response,
                 }
                 for answer in question.answers
             ]
@@ -337,6 +354,7 @@ class AssessmentRow:
     scores: list[float] = field(default_factory=list)
     answer_semantic_ids: list[str] = field(default_factory=list)
     question_semantic_id: str = ""
+    answer_responses: list[str] = field(default_factory=list)
 
     @classmethod
     def fields(cls) -> list[str]:
@@ -357,14 +375,21 @@ class AssessmentRow:
             key: value for key, value in row.items() if value and key in cls.fields()
         }
 
+        # Create default value with correct length for answer responses if not specified
+        answers = deserialise_list(row.pop("answers", ""))
+        answer_responses = deserialise_list(row.pop("answer_responses", ""))
+        if not answer_responses:
+            answer_responses = [""] * len(answers)
+
         try:
             return cls(
                 tags=deserialise_list(row.pop("tags", "")),
-                answers=deserialise_list(row.pop("answers", "")),
+                answers=answers,
                 scores=[float(i) for i in deserialise_list(row.pop("scores", ""))],
                 answer_semantic_ids=deserialise_list(
                     row.pop("answer_semantic_ids", "")
                 ),
+                answer_responses=answer_responses,
                 **row,
             )
         except TypeError:
