@@ -103,8 +103,8 @@ class OrderedContentSetImporter:
         return [
             OrderedContentSetPage(
                 time=time,
-                unit=unit,
-                before_or_after=before_or_after,
+                unit=unit.lower(),
+                before_or_after=before_or_after.lower(),
                 page_slug=page_slug,
                 contact_field=contact_field,
                 locale=row["locale"],
