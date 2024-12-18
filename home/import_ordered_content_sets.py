@@ -78,7 +78,7 @@ class OrderedContentSetImporter:
         ordered_set.profile_fields = []
         for field in [f.strip() for f in (row["profile fields"] or "").split(",")]:
             if field and field != "-":
-                [field_name, field_value] = field.split(":")
+                [field_name, field_value] = field.lower().split(":")
                 ordered_set.profile_fields.append((field_name, field_value))
 
     def _extract_ordered_content_set_pages(
@@ -103,8 +103,8 @@ class OrderedContentSetImporter:
         return [
             OrderedContentSetPage(
                 time=time,
-                unit=unit,
-                before_or_after=before_or_after,
+                unit=unit.lower(),
+                before_or_after=before_or_after.lower(),
                 page_slug=page_slug,
                 contact_field=contact_field,
                 locale=row["locale"],
@@ -179,7 +179,7 @@ class OrderedContentSetImporter:
         :raises ImportException: If time, units, before_or_afters, page_slugs and contact_fields are not all equal length.
         """
         ordered_set = self._get_or_init_ordered_content_set(
-            index, row, row["slug"].lower(), row["locale"]
+            index, row, row["slug"].lower(), row["locale"].lower()
         )
         ordered_set.name = row["name"]
         self._add_profile_fields(ordered_set, row)
