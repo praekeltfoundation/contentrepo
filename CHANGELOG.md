@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--
 ## Unreleased
+-->
+
+## v1.4.0
 ### Added
 - Go to form actions for lists and buttons
 ### Fixed
@@ -18,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Importing assessments with commas in inflection values will now be caught with a helpful error message
 ### Security
 - Updated django from 4.2.16 to 4.2.17
--->
+
 
 ## v1.3.0
 ### Added
