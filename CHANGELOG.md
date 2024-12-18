@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 -->
 
-## v1.4.0
+## v1.4.0 - 2024-12-18
 ### Added
 - Go to form actions for lists and buttons
 ### Fixed
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated django from 4.2.16 to 4.2.17
 
 
-## v1.3.0
+## v1.3.0 - 2024-11-27
 ### Added
 - Filter ordered content sets by profile field values.
 - Add list_button_title to Whatsapp messages.
@@ -58,12 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated requests from 2.31.0 to 2.32.2
 - Updated idna from 3.6 to 3.7
 
-## v1.2.1
+## v1.2.1 - 2024-08-26
 ### Added
 - Forms: Add skip threshold and skip high result page
 - Forms: Add semantic_id for questions
 
-## v1.2.0
+## v1.2.0 - 2024-07-22
 ### Fixed
 - Page not found api status change to 404 from 400
 - Use cache for data when importing assessments with xlsx
@@ -92,7 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom model validation for IntegerQuestionBlock min and max
 - Custom model validation for min and max values to only be positive
 
-## v1.1.0
+## v1.1.0 - 2024-02-14
 ### Fixed
 - Autofill for empty slug
 - Fixed Web content preview in CMS
