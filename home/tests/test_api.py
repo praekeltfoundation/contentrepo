@@ -1934,7 +1934,7 @@ class TestAssessmentAPI:
                     "answer": "Flake",
                     "score": "3",
                     "semantic_id": "flake",
-                    "response": "Only the flakiest",
+                    "response": ""
                 },
             ]
         )
@@ -2156,7 +2156,7 @@ class TestAssessmentAPI:
                     "answer": "Flake",
                     "score": "3",
                     "semantic_id": "flake",
-                    "response": "Only the flakiest",
+                    "response": "",
                 },
             ],
             "semantic_id": "best_chocolate",
@@ -2191,7 +2191,7 @@ class TestAssessmentAPI:
                     "answer": "Flake",
                     "score": "3",
                     "semantic_id": "flake",
-                    "response": "Only the flakiest",
+                    "response": "",
                 },
             ],
             "semantic_id": "yummy_chocolates",
