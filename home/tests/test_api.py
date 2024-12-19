@@ -1934,7 +1934,7 @@ class TestAssessmentAPI:
                     "answer": "Flake",
                     "score": "3",
                     "semantic_id": "flake",
-                    "response": ""
+                    "response": "",
                 },
             ]
         )
