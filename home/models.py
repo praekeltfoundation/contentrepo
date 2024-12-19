@@ -1327,6 +1327,9 @@ class AnswerBlock(blocks.StructBlock):
         help_text="How much to add to the total score if this answer is chosen"
     )
     semantic_id = blocks.TextBlock(help_text="Semantic ID for this answer")
+    response = blocks.TextBlock(
+        required=False, help_text="The text to show the user if they choose this answer"
+    )
 
 
 class BaseQuestionBlock(blocks.StructBlock):

@@ -1,6 +1,6 @@
 import csv
 import json
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
 from io import BytesIO, StringIO
@@ -33,7 +33,7 @@ from .page_builder import (
 IMP_EXP_DATA_BASE = Path("home/tests/import-export-data")
 
 ExpDict = dict[str, Any]
-ExpDicts = Iterable[ExpDict]
+ExpDicts = list[ExpDict]
 ExpDictsPair = tuple[ExpDicts, ExpDicts]
 
 
@@ -42,7 +42,7 @@ def csv2dicts(csv_bytes: bytes) -> ExpDicts:
 
 
 DbDict = dict[str, Any]
-DbDicts = Iterable[DbDict]
+DbDicts = list[DbDict]
 
 
 def _models2dicts(model_instances: Any) -> DbDicts:
@@ -79,8 +79,8 @@ def decode_json_fields(page: DbDict) -> DbDict:
 
 def _remove_fields(pages: DbDicts, field_names: set[str]) -> DbDicts:
     for p in pages:
-        fields = {k: v for k, v in p["fields"].items() if k not in field_names}
-        yield p | {"fields": fields}
+        p["fields"] = {k: v for k, v in p["fields"].items() if k not in field_names}
+    return pages
 
 
 def _update_field(
@@ -88,7 +88,8 @@ def _update_field(
 ) -> DbDicts:
     for p in pages:
         fields = p["fields"]
-        yield p | {"fields": {**fields, field_name: update_fn(fields[field_name])}}
+        p["fields"] = {**fields, field_name: update_fn(fields[field_name])}
+    return pages
 
 
 PAGE_TIMESTAMP_FIELDS = {
@@ -102,8 +103,6 @@ def remove_timestamps(assessments: DbDicts) -> DbDicts:
 
 
 def normalise_revisions(assessments: DbDicts) -> DbDicts:
-    if "latest_revision" not in list(assessments)[0]["fields"]:
-        return assessments
     min_latest = min(p["fields"]["latest_revision"] for p in assessments)
     min_live = min(p["fields"]["live_revision"] for p in assessments)
     assessments = _update_field(
@@ -115,18 +114,18 @@ def normalise_revisions(assessments: DbDicts) -> DbDicts:
 
 def normalise_pks(assessments: DbDicts) -> DbDicts:
     min_pk = min(p["pk"] for p in assessments)
-    assessments = _update_field(assessments, "pk", lambda v: v - min_pk)
+    for assessment in assessments:
+        assessment["pk"] -= min_pk
     return assessments
 
 
 def _normalise_answer_ids(
-    assessment: DbDict, q_list: list[dict[str, Any]]
+    assessment: DbDict, a_list: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
-    for q in q_list:
-        for i, a in enumerate(q["value"]):
-            assert "id" in a
-            a["id"] = f"fake:{assessment['pk']}:answer:{i}"
-    return q_list
+    for i, a in enumerate(a_list):
+        a["id"] = f"fake:{assessment['pk']}:answer_item:{i}"
+        a["value"]["id"] = f"fake:{assessment['pk']}:answer:{i}"
+    return a_list
 
 
 def _normalise_question_ids(
@@ -135,21 +134,14 @@ def _normalise_question_ids(
     for i, q in enumerate(q_list):
         assert "id" in q
         q["id"] = f"fake:{assessment['pk']}:question:{i}"
-        fields = {
-            k: _normalise_answer_ids(assessment, v) if k == "answers" else v
-            for k, v in q["fields"].items()
-        }
-        q = q | {"fields": fields}
+        _normalise_answer_ids(assessment, q["value"]["answers"])
     return q_list
 
 
 @per_page
 def normalise_nested_ids(assessment: DbDict) -> DbDict:
-    fields = {
-        k: _normalise_question_ids(assessment, v) if k == "questions" else v
-        for k, v in assessment["fields"].items()
-    }
-    return assessment | {"fields": fields}
+    _normalise_question_ids(assessment, assessment["fields"]["questions"])
+    return assessment
 
 
 ASSESSMENT_FILTER_FUNCS = [
@@ -396,11 +388,13 @@ class TestImportExportRoundtrip:
                         "question": "test question",
                         "error": "test error",
                         "semantic_id": "unique_id",
+                        "explainer": "test explainer",
                         "answers": [
                             {
                                 "answer": "test answer",
                                 "score": 2.0,
                                 "semantic_id": "unique_id",
+                                "response": "test response",
                             }
                         ],
                     },
@@ -575,7 +569,7 @@ class TestImportExport:
             csv_impexp.import_file("assessment_answers_mismatched_lengths.csv")
         assert (
             e.value.message
-            == "The amount of answers (5), scores (4), and answer semantic IDs (5) do "
-            "not match."
+            == "The amount of answers (5), scores (4), answer semantic IDs (5), and "
+            "answer responses (5) do not match."
         )
         assert e.value.row_num == 2
