@@ -300,7 +300,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
 
 
 class AssessmentAdmin(SnippetViewSet):
-    menu_label = 'CMS Forms'
+    menu_label = "CMS Forms"
     model = Assessment
     add_to_admin_menu = True
     list_display = ("title", "slug", "version", "locale")

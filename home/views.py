@@ -60,11 +60,11 @@ class CustomIndexView(SpreadsheetExportMixin, IndexView):
 
 class CustomIndexViewAssessment(SpreadsheetExportMixinAssessment, IndexViewAssessment):
     def get_template_names(self):
-        return ["wagtailsnippets/snippets/home/assessment/index.html"] 
+        return ["wagtailsnippets/snippets/home/assessment/index.html"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['model_opts'].verbose_name_plural = "CMS Form"
+        context["model_opts"].verbose_name_plural = "CMS Form"
         return context
 
 
