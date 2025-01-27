@@ -11,6 +11,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from wagtail import blocks  # type: ignore
+from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.query import PageQuerySet  # type: ignore
 
@@ -80,6 +81,7 @@ class ExportRow:
     media_link: str = ""
     related_pages: str = ""
     footer: str = ""
+    language_code: str = ""
 
     @classmethod
     def headings(cls) -> list[str]:
@@ -208,6 +210,11 @@ class ContentExporter:
          * We should use the parent slug (which is expected to be unique per
            locale (probably?)) instead of the parent title.
         """
+        export_lang_code = ""
+        for lang_code, lang_dn in get_content_languages().items():
+            if lang_dn == str(page.locale):
+                export_lang_code = lang_code
+
         row = ExportRow(
             structure=structure,
             message=1,
@@ -230,6 +237,7 @@ class ContentExporter:
             triggers=self._comma_sep_qs(page.triggers.all()),
             locale=str(page.locale),
             related_pages=self._comma_sep_qs(self._related_pages(page)),
+            language_code=export_lang_code,
         )
         self.rows.append(row)
         message_bodies = list(
@@ -361,6 +369,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "media_link": 118,
         "related": 118,
         "footer": 118,
+        "language_code": 118,
     }
 
     for index, column_width in enumerate(column_widths_in_pts.values(), 2):

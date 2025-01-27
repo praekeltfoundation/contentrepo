@@ -268,7 +268,10 @@ class ContentImporter:
     def create_shadow_content_page_from_row(
         self, row: "ContentRow", row_num: int
     ) -> None:
-        locale = self.locale_from_display_name(row.locale)
+        if row.language_code:
+            locale = locale = Locale.objects.get(language_code=row.language_code)
+        else:
+            locale = self.locale_from_display_name(row.locale)
         page = ShadowContentPage(
             row_num=row_num,
             slug=row.slug,
@@ -738,6 +741,7 @@ class ContentRow:
     media_link: str = ""
     related_pages: list[str] = field(default_factory=list)
     footer: str = ""
+    language_code: str = ""
 
     @classmethod
     def from_flat(cls, row: dict[str, str], row_num: int) -> "ContentRow":
