@@ -1651,8 +1651,7 @@ class TestImportExport:
         ]
 
     def test_language_code_import(self, csv_impexp: ImportExport) -> None:
-        """
-        """
+        """ """
         csv_impexp.import_file("language_code_import.csv")
         content = csv_impexp.export_content()
 

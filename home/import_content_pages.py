@@ -8,23 +8,32 @@ from queue import Queue
 from typing import Any
 from uuid import uuid4
 
-from django.core.exceptions import (ObjectDoesNotExist,  # type: ignore
-                                    ValidationError)
+from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
-from wagtail.blocks import StructValue  # type: ignore; type: ignore
+from wagtail.blocks import (  # type: ignore
+    StructValue,  # type: ignore
+)
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
-from home.import_helpers import (ImportException, parse_file,
-                                 validate_using_form)
+from home.import_helpers import ImportException, parse_file, validate_using_form
 
-from .models import (Assessment, ContentPage, ContentPageIndex,
-                     ContentQuickReply, ContentTrigger, HomePage,
-                     MessengerBlock, SMSBlock, USSDBlock, ViberBlock,
-                     WhatsappBlock)
+from .models import (
+    Assessment,
+    ContentPage,
+    ContentPageIndex,
+    ContentQuickReply,
+    ContentTrigger,
+    HomePage,
+    MessengerBlock,
+    SMSBlock,
+    USSDBlock,
+    ViberBlock,
+    WhatsappBlock,
+)
 
 PageId = tuple[str, Locale]
 
