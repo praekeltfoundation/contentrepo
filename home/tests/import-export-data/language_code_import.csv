@@ -1,0 +1,15 @@
+structure,message,page_id,Slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,whatsapp_template_name,whatsapp_template_category,example_values,variation_title,variation_body,list_title,list_items,sms_title,sms_body,ussd_title,ussd_body,messenger_title,messenger_body,viber_title,viber_body,translation_tag,tags,quick_replies,triggers,locale,next_prompt,buttons,image_link,doc_link,media_link,related_pages,footer,language_code
+Menu 1,0,4,main-menu,,Main Menu,,,,,,,,,,,,,,,,,,,,a0b85075-d01b-46bf-8997-8591e87ba171,,,,English,,,,,,,,
+Sub 1.1,1,5,main-menu-first-time-user,Main Menu,main menu first time user,,,main menu first time user,"*Welcome to HealthAlert* 🌍
+
+This is a messaging service created by the _*World Health Organization*_ *(WHO)* that provides information on COVID-19 as well as emergency resources for disease outbreaks, natural, and man-made disasters.
+
+_You can return to this main menu at any time by replying *0*_ 🏠
+
+Choose what you'd like to know more about by tapping a button below ⬇️",,UTILITY,[],,,,[],,,,,main menu first time user,"Welcome to HealthAlert 🌍
+
+This is a messaging service created by the World Health Organization (WHO) that provides information on COVID-19 as well as emergency resources for disease outbreaks, natural, and man-made disasters.
+
+You can return to this main menu at any time by replying 🏠
+
+Choose what you'd like to know more about by tapping a button below ⬇️",,,5892bccd-8025-419d-9a8e-a6a37b755dbf,menu,"Self-help🌬️, Settings⚙️, Health Info🏥",Main menu🏠,English,,[],,,,,,

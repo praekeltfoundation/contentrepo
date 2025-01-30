@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Answer responses for Forms
+- Language_code field on imports and exports
+### Removed
+- Locale field on exports 
 -->
 
 ## v1.4.0 - 2024-12-18

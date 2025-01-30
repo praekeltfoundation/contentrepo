@@ -1,3 +1,3 @@
-Structure,Message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,variation_body,variation_title,next_prompt,messenger_title,messenger_body,viber_title,viber_body,tags,quick_replies,triggers,locale,image_link,doc_link,media_link,footer,related_pages,footer
-Menu 1,0, ,main-menu,,test,,,,,,,,,,,,,,,English,,,,
-Sub 1.1.1,1,,content-page,,Web Title 1,Web subtitle 1,web body,Whatsapp Title 1,"First whatsapp message",,,,,,,,"tag1,tag2",,,English,,,, ,
+Structure,Message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,variation_body,variation_title,next_prompt,messenger_title,messenger_body,viber_title,viber_body,tags,quick_replies,triggers,locale,image_link,doc_link,media_link,footer,related_pages,footer,language_code
+Menu 1,0, ,main-menu,,test,,,,,,,,,,,,,,,English,,,,,,,en
+Sub 1.1.1,1,,content-page,,Web Title 1,Web subtitle 1,web body,Whatsapp Title 1,First whatsapp message,,,,,,,,"tag1,tag2",,,English,,,, ,,,en

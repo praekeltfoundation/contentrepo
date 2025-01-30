@@ -72,7 +72,6 @@ class ExportRow:
     tags: str = ""
     quick_replies: str = ""
     triggers: str = ""
-    locale: str = ""
     next_prompt: str = ""
     buttons: str = ""
     image_link: str = ""
@@ -80,6 +79,7 @@ class ExportRow:
     media_link: str = ""
     related_pages: str = ""
     footer: str = ""
+    language_code: str = ""
 
     @classmethod
     def headings(cls) -> list[str]:
@@ -203,8 +203,6 @@ class ContentExporter:
         Export a ContentPage.
 
         FIXME:
-         * The locale should be a language code rather than a language name to
-           make importing less messy.
          * We should use the parent slug (which is expected to be unique per
            locale (probably?)) instead of the parent title.
         """
@@ -228,8 +226,8 @@ class ContentExporter:
             tags=self._comma_sep_qs(page.tags.all()),
             quick_replies=self._comma_sep_qs(page.quick_replies.all()),
             triggers=self._comma_sep_qs(page.triggers.all()),
-            locale=str(page.locale),
             related_pages=self._comma_sep_qs(self._related_pages(page)),
+            language_code=page.locale.language_code,
         )
         self.rows.append(row)
         message_bodies = list(
@@ -260,8 +258,6 @@ class ContentExporter:
         Export a ContentPageIndex.
 
         FIXME:
-         * The locale should be a language code rather than a language name to
-           make importing less messy.
          * We should use the parent slug (which is expected to be unique per
            locale (probably?)) instead of the parent title.
         """
@@ -272,7 +268,7 @@ class ContentExporter:
             parent=self._parent_title(page),
             web_title=page.title,
             translation_tag=str(page.translation_key),
-            locale=str(page.locale),
+            language_code=page.locale.language_code,
         )
         self.rows.append(row)
 
@@ -353,7 +349,6 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "tags": 118,
         "quick_replies": 118,
         "triggers": 118,
-        "locale": 118,
         "next_prompt": 118,
         "buttons": 118,
         "image_link": 118,
@@ -361,6 +356,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "media_link": 118,
         "related": 118,
         "footer": 118,
+        "language_code": 118,
     }
 
     for index, column_width in enumerate(column_widths_in_pts.values(), 2):

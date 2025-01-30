@@ -413,7 +413,7 @@ class ImportExport:
         Determine whether to keep a given export row.
         """
         if locale:
-            if row["locale"] not in [None, "", locale]:
+            if row.get("locale") not in [None, "", locale]:
                 return False
         return True
 
@@ -467,6 +467,7 @@ class ImportExport:
             print("-v-CONTENT-v-")
             print(content.decode())
             print("-^-CONTENT-^-")
+
         return content
 
     def export_ordered_content(self) -> bytes:
@@ -798,6 +799,7 @@ class TestImportExport:
         for row in dst:
             assert len(row["translation_tag"]) == 36  # uuid with dashes
             row["translation_tag"] = ""
+
         assert dst == src
 
     def test_no_translation_key_nondefault(self, csv_impexp: ImportExport) -> None:
@@ -1650,6 +1652,18 @@ class TestImportExport:
             "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
         ]
 
+    def test_language_code_import(self, csv_impexp: ImportExport) -> None:
+        """ """
+        csv_impexp.import_file("language_code_import.csv")
+        content = csv_impexp.export_content()
+
+        new_export_content = csv_impexp.read_bytes(
+            "language_code_import_output.csv", IMP_EXP_DATA_BASE
+        )
+
+        src, dst = csv_impexp.csvs2dicts(new_export_content, content)
+        assert dst == src
+
 
 @pytest.mark.django_db
 class TestExport:
@@ -2424,7 +2438,6 @@ class TestExportImportRoundtrip:
 
         orig_en = impexp.get_page_json(locale="en")
         content = impexp.export_content()
-
         impexp.import_content(content, locale="en")
         imported = impexp.get_page_json()
         assert imported == orig_en
