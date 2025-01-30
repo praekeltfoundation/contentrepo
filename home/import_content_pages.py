@@ -259,7 +259,6 @@ class ContentImporter:
         # but optional for the default locale.
         if row.translation_tag or locale != self.default_locale():
             index.translation_key = row.translation_tag
-        # locale = self.locale_from_display_name(row.locale)
         try:
             with contextlib.suppress(NodeAlreadySaved):
                 self.home_page(locale).add_child(instance=index)
