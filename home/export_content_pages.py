@@ -11,13 +11,20 @@ from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from wagtail import blocks  # type: ignore
-from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.query import PageQuerySet  # type: ignore
 
-from .models import (ContentPage, ContentPageIndex, HomePage, MessengerBlock,
-                     SMSBlock, USSDBlock, VariationBlock, ViberBlock,
-                     WhatsappBlock)
+from .models import (
+    ContentPage,
+    ContentPageIndex,
+    HomePage,
+    MessengerBlock,
+    SMSBlock,
+    USSDBlock,
+    VariationBlock,
+    ViberBlock,
+    WhatsappBlock,
+)
 from .xlsx_helpers import get_active_sheet
 
 HP_CTYPE = HomePage._meta.verbose_name
