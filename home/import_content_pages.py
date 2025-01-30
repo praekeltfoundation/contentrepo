@@ -8,32 +8,23 @@ from queue import Queue
 from typing import Any
 from uuid import uuid4
 
-from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
+from django.core.exceptions import (ObjectDoesNotExist,  # type: ignore
+                                    ValidationError)
 from taggit.models import Tag  # type: ignore
 from treebeard.exceptions import NodeAlreadySaved  # type: ignore
-from wagtail.blocks import (  # type: ignore
-    StructValue,  # type: ignore
-)
+from wagtail.blocks import StructValue  # type: ignore; type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
-from home.import_helpers import ImportException, parse_file, validate_using_form
+from home.import_helpers import (ImportException, parse_file,
+                                 validate_using_form)
 
-from .models import (
-    Assessment,
-    ContentPage,
-    ContentPageIndex,
-    ContentQuickReply,
-    ContentTrigger,
-    HomePage,
-    MessengerBlock,
-    SMSBlock,
-    USSDBlock,
-    ViberBlock,
-    WhatsappBlock,
-)
+from .models import (Assessment, ContentPage, ContentPageIndex,
+                     ContentQuickReply, ContentTrigger, HomePage,
+                     MessengerBlock, SMSBlock, USSDBlock, ViberBlock,
+                     WhatsappBlock)
 
 PageId = tuple[str, Locale]
 
@@ -99,14 +90,14 @@ class ContentImporter:
         for i, row in enumerate(rows, start=2):
             try:
                 if row.is_page_index:
-                    if self.locale and row.locale != self.locale.get_display_name():
+                    prev_locale = self._get_locale_from_row(row)
+                    if self.locale and self.locale != prev_locale:
                         # This page index isn't for the locale we're importing, so skip it.
                         continue
                     self.create_content_page_index_from_row(row)
-                    prev_locale = self.locale_from_display_name(row.locale)
                 elif row.is_content_page:
                     self.create_shadow_content_page_from_row(row, i)
-                    prev_locale = self.locale_from_display_name(row.locale)
+                    prev_locale = self._get_locale_from_row(row)
                 elif row.is_variation_message:
                     self.add_variation_to_shadow_content_page_from_row(row, prev_locale)
                 else:
@@ -116,6 +107,15 @@ class ContentImporter:
                 e.slug = row.slug
                 e.locale = row.locale
                 raise e
+
+    def _get_locale_from_row(self, row: "ContentRow") -> Locale:
+        if row.language_code:
+            try:
+                return Locale.objects.get(language_code=row.language_code)
+            except Locale.DoesNotExist:
+                raise ImportException(f"Language not found: {row.language_code}")
+        else:
+            return self.locale_from_display_name(row.locale)
 
     def save_pages(self) -> None:
         for i, page in enumerate(self.shadow_pages.values()):
@@ -242,7 +242,7 @@ class ContentImporter:
         return site.root_page.locale
 
     def create_content_page_index_from_row(self, row: "ContentRow") -> None:
-        locale = self.locale_from_display_name(row.locale)
+        locale = self._get_locale_from_row(row)
         try:
             index = ContentPageIndex.objects.get(slug=row.slug, locale=locale)
         except ContentPageIndex.DoesNotExist:
@@ -252,7 +252,7 @@ class ContentImporter:
         # but optional for the default locale.
         if row.translation_tag or locale != self.default_locale():
             index.translation_key = row.translation_tag
-        locale = self.locale_from_display_name(row.locale)
+        # locale = self.locale_from_display_name(row.locale)
         try:
             with contextlib.suppress(NodeAlreadySaved):
                 self.home_page(locale).add_child(instance=index)
@@ -268,10 +268,7 @@ class ContentImporter:
     def create_shadow_content_page_from_row(
         self, row: "ContentRow", row_num: int
     ) -> None:
-        if row.language_code:
-            locale = locale = Locale.objects.get(language_code=row.language_code)
-        else:
-            locale = self.locale_from_display_name(row.locale)
+        locale = self._get_locale_from_row(row)
         page = ShadowContentPage(
             row_num=row_num,
             slug=row.slug,

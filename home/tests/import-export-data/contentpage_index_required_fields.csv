@@ -1,2 +1,2 @@
-message,slug,parent,web_title,locale
-0,main-menu,,Main Menu,English
+message,slug,parent,web_title,language_code
+0,main-menu,,Main Menu,en

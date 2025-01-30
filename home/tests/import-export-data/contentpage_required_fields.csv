@@ -1,4 +1,4 @@
-message,slug,parent,web_title,locale
-0,main_menu,,Main Menu,English
-1,first_time_user,Main Menu,main menu first time user,English
-1,health_info,main menu first time user,health info,English
+message,slug,parent,web_title,language_code
+0,main_menu,,Main Menu,en
+1,first_time_user,Main Menu,main menu first time user,en
+1,health_info,main menu first time user,health info,en
