@@ -152,6 +152,24 @@ ASSESSMENT_FILTER_FUNCS = [
 ]
 
 
+def create_content_page(title: str, slug: str, locale_code: str = "en") -> ContentPage:
+    locale = Locale.objects.get(language_code=locale_code)
+    home_page = HomePage.objects.get(slug="home")
+    page = ContentPage(
+        title=title,
+        slug=slug,
+        locale=locale,
+    )
+    home_page.add_child(instance=page)
+    page.save_revision().publish()
+    return page
+
+
+def create_locale_if_not_exists(locale_code: str) -> None:
+    if not Locale.objects.filter(language_code=locale_code).exists():
+        Locale.objects.create(language_code=locale_code)
+
+
 @dataclass
 class ImportExport:
     admin_client: Any
@@ -431,11 +449,11 @@ class TestImportExport:
         assert (
             e.value.message
             == "You are trying to add an assessment, where one of the result pages "
-            "references the content page with slug fake-page which does not exist. "
+            "references the content page with slug fake-page and locale en which does not exist. "
             "Please create the content page first."
         )
 
-    def test_import_error(elf, csv_impexp: ImportExport) -> None:
+    def test_import_error(self, csv_impexp: ImportExport) -> None:
         """
         Importing an invalid CSV file leaves the db as-is.
 
@@ -573,3 +591,40 @@ class TestImportExport:
             "answer responses (5) do not match."
         )
         assert e.value.row_num == 2
+
+
+@pytest.mark.usefixtures("result_content_pages")
+@pytest.mark.django_db()
+class TestImportMultipleLanguages:
+
+    def test_create_content_page(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a csv with a results page that has the same slug
+        in more than one locale should pass.
+
+        This test uses high-inflection as slug and high-result page in English and French locale
+        The English high-inflection is already created by the result_content_pages fixture
+        The French high_inflection is created below
+        """
+
+        high_inflection_page_en = ContentPage.objects.get(
+            slug="high-inflection", locale__language_code="en"
+        )
+
+        create_locale_if_not_exists("fr")
+        high_inflection_page_fr = create_content_page(
+            "High Inflection", "high-inflection", locale_code="fr"
+        )
+
+        assert high_inflection_page_en.title == "High Inflection"
+        assert high_inflection_page_en.locale.language_code == "en"
+        assert high_inflection_page_en.live is True
+
+        assert high_inflection_page_fr.title == "High Inflection"
+        assert high_inflection_page_fr.locale.language_code == "fr"
+        assert high_inflection_page_fr.live is True
+
+        csv_bytes = csv_impexp.import_file("multiple_language.csv")
+        content = csv_impexp.export_assessment()
+        src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        assert dst == src
