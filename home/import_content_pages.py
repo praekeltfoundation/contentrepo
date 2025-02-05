@@ -99,42 +99,28 @@ class ContentImporter:
         prev_locale: Locale | None = None
         for i, row in enumerate(rows, start=2):
             try:
-                cleaned_row = self._clean_row_content(row)
-                if cleaned_row.is_page_index:
-                    prev_locale = self._get_locale_from_row(cleaned_row)
+                if row.is_page_index:
+                    prev_locale = self._get_locale_from_row(row)
                     if self.locale and self.locale != prev_locale:
                         # This page index isn't for the locale we're importing, so skip it.
                         continue
-                    self.create_content_page_index_from_row(cleaned_row)
 
-                elif cleaned_row.is_content_page:
-                    self.create_shadow_content_page_from_row(cleaned_row, i)
-                    prev_locale = self._get_locale_from_row(cleaned_row)
+                    self.create_content_page_index_from_row(row)
+                elif row.is_content_page:
+                    self.create_shadow_content_page_from_row(row, i)
+                    prev_locale = self._get_locale_from_row(row)
 
-                elif cleaned_row.is_variation_message:
-                    self.add_variation_to_shadow_content_page_from_row(cleaned_row, prev_locale)
+                elif row.is_variation_message:
+                    self.add_variation_to_shadow_content_page_from_row(row, prev_locale)
 
                 else:
-                    self.add_message_to_shadow_content_page_from_row(cleaned_row, prev_locale)
+                    self.add_message_to_shadow_content_page_from_row(row, prev_locale)
 
             except ImportException as e:
                 e.row_num = i
                 e.slug = row.slug
                 e.locale = row.locale
                 raise e
-
-    def _clean_row_content(self, row: "ContentRow") -> "ContentRow":
-        cleaned_data = {}
-
-        for field in fields(row):
-            value = getattr(row, field.name)
-            if isinstance(value, str):
-                cleaned_value = "".join(char for char in value if char.isprintable() or char in "\n\r\t").strip()
-                cleaned_data[field.name] = cleaned_value
-            else:
-                cleaned_data[field.name] = value
-
-        return replace(row, **cleaned_data)
 
     def _get_locale_from_row(self, row: "ContentRow") -> Locale:
         if row.language_code:
