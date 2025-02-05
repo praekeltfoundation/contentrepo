@@ -968,15 +968,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
         return revision
-    
-    def clean_whatsapp_body(self):
-        """Cleans whatsapp_body by removing non-printable characters except newlines, carriage returns, and tabs."""
-        if self.whatsapp_body:
-            self.whatsapp_body = "".join(
-                char for char in self.whatsapp_body if char.isprintable() or char in "\n\r\t"
-            ).strip()
-
-
 
     def clean(self):
         result = super().clean(Page)
