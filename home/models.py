@@ -14,18 +14,33 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from taggit.models import ItemBase, TagBase, TaggedItemBase
 from wagtail import blocks
-from wagtail.admin.panels import (FieldPanel, MultiFieldPanel, ObjectList,
-                                  TabbedInterface, TitleFieldPanel)
+from wagtail.admin.panels import (
+    FieldPanel,
+    MultiFieldPanel,
+    ObjectList,
+    TabbedInterface,
+    TitleFieldPanel,
+)
 from wagtail.api import APIField
-from wagtail.blocks import (StreamBlockValidationError, StreamValue,
-                            StructBlockValidationError)
+from wagtail.blocks import (
+    StreamBlockValidationError,
+    StreamValue,
+    StructBlockValidationError,
+)
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import (DraftStateMixin, Locale, LockableMixin, Page,
-                            ReferenceIndex, Revision, RevisionMixin,
-                            WorkflowMixin)
+from wagtail.models import (
+    DraftStateMixin,
+    Locale,
+    LockableMixin,
+    Page,
+    ReferenceIndex,
+    Revision,
+    RevisionMixin,
+    WorkflowMixin,
+)
 from wagtail.models.sites import Site
 from wagtail.search import index
 from wagtail.snippets.blocks import SnippetChooserBlock
@@ -33,9 +48,11 @@ from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
-from .whatsapp import (TemplateSubmissionException,
-                       create_standalone_whatsapp_template,
-                       create_whatsapp_template)
+from .whatsapp import (
+    TemplateSubmissionException,
+    create_standalone_whatsapp_template,
+    create_whatsapp_template,
+)
 
 from .constants import (  # isort:skip
     AGE_CHOICES,

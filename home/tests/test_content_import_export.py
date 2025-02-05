@@ -23,16 +23,39 @@ from wagtailmedia.models import Media  # type: ignore
 
 from home.content_import_export import import_content, import_ordered_sets
 from home.import_helpers import ImportException
-from home.models import (Assessment, ContentPage, ContentPageIndex,
-                         GoToFormButton, GoToFormListItem, GoToPageButton,
-                         HomePage, OrderedContentSet)
+from home.models import (
+    Assessment,
+    ContentPage,
+    ContentPageIndex,
+    GoToFormButton,
+    GoToFormListItem,
+    GoToPageButton,
+    HomePage,
+    OrderedContentSet,
+)
 from home.xlsx_helpers import get_active_sheet
 
 from .helpers import set_profile_field_options
-from .page_builder import (FormBtn, FormListItem, MBlk, MBody, NextBtn,
-                           NextListItem, PageBtn, PageBuilder, PageListItem,
-                           SBlk, SBody, UBlk, UBody, VarMsg, VBlk, VBody,
-                           WABlk, WABody)
+from .page_builder import (
+    FormBtn,
+    FormListItem,
+    MBlk,
+    MBody,
+    NextBtn,
+    NextListItem,
+    PageBtn,
+    PageBuilder,
+    PageListItem,
+    SBlk,
+    SBody,
+    UBlk,
+    UBody,
+    VarMsg,
+    VBlk,
+    VBody,
+    WABlk,
+    WABody,
+)
 from .utils import unwagtail
 
 IMP_EXP_DATA_BASE = Path("home/tests/import-export-data")
