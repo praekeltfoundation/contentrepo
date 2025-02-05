@@ -449,7 +449,7 @@ class TestImportExport:
         assert (
             e.value.message
             == "You are trying to add an assessment, where one of the result pages "
-            "references the content page with slug fake-page and locale en which does not exist. "
+            "references the content page with slug fake-page and locale English which does not exist. "
             "Please create the content page first."
         )
 
