@@ -6,10 +6,7 @@ from dataclasses import dataclass, field, fields
 from json.decoder import JSONDecodeError
 from queue import Queue
 from typing import Any
-import unicodedata
 from uuid import uuid4
-import re
-from dataclasses import replace
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from taggit.models import Tag  # type: ignore
@@ -104,18 +101,14 @@ class ContentImporter:
                     if self.locale and self.locale != prev_locale:
                         # This page index isn't for the locale we're importing, so skip it.
                         continue
-
                     self.create_content_page_index_from_row(row)
                 elif row.is_content_page:
                     self.create_shadow_content_page_from_row(row, i)
                     prev_locale = self._get_locale_from_row(row)
-
                 elif row.is_variation_message:
                     self.add_variation_to_shadow_content_page_from_row(row, prev_locale)
-
                 else:
                     self.add_message_to_shadow_content_page_from_row(row, prev_locale)
-
             except ImportException as e:
                 e.row_num = i
                 e.slug = row.slug
