@@ -576,7 +576,7 @@ class TestImportExportRoundtrip:
          * Should we set enable_web and friends based on body, title, or an
            enable field that we'll need to add to the export?
         """
-        csv_bytes = csv_impexp.import_file("content2.csv")
+        csv_bytes = csv_impexp.import_file("content3.csv")
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
@@ -744,7 +744,7 @@ class TestImportExport:
         (This uses content2.csv from test_api.py and broken.csv.)
         """
         # Start with some existing content.
-        csv_bytes = csv_impexp.import_file("content2.csv")
+        csv_bytes = csv_impexp.import_file("content3.csv")
 
         # This CSV doesn't have any of the fields we expect.
         with pytest.raises((KeyError, TypeError, ImportException)):
@@ -1653,7 +1653,9 @@ class TestImportExport:
         ]
 
     def test_language_code_import(self, csv_impexp: ImportExport) -> None:
-        """ """
+        """
+        Import a page that doesn't have language code set
+        """
         csv_impexp.import_file("language_code_import.csv")
         content = csv_impexp.export_content()
 
@@ -1666,10 +1668,11 @@ class TestImportExport:
 
 
     def test_hidden_characters(self, csv_impexp: ImportExport) -> None:
-        """ """
-        csv_bytes = csv_impexp.import_file("test_special_chars.csv")
-        csv_dict = csv2dicts(csv_bytes)
-        assert '\u2028' not in csv_dict[1]['whatsapp_body']
+        """
+        Import a page that has hidden characters in the whatsapp body
+        """
+        csv_impexp.import_file("test_special_chars.csv")
+        assert "\u2028" not in ContentPage.objects.all().values()[0]['whatsapp_body']
 
 @pytest.mark.django_db
 class TestExport:

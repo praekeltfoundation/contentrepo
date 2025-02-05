@@ -969,6 +969,15 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
         return revision
+    
+    def clean_whatsapp_body(self):
+        """Cleans whatsapp_body by removing non-printable characters except newlines, carriage returns, and tabs."""
+        if self.whatsapp_body:
+            self.whatsapp_body = "".join(
+                char for char in self.whatsapp_body if char.isprintable() or char in "\n\r\t"
+            ).strip()
+
+
 
     def clean(self):
         result = super().clean(Page)
@@ -985,8 +994,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                     ).strip()
 
                     block.value['message'] = cleaned_message
-                whatsapp_block.append(block)
-            self.whatsapp_body = StreamValue(self.whatsapp_body.stream_block, whatsapp_block)
 
         # The WA title is needed for all templates to generate a name for the template
         if self.is_whatsapp_template and not self.whatsapp_title:
