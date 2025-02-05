@@ -12,12 +12,8 @@ from django.test import TestCase, override_settings
 from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
-from wagtail.models import (
-    Locale,  # type: ignore
-    Page,
-    Workflow,
-    WorkflowState,
-)
+from wagtail.models import Locale  # type: ignore
+from wagtail.models import Page, Workflow, WorkflowState
 from wagtail.test.utils import WagtailPageTests
 
 from home.models import (
