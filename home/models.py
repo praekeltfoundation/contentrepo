@@ -1,4 +1,3 @@
-from copy import deepcopy
 import logging
 import re
 
@@ -23,7 +22,7 @@ from wagtail.admin.panels import (
     TitleFieldPanel,
 )
 from wagtail.api import APIField
-from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError, StreamValue, StructValue
+from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError, StreamValue
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
