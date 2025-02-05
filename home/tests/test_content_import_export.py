@@ -1665,6 +1665,12 @@ class TestImportExport:
         assert dst == src
 
 
+    def test_hidden_characters(self, csv_impexp: ImportExport) -> None:
+        """ """
+        csv_bytes = csv_impexp.import_file("test_special_chars.csv")
+        csv_dict = csv2dicts(csv_bytes)
+        assert '\u2028' not in csv_dict[1]['whatsapp_body']
+
 @pytest.mark.django_db
 class TestExport:
     """
