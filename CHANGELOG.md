@@ -10,10 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Answer responses for Forms
 - Language_code field on imports and exports
+- whatsapp body hidden characters validation
 ### Removed
 - Locale field on exports
-### Changed
-- clean whatsapp body to remove hidden characters
 -->
 
 ## v1.4.0 - 2024-12-18
