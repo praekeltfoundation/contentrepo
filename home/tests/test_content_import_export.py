@@ -1653,7 +1653,9 @@ class TestImportExport:
         ]
 
     def test_language_code_import(self, csv_impexp: ImportExport) -> None:
-        """ """
+        """
+        Import a page that doesn't have language code set
+        """
         csv_impexp.import_file("language_code_import.csv")
         content = csv_impexp.export_content()
 
@@ -1663,6 +1665,14 @@ class TestImportExport:
 
         src, dst = csv_impexp.csvs2dicts(new_export_content, content)
         assert dst == src
+
+    def test_hidden_characters(self, csv_impexp: ImportExport) -> None:
+        """
+        Import a page that has hidden characters in the whatsapp body
+        """
+        csv_bytes = csv_impexp.import_file("test_special_chars.csv")
+        assert "\u2028\u2028" in csv_bytes.decode("utf-8")
+        assert "\u2028" not in ContentPage.objects.all().values()[0]["whatsapp_body"]
 
 
 @pytest.mark.django_db
