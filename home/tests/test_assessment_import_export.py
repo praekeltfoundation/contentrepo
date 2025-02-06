@@ -16,9 +16,19 @@ from home.assessment_import_export import import_assessment
 from home.content_import_export import import_content
 from home.import_assessments import ImportAssessmentException
 from home.import_helpers import ImportException
-from home.models import Assessment, ContentPage, HomePage
+from home.models import (
+    Assessment,
+    ContentPage,
+    HomePage,
+)
 
-from .page_builder import MBlk, MBody, PageBuilder, WABlk, WABody
+from .page_builder import (
+    MBlk,
+    MBody,
+    PageBuilder,
+    WABlk,
+    WABody,
+)
 
 IMP_EXP_DATA_BASE = Path("home/tests/import-export-data")
 
