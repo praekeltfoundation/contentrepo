@@ -770,12 +770,9 @@ class ContentRow:
         list_items = []
         try:
             row_list_items = row.pop("list_items", "")
-            list_items = JSON_loader(row_num, row_list_items)
-        except ImportException:
-            list_items = [
-                {"type": "next_message", "title": item}
-                for item in deserialise_list(row_list_items)
-            ]
+            list_items = JSON_loader(row_num, row_list_items, "list_items")
+        except ImportException as e:
+            raise e
         return cls(
             variation_title=deserialise_dict(row.pop("variation_title", "")),
             tags=deserialise_list(row.pop("tags", "")),
@@ -784,7 +781,7 @@ class ContentRow:
             related_pages=deserialise_list(row.pop("related_pages", "")),
             example_values=deserialise_list(row.pop("example_values", "")),
             buttons=(
-                JSON_loader(row_num, row.pop("buttons", ""))
+                JSON_loader(row_num, row.pop("buttons", ""), "buttons")
                 if row.get("buttons")
                 else []
             ),
@@ -859,14 +856,14 @@ def deserialise_list(value: str) -> list[str]:
     return [item.strip() for item in items]
 
 
-def JSON_loader(row_num: int, value: str) -> list[dict[str, Any]]:
+def JSON_loader(row_num: int, value: str, field_name: str = "") -> list[dict[str, Any]]:
     if not value:
         return []
 
     try:
         button = json.loads(value)
     except JSONDecodeError:
-        raise ImportException(f"Bad JSON button, you have: {value}", row_num)
+        raise ImportException(f"Bad JSON {field_name}, you have: {value}", row_num)
 
     return button
 

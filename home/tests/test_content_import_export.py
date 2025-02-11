@@ -1675,6 +1675,18 @@ class TestImportExport:
         assert "\u2028" not in ContentPage.objects.all().values()[0]["whatsapp_body"]
 
 
+    def test_list_item_descriptive_error_message(self, csv_impexp: ImportExport) -> None:
+        """
+        Import a page with a broken json list items
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("list_items_with_errors.csv")
+
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Bad JSON list_items, you have: Menos de 10 minutos, 10 a 30 minutos, 20 a 30 minutos,  30 minutos a 1 hora\\n, Mais de 1 hora"
+        ]
+
 @pytest.mark.django_db
 class TestExport:
     """
