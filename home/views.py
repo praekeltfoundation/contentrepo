@@ -39,13 +39,18 @@ from .mixins import (
     SpreadsheetExportMixinWhatsAppTemplate,
 )
 from .models import (
+    Assessment,
     ContentPage,
     ContentPageRating,
     OrderedContentSet,
     PageView,
     WhatsAppTemplate,
 )
-from .serializers import ContentPageRatingSerializer, PageViewSerializer
+from .serializers import (
+    AssessmentSerializer,
+    ContentPageRatingSerializer,
+    PageViewSerializer,
+)
 from .whatsapp_template_import_export import (
     ImportWhatsAppTemplateException,
     import_whatsapptemplate,
@@ -555,6 +560,11 @@ class ContentPageRatingFilter(filters.FilterSet):
         fields: list = []
 
 
+class AssessmentCursorPagination(CursorPagination):
+    ordering = "id"
+    page_size = 1000
+
+
 class GenericListViewset(GenericViewSet, ListModelMixin):
     page_size = 1000
     pagination_class = CursorPaginationFactory("timestamp")
@@ -612,3 +622,17 @@ class WhatsAppTemplateViewSet(GenericListViewset):
     add_to_admin_menu = True
     copy_view_enabled = False
     inspect_view_enabled = True
+
+
+class AssessmentListViewSet(GenericViewSet, ListModelMixin):
+    queryset = Assessment.objects.all()
+    serializer_class = AssessmentSerializer
+    pagination_class = AssessmentCursorPagination
+    authentication_classes = [TokenAuthentication]
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def list(self, request, *args, **kwargs):
+        locale = request.GET.get("locale", None)
+        if locale:
+            self.queryset = self.queryset.filter(locale__language_code=locale)
+        return super().list(request, *args, **kwargs)

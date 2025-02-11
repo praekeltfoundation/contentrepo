@@ -10,7 +10,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from wagtail.models import Locale
 
-from home.models import ContentPageRating, HomePage, PageView
+from home.models import Assessment, ContentPageRating, HomePage, PageView
 from home.serializers import ContentPageRatingSerializer, PageViewSerializer
 from home.views import PageViewFilterSet
 
@@ -47,6 +47,36 @@ def find_options(soup, element_id):
     return [
         option.text.strip()
         for option in soup.find("select", id=f"id_{element_id}").find_all("option")
+    ]
+
+
+@pytest.fixture
+def locale_en():
+    locale, created = Locale.objects.get_or_create(language_code="en")
+    return locale
+
+
+@pytest.fixture
+def locale_fr():
+    locale, created = Locale.objects.get_or_create(language_code="fr")
+    return locale
+
+
+@pytest.fixture
+def assessments(locale_en, locale_fr):
+    return [
+        Assessment.objects.create(
+            title="Assessment 1", slug="assessment-1", version="1.0", locale=locale_en
+        ),
+        Assessment.objects.create(
+            title="Assessment 2", slug="assessment-2", version="1.0", locale=locale_en
+        ),
+        Assessment.objects.create(
+            title="Assessment 3", slug="assessment-3", version="1.0", locale=locale_fr
+        ),
+        Assessment.objects.create(
+            title="Assessment 4", slug="assessment-4", version="1.0", locale=locale_fr
+        ),
     ]
 
 
@@ -826,3 +856,29 @@ class TestPageViewReportView:
         filtered_queryset = filter_set.qs
 
         assert filtered_queryset.count() == 0
+
+
+@pytest.mark.django_db
+class TestAssessmentListViewSet:
+
+    def test_assessment_list_viewset_en(self, api_client, assessments):
+        """
+        Ensure only 'en' assessments are returned
+        """
+        url = "/api/v2/cms-forms/?locale=en"
+        response = api_client.get(url)
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 2
+        for result in response.data["results"]:
+            assert result["locale"] == "en"
+
+    def test_assessment_list_viewset_fr(self, api_client, assessments):
+        """
+        Ensure only 'fr' assessments are returned
+        """
+        url = "/api/v2/cms-forms/?locale=fr"
+        response = api_client.get(url)
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 2
+        for result in response.data["results"]:
+            assert result["locale"] == "fr"

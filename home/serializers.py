@@ -9,7 +9,7 @@ from wagtail.api.v2.serializers import (
 )
 from wagtail.api.v2.utils import get_object_detail_url
 
-from home.models import ContentPage, ContentPageRating, PageView
+from home.models import Assessment, ContentPage, ContentPageRating, PageView
 
 
 class TitleField(serializers.Field):
@@ -623,6 +623,10 @@ class QuestionField(serializers.Field):
         return questions
 
 
-class AssessmentSerializer(BaseSerializer):
+class AssessmentSerializer(serializers.ModelSerializer):
     locale = PageLocaleField(read_only=True)
     questions = QuestionField(read_only=True)
+
+    class Meta:
+        model = Assessment
+        fields = "__all__"

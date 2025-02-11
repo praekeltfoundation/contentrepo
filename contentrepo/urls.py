@@ -19,6 +19,10 @@ from drf_spectacular.views import (  # isort:skip
     SpectacularSwaggerView,
 )
 
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r"cms-forms", home_views.AssessmentListViewSet, basename="cms-form")
 
 custom_v2router = routers.DefaultRouter()
 custom_v2router.register("ratings", home_views.ContentPageRatingViewSet)
@@ -47,8 +51,8 @@ urlpatterns = [
         name="redoc",
     ),
     path("api/whatsapptemplates/", menu_views.randommenu, name="whatsapptemplate"),
+    path("api/v2/", include(router.urls)),
 ]
-
 
 if settings.DEBUG:
     from django.conf.urls.static import static
