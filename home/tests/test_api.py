@@ -2810,3 +2810,54 @@ class TestAssessmentAPI:
         response = uclient.get("/api/v2/assessment/?tag=tag3")
         content = json.loads(response.content)
         assert content["count"] == 0
+
+
+@pytest.mark.django_db
+class TestAssessmentLocaleFilterAPI:
+    @pytest.fixture(autouse=True)
+    def create_test_data(self):
+        """
+        Create the content that the tests in this class will use.
+        """
+        self.locale_fr, _ = Locale.objects.get_or_create(language_code="fr")
+        self.locale_en, _ = Locale.objects.get_or_create(language_code="en")
+
+        self.assessment_fr = Assessment.objects.create(
+            title="French Assessment",
+            slug="french-assessment",
+            version="1.0",
+            locale=self.locale_fr,
+            live=True,
+        )
+
+        self.assessment_en = Assessment.objects.create(
+            title="English Assessment",
+            slug="english-assessment",
+            version="1.0",
+            locale=self.locale_en,
+            live=True,
+        )
+
+    def test_assessment_locale_filter_fr(self, admin_client):
+        """
+        Ensure that only French assessment is returned
+        """
+        response_fr = admin_client.get("/api/v2/assessment/", {"locale": "fr"})
+
+        assert response_fr.status_code == 200
+        response_data_fr = response_fr.json()
+
+        assert len(response_data_fr["results"]) == 1
+        assert response_data_fr["results"][0]["locale"] == "fr"
+        assert response_data_fr["results"][0]["title"] == "French Assessment"
+
+    def test_assessment_locale_filter_en(self, admin_client):
+        """
+        Ensure that only English assessment is returned
+        """
+        response_en = admin_client.get("/api/v2/assessment/", {"locale": "en"})
+        assert response_en.status_code == 200
+        response_data_en = response_en.json()
+        assert len(response_data_en["results"]) == 1
+        assert response_data_en["results"][0]["locale"] == "en"
+        assert response_data_en["results"][0]["title"] == "English Assessment"
