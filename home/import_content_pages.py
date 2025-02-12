@@ -424,8 +424,6 @@ class ContentImporter:
                     raise
                 except KeyError as e:
                     raise ImportException(f"List item is missing key {e}")
-                except Exception as e:
-                    raise ImportException(f"Invalid list_item {e}")
 
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
