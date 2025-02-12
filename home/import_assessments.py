@@ -451,7 +451,7 @@ def check_score_type(
             float(medium_inflection)
         except ValueError:
             raise ImportAssessmentException(
-                "Invalid number format for high inflection. "
+                "Invalid number format for medium inflection. "
                 "The score value allows only numbers",
                 row_num,
             )
