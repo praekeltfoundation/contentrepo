@@ -1677,10 +1677,13 @@ class TestImportExport:
     def test_list_item_descriptive_error_message(
         self, csv_impexp: ImportExport
     ) -> None:
+        """
+        Import failure for list_items should return a descriptive error message
+        """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("list_items_with_errors.csv")
         assert e.value.row_num == 3
-        assert e.value.message == ["Invalid list_items"]
+        assert e.value.message == ["List item is missing key 'type'"]
 
 
 @pytest.mark.django_db
