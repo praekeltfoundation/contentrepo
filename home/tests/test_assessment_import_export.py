@@ -592,6 +592,32 @@ class TestImportExport:
         )
         assert e.value.row_num == 2
 
+    def test_invalid_high_score(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV with invalid data in the high inflection value should
+        return an intuitive error message
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("bad_form_score.csv")
+        assert (
+            e.value.message == "Invalid number format for high inflection. "
+            "The score value allows only numbers"
+        )
+        assert e.value.row_num == 2
+
+    def test_invalid_medium_score(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV with invalid data in the medium inflection value should
+        return an intuitive error message
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("bad_medium_score.csv")
+        assert (
+            e.value.message == "Invalid number format for medium inflection. "
+            "The score value allows only numbers"
+        )
+        assert e.value.row_num == 2
+
 
 @pytest.mark.usefixtures("result_content_pages")
 @pytest.mark.django_db()
