@@ -601,7 +601,7 @@ class TestImportExport:
             csv_impexp.import_file("bad_form_score.csv")
         assert (
             e.value.message == "Invalid number format for high inflection. "
-            "The score value allows only numbers",
+            "The score value allows only numbers"
         )
         assert e.value.row_num == 2
 
@@ -614,7 +614,7 @@ class TestImportExport:
             csv_impexp.import_file("bad_medium_score.csv")
         assert (
             e.value.message == "Invalid number format for medium inflection. "
-            "The score value allows only numbers",
+            "The score value allows only numbers"
         )
         assert e.value.row_num == 2
 
