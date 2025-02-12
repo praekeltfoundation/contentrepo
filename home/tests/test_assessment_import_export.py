@@ -592,16 +592,16 @@ class TestImportExport:
         )
         assert e.value.row_num == 2
 
-    def test_text_answers(self, csv_impexp: ImportExport) -> None:
+    def test_invalid_scores(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a CSV with text in the inflection values should return
+        Importing a CSV with invalid data in the inflection values should return
         an intuitive error message
         """
         with pytest.raises(ImportAssessmentException) as e:
             csv_impexp.import_file("bad_form_score.csv")
         assert (
             e.value.message == "Invalid number format for high inflection. "
-            "The score value allows only numbers",
+            "The score value allows only numbers"
         )
         assert e.value.row_num == 2
 

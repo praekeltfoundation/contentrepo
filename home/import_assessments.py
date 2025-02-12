@@ -455,8 +455,8 @@ def check_score_type(
                 "The score value allows only numbers",
                 row_num,
             )
-        
-        
+
+
 def deserialise_list(value: str) -> list[str]:
     """
     Takes a comma separated value serialised by the CSV library, and returns it as a
