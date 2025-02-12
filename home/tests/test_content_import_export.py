@@ -1674,6 +1674,12 @@ class TestImportExport:
         assert "\u2028\u2028" in csv_bytes.decode("utf-8")
         assert "\u2028" not in ContentPage.objects.all().values()[0]["whatsapp_body"]
 
+    def test_list_item_descriptive_error_message(self, csv_impexp: ImportExport) -> None:
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("list_items_with_errors.csv")
+        assert e.value.row_num == 3
+        assert e.value.message == ["Invalid list_items"]
+
 
 @pytest.mark.django_db
 class TestExport:
