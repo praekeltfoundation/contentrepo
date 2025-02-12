@@ -416,6 +416,10 @@ class ContentImporter:
                                 "value": {"title": item["title"], "form": form.id},
                             }
                         )
+                    else:
+                        raise ImportException(
+                            f"List item with invalid type '{item['type']}'"
+                        )
                 except ImportException:
                     raise
                 except KeyError as e:

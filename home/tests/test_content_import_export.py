@@ -1685,6 +1685,15 @@ class TestImportExport:
         assert e.value.row_num == 3
         assert e.value.message == ["List item is missing key 'type'"]
 
+    def test_list_item_type_error_message(self, csv_impexp: ImportExport) -> None:
+        """
+        Import invalid list item type should return a invalid type error message
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("list_items_with_type_error.csv")
+        assert e.value.row_num == 3
+        assert e.value.message == ["List item with invalid type 'new_type'"]
+
 
 @pytest.mark.django_db
 class TestExport:
