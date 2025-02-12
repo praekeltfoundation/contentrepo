@@ -400,7 +400,9 @@ class ContentImporter:
                         page_gtpli[len(page.whatsapp_body)].append(item)
                     elif item["type"] == "go_to_form":
                         try:
-                            form = Assessment.objects.get(slug=item["slug"], locale=locale)
+                            form = Assessment.objects.get(
+                                slug=item["slug"], locale=locale
+                            )
                         except Assessment.DoesNotExist:
                             raise ImportException(
                                 f"No form found with slug '{item['slug']}' and locale "
