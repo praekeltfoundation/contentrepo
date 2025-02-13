@@ -1415,6 +1415,11 @@ class AssessmentTag(TaggedItemBase):
 
 
 class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel):
+
+    class Meta:
+        verbose_name = "CMS Form"
+        verbose_name_plural = "CMS Forms"
+
     title = models.CharField(max_length=255)
     slug = models.SlugField(
         max_length=255, help_text="A unique identifier for this assessment"
