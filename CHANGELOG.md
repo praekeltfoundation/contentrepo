@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Language_code field on imports and exports
 - Remove whatsapp body hidden characters
 - Fix for assessment import for multiple languages
-- Changed "Assessments" naming to "CMS Forms" 
 ### Removed
 - Locale field on exports
 -->
