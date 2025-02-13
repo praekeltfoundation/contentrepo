@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove whatsapp body hidden characters
 - Fix for assessment import for multiple languages
 - Add locale filtering to assessments API
+- Consistent labelling on import forms
 ### Removed
 - Locale field on exports
 -->
