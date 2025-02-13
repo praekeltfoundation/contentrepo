@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix for assessment import for multiple languages
 - Add locale filtering to assessments API
 - Error message when list_items is broken
+- Consistent labelling on import forms
 ### Removed
 - Locale field on exports
 -->
