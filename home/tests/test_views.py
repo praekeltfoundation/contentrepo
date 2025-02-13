@@ -723,6 +723,7 @@ class TestAssessmentImportView:
 
         assert find_options(form, "file_type") == ["CSV File", "Excel File"]
         assert find_options(soup, "purge") == ["No", "Yes"]
+        assert find_options(form, "locale") == ["Import all languages", "English"]
 
 
 class TestWhatsAppTemplateImportView:
@@ -756,6 +757,7 @@ class TestWhatsAppTemplateImportView:
 
         assert find_options(form, "file_type") == ["CSV File", "Excel File"]
         assert find_options(soup, "purge") == ["No", "Yes"]
+        assert find_options(form, "locale") == ["Import all languages", "English"]
 
 
 @pytest.mark.django_db
