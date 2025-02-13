@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add locale filtering to assessments API
 - Error message when list_items is broken
 - Consistent labelling on import forms
+- Fix class_name warning: RemovedInWagtail60Warning
 ### Removed
 - Locale field on exports
 -->
