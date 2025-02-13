@@ -3,7 +3,7 @@ from wagtail.models import Locale
 
 
 class UploadFileForm(forms.Form):
-    FILE_CHOICES = (("CSV", "CSV file"), ("XLSX", "Excel File"))
+    FILE_CHOICES = (("CSV", "CSV File"), ("XLSX", "Excel File"))
     file = forms.FileField()
     file_type = forms.ChoiceField(choices=FILE_CHOICES)
 

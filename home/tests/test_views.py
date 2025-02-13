@@ -576,9 +576,7 @@ class TestUploadViews:
         file_upload = form.find("input", type="file", id="id_file")
         assert file_upload
 
-        assert find_options(form, "file_type") == ["CSV file", "Excel File"]
-        # TODO: consistency in the labeling, either both "file" or both "File"
-
+        assert find_options(form, "file_type") == ["CSV File", "Excel File"]
         assert find_options(soup, "purge") == ["No", "Yes"]
 
         all_locales = [locale.language_name for locale in Locale.objects.all()]
@@ -690,8 +688,7 @@ class TestOrderedContentImportView:
         file_upload = form.find("input", type="file", id="id_file")
         assert file_upload
 
-        assert find_options(form, "file_type") == ["CSV file", "Excel File"]
-
+        assert find_options(form, "file_type") == ["CSV File", "Excel File"]
         assert find_options(soup, "purge") == ["No", "Yes"]
 
 
