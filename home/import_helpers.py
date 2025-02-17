@@ -43,6 +43,18 @@ class ImportException(Exception):
         self.locale = locale
         super().__init__()
 
+class ImportWarning:
+    """
+        Base warnings for all import related issues.
+        """
+    def __init__(
+            self,
+            message: str | list[str],
+            row_num: int | None = None,
+                 ):
+        self.row_num = row_num
+        self.message = [message] if isinstance(message, str) else message
+
 
 def wagtail_to_formdata(val: Any) -> Any:
     """

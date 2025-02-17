@@ -1674,6 +1674,17 @@ class TestImportExport:
         assert "\u2028\u2028" in csv_bytes.decode("utf-8")
         assert "\u2028" not in ContentPage.objects.all().values()[0]["whatsapp_body"]
 
+    def test_media_link_warning(self, csv_impexp: ImportExport) -> None:
+        """
+            Import a page with media link it should return a warning
+        """
+
+        import_file = csv_impexp.import_file("contentpage_media_link_warning.csv")
+        print("Resp: ", import_file)
+        breakpoint()
+        assert 2+3 == 3
+
+
 
 @pytest.mark.django_db
 class TestExport:
