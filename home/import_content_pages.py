@@ -367,65 +367,63 @@ class ContentImporter:
         page: Page,
         slug: str,
         locale: Locale,
-        field_name: str,
+        item_type: str,
     ) -> list[dict[str, Any]]:
-        messages: list[dict[str, Any]] = []
-        for index, content_page_field in enumerate(row_field):
+        items: list[dict[str, Any]] = []
+        for index, item in enumerate(row_field):
             try:
-                if content_page_field["type"] == "next_message":
-                    messages.append(
+                if item["type"] == "next_message":
+                    items.append(
                         {
                             "id": str(uuid4()),
-                            "type": content_page_field["type"],
-                            "value": {"title": content_page_field["title"]},
+                            "type": item["type"],
+                            "value": {"title": item["title"]},
                         }
                     )
-                elif content_page_field["type"] == "go_to_page":
-                    content_page_field["index"] = index
-                    if field_name == "button":
+                elif item["type"] == "go_to_page":
+                    item["index"] = index
+                    if item_type == "button":
                         go_to_page = self.go_to_page_buttons
                     else:
                         go_to_page = self.go_to_page_list_items
                     page_gtp = go_to_page[(slug, locale)]
-                    page_gtp[len(page.whatsapp_body)].append(content_page_field)
-                elif content_page_field["type"] == "go_to_form":
+                    page_gtp[len(page.whatsapp_body)].append(item)
+                elif item["type"] == "go_to_form":
                     form = self._get_form(
-                        content_page_field["slug"],
+                        item["slug"],
                         locale,
-                        content_page_field["title"],
+                        item["title"],
                         slug,
-                        field_name,
+                        item_type,
                     )
 
                     try:
-                        form = Assessment.objects.get(
-                            slug=content_page_field["slug"], locale=locale
-                        )
+                        form = Assessment.objects.get(slug=item["slug"], locale=locale)
                     except Assessment.DoesNotExist:
                         raise ImportException(
-                            f"No form found with slug '{content_page_field['slug']}' and locale "
-                            f"'{locale}' for go_to_form button '{content_page_field['title']}' on "
+                            f"No form found with slug '{item['slug']}' and locale "
+                            f"'{locale}' for go_to_form button '{item['title']}' on "
                             f"page '{slug}'"
                         )
-                    messages.append(
+                    items.append(
                         {
                             "id": str(uuid4()),
-                            "type": content_page_field["type"],
+                            "type": item["type"],
                             "value": {
-                                "title": content_page_field["title"],
+                                "title": item["title"],
                                 "form": form.id,
                             },
                         }
                     )
-                elif not content_page_field["type"]:
+                elif not item["type"]:
                     pass
                 else:
                     raise ImportException(
-                        f"{field_name} with invalid type '{content_page_field['type']}'"
+                        f"{item_type} with invalid type '{item['type']}'"
                     )
             except KeyError as e:
-                raise ImportException(f"{field_name} is missing key {e}")
-        return messages
+                raise ImportException(f"{item_type} is missing key {e}")
+        return items
 
     def add_message_to_shadow_content_page_from_row(
         self, row: "ContentRow", locale: Locale
