@@ -1,5 +1,6 @@
 # The error messages are processed and parsed into a list of messages we return to the user
 import csv
+import re
 from collections.abc import Iterator
 from datetime import datetime
 from io import BytesIO, StringIO
@@ -165,6 +166,30 @@ def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
     return error_message
 
 
+def check_empty_rows(rows: list[dict[str, Any]], row_num: int) -> None:
+    """
+    Checks if the list of rows is empty and raises an exception if true.
+    """
+    if not rows:
+        raise ImportException(
+            "The import file is empty or contains no valid rows.", row_num=row_num
+        )
+
+
+def convert_headers_to_snake_case(headers: list[str]) -> dict[str, str]:
+    """
+    Converts a list of headers to snake_case and returns a mapping.
+    """
+    return {header: to_snake_case(header) for header in headers}
+
+
+def to_snake_case(s: str) -> str:
+    """
+    Converts string to snake_case.
+    """
+    return re.sub(r"[\W_]+", "_", s).lower().strip("_")
+
+
 def fix_rows(rows: Iterator[dict[str | Any, Any]]) -> Iterator[dict[str, str | None]]:
     """
     Fix keys for all rows by lowercasing keys and removing whitespace from keys and values
@@ -210,7 +235,11 @@ def parse_file(
     file_content: bytes, file_type: str
 ) -> Iterator[tuple[int, dict[str, Any]]]:
     read_rows = read_xlsx if file_type == "XLSX" else read_csv
-    return enumerate(fix_rows(read_rows(file_content)), start=2)
+    rows = list(fix_rows(read_rows(file_content)))
+
+    check_empty_rows(rows, row_num=1)
+
+    return enumerate(rows, start=2)
 
 
 def read_csv(file_content: bytes) -> Iterator[dict[str, Any]]:

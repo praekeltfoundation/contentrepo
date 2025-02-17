@@ -706,9 +706,11 @@ class TestImportExport:
         Importing an empty CSV should return an error that the
         import file has no rows.
         """
-        with pytest.raises(ImportAssessmentException) as e:
+        with pytest.raises(ImportException) as e:
             csv_impexp.import_file("empty.csv")
-        assert e.value.message == "The import file is empty or contains no valid rows."
+        assert e.value.message == [
+            "The import file is empty or contains no valid rows."
+        ]
         assert e.value.row_num == 1
 
 

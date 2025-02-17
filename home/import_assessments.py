@@ -12,7 +12,14 @@ from wagtail.admin.panels import get_edit_handler  # type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 
-from home.import_helpers import ImportException, parse_file, validate_using_form
+from home.import_helpers import (
+    ImportException,
+    convert_headers_to_snake_case,
+    validate_using_form,
+)
+from home.import_helpers import (
+    parse_file as helper_parse_file,
+)
 from home.models import Assessment, ContentPage, HomePage  # type: ignore
 
 AssessmentId = tuple[str, Locale]
@@ -106,21 +113,13 @@ class AssessmentImporter:
             c. Validates that the snake_case headers contain all mandatory headers.
             d. Transforms each row to use snake_case headers.
         """
-
-        row_iterator = parse_file(self.file_content, self.file_type)
+        row_iterator = helper_parse_file(self.file_content, self.file_type)
         rows = [row for _, row in row_iterator]
 
-        if not rows:
-            raise ImportAssessmentException(
-                "The import file is empty or contains no valid rows.", row_num=1
-            )
-
         original_headers = rows[0].keys()
-        headers_mapping = {
-            header: self.to_snake_case(header) for header in original_headers
-        }
+        headers_mapping = convert_headers_to_snake_case(list(original_headers))
         snake_case_headers = list(headers_mapping.values())
-        self.validate_headers(snake_case_headers, MANDATORY_HEADERS, row_num=1)
+        self.validate_headers(snake_case_headers, row_num=1)
         transformed_rows = [
             {headers_mapping[key]: value for key, value in row.items()} for row in rows
         ]
@@ -214,9 +213,7 @@ class AssessmentImporter:
         )
         assessment.questions.append(question)
 
-    def validate_headers(
-        self, headers: list[str], MANDATORY_HEADERS: list[str], row_num: int
-    ) -> None:
+    def validate_headers(self, headers: list[str], row_num: int) -> None:
         missing_headers = [
             header for header in MANDATORY_HEADERS if header not in headers
         ]
