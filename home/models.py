@@ -1207,7 +1207,14 @@ class OrderedContentSet(
                 blocks.StructBlock(
                     [
                         ("contentpage", blocks.PageChooserBlock()),
-                        ("time", blocks.IntegerBlock(min_value=0, required=False)),
+                        (
+                            "time",
+                            blocks.IntegerBlock(
+                                min_value=0,
+                                required=False,
+                                help_text="When should this message be sent? Set the number of  hours, days, months or year.",
+                            ),
+                        ),
                         (
                             "unit",
                             blocks.ChoiceBlock(
@@ -1217,6 +1224,7 @@ class OrderedContentSet(
                                     ("days", "Days"),
                                     ("months", "Months"),
                                 ],
+                                help_text="Choose the unit of time to use.",
                                 required=False,
                             ),
                         ),
@@ -1227,12 +1235,14 @@ class OrderedContentSet(
                                     ("after", "After"),
                                     ("before", "Before"),
                                 ],
+                                help_text="Is it ‘before’ or ‘after’ the reference point for your timings, which is set in the contact field below.",
                                 required=False,
                             ),
                         ),
                         (
                             "contact_field",
                             blocks.CharBlock(
+                                help_text="This is the reference point used to base the timing of message on. For example, edd (estimated date of birth) or dob (date of birth).",
                                 required=False,
                             ),
                         ),
@@ -1415,6 +1425,11 @@ class AssessmentTag(TaggedItemBase):
 
 
 class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel):
+
+    class Meta:
+        verbose_name = "CMS Form"
+        verbose_name_plural = "CMS Forms"
+
     title = models.CharField(max_length=255)
     slug = models.SlugField(
         max_length=255, help_text="A unique identifier for this assessment"
