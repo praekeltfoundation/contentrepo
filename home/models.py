@@ -1207,10 +1207,14 @@ class OrderedContentSet(
                 blocks.StructBlock(
                     [
                         ("contentpage", blocks.PageChooserBlock()),
-                        ("time", blocks.IntegerBlock(
-                            min_value=0,
-                            required=False,
-                            help_text="When should this message be sent? Set the number of  hours, days, months or year.")),
+                        (
+                            "time",
+                            blocks.IntegerBlock(
+                                min_value=0,
+                                required=False,
+                                help_text="When should this message be sent? Set the number of  hours, days, months or year.",
+                            ),
+                        ),
                         (
                             "unit",
                             blocks.ChoiceBlock(
