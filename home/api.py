@@ -324,6 +324,7 @@ class AssessmentViewSet(BaseAPIViewSet):
 
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
+        locale_code = self.request.query_params.get("locale")
 
         if qa:
             # return the latest revision for each Assessment
@@ -355,12 +356,16 @@ class AssessmentViewSet(BaseAPIViewSet):
                 "last_published_at"
             )
 
+        if locale_code:
+            queryset = queryset.filter(locale__language_code=locale_code)
+
         tag = self.request.query_params.get("tag")
         if tag is not None:
             ids = []
             for t in AssessmentTag.objects.filter(tag__name__iexact=tag):
                 ids.append(t.content_object_id)
             queryset = queryset.filter(id__in=ids)
+
         return queryset
 
 
