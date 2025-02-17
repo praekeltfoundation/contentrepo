@@ -362,49 +362,50 @@ class ContentImporter:
     def _create_interactive_items(self, row_field, page, slug, locale, field_name) -> list:
         messages = []
         for index, field in enumerate(row_field):
-            if field["type"] == "next_message":
-                messages.append(
-                    {
-                        "id": str(uuid4()),
-                        "type": field["type"],
-                        "value": {"title": field["title"]},
-                    }
-                )
-            elif field["type"] == "go_to_page":
-                field["index"] = index
-                if field_name == "button":
-                    go_to_page = self.go_to_page_buttons
+            try:
+                if field["type"] == "next_message":
+                    messages.append(
+                        {
+                            "id": str(uuid4()),
+                            "type": field["type"],
+                            "value": {"title": field["title"]},
+                        }
+                    )
+                elif field["type"] == "go_to_page":
+                    field["index"] = index
+                    if field_name == "button":
+                        go_to_page = self.go_to_page_buttons
+                    else:
+                        go_to_page = self.go_to_page_list_items
+                    page_gtp = go_to_page[(slug, locale)]
+                    page_gtp[len(page.whatsapp_body)].append(field)
+                elif field["type"] == "go_to_form":
+                    form = self._get_form(field["slug"], locale, field["title"], slug, field_name)
+
+                    try:
+                        form = Assessment.objects.get(
+                            slug=field["slug"], locale=locale
+                        )
+                    except Assessment.DoesNotExist:
+                        raise ImportException(
+                            f"No form found with slug '{field['slug']}' and locale "
+                            f"'{locale}' for go_to_form button '{field['title']}' on "
+                            f"page '{slug}'"
+                        )
+                    messages.append(
+                        {
+                            "id": str(uuid4()),
+                            "type": field["type"],
+                            "value": {"title": field["title"], "form": form.id},
+                        }
+                    )
+
                 else:
-                    go_to_page = self.go_to_page_list_items
-                page_gtp = go_to_page[(slug, locale)]
-                page_gtp[len(page.whatsapp_body)].append(field)
-            elif field["type"] == "go_to_form":
-                form = self._get_form(field["slug"], locale, field["title"], slug, field_name)
-
-                try:
-                    form = Assessment.objects.get(
-                        slug=field["slug"], locale=locale
-                    )
-                except Assessment.DoesNotExist:
                     raise ImportException(
-                        f"No form found with slug '{field['slug']}' and locale "
-                        f"'{locale}' for go_to_form button '{field['title']}' on "
-                        f"page '{slug}'"
+                        f"{field_name} with invalid type '{field['type']}'"
                     )
-                messages.append(
-                    {
-                        "id": str(uuid4()),
-                        "type": field["type"],
-                        "value": {"title": field["title"], "form": form.id},
-                    }
-                )
-
-            #     else:
-            #         raise ImportException(
-            #             f"{field_name} with invalid type '{field['type']}'"
-            #         )
-            # except KeyError as e:
-            #     raise ImportException(f"{field_name} is missing key {e}")
+            except KeyError as e:
+                raise ImportException(f"{field_name} is missing key {e}")
         return messages
 
 
@@ -419,83 +420,11 @@ class ContentImporter:
             )
         if row.is_whatsapp_message:
             page.enable_whatsapp = True
-            # buttons = []
-            # for index, button in enumerate(row.buttons):
-            #     if button["type"] == "next_message":
-            #         buttons.append(
-            #             {
-            #                 "id": str(uuid4()),
-            #                 "type": button["type"],
-            #                 "value": {"title": button["title"]},
-            #             }
-            #         )
-            #     elif button["type"] == "go_to_page":
-            #         button["index"] = index
-            #         page_gtps = self.go_to_page_buttons[(row.slug, locale)]
-            #         page_gtps[len(page.whatsapp_body)].append(button)
-            #     elif button["type"] == "go_to_form":
-            #         try:
-            #             form = Assessment.objects.get(
-            #                 slug=button["slug"], locale=locale
-            #             )
-            #         except Assessment.DoesNotExist:
-            #             raise ImportException(
-            #                 f"No form found with slug '{button['slug']}' and locale "
-            #                 f"'{locale}' for go_to_form button '{button['title']}' on "
-            #                 f"page '{row.slug}'"
-            #             )
-            #         buttons.append(
-            #             {
-            #                 "id": str(uuid4()),
-            #                 "type": button["type"],
-            #                 "value": {"title": button["title"], "form": form.id},
-            #             }
-            #         )
+
             page = self._get_shadow_page(row.slug, locale)
             buttons = self._create_interactive_items(row.buttons, page, row.slug, locale, "button")
             list_items = self._create_interactive_items(row.list_items, page, row.slug, locale, "List Item")
 
-            list_items = []
-            for index, item in enumerate(row.list_items):
-                try:
-                    if item["type"] == "next_message":
-                        list_items.append(
-                            {
-                                "id": str(uuid4()),
-                                "type": item["type"],
-                                "value": {"title": item["title"]},
-                            }
-                        )
-                    elif item["type"] == "go_to_page":
-                        item["index"] = index
-                        page_gtpli = self.go_to_page_list_items[(row.slug, locale)]
-                        page_gtpli[len(page.whatsapp_body)].append(item)
-                    elif item["type"] == "go_to_form":
-                        try:
-                            form = Assessment.objects.get(
-                                slug=item["slug"], locale=locale
-                            )
-                        except Assessment.DoesNotExist:
-                            raise ImportException(
-                                f"No form found with slug '{item['slug']}' and locale "
-                                f"'{locale}' for go_to_form list item '{item['title']}' on "
-                                f"page '{row.slug}'"
-                            )
-                        list_items.append(
-                            {
-                                "id": str(uuid4()),
-                                "type": item["type"],
-                                "value": {"title": item["title"], "form": form.id},
-                            }
-                        )
-                    else:
-                        raise ImportException(
-                            f"List item with invalid type '{item['type']}'"
-                        )
-                except ImportException:
-                    raise
-                except KeyError as e:
-                    raise ImportException(f"List item is missing key {e}")
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
                     message=row.whatsapp_body,
