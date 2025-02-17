@@ -199,7 +199,6 @@ class ContentUploadThread(UploadThread):
             self.result_queue.put((messages.ERROR, ["Content import failed"]))
             logger.exception("Content import failed")
         else:
-
             self.result_queue.put((messages.SUCCESS, ["Content import successful"]))
             for warning in importer.import_warnings:
                 self.result_queue.put(messages.WARNING, [f"{warning.row_num}, {warning.message}"])

@@ -44,8 +44,6 @@ class ContentImporter:
         progress_queue: Queue[int],
         purge: bool | str = True,
         locale: Locale | str | None = None,
-        import_warnings: ImportWarning | list | None = None
-        # import_warnings: list[ImportWarning] | list | None = None
     ):
         if isinstance(locale, str):
             locale = Locale.objects.get(language_code=locale)
@@ -62,10 +60,9 @@ class ContentImporter:
         self.go_to_page_list_items: dict[PageId, dict[int, list[dict[str, Any]]]] = (
             defaultdict(lambda: defaultdict(list))
         )
-        self.import_warnings = import_warnings
+        self.import_warnings = []
 
     def locale_from_display_name(self, langname: str) -> Locale:
-        # breakpoint()
         if langname not in self.locale_map:
             codes = []
             for lang_code, lang_dn in get_content_languages().items():
@@ -82,7 +79,7 @@ class ContentImporter:
 
     def perform_import(self) -> None:
         rows = self.parse_file()
-        print(">>>perform_import>>>>")
+
         self.set_progress("Loaded file", 5)
 
         if self.purge:
@@ -96,15 +93,16 @@ class ContentImporter:
         self.add_go_to_page_list_items()
         self.add_media_link(rows)
 
-    def add_media_link(self, rows: list["ContentRow"]) -> None:
+    def add_media_link(self, rows: list["ContentRow"]):
+        row_num = 0
         for i, row in enumerate(rows, start=2):
-            # print(">>>> Row:", row)
-            # breakpoint()
+            row_num += 1
+
             if row.media_link:
                 if row.media_link is not None or row.media_link != "":
-                    self.import_warnings.append(ImportWarning(f"Media link: {row.media_link}" , row.row_num))
+                    self.import_warnings.append(ImportWarning(f"Media link: {row.media_link}" , row_num))
 
-        return self.import_warnings
+        # return self.import_warnings
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         # Non-page rows don't have a locale, so we need to remember the last
@@ -132,7 +130,6 @@ class ContentImporter:
                 raise e
 
     def _get_locale_from_row(self, row: "ContentRow") -> Locale:
-        # breakpoint()
         if row.language_code:
             try:
                 return Locale.objects.get(language_code=row.language_code)
