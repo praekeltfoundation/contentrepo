@@ -427,7 +427,7 @@ class TestImportExportRoundtrip:
 
     def test_snake_case_assessments(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a csv with spaces in header names and uppercase text should be coverted to snake case
+        Importing a csv with spaces in header names and uppercase text should be converted to snake case
         and pass, provided that the converted text are valid cms headers.
         Here we check that the headers are changed to snake case, the assessment is saved
         and finally we check that the saved assessment has the correct headers.
@@ -440,25 +440,24 @@ class TestImportExportRoundtrip:
         assessment_model = Assessment
         model_fields = [field.name for field in assessment_model._meta.get_fields()]
 
-        expected_fields = {
-            "title": True,
-            "slug": True,
-            "high_inflection": True,
-            "medium_inflection": True,
-            "high_result_page": True,
-            "medium_result_page": True,
-            "low_result_page": True,
-            "skip_high_result_page": True,
-            "skip_threshold": True,
-            "generic_error": True,
-            "questions": True,
-        }
+        expected_fields = [
+            "title",
+            "slug",
+            "high_inflection",
+            "medium_inflection",
+            "high_result_page",
+            "medium_result_page",
+            "low_result_page",
+            "skip_high_result_page",
+            "skip_threshold",
+            "generic_error",
+            "questions",
+        ]
 
-        for field_name, should_exist in expected_fields.items():
-            if should_exist:
-                assert (
-                    field_name in model_fields
-                ), f"Field '{field_name}' not found in Assessment model."
+        for field_name in expected_fields:
+            assert (
+                field_name in model_fields
+            ), f"Field '{field_name}' not found in Assessment model."
 
 
 @pytest.mark.usefixtures("result_content_pages")
@@ -701,6 +700,16 @@ class TestImportExport:
             == "The import file is missing required fields: generic_error"
         )
         assert e.value.row_num == 2
+
+    def test_empty_rows(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an empty CSV should return an error that the
+        import file has no rows.
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("empty.csv")
+        assert e.value.message == "The import file is empty or contains no valid rows."
+        assert e.value.row_num == 1
 
 
 @pytest.mark.usefixtures("result_content_pages")

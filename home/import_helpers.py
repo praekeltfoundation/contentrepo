@@ -169,7 +169,11 @@ def fix_rows(rows: Iterator[dict[str | Any, Any]]) -> Iterator[dict[str, str | N
     """
     Fix keys for all rows by lowercasing keys and removing whitespace from keys and values
     """
-    first_row = next(rows)
+    try:
+        first_row = next(rows)
+    except StopIteration:
+        return iter([])
+
     if len(first_row) != len(fix_row(first_row)):
         raise ImportException(
             "Invalid format. Please check that there are no duplicate headers."

@@ -106,20 +106,24 @@ class AssessmentImporter:
             c. Validates that the snake_case headers contain all mandatory headers.
             d. Transforms each row to use snake_case headers.
         """
+
         row_iterator = parse_file(self.file_content, self.file_type)
         rows = [row for _, row in row_iterator]
 
-        if rows:
-            original_headers = rows[0].keys()
-            headers_mapping = {
-                header: self.to_snake_case(header) for header in original_headers
-            }
-            snake_case_headers = list(headers_mapping.values())
-            self.validate_headers(snake_case_headers, MANDATORY_HEADERS, row_num=1)
-            transformed_rows = [
-                {headers_mapping[key]: value for key, value in row.items()}
-                for row in rows
-            ]
+        if not rows:
+            raise ImportAssessmentException(
+                "The import file is empty or contains no valid rows.", row_num=1
+            )
+
+        original_headers = rows[0].keys()
+        headers_mapping = {
+            header: self.to_snake_case(header) for header in original_headers
+        }
+        snake_case_headers = list(headers_mapping.values())
+        self.validate_headers(snake_case_headers, MANDATORY_HEADERS, row_num=1)
+        transformed_rows = [
+            {headers_mapping[key]: value for key, value in row.items()} for row in rows
+        ]
 
         return [
             AssessmentRow.from_flat(row, i + 2)
