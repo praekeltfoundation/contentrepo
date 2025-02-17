@@ -101,8 +101,7 @@ class ContentImporter:
             if row.media_link:
                 if row.media_link is not None or row.media_link != "":
                     self.import_warnings.append(ImportWarning(f"Media link: {row.media_link}" , row_num))
-
-        # return self.import_warnings
+        return self.import_warnings
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         # Non-page rows don't have a locale, so we need to remember the last
