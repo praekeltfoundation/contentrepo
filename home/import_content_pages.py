@@ -60,8 +60,8 @@ class ContentImporter:
         self.go_to_page_list_items: dict[PageId, dict[int, list[dict[str, Any]]]] = (
             defaultdict(lambda: defaultdict(list))
         )
-        self.go_to_page: dict[PageId, dict[int, list[dict[str, Any]]]] = (
-            defaultdict(lambda: defaultdict(list))
+        self.go_to_page: dict[PageId, dict[int, list[dict[str, Any]]]] = defaultdict(
+            lambda: defaultdict(list)
         )
 
     def locale_from_display_name(self, langname: str) -> Locale:
@@ -342,7 +342,7 @@ class ContentImporter:
             )
         )
 
-    def _get_shadow_page(self, slug: str, locale: Locale):
+    def _get_shadow_page(self, slug: str, locale: Locale) -> Page:
 
         try:
             return self.shadow_pages[(slug, locale)]
@@ -351,7 +351,9 @@ class ContentImporter:
                 f"This is a message for page with slug '{slug}' and locale '{locale}', but no such page exists"
             )
 
-    def _get_form(self, slug: str, locale: Locale, title: str, page_slug: str, field: str):
+    def _get_form(
+        self, slug: str, locale: Locale, title: str, page_slug: str, field: str
+    ) -> Assessment:
         try:
             return Assessment.objects.get(slug=slug, locale=locale)
         except Assessment.DoesNotExist:
@@ -359,56 +361,71 @@ class ContentImporter:
                 f"No form found with slug '{slug}' and locale '{locale}' for go_to_form {field} '{title}' on page '{page_slug}'"
             )
 
-    def _create_interactive_items(self, row_field, page, slug, locale, field_name) -> list:
-        messages = []
-        for index, field in enumerate(row_field):
+    def _create_interactive_items(
+        self,
+        row_field: list[dict[str, Any]],
+        page: Page,
+        slug: str,
+        locale: Locale,
+        field_name: str,
+    ) -> list[dict[str, Any]]:
+        messages: list[dict[str, Any]] = []
+        for index, content_page_field in enumerate(row_field):
             try:
-                if field["type"] == "next_message":
+                if content_page_field["type"] == "next_message":
                     messages.append(
                         {
                             "id": str(uuid4()),
-                            "type": field["type"],
-                            "value": {"title": field["title"]},
+                            "type": content_page_field["type"],
+                            "value": {"title": content_page_field["title"]},
                         }
                     )
-                elif field["type"] == "go_to_page":
-                    field["index"] = index
+                elif content_page_field["type"] == "go_to_page":
+                    content_page_field["index"] = index
                     if field_name == "button":
                         go_to_page = self.go_to_page_buttons
                     else:
                         go_to_page = self.go_to_page_list_items
                     page_gtp = go_to_page[(slug, locale)]
-                    page_gtp[len(page.whatsapp_body)].append(field)
-                elif field["type"] == "go_to_form":
-                    form = self._get_form(field["slug"], locale, field["title"], slug, field_name)
+                    page_gtp[len(page.whatsapp_body)].append(content_page_field)
+                elif content_page_field["type"] == "go_to_form":
+                    form = self._get_form(
+                        content_page_field["slug"],
+                        locale,
+                        content_page_field["title"],
+                        slug,
+                        field_name,
+                    )
 
                     try:
                         form = Assessment.objects.get(
-                            slug=field["slug"], locale=locale
+                            slug=content_page_field["slug"], locale=locale
                         )
                     except Assessment.DoesNotExist:
                         raise ImportException(
-                            f"No form found with slug '{field['slug']}' and locale "
-                            f"'{locale}' for go_to_form button '{field['title']}' on "
+                            f"No form found with slug '{content_page_field['slug']}' and locale "
+                            f"'{locale}' for go_to_form button '{content_page_field['title']}' on "
                             f"page '{slug}'"
                         )
                     messages.append(
                         {
                             "id": str(uuid4()),
-                            "type": field["type"],
-                            "value": {"title": field["title"], "form": form.id},
+                            "type": content_page_field["type"],
+                            "value": {
+                                "title": content_page_field["title"],
+                                "form": form.id,
+                            },
                         }
                     )
-                elif not field["type"]:
+                elif not content_page_field["type"]:
                     pass
                 else:
                     raise ImportException(
-                        f"{field_name} with invalid type '{field['type']}'"
+                        f"{field_name} with invalid type '{content_page_field['type']}'"
                     )
             except KeyError as e:
                 raise ImportException(f"{field_name} is missing key {e}")
         return messages
-
 
     def add_message_to_shadow_content_page_from_row(
         self, row: "ContentRow", locale: Locale
@@ -423,8 +440,12 @@ class ContentImporter:
             page.enable_whatsapp = True
 
             page = self._get_shadow_page(row.slug, locale)
-            buttons = self._create_interactive_items(row.buttons, page, row.slug, locale, "button")
-            list_items = self._create_interactive_items(row.list_items, page, row.slug, locale, "list item")
+            buttons = self._create_interactive_items(
+                row.buttons, page, row.slug, locale, "button"
+            )
+            list_items = self._create_interactive_items(
+                row.list_items, page, row.slug, locale, "list item"
+            )
 
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
