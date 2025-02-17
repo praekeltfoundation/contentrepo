@@ -399,7 +399,8 @@ class ContentImporter:
                             "value": {"title": field["title"], "form": form.id},
                         }
                     )
-
+                elif not field["type"]:
+                    pass
                 else:
                     raise ImportException(
                         f"{field_name} with invalid type '{field['type']}'"
@@ -423,7 +424,7 @@ class ContentImporter:
 
             page = self._get_shadow_page(row.slug, locale)
             buttons = self._create_interactive_items(row.buttons, page, row.slug, locale, "button")
-            list_items = self._create_interactive_items(row.list_items, page, row.slug, locale, "List Item")
+            list_items = self._create_interactive_items(row.list_items, page, row.slug, locale, "list item")
 
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
