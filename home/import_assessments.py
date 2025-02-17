@@ -264,23 +264,23 @@ class ShadowAssessment:
         assessment.high_result_page_id = (
             None
             if self.high_result_page == ""
-            else get_content_page_id_from_slug(self.high_result_page)
+            else get_content_page_id_from_slug(self.high_result_page, self.locale)
         )
         assessment.medium_inflection = self.medium_inflection
         assessment.medium_result_page_id = (
             None
             if self.medium_result_page == ""
-            else get_content_page_id_from_slug(self.medium_result_page)
+            else get_content_page_id_from_slug(self.medium_result_page, self.locale)
         )
         assessment.low_result_page_id = (
             None
             if self.low_result_page == ""
-            else get_content_page_id_from_slug(self.low_result_page)
+            else get_content_page_id_from_slug(self.low_result_page, self.locale)
         )
         assessment.skip_high_result_page_id = (
             None
             if self.skip_high_result_page == ""
-            else get_content_page_id_from_slug(self.skip_high_result_page)
+            else get_content_page_id_from_slug(self.skip_high_result_page, self.locale)
         )
         assessment.skip_threshold = self.skip_threshold
         assessment.generic_error = self.generic_error
@@ -370,6 +370,7 @@ class AssessmentRow:
         high_inflection = row.get("high_inflection")
         medium_inflection = row.get("medium_inflection")
         check_punctuation(high_inflection, medium_inflection, row_num)
+        check_score_type(high_inflection, medium_inflection, row_num)
 
         row = {
             key: value for key, value in row.items() if value and key in cls.fields()
@@ -398,13 +399,13 @@ class AssessmentRow:
             )
 
 
-def get_content_page_id_from_slug(slug: str) -> int:
+def get_content_page_id_from_slug(slug: str, locale: Locale) -> int:
     try:
-        page = ContentPage.objects.get(slug=slug)
+        page = ContentPage.objects.get(slug=slug, locale=locale)
     except ObjectDoesNotExist:
         raise ImportAssessmentException(
             f"You are trying to add an assessment, where one of the result pages "
-            f"references the content page with slug {slug} which does not exist. "
+            f"references the content page with slug {slug} and locale {locale} which does not exist. "
             "Please create the content page first."
         )
     return page.id
@@ -429,6 +430,29 @@ def check_punctuation(
             raise ImportAssessmentException(
                 "Invalid number format for medium inflection. "
                 "Please use '.' instead of ',' for decimals.",
+                row_num,
+            )
+
+
+def check_score_type(
+    high_inflection: Any | None, medium_inflection: Any | None, row_num: int
+) -> None:
+    if high_inflection is not None and high_inflection != "":
+        try:
+            float(high_inflection)
+        except ValueError:
+            raise ImportAssessmentException(
+                "Invalid number format for high inflection. "
+                "The score value allows only numbers",
+                row_num,
+            )
+    if medium_inflection is not None and medium_inflection != "":
+        try:
+            float(medium_inflection)
+        except ValueError:
+            raise ImportAssessmentException(
+                "Invalid number format for medium inflection. "
+                "The score value allows only numbers",
                 row_num,
             )
 

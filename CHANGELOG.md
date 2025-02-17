@@ -10,8 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Answer responses for Forms
 - Language_code field on imports and exports
+- Remove whatsapp body hidden characters
+- Fix for assessment import for multiple languages
+- Add locale filtering to assessments API
+- Consistent labelling on import forms
 ### Removed
-- Locale field on exports 
+- Locale field on exports
 -->
 
 ## v1.4.0 - 2024-12-18

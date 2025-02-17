@@ -22,7 +22,11 @@ from wagtail.admin.panels import (
     TitleFieldPanel,
 )
 from wagtail.api import APIField
-from wagtail.blocks import StreamBlockValidationError, StructBlockValidationError
+from wagtail.blocks import (
+    StreamBlockValidationError,
+    StreamValue,
+    StructBlockValidationError,
+)
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
@@ -972,6 +976,19 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     def clean(self):
         result = super().clean(Page)
         errors = {}
+
+        # Clean the whatsapp body to remove hidden characters
+        if self.whatsapp_body and isinstance(self.whatsapp_body, StreamValue):
+            for block in self.whatsapp_body:
+                if block.block_type == "Whatsapp_Message":
+                    message = block.value["message"]
+                    cleaned_message = "".join(
+                        char
+                        for char in message
+                        if char.isprintable() or char in "\n\r\t"
+                    ).strip()
+
+                    block.value["message"] = cleaned_message
 
         # The WA title is needed for all templates to generate a name for the template
         if self.is_whatsapp_template and not self.whatsapp_title:
