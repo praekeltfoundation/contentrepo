@@ -1,5 +1,6 @@
 import contextlib
 import csv
+import re
 from dataclasses import dataclass, field, fields
 from queue import Queue
 from typing import Any
@@ -15,6 +16,7 @@ from home.import_helpers import ImportException, parse_file, validate_using_form
 from home.models import Assessment, ContentPage, HomePage  # type: ignore
 
 AssessmentId = tuple[str, Locale]
+MANDATORY_HEADERS = ["title", "question", "slug", "generic_error", "locale"]
 
 
 class ImportAssessmentException(Exception):
@@ -96,9 +98,32 @@ class AssessmentImporter:
             )
 
     def parse_file(self) -> list["AssessmentRow"]:
+        """
+        Converts the iterator to a list of rows.
+        If there are rows:
+            a. Extracts the original headers from the first row.
+            b. Converts the original headers to snake_case and creates a mapping from original headers to snake_case headers.
+            c. Validates that the snake_case headers contain all mandatory headers.
+            d. Transforms each row to use snake_case headers.
+        """
+        row_iterator = parse_file(self.file_content, self.file_type)
+        rows = [row for _, row in row_iterator]
+
+        if rows:
+            original_headers = rows[0].keys()
+            headers_mapping = {
+                header: self.to_snake_case(header) for header in original_headers
+            }
+            snake_case_headers = list(headers_mapping.values())
+            self.validate_headers(snake_case_headers, MANDATORY_HEADERS, row_num=1)
+            transformed_rows = [
+                {headers_mapping[key]: value for key, value in row.items()}
+                for row in rows
+            ]
+
         return [
-            AssessmentRow.from_flat(row, i)
-            for i, row in parse_file(self.file_content, self.file_type)
+            AssessmentRow.from_flat(row, i + 2)
+            for i, row in enumerate(transformed_rows)
         ]
 
     def set_progress(self, message: str, progress: int) -> None:
@@ -184,6 +209,21 @@ class AssessmentImporter:
             semantic_id=row.question_semantic_id,
         )
         assessment.questions.append(question)
+
+    def validate_headers(
+        self, headers: list[str], MANDATORY_HEADERS: list[str], row_num: int
+    ) -> None:
+        missing_headers = [
+            header for header in MANDATORY_HEADERS if header not in headers
+        ]
+        if missing_headers:
+            raise ImportAssessmentException(
+                message=f"Missing mandatory headers: {', '.join(missing_headers)}",
+                row_num=row_num,
+            )
+
+    def to_snake_case(self, s: str) -> str:
+        return re.sub(r"[\W_]+", "_", s).lower().strip("_")
 
 
 # Since wagtail page models are so difficult to create and modify programatically,
@@ -361,6 +401,18 @@ class AssessmentRow:
         return [field.name for field in fields(cls)]
 
     @classmethod
+    def check_missing_fields(cls, row: dict[str, str], row_num: int) -> None:
+        """
+        Checks for missing required fields in the row and raises an exception if any is missing.
+        """
+        missing_fields = [field for field in MANDATORY_HEADERS if field not in row]
+        if missing_fields:
+            raise ImportAssessmentException(
+                f"The import file is missing required fields: {', '.join(missing_fields)}",
+                row_num,
+            )
+
+    @classmethod
     def from_flat(cls, row: dict[str, str], row_num: int) -> "AssessmentRow":
         """
         Creates an AssessmentRow instance from a row in the import, deserialising the
@@ -376,27 +428,21 @@ class AssessmentRow:
             key: value for key, value in row.items() if value and key in cls.fields()
         }
 
-        # Create default value with correct length for answer responses if not specified
+        cls.check_missing_fields(row, row_num)
+
         answers = deserialise_list(row.pop("answers", ""))
         answer_responses = deserialise_list(row.pop("answer_responses", ""))
         if not answer_responses:
             answer_responses = [""] * len(answers)
 
-        try:
-            return cls(
-                tags=deserialise_list(row.pop("tags", "")),
-                answers=answers,
-                scores=[float(i) for i in deserialise_list(row.pop("scores", ""))],
-                answer_semantic_ids=deserialise_list(
-                    row.pop("answer_semantic_ids", "")
-                ),
-                answer_responses=answer_responses,
-                **row,
-            )
-        except TypeError:
-            raise ImportAssessmentException(
-                "The import file is missing some required fields."
-            )
+        return cls(
+            tags=deserialise_list(row.pop("tags", "")),
+            answers=answers,
+            scores=[float(i) for i in deserialise_list(row.pop("scores", ""))],
+            answer_semantic_ids=deserialise_list(row.pop("answer_semantic_ids", "")),
+            answer_responses=answer_responses,
+            **row,
+        )
 
 
 def get_content_page_id_from_slug(slug: str, locale: Locale) -> int:
