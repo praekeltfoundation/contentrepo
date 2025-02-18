@@ -1,6 +1,5 @@
 import contextlib
 import csv
-import re
 from dataclasses import dataclass, field, fields
 from queue import Queue
 from typing import Any
@@ -222,9 +221,6 @@ class AssessmentImporter:
                 message=f"Missing mandatory headers: {', '.join(missing_headers)}",
                 row_num=row_num,
             )
-
-    def to_snake_case(self, s: str) -> str:
-        return re.sub(r"[\W_]+", "_", s).lower().strip("_")
 
 
 # Since wagtail page models are so difficult to create and modify programatically,
