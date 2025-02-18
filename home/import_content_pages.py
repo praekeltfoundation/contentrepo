@@ -60,9 +60,6 @@ class ContentImporter:
         self.go_to_page_list_items: dict[PageId, dict[int, list[dict[str, Any]]]] = (
             defaultdict(lambda: defaultdict(list))
         )
-        self.go_to_page: dict[PageId, dict[int, list[dict[str, Any]]]] = defaultdict(
-            lambda: defaultdict(list)
-        )
 
     def locale_from_display_name(self, langname: str) -> Locale:
         if langname not in self.locale_map:
@@ -90,8 +87,8 @@ class ContentImporter:
         self.process_rows(rows)
         self.save_pages()
         self.link_related_pages()
-        self.add_go_to_page_buttons()
-        self.add_go_to_page_list_items()
+        self.add_go_to_page_items(self.go_to_page_buttons, "buttons")
+        self.add_go_to_page_items(self.go_to_page_list_items, "list_items")
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         # Non-page rows don't have a locale, so we need to remember the last
@@ -178,35 +175,13 @@ class ContentImporter:
                 "Linking related pages", 80 + 10 * i // len(self.shadow_pages)
             )
 
-    def add_go_to_page_buttons(self) -> None:
-        for (slug, locale), messages in self.go_to_page_buttons.items():
+    def add_go_to_page_items(
+        self, items_dict: dict[PageId, dict[int, list[dict[str, Any]]]], item_type: str
+    ) -> None:
+        for (slug, locale), messages in items_dict.items():
             page = ContentPage.objects.get(slug=slug, locale=locale)
-            for message_index, buttons in messages.items():
-                for button in buttons:
-                    title = button["title"]
-                    try:
-                        related_page = Page.objects.get(
-                            slug=button["slug"], locale=locale
-                        )
-                    except Page.DoesNotExist:
-                        row = self.shadow_pages[(slug, locale)]
-                        raise ImportException(
-                            f"No pages found with slug '{button['slug']}' and locale "
-                            f"'{locale}' for go_to_page button '{button['title']}' on "
-                            f"page '{slug}'",
-                            row.row_num,
-                        )
-                    page.whatsapp_body[message_index].value["buttons"].insert(
-                        button["index"],
-                        ("go_to_page", {"page": related_page, "title": title}),
-                    )
-            page.save()
-
-    def add_go_to_page_list_items(self) -> None:
-        for (slug, locale), messages in self.go_to_page_list_items.items():
-            page = ContentPage.objects.get(slug=slug, locale=locale)
-            for message_index, list_items in messages.items():
-                for item in list_items:
+            for message_index, items in messages.items():
+                for item in items:
                     title = item["title"]
                     try:
                         related_page = Page.objects.get(
@@ -216,11 +191,11 @@ class ContentImporter:
                         row = self.shadow_pages[(slug, locale)]
                         raise ImportException(
                             f"No pages found with slug '{item['slug']}' and locale "
-                            f"'{locale}' for go_to_page list item '{item['title']}' on "
+                            f"'{locale}' for go_to_page {item_type[:-1]} '{item['title']}' on "
                             f"page '{slug}'",
                             row.row_num,
                         )
-                    page.whatsapp_body[message_index].value["list_items"].insert(
+                    page.whatsapp_body[message_index].value[item_type].insert(
                         item["index"],
                         ("go_to_page", {"page": related_page, "title": title}),
                     )
@@ -352,13 +327,13 @@ class ContentImporter:
             )
 
     def _get_form(
-        self, slug: str, locale: Locale, title: str, page_slug: str, field: str
+        self, slug: str, locale: Locale, title: str, page_slug: str, item_type: str
     ) -> Assessment:
         try:
             return Assessment.objects.get(slug=slug, locale=locale)
         except Assessment.DoesNotExist:
             raise ImportException(
-                f"No form found with slug '{slug}' and locale '{locale}' for go_to_form {field} '{title}' on page '{page_slug}'"
+                f"No form found with slug '{slug}' and locale '{locale}' for go_to_form {item_type} '{title}' on page '{page_slug}'"
             )
 
     def _create_interactive_items(
