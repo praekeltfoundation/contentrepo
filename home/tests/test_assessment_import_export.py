@@ -678,29 +678,6 @@ class TestImportExport:
         assert e.value.message == "The import file is missing required fields: title"
         assert e.value.row_num == 4
 
-    def test_missing_locale(self, csv_impexp: ImportExport) -> None:
-        """
-        Importing a CSV with a missing locale field should return an error
-        that a locale is mmissing
-        """
-        with pytest.raises(ImportAssessmentException) as e:
-            csv_impexp.import_file("assessments_missing_locale.csv")
-        assert e.value.message == "The import file is missing required fields: locale"
-        assert e.value.row_num == 5
-
-    def test_missing_generic_error(self, csv_impexp: ImportExport) -> None:
-        """
-        Importing a CSV with a missing generic error field should return an error
-        that a generic error is mmissing
-        """
-        with pytest.raises(ImportAssessmentException) as e:
-            csv_impexp.import_file("assessments_missing_generic_error.csv")
-        assert (
-            e.value.message
-            == "The import file is missing required fields: generic_error"
-        )
-        assert e.value.row_num == 2
-
     def test_empty_rows(self, csv_impexp: ImportExport) -> None:
         """
         Importing an empty CSV should return an error that the

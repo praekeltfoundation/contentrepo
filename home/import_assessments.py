@@ -13,7 +13,6 @@ from wagtail.models import Locale, Page  # type: ignore
 
 from home.import_helpers import (
     ImportException,
-    convert_headers_to_snake_case,
     validate_using_form,
 )
 from home.import_helpers import (
@@ -116,17 +115,9 @@ class AssessmentImporter:
         rows = [row for _, row in row_iterator]
 
         original_headers = rows[0].keys()
-        headers_mapping = convert_headers_to_snake_case(list(original_headers))
-        snake_case_headers = list(headers_mapping.values())
-        self.validate_headers(snake_case_headers, row_num=1)
-        transformed_rows = [
-            {headers_mapping[key]: value for key, value in row.items()} for row in rows
-        ]
+        self.validate_headers(list(original_headers), row_num=1)
 
-        return [
-            AssessmentRow.from_flat(row, i + 2)
-            for i, row in enumerate(transformed_rows)
-        ]
+        return [AssessmentRow.from_flat(row, i + 2) for i, row in enumerate(rows)]
 
     def set_progress(self, message: str, progress: int) -> None:
         self.progress_queue.put_nowait(progress)

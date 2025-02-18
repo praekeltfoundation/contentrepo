@@ -25,6 +25,45 @@ from wagtail.test.utils.form_data import nested_form_data, streamfield  # type: 
 
 from .xlsx_helpers import get_active_sheet
 
+TYPO_KEYWORDS = [
+    "question type",
+    "question-type",
+    "high result page",
+    "high-result-page",
+    "high inflection",
+    "high-inflection",
+    "medium result page",
+    "medium-result-page",
+    "medium inflection",
+    "medium-inflection",
+    "low result page",
+    "low-result-page",
+    "skip threshold",
+    "skip-threshold",
+    "skip high result page",
+    "skip-high-result-page",
+    "generic error",
+    "generic_error",
+    "answer semantic ids",
+    "answer-semantic-id",
+    "question semantic id",
+    "question-semantic-id",
+    "answer responses",
+    "answer-responses",
+]
+"""
+List of keywords known to be common user typos or formatting inconsistencies.
+
+These keywords are identified as common variations or errors in user input that
+should be corrected by converting them to snake_case format. The list contains
+different representations of header titles from CMS-Forms for conversion to snake_case.
+
+Any additional keywords from Content Pages and other import applications that need
+similar corrections should be appended to this list to maintain uniformity in data processing.
+Contentset uses Pascal casing so changes to the application may be needed first before including
+those variations in the list.
+"""
+
 
 class ImportException(Exception):
     """
@@ -192,29 +231,39 @@ def to_snake_case(s: str) -> str:
 
 def fix_rows(rows: Iterator[dict[str | Any, Any]]) -> Iterator[dict[str, str | None]]:
     """
-    Fix keys for all rows by lowercasing keys and removing whitespace from keys and values
+    Fix keys for all rows by lowercasing keys, optionally converting to snake_case
+    if header text matches typo_keywords, and removing whitespace from keys and values.
     """
+
     try:
         first_row = next(rows)
     except StopIteration:
         return iter([])
 
-    if len(first_row) != len(fix_row(first_row)):
+    if len(first_row) != len(fix_row(first_row, TYPO_KEYWORDS)):
         raise ImportException(
             "Invalid format. Please check that there are no duplicate headers."
         )
-    yield fix_row(first_row)
+    yield fix_row(first_row, TYPO_KEYWORDS)
 
     for row in rows:
-        yield fix_row(row)
+        yield fix_row(row, TYPO_KEYWORDS)
 
 
-def fix_row(row: dict[str, str | None]) -> dict[str, str | None]:
+def fix_row(row: dict[str, str | None], keywords: list[str]) -> dict[str, str | None]:
     """
-    Fix a single row by lowercasing the key and removing whitespace from the key and value
+    Fix a single row by lowercasing the key, converting it to snake_case
+    if it matches a typo_keyword, and removing whitespace from the key and value.
     """
     try:
-        return {_normalise_key(k): _normalise_value(v) for k, v in row.items()}
+        return {
+            (
+                to_snake_case(_normalise_key(k))
+                if _normalise_key(k) in keywords
+                else _normalise_key(k)
+            ): _normalise_value(v)
+            for k, v in row.items()
+        }
     except AttributeError:
         raise ImportException(
             "Invalid format. Please check that all row values have headers."
