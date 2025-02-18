@@ -60,7 +60,7 @@ class ContentImporter:
         self.go_to_page_list_items: dict[PageId, dict[int, list[dict[str, Any]]]] = (
             defaultdict(lambda: defaultdict(list))
         )
-        self.import_warnings = []
+        self.import_warnings: list[ImportWarning] = []
 
     def locale_from_display_name(self, langname: str) -> Locale:
         if langname not in self.locale_map:
@@ -93,7 +93,7 @@ class ContentImporter:
         self.add_go_to_page_list_items()
         self.add_media_link(rows)
 
-    def add_media_link(self, rows: list["ContentRow"]):
+    def add_media_link(self, rows: list["ContentRow"]) -> None:
         row_num = 0
         for i, row in enumerate(rows, start=2):
             row_num += 1
@@ -101,7 +101,6 @@ class ContentImporter:
             if row.media_link:
                 if row.media_link is not None or row.media_link != "":
                     self.import_warnings.append(ImportWarning(f"Media link: {row.media_link}" , row_num))
-        return self.import_warnings
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         # Non-page rows don't have a locale, so we need to remember the last
@@ -819,6 +818,7 @@ class ContentRow:
             list_items=list_items,
             footer=row.pop("footer", ""),
             **row,
+            import_warnings=[]
         )
 
     @property
