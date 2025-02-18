@@ -1696,15 +1696,16 @@ class TestImportExport:
 
     def test_media_link_warning(self, csv_impexp: ImportExport) -> None:
         """
-            Import a page with media link it should return a warning
-            no error should be raised
+        Import a page with media link it should return a warning
+        no error should be raised
         """
 
         csv_impexp.import_file("contentpage_media_link_warning.csv")
 
-        page =  Page.objects.all()
+        page = Page.objects.all()
 
         assert len(page) > 0
+
 
 @pytest.mark.django_db
 class TestExport:

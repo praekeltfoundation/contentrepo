@@ -102,7 +102,9 @@ class ContentImporter:
         for row_num, row in enumerate(rows, start=2):
             if row.media_link:
                 if row.media_link is not None or row.media_link != "":
-                    self.import_warnings.append(ImportWarning(f"Media link: {row.media_link}" , row_num))
+                    self.import_warnings.append(
+                        ImportWarning(f"Media link: {row.media_link}", row_num)
+                    )
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         # Non-page rows don't have a locale, so we need to remember the last
@@ -820,7 +822,7 @@ class ContentRow:
             list_items=list_items,
             footer=row.pop("footer", ""),
             **row,
-            import_warnings=[]
+            import_warnings=[],
         )
 
     @property

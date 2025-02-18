@@ -201,7 +201,9 @@ class ContentUploadThread(UploadThread):
         else:
             self.result_queue.put((messages.SUCCESS, ["Content import successful"]))
             for warning in importer.import_warnings:
-                self.result_queue.put(messages.WARNING, [f"{warning.row_num}, {warning.message}"])
+                self.result_queue.put(
+                    messages.WARNING, [f"{warning.row_num}, {warning.message}"]
+                )
         # Wait until the user has fetched the result message to close the thread
         self.result_queue.join()
 
