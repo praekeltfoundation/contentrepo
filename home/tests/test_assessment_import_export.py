@@ -690,6 +690,19 @@ class TestImportExport:
         ]
         assert e.value.row_num == 1
 
+    def test_invalid_character(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an empty CSV with an invalid character in the header
+        should return an error with the line number and header
+        that was wrongly entered.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("invalid_character.csv")
+        assert e.value.message == [
+            "Invalid header: 'question type:' contains invalid characters."
+        ]
+        assert e.value.row_num == 1
+
 
 @pytest.mark.usefixtures("result_content_pages")
 @pytest.mark.django_db()
