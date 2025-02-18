@@ -17,7 +17,12 @@ from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
-from home.import_helpers import ImportException, parse_file, validate_using_form, ImportWarning
+from home.import_helpers import (
+    ImportException,
+    ImportWarning,
+    parse_file,
+    validate_using_form,
+)
 
 from .models import (
     Assessment,
@@ -94,10 +99,7 @@ class ContentImporter:
         self.add_media_link(rows)
 
     def add_media_link(self, rows: list["ContentRow"]) -> None:
-        row_num = 0
-        for i, row in enumerate(rows, start=2):
-            row_num += 1
-
+        for row_num, row in enumerate(rows, start=2):
             if row.media_link:
                 if row.media_link is not None or row.media_link != "":
                     self.import_warnings.append(ImportWarning(f"Media link: {row.media_link}" , row_num))
