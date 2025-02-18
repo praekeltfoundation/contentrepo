@@ -10,7 +10,6 @@ from wagtail.documents import urls as wagtaildocs_urls
 
 from home import views as home_views
 from home.api import api_router
-from menu import views as menu_views
 from search import views as search_views
 
 from drf_spectacular.views import (  # isort:skip
@@ -30,11 +29,6 @@ urlpatterns = [
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("search/", search_views.search, name="search"),
-    path("mainmenu/", menu_views.mainmenu, name="mainmenu"),
-    path("submenu/", menu_views.submenu, name="submenu"),
-    path("randommenu/", menu_views.randommenu, name="randommenu"),
-    path("faqmenu/", menu_views.faqmenu, name="faqmenu"),
-    path("suggestedcontent/", menu_views.suggestedcontent, name="suggestedcontent"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/schema/swagger-ui/",
@@ -46,7 +40,6 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name="schema"),
         name="redoc",
     ),
-    path("api/whatsapptemplates/", menu_views.randommenu, name="whatsapptemplate"),
 ]
 
 
