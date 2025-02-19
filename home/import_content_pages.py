@@ -103,7 +103,7 @@ class ContentImporter:
             if row.media_link:
                 if row.media_link is not None or row.media_link != "":
                     self.import_warnings.append(
-                        ImportWarning(f"Media link: {row.media_link}", row_num)
+                        ImportWarning(f"{row.media_link}", row_num)
                     )
 
     def process_rows(self, rows: list["ContentRow"]) -> None:

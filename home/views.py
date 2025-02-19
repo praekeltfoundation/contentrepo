@@ -180,7 +180,6 @@ class ContentUploadThread(UploadThread):
         super().__init__(**kwargs)
 
     def run(self):
-
         try:
             importer = import_content(
                 self.file, self.file_type, self.progress_queue, self.purge, self.locale
@@ -198,12 +197,15 @@ class ContentUploadThread(UploadThread):
         except Exception:
             self.result_queue.put((messages.ERROR, ["Content import failed"]))
             logger.exception("Content import failed")
+
+        if len(importer.import_warnings) > 0:
+            self.result_queue.put((messages.WARNING, ["Content import successful", "Upload media on :",
+                                                    [f"row {warning.row_num}: {warning.message}"
+                                                       for warning in importer.import_warnings]
+                                   ]))
         else:
             self.result_queue.put((messages.SUCCESS, ["Content import successful"]))
-            for warning in importer.import_warnings:
-                self.result_queue.put(
-                    messages.WARNING, [f"{warning.row_num}, {warning.message}"]
-                )
+
         # Wait until the user has fetched the result message to close the thread
         self.result_queue.join()
 
