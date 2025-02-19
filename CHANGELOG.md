@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Helper texts for some ordered content sets
 ### Removed
 - Locale field on exports
-- Remove menu app
+- Menu app
+- Search app
 -->
 
 ## v1.4.0 - 2024-12-18
