@@ -175,6 +175,9 @@ def check_empty_rows(rows: list[dict[str, Any]], row_num: int) -> None:
         )
 
 
+# TODO:
+# Move to shared code once we're able to work on the contentpage import.
+# Contentsets uses pascal case headers
 def convert_headers_to_snake_case(headers: list[str], row_num: int) -> dict[str, str]:
     """
     Converts a list of headers to snake_case and returns a mapping.

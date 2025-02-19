@@ -372,11 +372,13 @@ class AssessmentRow:
     """
 
     slug: str
-    title: str = ""
+    title: str
+    question: str
+    generic_error: str
+    locale: str
     version: str = ""
     tags: list[str] = field(default_factory=list)
     question_type: str = ""
-    locale: str = ""
     high_result_page: str = ""
     high_inflection: str = ""
     medium_result_page: str = ""
@@ -384,8 +386,6 @@ class AssessmentRow:
     low_result_page: str = ""
     skip_threshold: str = ""
     skip_high_result_page: str = ""
-    generic_error: str = ""
-    question: str = ""
     explainer: str = ""
     error: str = ""
     min: str = ""
@@ -399,18 +399,6 @@ class AssessmentRow:
     @classmethod
     def fields(cls) -> list[str]:
         return [field.name for field in fields(cls)]
-
-    @classmethod
-    def check_missing_fields(cls, row: dict[str, str], row_num: int) -> None:
-        """
-        Checks for missing required fields in the row and raises an exception if any is missing.
-        """
-        missing_fields = [field for field in MANDATORY_HEADERS if field not in row]
-        if missing_fields:
-            raise ImportAssessmentException(
-                f"The import file is missing required fields: {', '.join(missing_fields)}",
-                row_num,
-            )
 
     @classmethod
     def from_flat(cls, row: dict[str, str], row_num: int) -> "AssessmentRow":
@@ -428,21 +416,32 @@ class AssessmentRow:
             key: value for key, value in row.items() if value and key in cls.fields()
         }
 
-        cls.check_missing_fields(row, row_num)
-
         answers = deserialise_list(row.pop("answers", ""))
         answer_responses = deserialise_list(row.pop("answer_responses", ""))
         if not answer_responses:
             answer_responses = [""] * len(answers)
 
-        return cls(
-            tags=deserialise_list(row.pop("tags", "")),
-            answers=answers,
-            scores=[float(i) for i in deserialise_list(row.pop("scores", ""))],
-            answer_semantic_ids=deserialise_list(row.pop("answer_semantic_ids", "")),
-            answer_responses=answer_responses,
-            **row,
-        )
+        try:
+            return cls(
+                tags=deserialise_list(row.pop("tags", "")),
+                answers=answers,
+                scores=[float(i) for i in deserialise_list(row.pop("scores", ""))],
+                answer_semantic_ids=deserialise_list(
+                    row.pop("answer_semantic_ids", "")
+                ),
+                answer_responses=answer_responses,
+                **row,
+            )
+        except TypeError:
+            missing_fields = [
+                field
+                for field in MANDATORY_HEADERS
+                if field not in row or row[field] == ""
+            ]
+            raise ImportAssessmentException(
+                f"The import file is missing required fields: {', '.join(missing_fields)}",
+                row_num,
+            )
 
 
 def get_content_page_id_from_slug(slug: str, locale: Locale) -> int:
