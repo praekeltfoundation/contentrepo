@@ -165,11 +165,42 @@ def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
     return error_message
 
 
+def check_empty_rows(rows: list[dict[str, Any]], row_num: int) -> None:
+    """
+    Checks if the list of rows is empty and raises an exception if true.
+    """
+    if not rows:
+        raise ImportException(
+            "The import file is empty or contains no valid rows.", row_num=row_num
+        )
+
+
+# TODO:
+# Move to shared code once we're able to work on the contentpage import.
+# Contentsets uses pascal case headers
+def convert_headers_to_snake_case(headers: list[str], row_num: int) -> dict[str, str]:
+    """
+    Converts a list of headers to snake_case and returns a mapping.
+    """
+    return {header: to_snake_case(header, row_num) for header in headers}
+
+
+def to_snake_case(s: str, row_num: int) -> str:
+    """
+    Converts a given string to snake_case if it contains spaces or hyphens.
+    """
+    return s.replace(" ", "_").replace("-", "_").strip("_")
+
+
 def fix_rows(rows: Iterator[dict[str | Any, Any]]) -> Iterator[dict[str, str | None]]:
     """
     Fix keys for all rows by lowercasing keys and removing whitespace from keys and values
     """
-    first_row = next(rows)
+    try:
+        first_row = next(rows)
+    except StopIteration:
+        return iter([])
+
     if len(first_row) != len(fix_row(first_row)):
         raise ImportException(
             "Invalid format. Please check that there are no duplicate headers."
@@ -206,7 +237,11 @@ def parse_file(
     file_content: bytes, file_type: str
 ) -> Iterator[tuple[int, dict[str, Any]]]:
     read_rows = read_xlsx if file_type == "XLSX" else read_csv
-    return enumerate(fix_rows(read_rows(file_content)), start=2)
+    rows = list(fix_rows(read_rows(file_content)))
+
+    check_empty_rows(rows, row_num=1)
+
+    return enumerate(rows, start=2)
 
 
 def read_csv(file_content: bytes) -> Iterator[dict[str, Any]]:
