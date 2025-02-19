@@ -199,10 +199,19 @@ class ContentUploadThread(UploadThread):
             logger.exception("Content import failed")
 
         if len(importer.import_warnings) > 0:
-            self.result_queue.put((messages.WARNING, ["Content import successful", "Upload media on :",
-                                                    [f"row {warning.row_num}: {warning.message}"
-                                                       for warning in importer.import_warnings]
-                                   ]))
+            self.result_queue.put(
+                (
+                    messages.WARNING,
+                    [
+                        "Content import successful",
+                        "Upload media on :",
+                        [
+                            f"row {warning.row_num}: {warning.message}"
+                            for warning in importer.import_warnings
+                        ],
+                    ],
+                )
+            )
         else:
             self.result_queue.put((messages.SUCCESS, ["Content import successful"]))
 

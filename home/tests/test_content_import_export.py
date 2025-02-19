@@ -1717,7 +1717,7 @@ class TestImportExport:
         content = csv_impexp.export_content()
         src, dst = csv_impexp.csvs2dicts(resp, content)
 
-        assert "media_link" not in src
+        assert "media_link" not in [item.keys() for item in dst]
 
 
 @pytest.mark.django_db
