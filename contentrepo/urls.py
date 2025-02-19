@@ -11,7 +11,6 @@ from wagtail.documents import urls as wagtaildocs_urls
 from home import views as home_views
 from home.api import api_router
 from menu import views as menu_views
-from search import views as search_views
 
 from drf_spectacular.views import (  # isort:skip
     SpectacularAPIView,
@@ -29,7 +28,6 @@ urlpatterns = [
     path("", RedirectView.as_view(url=reverse_lazy("wagtailadmin_home"))),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
-    path("search/", search_views.search, name="search"),
     path("mainmenu/", menu_views.mainmenu, name="mainmenu"),
     path("submenu/", menu_views.submenu, name="submenu"),
     path("randommenu/", menu_views.randommenu, name="randommenu"),
