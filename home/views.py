@@ -198,7 +198,7 @@ class ContentUploadThread(UploadThread):
             self.result_queue.put((messages.ERROR, ["Content import failed"]))
             logger.exception("Content import failed")
 
-        if len(importer.import_warnings) > 0:
+        if importer.import_warnings:
             self.result_queue.put(
                 (
                     messages.WARNING,
