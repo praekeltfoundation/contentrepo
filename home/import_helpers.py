@@ -1,6 +1,5 @@
 # The error messages are processed and parsed into a list of messages we return to the user
 import csv
-import re
 from collections.abc import Iterator
 from datetime import datetime
 from io import BytesIO, StringIO
@@ -24,33 +23,6 @@ from wagtail.rich_text import RichText  # type: ignore
 from wagtail.test.utils.form_data import nested_form_data, streamfield  # type: ignore
 
 from .xlsx_helpers import get_active_sheet
-
-INVALID_CHARACTERS = {
-    ":",
-    ";",
-    "!",
-    "@",
-    "#",
-    "$",
-    "%",
-    "^",
-    "&",
-    "*",
-    "(",
-    ")",
-    "+",
-    "=",
-    "{",
-    "}",
-    "[",
-    "]",
-    "|",
-    "\\",
-    "/",
-    "?",
-    ">",
-    "<",
-}
 
 
 class ImportException(Exception):
@@ -213,13 +185,8 @@ def convert_headers_to_snake_case(headers: list[str], row_num: int) -> dict[str,
 def to_snake_case(s: str, row_num: int) -> str:
     """
     Converts a given string to snake_case if it contains spaces or hyphens.
-    Throws an exception for invalid headers containing special characters.
     """
-    if any(char in s for char in INVALID_CHARACTERS):
-        raise ImportException(
-            f"Invalid header: '{s}' contains invalid characters.", row_num=row_num
-        )
-    return re.sub(r"[\W_]+", "_", s).strip("_")
+    return s.replace(" ", "_").replace("-", "_").strip("_")
 
 
 def fix_rows(rows: Iterator[dict[str | Any, Any]]) -> Iterator[dict[str, str | None]]:

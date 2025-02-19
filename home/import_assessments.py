@@ -119,6 +119,7 @@ class AssessmentImporter:
         headers_mapping = convert_headers_to_snake_case(
             list(original_headers), row_num=1
         )
+
         snake_case_headers = list(headers_mapping.values())
         self.validate_headers(snake_case_headers, row_num=1)
         transformed_rows = [
