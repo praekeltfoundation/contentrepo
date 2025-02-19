@@ -55,7 +55,7 @@ class ImportWarning:
         row_num: int | None = None,
     ):
         self.row_num = row_num
-        self.message = message if isinstance(message, str) else message
+        self.message = message
 
 
 def wagtail_to_formdata(val: Any) -> Any:
