@@ -484,7 +484,9 @@ class ImportExport:
         """
         Import given content in the configured format with the configured importer.
         """
-        return import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
+        return import_content(
+            BytesIO(content_bytes), self.format.upper(), Queue(), **kw
+        )
 
     def import_ordered_sets(self, content_bytes: bytes) -> None:
         import_ordered_sets(BytesIO(content_bytes), self.format.upper(), Queue())
@@ -1721,7 +1723,7 @@ class TestImportExport:
 
     def test_import_success_no_warnings(self, csv_impexp: ImportExport) -> None:
         """
-            Import a page that will not have warnings list
+        Import a page that will not have warnings list
         """
         content = csv_impexp.read_bytes("contentpage_without_warning.csv")
         importer = csv_impexp.import_content(content)
@@ -1730,7 +1732,7 @@ class TestImportExport:
 
     def test_import_success_with_warnings(self, csv_impexp: ImportExport) -> None:
         """
-            Import a page that will return warnings if media_link is not empty
+        Import a page that will return warnings if media_link is not empty
         """
         content = csv_impexp.read_bytes("contentpage_media_link_warning.csv")
         importer = csv_impexp.import_content(content)
@@ -1738,6 +1740,7 @@ class TestImportExport:
         assert len(importer.import_warnings) == 2
         assert importer.import_warnings[0].message == "http://test.com/image.png"
         assert importer.import_warnings[0].row_num == 3
+
 
 @pytest.mark.django_db
 class TestExport:
