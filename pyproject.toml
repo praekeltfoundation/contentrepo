@@ -15,7 +15,7 @@
 # "Bug Tracker" = "https://github.com/praekeltfoundation/contentrepo/issues"
 
 # [tool.setuptools]
-# packages = ["contentrepo", "home",]
+# packages = ["contentrepo", "home"]
 
 # [tool.setuptools.dynamic]
 # dependencies = {file = ["requirements.txt"]}
