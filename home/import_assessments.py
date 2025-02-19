@@ -439,7 +439,7 @@ class AssessmentRow:
                 if field not in row or row[field] == ""
             ]
             raise ImportAssessmentException(
-                f"The import file is missing required fields: {', '.join(missing_fields)}",
+                f"Row missing values for required fields: {', '.join(missing_fields)}",
                 row_num,
             )
 

@@ -675,7 +675,7 @@ class TestImportExport:
         """
         with pytest.raises(ImportAssessmentException) as e:
             csv_impexp.import_file("assessments_missing_title.csv")
-        assert e.value.message == "The import file is missing required fields: title"
+        assert e.value.message == "Row missing values for required fields: title"
         assert e.value.row_num == 4
 
     def test_empty_rows(self, csv_impexp: ImportExport) -> None:
