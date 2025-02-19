@@ -28,7 +28,11 @@ from .views import (  # isort:skip
 
 
 @hooks.register("before_delete_page")
-def before_delete_page(request, page):
+def prevent_deletion_if_linked(request, page):
+    """
+    Check if the page is a ContentPage and if it has any links to prevent
+    the deletion of a page if it is linked to other content.
+    """
     if page.content_type.name != ContentPage._meta.verbose_name:
         return
     page_links, orderedcontentset_links, wat_links = page.get_all_links()
@@ -51,7 +55,10 @@ def before_delete_page(request, page):
 
 
 @hooks.register("register_admin_urls")
-def register_import_urls():
+def get_import_urls():
+    """
+    Define additional admin URLs for various content import views.
+    """
     return [
         path("import/", ContentUploadView.as_view(), name="import"),
         path(
@@ -73,14 +80,20 @@ def register_import_urls():
 
 
 @hooks.register("register_page_listing_buttons")
-def page_listing_buttons(page, page_perms, is_parent=False, next_url=None):
+def get_import_content_button(page, page_perms, is_parent=False, next_url=None):
+    """
+    Generate buttons to add to action list for importing content.
+    """
     yield wagtailadmin_widgets.PageListingButton(
         "Import Content", reverse("import"), priority=10
     )
 
 
 @hooks.register("register_reports_menu_item")
-def register_stale_content_report_menu_item():
+def get_stale_content_report_menu_item():
+    """
+    Create a admin only sub menu item for the Stale Content report.
+    """
     return AdminOnlyMenuItem(
         "Stale Content",
         reverse("stale_content_report"),
@@ -90,7 +103,10 @@ def register_stale_content_report_menu_item():
 
 
 @hooks.register("register_admin_urls")
-def register_stale_content_report_url():
+def get_stale_content_report_url():
+    """
+    Create additional URL for the State Content Report.
+    """
     return [
         path(
             "reports/stale-content/",
@@ -101,7 +117,10 @@ def register_stale_content_report_url():
 
 
 @hooks.register("register_reports_menu_item")
-def register_page_views_report_menu_item():
+def get_page_views_report_menu_item():
+    """
+    Create a admin only sub menu item for the Page Views report.
+    """
     return AdminOnlyMenuItem(
         "Page Views",
         reverse("page_view_report"),
@@ -111,7 +130,10 @@ def register_page_views_report_menu_item():
 
 
 @hooks.register("register_admin_urls")
-def register_page_views_report_url():
+def get_page_views_report_url():
+    """
+    Create additional URL for the Page Views report.
+    """
     return [
         path(
             "reports/page-views/",
@@ -159,71 +181,6 @@ class ContentPageAdmin(ModelAdmin):
         "slug",
     )
     list_export = ("locale", "title")
-
-    def replies(self, obj):
-        return list(obj.quick_replies.all())
-
-    replies.short_description = "Quick Replies"
-
-    def trigger(self, obj):
-        return list(obj.triggers.all())
-
-    trigger.short_description = "Triggers"
-
-    def tag(self, obj):
-        return list(obj.tags.all())
-
-    tag.short_description = "Tags"
-
-    def wa_body(self, obj):
-        body = (
-            "\n".join(m.value["message"] for m in obj.whatsapp_body)
-            if obj.whatsapp_body
-            else ""
-        )
-        return truncatechars(str(body), self.body_truncate_size)
-
-    wa_body.short_description = "Whatsapp Body"
-
-    def sms_body(self, obj):
-        body = (
-            "\n".join(m.value["message"] for m in obj.sms_body) if obj.sms_body else ""
-        )
-        return truncatechars(str(body), self.body_truncate_size)
-
-    sms_body.short_description = "SMS Body"
-
-    def ussd_body(self, obj):
-        body = (
-            "\n".join(m.value["message"] for m in obj.ussd_body)
-            if obj.ussd_body
-            else ""
-        )
-        return truncatechars(str(body), self.body_truncate_size)
-
-    ussd_body.short_description = "USSD Body"
-
-    def mess_body(self, obj):
-        body = "\n".join(m.value["message"] for m in obj.messenger_body)
-        return truncatechars(str(body), self.body_truncate_size)
-
-    mess_body.short_description = "Messenger Body"
-
-    def vib_body(self, obj):
-        body = "\n".join(m.value["message"] for m in obj.viber_body)
-        return truncatechars(str(body), self.body_truncate_size)
-
-    vib_body.short_description = "Viber Body"
-
-    def web_body(self, obj):
-        return truncatechars(str(obj.body), self.body_truncate_size)
-
-    web_body.short_description = "Web Body"
-
-    def parental(self, obj):
-        return obj.get_parent()
-
-    parental.short_description = "Parent"
 
 
 class OrderedContentSetViewSet(SnippetViewSet):
