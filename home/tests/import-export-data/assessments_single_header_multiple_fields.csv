@@ -1,0 +1,6 @@
+,question_type,tags,slug,version,locale,high_result_page,high_inflection,medium_result_page,medium_inflection,low_result_page,skip_threshold,skip_high_result_page,generic_error,question,explainer,error,min,max,answers,scores,answer_semantic_ids,question_semantic_id,answer_responses
+Freetext Question,freetext_question,draft-assessment,Draft-assessment,v1.0,en,,,,,,0,,This is a generic error for draft page,Is this a draft assessment,,,,,,,,draf-assessment,
+,freetext_question,,,v1.0,,high-inflection,5,,3,,0,,Sorry we didn't quite get that.,What do you not like about France,We need to know this,,,,,,,france-notlike,
+Test min max range,integer_question,test-min-max-range,test-min-max-range,v1.0,en,,5,,3,,0,,This is a generic error,Lowest temeprature you're experienced,We need to know some things,This is an error message,0,30,,,,lowest-temperature,
+Weather Trivia,integer_question,weather-trivia,weather-trivia,v1.0,en,high-inflection,5,medium-score,1,low-score,0,,"Sorry, we didn't quite get that.",What's the coldest weather you're experienced?,We need to know some things,Your reply should be between {min} and {max},50,70,,,,coldest-weather,
+Draft Assessment 2,freetext_question,draft-assessment,Draft-assessment-2,v1.0,en,,,,,,0,,This is a generic error for draft page,Is this a draft assessment,,,,,,,,draf-assessment,

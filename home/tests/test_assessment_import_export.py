@@ -690,6 +690,31 @@ class TestImportExport:
         ]
         assert e.value.row_num == 1
 
+    def test_multiple_missing_values(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an empty CSV should return an error with all the missing
+        values in a row
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("assessments_missing_row_values.csv")
+        assert (
+            e.value.message
+            == "Row missing values for required fields: title, slug, generic_error, locale"
+        )
+        assert e.value.row_num == 4
+
+    def test_single_missing_header_multiple_missing_rows(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV with a single missing header and multiple missing rows
+        should return an error that a header is missing
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("assessments_single_header_multiple_fields.csv")
+        assert e.value.message == "Missing mandatory headers: title"
+        assert e.value.row_num == 1
+
 
 @pytest.mark.usefixtures("result_content_pages")
 @pytest.mark.django_db()
