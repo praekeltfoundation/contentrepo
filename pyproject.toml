@@ -15,7 +15,7 @@
 # "Bug Tracker" = "https://github.com/praekeltfoundation/contentrepo/issues"
 
 # [tool.setuptools]
-# packages = ["contentrepo", "home", "menu"]
+# packages = ["contentrepo", "home"]
 
 # [tool.setuptools.dynamic]
 # dependencies = {file = ["requirements.txt"]}
@@ -36,7 +36,6 @@ repository ="https://github.com/praekeltfoundation/contentrepo"
 packages = [
   { include = "contentrepo" },
   { include = "home" },
-  { include = "menu" },
 ]
 
 [tool.poetry.dependencies]
@@ -99,7 +98,6 @@ exclude = '''
 exclude = [  # Regexes.
     '^manage\.py',
     '^contentrepo/',
-    '^menu/',
     '^home/(management|migrations)/',
     '^home/(admin|apps|api|constants|content_import_export|forms)\.py',
     '^home/(mappers|mixins|models|panels|serializers)\.py',

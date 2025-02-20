@@ -17,7 +17,6 @@ WAGTAILDOCS_EXTENSIONS = ["doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf", "t
 
 INSTALLED_APPS = [
     "home",
-    "menu",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.settings",

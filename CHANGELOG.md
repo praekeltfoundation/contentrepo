@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CMS Forms Flexible imports and Better Error Handling
 ### Removed
 - Locale field on exports
+- Menu app
 - Search app
 -->
 
