@@ -375,7 +375,10 @@ class ContentImporter:
                         {
                             "id": str(uuid4()),
                             "type": item["type"],
-                            "value": {"title": item["title"],"form": form.id,},
+                            "value": {
+                                "title": item["title"],
+                                "form": form.id,
+                            },
                         }
                     )
                 elif not item["type"]:
