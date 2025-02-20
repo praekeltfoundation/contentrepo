@@ -11,10 +11,18 @@ from wagtail.admin.panels import get_edit_handler  # type: ignore
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 
-from home.import_helpers import ImportException, parse_file, validate_using_form
+from home.import_helpers import (
+    ImportException,
+    convert_headers_to_snake_case,
+    validate_using_form,
+)
+from home.import_helpers import (
+    parse_file as helper_parse_file,
+)
 from home.models import Assessment, ContentPage, HomePage  # type: ignore
 
 AssessmentId = tuple[str, Locale]
+MANDATORY_HEADERS = ["title", "question", "slug", "generic_error", "locale"]
 
 
 class ImportAssessmentException(Exception):
@@ -96,9 +104,31 @@ class AssessmentImporter:
             )
 
     def parse_file(self) -> list["AssessmentRow"]:
+        """
+        Converts the iterator to a list of rows.
+        If there are rows:
+            a. Extracts the original headers from the first row.
+            b. Converts the original headers to snake_case and creates a mapping from original headers to snake_case headers.
+            c. Validates that the snake_case headers contain all mandatory headers.
+            d. Transforms each row to use snake_case headers.
+        """
+        row_iterator = helper_parse_file(self.file_content, self.file_type)
+        rows = [row for _, row in row_iterator]
+
+        original_headers = rows[0].keys()
+        headers_mapping = convert_headers_to_snake_case(
+            list(original_headers), row_num=1
+        )
+
+        snake_case_headers = list(headers_mapping.values())
+        self.validate_headers(snake_case_headers, row_num=1)
+        transformed_rows = [
+            {headers_mapping[key]: value for key, value in row.items()} for row in rows
+        ]
+
         return [
-            AssessmentRow.from_flat(row, i)
-            for i, row in parse_file(self.file_content, self.file_type)
+            AssessmentRow.from_flat(row, i + 2)
+            for i, row in enumerate(transformed_rows)
         ]
 
     def set_progress(self, message: str, progress: int) -> None:
@@ -184,6 +214,16 @@ class AssessmentImporter:
             semantic_id=row.question_semantic_id,
         )
         assessment.questions.append(question)
+
+    def validate_headers(self, headers: list[str], row_num: int) -> None:
+        missing_headers = [
+            header for header in MANDATORY_HEADERS if header not in headers
+        ]
+        if missing_headers:
+            raise ImportAssessmentException(
+                message=f"Missing mandatory headers: {', '.join(missing_headers)}",
+                row_num=row_num,
+            )
 
 
 # Since wagtail page models are so difficult to create and modify programatically,
@@ -332,11 +372,13 @@ class AssessmentRow:
     """
 
     slug: str
-    title: str = ""
+    title: str
+    question: str
+    generic_error: str
+    locale: str
     version: str = ""
     tags: list[str] = field(default_factory=list)
     question_type: str = ""
-    locale: str = ""
     high_result_page: str = ""
     high_inflection: str = ""
     medium_result_page: str = ""
@@ -344,8 +386,6 @@ class AssessmentRow:
     low_result_page: str = ""
     skip_threshold: str = ""
     skip_high_result_page: str = ""
-    generic_error: str = ""
-    question: str = ""
     explainer: str = ""
     error: str = ""
     min: str = ""
@@ -376,7 +416,6 @@ class AssessmentRow:
             key: value for key, value in row.items() if value and key in cls.fields()
         }
 
-        # Create default value with correct length for answer responses if not specified
         answers = deserialise_list(row.pop("answers", ""))
         answer_responses = deserialise_list(row.pop("answer_responses", ""))
         if not answer_responses:
@@ -394,8 +433,14 @@ class AssessmentRow:
                 **row,
             )
         except TypeError:
+            missing_fields = [
+                field
+                for field in MANDATORY_HEADERS
+                if field not in row or row[field] == ""
+            ]
             raise ImportAssessmentException(
-                "The import file is missing some required fields."
+                f"Row missing values for required fields: {', '.join(missing_fields)}",
+                row_num,
             )
 
 

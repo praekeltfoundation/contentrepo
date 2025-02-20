@@ -425,6 +425,40 @@ class TestImportExportRoundtrip:
         imported = impexp.get_assessment_json()
         assert imported == orig
 
+    def test_snake_case_assessments(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a csv with spaces in header names and uppercase text should be converted to snake case
+        and pass, provided that the converted text are valid cms headers.
+        Here we check that the headers are changed to snake case, the assessment is saved
+        and finally we check that the saved assessment has the correct headers.
+
+        (This uses snake_case_assessments.csv.)
+        """
+        csv_impexp.import_file("snake_case_assessments.csv")
+        imported_assessments = Assessment.objects.all()
+        assert imported_assessments.exists()
+        assessment_model = Assessment
+        model_fields = [field.name for field in assessment_model._meta.get_fields()]
+
+        expected_fields = [
+            "title",
+            "slug",
+            "high_inflection",
+            "medium_inflection",
+            "high_result_page",
+            "medium_result_page",
+            "low_result_page",
+            "skip_high_result_page",
+            "skip_threshold",
+            "generic_error",
+            "questions",
+        ]
+
+        for field_name in expected_fields:
+            assert (
+                field_name in model_fields
+            ), f"Field '{field_name}' not found in Assessment model."
+
 
 @pytest.mark.usefixtures("result_content_pages")
 @pytest.mark.django_db()
@@ -462,7 +496,10 @@ class TestImportExport:
         csv_bytes = csv_impexp.import_file("assessment_simple.csv")
         with pytest.raises(ImportAssessmentException) as e:
             csv_impexp.import_file("broken_assessment.csv")
-        assert e.value.message == "The import file is missing some required fields."
+        assert (
+            e.value.message
+            == "Missing mandatory headers: title, question, slug, generic_error, locale"
+        )
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
@@ -617,6 +654,66 @@ class TestImportExport:
             "The score value allows only numbers"
         )
         assert e.value.row_num == 2
+
+    def test_multiple_missing_headers(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV with multiple missing headers should return an error
+        stating all the mandatory headers that are missing
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("assessments_multiple_missing_headers.csv")
+        assert (
+            e.value.message == "Missing mandatory headers: title, slug, "
+            "generic_error, locale"
+        )
+        assert e.value.row_num == 1
+
+    def test_missing_title(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV with a missing title field should return an error
+        that a title is missing
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("assessments_missing_title.csv")
+        assert e.value.message == "Row missing values for required fields: title"
+        assert e.value.row_num == 4
+
+    def test_empty_rows(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an empty CSV should return an error that the
+        import file has no rows.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("empty.csv")
+        assert e.value.message == [
+            "The import file is empty or contains no valid rows."
+        ]
+        assert e.value.row_num == 1
+
+    def test_multiple_missing_values(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing an empty CSV should return an error with all the missing
+        values in a row
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("assessments_missing_row_values.csv")
+        assert (
+            e.value.message
+            == "Row missing values for required fields: title, slug, generic_error, locale"
+        )
+        assert e.value.row_num == 4
+
+    def test_single_missing_header_multiple_missing_rows(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV with a single missing header and multiple missing rows
+        should return an error that a header is missing
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("assessments_single_header_multiple_fields.csv")
+        assert e.value.message == "Missing mandatory headers: title"
+        assert e.value.row_num == 1
 
 
 @pytest.mark.usefixtures("result_content_pages")
