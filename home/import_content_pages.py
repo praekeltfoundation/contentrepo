@@ -95,8 +95,6 @@ class ContentImporter:
         self.link_related_pages()
         self.add_go_to_page_items(self.go_to_page_buttons, "buttons")
         self.add_go_to_page_items(self.go_to_page_list_items, "list_items")
-        self.add_go_to_page_buttons()
-        self.add_go_to_page_list_items()
         self.add_media_link(rows)
 
     def add_media_link(self, rows: list["ContentRow"]) -> None:
