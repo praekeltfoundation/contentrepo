@@ -56,7 +56,7 @@ def prevent_deletion_if_linked(request, page):
 @hooks.register("register_admin_urls")
 def get_import_urls():
     """
-    Define additional admin URLs for various content import views.
+    Create additional admin URLs for various content import views.
     """
     return [
         path("import/", ContentUploadView.as_view(), name="import"),
@@ -118,7 +118,7 @@ def get_stale_content_report_url():
 @hooks.register("register_reports_menu_item")
 def get_page_views_report_menu_item():
     """
-    Create a admin only sub menu item for the Page Views report.
+    Create an admin only sub menu item for the Page Views report.
     """
     return AdminOnlyMenuItem(
         "Page Views",
