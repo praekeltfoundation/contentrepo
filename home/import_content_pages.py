@@ -303,7 +303,7 @@ class ContentImporter:
             quick_replies=row.quick_replies,
             triggers=row.triggers,
             parent=row.parent,
-            related_pages=row.related_pages
+            related_pages=row.related_pages,
         )
 
         self.shadow_pages[(row.slug, locale)] = page
