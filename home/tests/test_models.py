@@ -569,6 +569,30 @@ class ContentPageTests(TestCase):
             [],
         )
 
+    def test_body_text_truncation(self):
+        """
+        Body text for web, whatsapp, messenger, and viber, should be truncated in this
+        list view
+        """
+        page = ContentPage(
+            body=[("paragraph", "test " * 100)],
+        )
+
+        page.whatsapp_body.append(("Whatsapp_Message", {"message": "test " * 100}))
+        page.messenger_body.append(("messenger_block", {"message": "test " * 100}))
+        page.viber_body.append(("viber_message", {"message": "test " * 100}))
+
+        self.assertEqual(len(page.web_body()), 200)
+        self.assertEqual(len(page.wa_body()), 200)
+        self.assertEqual(len(page.mess_body()), 200)
+        self.assertEqual(len(page.vib_body()), 200)
+
+        # Web body is different to the rest because of the html
+        self.assertEqual(page.web_body()[-6:], "test …")
+        self.assertEqual(page.wa_body()[-5:], "test…")
+        self.assertEqual(page.mess_body()[-5:], "test…")
+        self.assertEqual(page.vib_body()[-5:], "test…")
+
 
 class OrderedContentSetTests(TestCase):
     def test_get_gender_none(self):

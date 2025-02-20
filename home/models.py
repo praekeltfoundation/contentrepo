@@ -501,6 +501,7 @@ class QuickReplyContent(ItemBase):
 
 class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     body_truncate_size = 200
+
     class WhatsAppTemplateCategory(models.TextChoices):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
@@ -974,11 +975,12 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
         return revision
-    
+
     def short_description(description):
         def set_short_description(func):
             func.short_description = description
             return func
+
         return set_short_description
 
     @short_description("Quick Replies")
@@ -1003,14 +1005,16 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         return truncatechars(str(body), self.body_truncate_size)
 
     @short_description("SMS Body")
-    def sm_body(self, obj):
+    def sms_body_message(self):
         body = (
-            "\n".join(m.value["message"] for m in obj.sms_body) if obj.sms_body else ""
+            "\n".join(m.value["message"] for m in self.sms_body)
+            if self.sms_body
+            else ""
         )
         return truncatechars(str(body), self.body_truncate_size)
 
     @short_description("USSD Body")
-    def usd_body(self):
+    def ussd_body_message(self):
         body = (
             "\n".join(m.value["message"] for m in self.ussd_body)
             if self.ussd_body
@@ -1030,7 +1034,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
     @short_description("Web Body")
     def web_body(self):
-        return truncatechars(str(self.web_body), self.body_truncate_size)
+        return truncatechars(str(self.body), self.body_truncate_size)
 
     @short_description("Parent")
     def parental(self):
