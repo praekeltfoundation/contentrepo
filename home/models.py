@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.db import models
 from django.forms import CheckboxSelectMultiple
+from django.template.defaultfilters import truncatechars
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
@@ -499,6 +500,8 @@ class QuickReplyContent(ItemBase):
 
 
 class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
+    body_truncate_size = 200
+
     class WhatsAppTemplateCategory(models.TextChoices):
         MARKETING = "MARKETING", _("Marketing")
         UTILITY = "UTILITY", _("Utility")
@@ -972,6 +975,70 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             revision.content["whatsapp_template_name"] = template_name
             revision.save(update_fields=["content"])
         return revision
+
+    def short_description(description):
+        def set_short_description(func):
+            func.short_description = description
+            return func
+
+        return set_short_description
+
+    @short_description("Quick Replies")
+    def replies(self):
+        return list(self.quick_replies.all())
+
+    @short_description("Triggers")
+    def trigger(self):
+        return list(self.triggers.all())
+
+    @short_description("Tags")
+    def tag(self):
+        return list(self.tags.all())
+
+    @short_description("Whatsapp Body")
+    def wa_body(self):
+        body = (
+            "\n".join(m.value["message"] for m in self.whatsapp_body)
+            if self.whatsapp_body
+            else ""
+        )
+        return truncatechars(str(body), self.body_truncate_size)
+
+    @short_description("SMS Body")
+    def sms_body_message(self):
+        body = (
+            "\n".join(m.value["message"] for m in self.sms_body)
+            if self.sms_body
+            else ""
+        )
+        return truncatechars(str(body), self.body_truncate_size)
+
+    @short_description("USSD Body")
+    def ussd_body_message(self):
+        body = (
+            "\n".join(m.value["message"] for m in self.ussd_body)
+            if self.ussd_body
+            else ""
+        )
+        return truncatechars(str(body), self.body_truncate_size)
+
+    @short_description("Messenger Body")
+    def mess_body(self):
+        body = "\n".join(m.value["message"] for m in self.messenger_body)
+        return truncatechars(str(body), self.body_truncate_size)
+
+    @short_description("Viber Body")
+    def vib_body(self):
+        body = "\n".join(m.value["message"] for m in self.viber_body)
+        return truncatechars(str(body), self.body_truncate_size)
+
+    @short_description("Web Body")
+    def web_body(self):
+        return truncatechars(str(self.body), self.body_truncate_size)
+
+    @short_description("Parent")
+    def parental(self):
+        return self.get_parent()
 
     def clean(self):
         result = super().clean(Page)
