@@ -371,23 +371,11 @@ class ContentImporter:
                         slug,
                         item_type,
                     )
-
-                    try:
-                        form = Assessment.objects.get(slug=item["slug"], locale=locale)
-                    except Assessment.DoesNotExist:
-                        raise ImportException(
-                            f"No form found with slug '{item['slug']}' and locale "
-                            f"'{locale}' for go_to_form button '{item['title']}' on "
-                            f"page '{slug}'"
-                        )
                     items.append(
                         {
                             "id": str(uuid4()),
                             "type": item["type"],
-                            "value": {
-                                "title": item["title"],
-                                "form": form.id,
-                            },
+                            "value": {"title": item["title"],"form": form.id,},
                         }
                     )
                 elif not item["type"]:
