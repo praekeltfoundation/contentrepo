@@ -162,7 +162,7 @@ class OrderedContentSetImporter:
                 page.time or page.unit or page.before_or_after or page.contact_field
             ):
                 raise ImportException(
-                    f"You are attempting to import an ordered content set with page details, but no page slug.",
+                    "You are attempting to import an ordered content set with page details, but no page slug.",
                     index,
                 )
 
