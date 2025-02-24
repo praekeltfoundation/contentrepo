@@ -17,7 +17,12 @@ from wagtail.models import Locale, Page  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 from wagtail.rich_text import RichText  # type: ignore
 
-from home.import_helpers import ImportException, parse_file, validate_using_form
+from home.import_helpers import (
+    ImportException,
+    ImportWarning,
+    parse_file,
+    validate_using_form,
+)
 
 from .models import (
     Assessment,
@@ -60,6 +65,7 @@ class ContentImporter:
         self.go_to_page_list_items: dict[PageId, dict[int, list[dict[str, Any]]]] = (
             defaultdict(lambda: defaultdict(list))
         )
+        self.import_warnings: list[ImportWarning] = []
 
     def locale_from_display_name(self, langname: str) -> Locale:
         if langname not in self.locale_map:
@@ -89,6 +95,15 @@ class ContentImporter:
         self.link_related_pages()
         self.add_go_to_page_items(self.go_to_page_buttons, "buttons")
         self.add_go_to_page_items(self.go_to_page_list_items, "list_items")
+        self.add_media_link(rows)
+
+    def add_media_link(self, rows: list["ContentRow"]) -> None:
+        for row_num, row in enumerate(rows, start=2):
+            if row.media_link:
+                if row.media_link is not None or row.media_link != "":
+                    self.import_warnings.append(
+                        ImportWarning(f"{row.media_link}", row_num)
+                    )
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         # Non-page rows don't have a locale, so we need to remember the last
@@ -743,6 +758,7 @@ class ContentRow:
     related_pages: list[str] = field(default_factory=list)
     footer: str = ""
     language_code: str = ""
+    import_warnings: list[ImportWarning] = field(default_factory=list)
 
     @classmethod
     def from_flat(cls, row: dict[str, str], row_num: int) -> "ContentRow":
@@ -790,6 +806,7 @@ class ContentRow:
             list_items=list_items,
             footer=row.pop("footer", ""),
             **row,
+            import_warnings=[],
         )
 
     @property

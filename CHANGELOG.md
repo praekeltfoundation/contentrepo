@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix class_name warning: RemovedInWagtail60Warning
 - Helper texts for some ordered content sets
 - CMS Forms Flexible imports and Better Error Handling
+- Contentpage warnings for media_link field
 ### Removed
 - Locale field on exports
 - Menu app

@@ -15,6 +15,7 @@ def import_content(file, filetype, progress_queue, purge=True, locale=None) -> N
 
     importer = ContentImporter(file.read(), filetype, progress_queue, purge, locale)
     importer.perform_import()
+    return importer
 
 
 def export_xlsx_content(queryset: PageQuerySet, response: HttpResponse) -> None:

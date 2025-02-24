@@ -480,11 +480,13 @@ class ImportExport:
         content = b"".join(stream.streaming_content)
         return content
 
-    def import_content(self, content_bytes: bytes, **kw: Any) -> None:
+    def import_content(self, content_bytes: bytes, **kw: Any) -> Any:
         """
         Import given content in the configured format with the configured importer.
         """
-        import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
+        return import_content(
+            BytesIO(content_bytes), self.format.upper(), Queue(), **kw
+        )
 
     def import_ordered_sets(self, content_bytes: bytes) -> None:
         import_ordered_sets(BytesIO(content_bytes), self.format.upper(), Queue())
@@ -1693,6 +1695,51 @@ class TestImportExport:
             csv_impexp.import_file("list_items_with_type_error.csv")
         assert e.value.row_num == 3
         assert e.value.message == ["list item with invalid type 'new_type'"]
+
+    def test_media_link_warning(self, csv_impexp: ImportExport) -> None:
+        """
+        Import a page with media link it should return a warning
+        no error should be raised
+        """
+
+        csv_impexp.import_file("contentpage_media_link_warning.csv")
+
+        page = Page.objects.all()
+
+        assert len(page) > 0
+
+    def test_media_link_warning_response(self, csv_impexp: ImportExport) -> None:
+        """
+        Import a page with media link it should return a warning
+        media_link will be excluded from uploaded data
+        """
+
+        resp = csv_impexp.import_file("contentpage_media_link_warning.csv")
+
+        content = csv_impexp.export_content()
+        src, dst = csv_impexp.csvs2dicts(resp, content)
+
+        assert "media_link" not in [item.keys() for item in dst]
+
+    def test_import_success_no_warnings(self, csv_impexp: ImportExport) -> None:
+        """
+        Import a page that will not have warnings list
+        """
+        content = csv_impexp.read_bytes("contentpage_without_warning.csv")
+        importer = csv_impexp.import_content(content)
+
+        assert importer.import_warnings == []
+
+    def test_import_success_with_warnings(self, csv_impexp: ImportExport) -> None:
+        """
+        Import a page that will return warnings if media_link is not empty
+        """
+        content = csv_impexp.read_bytes("contentpage_media_link_warning.csv")
+        importer = csv_impexp.import_content(content)
+
+        assert len(importer.import_warnings) == 2
+        assert importer.import_warnings[0].message == "http://test.com/image.png"
+        assert importer.import_warnings[0].row_num == 3
 
 
 @pytest.mark.django_db
