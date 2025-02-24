@@ -1432,7 +1432,7 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
 
     title = models.CharField(max_length=255)
     slug = models.SlugField(
-        max_length=255, help_text="A unique identifier for this assessment"
+        max_length=255, help_text="A unique identifier for this CMS Form"
     )
     version = models.CharField(
         max_length=200,

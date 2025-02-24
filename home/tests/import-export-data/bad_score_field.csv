@@ -1,0 +1,326 @@
+title,question_type,tags,slug,version,locale,high_result_page,high_inflection,medium_result_page,medium_inflection,low_result_page,skip_threshold,skip_high_result_page,generic_error,question,explainer,error,min,max,answers,scores,answer_semantic_ids,question_semantic_id,answer_responses
+Test assessment pt,categorical_question,"pt,test",test-assessment-pt,,pt,,,,,,0,,Generic error,Q1,,,,,A1,0,a1,q1,""""""
+Breastfeeding Quiz,categorical_question,"mnch,breastfeeding_quiz",breastfeeding-quiz,1,en,breastfeeding-quiz-champion,75,breastfeeding-quiz-good,25,breastfeeding-quiz-learner,100,,"Sorry, I didn't understand that. Please click one of the buttons.","*Question 1*
+🟩🟩⬜⬜⬜⬜⬜⬜
+
+What’s the best food for a baby from birth to 6 months?
+
+• Formula
+• Formula + breast milk
+• Breast milk only",,,,,"Formula,Formula+breast milk,Breast milk only","test,0.0,1.0","formula,formula-and-breast milk,breast-milk-only",baby-food@,"""🤔
+
+Actually, it's best to give your baby *only breast milk* from birth to 6 months if you can.
+
+Breast milk has everything your baby needs, and your body will make as much milk as she needs.
+
+If you are struggling to breastfeed, speak to a health worker about what to try.
+
+Let's keep going ..."",""🤔
+
+Actually, it's best to give your baby *only breast milk* from birth to 6 months if you can.
+
+Breast milk has everything your baby needs, and your body will make as much milk as she needs.
+
+If you are struggling to breastfeed, speak to a health worker about what to try.
+
+Let's keep going ..."",""*Yes!* ✅
+
+It's best to give your baby only breast milk from birth to 6 months if you can.
+
+Breast milk has everything your baby needs, and your body will make as much milk as she needs.
+
+Let's keep going ..."""
+Breastfeeding Quiz,categorical_question,"mnch,breastfeeding_quiz",breastfeeding-quiz,1,en,breastfeeding-quiz-champion,75,breastfeeding-quiz-good,25,breastfeeding-quiz-learner,100,,"Sorry, I didn't understand that. Please click one of the buttons.","*Question 2*
+🟩🟩🟩🟩⬜⬜⬜⬜
+
+How does breastfeeding help you as a mother?
+
+• It helps bonding with baby
+• It saves money
+• It helps you sleep better
+• It lowers your risk of depression
+• All of the above",,,,,"It helps bonding,It can save money,It helps sleep,Depression risk,All of the above","0.0,0.0,0.0,0.0,1.0","bonding,save-money,sleep,depression-risk,all-of-the-above",breastfeeding-help-mother,"""🤔 It's even better than that!
+
+Breastfeeding is great for moms for many practical and health reasons.
+
+It helps mom:
+• bleed less after birth
+• bond with baby
+• save money and time
+• sleep better
+• lose pregnancy weight
+
+It also lowers the risk of illnesses like:
+• depression
+• some cancers
+• heart disease
+• diabetes
+
+Let's keep going ..."",""🤔 It's even better than that!
+
+Breastfeeding is great for moms for many practical and health reasons.
+
+It helps mom:
+• bleed less after birth
+• bond with baby
+• save money and time
+• sleep better
+• lose pregnancy weight
+
+It also lowers the risk of illnesses like:
+• depression
+• some cancers
+• heart disease
+• diabetes
+
+Let's keep going ..."",""🤔 It's even better than that!
+
+Breastfeeding is great for moms for many practical and health reasons.
+
+It helps mom:
+• bleed less after birth
+• bond with baby
+• save money and time
+• sleep better
+• lose pregnancy weight
+
+It also lowers the risk of illnesses like:
+• depression
+• some cancers
+• heart disease
+• diabetes
+
+Let's keep going ..."",""🤔 It's even better than that!
+
+Breastfeeding is great for moms for many practical and health reasons.
+
+It helps mom:
+• bleed less after birth
+• bond with baby
+• save money and time
+• sleep better
+• lose pregnancy weight
+
+It also lowers the risk of illnesses like:
+• depression
+• some cancers
+• heart disease
+• diabetes
+
+Let's keep going ..."",""*Yes!* ✅
+
+Breastfeeding is great for moms for practical and health reasons.
+
+It helps mom:
+• bleed less after birth
+• bond with baby
+• save money and time
+• sleep better
+• lose pregnancy weight
+
+It also lowers the risk of illnesses like:
+• depression
+• some cancers
+• heart disease
+• diabetes
+
+Let's keep going ..."""
+Breastfeeding Quiz,categorical_question,"mnch,breastfeeding_quiz",breastfeeding-quiz,1,en,breastfeeding-quiz-champion,75,breastfeeding-quiz-good,25,breastfeeding-quiz-learner,100,,"Sorry, I didn't understand that. Please click one of the buttons.","*Question 3*
+🟩🟩🟩🟩🟩🟩⬜⬜
+
+How does breastfeeding help a baby?
+
+• It boost baby's immune system
+• It gives a baby everything he needs
+• It's clean and safe
+• All of the above",,,,,"Immune boost,Everything he needs,It's clean and safe,All of the above","0.0,0.0,0.0,1.0","immune-boost,everything-he-needs,clean-and-safe,all-of-the-above",breastfeeding-baby,"""*It's even better than that - all of these are true!* 🤔
+
+Breast milk gives a baby everything he needs, and it's available whenever he’s hungry.
+
+Breastfeeding strengthens the bond between the baby and the mother.
+
+Breast milk makes a baby's immune system stronger. This protects him against illness. It lowers the risk of:
+
+• infections
+• diarrhoea and vomiting
+• sudden infant death syndrome (SIDS)
+• obesity
+• heart disease as an adult
+
+With breastfeeding, you don’t need to wash and sterilise bottles or boil water to make formula.
+
+Time for the last question ..."",""*It's even better than that - all of these are true!* 🤔
+
+Breast milk gives a baby everything he needs, and it's available whenever he’s hungry.
+
+Breastfeeding strengthens the bond between the baby and the mother.
+
+Breast milk makes a baby's immune system stronger. This protects him against illness. It lowers the risk of:
+
+• infections
+• diarrhoea and vomiting
+• sudden infant death syndrome (SIDS)
+• obesity
+• heart disease as an adult
+
+With breastfeeding, you don’t need to wash and sterilise bottles or boil water to make formula.
+
+Time for the last question ..."",""*It's even better than that - all of these are true!* 🤔
+
+Breast milk gives a baby everything he needs, and it's available whenever he’s hungry.
+
+Breastfeeding strengthens the bond between the baby and the mother.
+
+Breast milk makes a baby's immune system stronger. This protects him against illness. It lowers the risk of:
+
+• infections
+• diarrhoea and vomiting
+• sudden infant death syndrome (SIDS)
+• obesity
+• heart disease as an adult
+
+With breastfeeding, you don’t need to wash and sterilise bottles or boil water to make formula.
+
+Time for the last question ..."",""*Yes, all of these benefits are true* ✅
+
+Breast milk gives a baby everything he needs, and it's available whenever he needs it.
+
+Breastfeeding strengthens the bond between the baby and the mother.
+
+Breast milk makes a baby's immune system stronger. This protects him against illness. It lowers the risk of:
+
+• infections
+• diarrhoea and vomiting
+• sudden infant death syndrome (SIDS)
+• obesity
+• heart disease as an adult
+
+With breastfeeding, you don’t need to wash and sterilise bottles or boil water to make formula.
+
+Last question ..."""
+Breastfeeding Quiz,categorical_question,"mnch,breastfeeding_quiz",breastfeeding-quiz,1,en,breastfeeding-quiz-champion,75,breastfeeding-quiz-good,25,breastfeeding-quiz-learner,100,,"Sorry, I didn't understand that. Please click one of the buttons.","*Question 4*
+🟩🟩🟩🟩🟩🟩🟩🟩
+
+How often should you breastfeed your baby?
+
+• Whenever he is hungry
+• Every 4 hours
+• Every 2 hours",,,,,"When he is hungry,Every 4 hours,Every 2 hours","1.0,0.0,0.0","when-he-is-hungry,every-4-hours,every-2-hours",how-often-breastfeed,"""*That's correct* ✅
+
+Experts around the world recommend that you breastfeed your baby whenever he is hungry. This is called demand feeding.
+
+When your baby is a newborn, feed him at least 8 times in 24 hours. As he gets older he will have bigger feeds less often.
+
+The more your baby breastfeeds, the more milk you will make.
+
+Almost all mothers produce enough milk so baby doesn't need anything else for the first 6 months of life.
+
+And that's it!"",""🤔
+
+In fact, experts around the world recommend that you breastfeed your baby whenever he is hungry. This is called demand feeding.
+
+When your baby is a newborn, feed him at least 8 times in 24 hours. As he gets older he will have bigger feeds less often.
+
+The more your baby breastfeeds, the more milk your body makes.
+
+Almost all mothers make enough milk so that their baby doesn't need anything else for the first 6 months of life.
+
+And that's it!"",""🤔
+
+In fact, experts around the world recommend that you breastfeed your baby whenever he is hungry. This is called demand feeding.
+
+When your baby is a newborn, feed him at least 8 times in 24 hours. As he gets older he will have bigger feeds less often.
+
+The more your baby breastfeeds, the more milk your body makes.
+
+Almost all mothers make enough milk so that their baby doesn't need anything else for the first 6 months of life.
+
+And that's it!"""
+DMA_Form_01,categorical_question,dma_form,mnch_onboarding_dma_form,v1.0,en,mnch_onboarding_dma_results_high,5,mnch_onboarding_dma_results_medium,3,mnch_onboarding_dma_results_low,1,,Please choose an option that matches your answer,"Thanks, {{name}}
+
+Now please share your view on these statements so that you can get the best support from [MyHealth] for your needs.
+
+To skip any question, reply: Skip
+
+Here’s the first statement:
+
+👤 *I am confident that I can do things to avoid health issues or reduce my symptoms.*",TEST: Explainer text,TEST: custom error text,,,"Strongly disagree,Disagree,Neutral,Agree,Strongly agree","2.0,1.0,0.0,1.0,2.0","dma_form_01_strongly_disagree,dma_form_01_disagree,dma_form_01_neutral,dma_form_01_agree,dma_form_01_strongly_agree",dma-do-things,",,,,"
+DMA_Form_01,categorical_question,dma_form,mnch_onboarding_dma_form,v1.0,en,mnch_onboarding_dma_results_high,5,mnch_onboarding_dma_results_medium,3,mnch_onboarding_dma_results_low,1,,Please choose an option that matches your answer,"Thanks for sharing. How about this one?
+
+👤 *I am confident that I know when I need to get medical care and when I can handle a health issue by myself.*",,,,,"Strongly disagree,Disagree,Neutral,Agree,Strongly agree","2.0,1.0,0.0,1.0,2.0","dma_form_02_strongly_disagree,dma_form_02_disagree,dma_form_02_neutral,dma_form_02_agree,dma_form_02_strongly_agree",dma-medical-care,",,,,"
+DMA_Form_01,categorical_question,dma_form,mnch_onboarding_dma_form,v1.0,en,mnch_onboarding_dma_results_high,5,mnch_onboarding_dma_results_medium,3,mnch_onboarding_dma_results_low,1,,Please choose an option that matches your answer,"Here’s a next one:
+
+👤*I am confident that I can tell a health worker the worries I have, even when they don't ask.*",,,,,"Strongly disagree,Disagree,Neutral,Agree,Strongly agree","2.0,1.0,0.0,1.0,2.0","dma_form_03_strongly_disagree,dma_form_03_disagree,dma_form_03_neutral,dma_form_03_agree,dma_form_03_strongly_agree",dma-sharing,",,,,"
+DMA_Form_01,categorical_question,dma_form,mnch_onboarding_dma_form,v1.0,en,mnch_onboarding_dma_results_high,5,mnch_onboarding_dma_results_medium,3,mnch_onboarding_dma_results_low,1,,Please choose an option that matches your answer,"Here’s a next one:
+
+👤 *I am confident that I can stick to any medical advice from a health worker.*",,,,,"Strongly disagree,Disagree,Neutral,Agree,Strongly agree","2.0,1.0,0.0,1.0,2.0","dma_form_04_strongly_disagree,dma_form_04_disagree,dma_form_04_neutral,dma_form_04_agree,dma_form_04_strongly_agree",dma-medical-advice,",,,,"
+DMA_Form_01,categorical_question,dma_form,mnch_onboarding_dma_form,v1.0,en,mnch_onboarding_dma_results_high,5,mnch_onboarding_dma_results_medium,3,mnch_onboarding_dma_results_low,1,,Please choose an option that matches your answer,"Last statement!
+
+👤 *I am confident that I can find solutions when I have to deal with a new health issue.*",,,,,"Strongly disagree,Disagree,Neutral,Agree,Strongly agree","2.0,1.0,0.0,1.0,2.0","dma_form_05_strongly_disagree,dma_form_05_disagree,dma_form_05_neutral,dma_form_05_agree,dma_form_05_strongly_agree",dma-find-solutions,",,,,"
+QA consolidate form,categorical_question,loc_assessment,mnch_onboarding_loc,,en,mnch_onboarding_loc_results_01,4,mnch_onboarding_loc_results_02,2,mnch_onboarding_loc_results_03,0,,Please choose an option that matches your answer,"Thanks, {@user.name}. Now it's time you tell me if you agree or disagree with some statements about you, your life, and your health.
+  
+ 
+
+  If there are any questions you don’t want to answer right now, reply `Skip`
+  
+ 
+
+  Here’s the first statement:
+  
+ 
+
+  👤 *I’m my own boss.*",,,,,"Agree,Not sure,Disagree","0.0,1.0,0.0","agree,not-sure,disagree",sem019,",,"
+QA consolidate form,age_question,loc_assessment,mnch_onboarding_loc,,en,mnch_onboarding_loc_results_01,4,mnch_onboarding_loc_results_02,2,mnch_onboarding_loc_results_03,0,,Please choose an option that matches your answer,Age?,,,,,,,,Semantic id-1,
+QA consolidate form,multiselect_question,loc_assessment,mnch_onboarding_loc,,en,mnch_onboarding_loc_results_01,4,mnch_onboarding_loc_results_02,2,mnch_onboarding_loc_results_03,0,,Please choose an option that matches your answer,Multi Question,,,,,"Answer 1,Answer 2","1.0,2.0","Semantic id-3,Semantic id-4",Semantic id-2,","
+QA consolidate form,freetext_question,loc_assessment,mnch_onboarding_loc,,en,mnch_onboarding_loc_results_01,4,mnch_onboarding_loc_results_02,2,mnch_onboarding_loc_results_03,0,,Please choose an option that matches your answer,This free text,,,,,,,,Semantic id-5,
+QA consolidate form,integer_question,loc_assessment,mnch_onboarding_loc,,en,mnch_onboarding_loc_results_01,4,mnch_onboarding_loc_results_02,2,mnch_onboarding_loc_results_03,0,,Please choose an option that matches your answer,Integer amount question,,,0,10,,,,Semantic id-6,
+QA consolidate form,year_of_birth_question,loc_assessment,mnch_onboarding_loc,,en,mnch_onboarding_loc_results_01,4,mnch_onboarding_loc_results_02,2,mnch_onboarding_loc_results_03,0,,Please choose an option that matches your answer,YOB?,,,,,,,,Semantic id-7,
+Test 2,freetext_question,test,test-2,,en,,,,,,0,,asdsad,dsdsadasd,,,,,,,,t2,
+Test 3,freetext_question,,test-3,,en,,,,,,0,,asdsad,dsdsadasd,,,,,,,,t3,
+Test 4,freetext_question,,test-4,,en,,,,,,0,,asdsad,dsdsadasd,,,,,,,,t4,
+Test 5,freetext_question,,test-5,,en,,,,,,0,,asdsad,dsdsadasd,,,,,,,,t5,
+Test 6,freetext_question,,test-6,,en,,,,,,0,,asdsad,dsdsadasd,,,,,,,,t6,
+Test 7,freetext_question,,test-7,,en,,,,,,0,,asdsad,dsdsadasd,,,,,,,,t7,
+Test 8,freetext_question,,test-8,,en,,,,,,0,,asdsad,dsdsadasd,,,,,,,,t8,
+Test 9,freetext_question,,test-9,,en,,,,,,0,,asdsad,dsdsadasd,,,,,,,,t89,
+Test 10,freetext_question,,test-10,,en,,,,,,0,,asdsad,dsdsadasd,,,,,,,,t10,
+Test 1,freetext_question,,test-1,,en,,,,,,0,,asdsad,dsdsadasd,,,,,,,,t1,
+Demo Assessment,integer_question,demo-assessment,demo-assessment,v1.5,en,assessment-result-high,5,assessment-result-moderate,2.5,assessment-result-low,0,,This is a generic error,{{name}} What's your blood pressure?,We need to know some things okay,You need to enter a value between {min} and {max},80,120,,,,sem018,
+Demo Assessment,age_question,demo-assessment,demo-assessment,v1.5,en,assessment-result-high,5,assessment-result-moderate,2.5,assessment-result-low,0,,This is a generic error,"{{name}}, what's your age please?",Do we need to know your age?,You need to enter a number for your age okay,,,,,,sem017,
+Demo Assessment,year_of_birth_question,demo-assessment,demo-assessment,v1.5,en,assessment-result-high,5,assessment-result-moderate,2.5,assessment-result-low,0,,This is a generic error,"{{name}}, What's your year of birth?",We need to know your year of birth,Your year of birth must be between {current_year} and {lower_bound}.,,,,,,sem016,
+Demo Assessment,multiselect_question,demo-assessment,demo-assessment,v1.5,en,assessment-result-high,5,assessment-result-moderate,2.5,assessment-result-low,0,,This is a generic error,"{{name}} when you think about last week, how did you feel? Select all that apply please.",We want to know how you feel so that we can give you the right information recommendations.,Please select either 'Yes' or 'No'.,,,"Happy,Frustrated,Thoughtful,Loved,Excited,Angry","0.0,1.0,1.0,0.0,0.0,2.0","feeling-happy,feeling-frustrated,feeling-thoughtful,feeling-loved,feeling-excited,feeling-angry",sem015,",,,,,"
+Demo Assessment,categorical_question,demo-assessment,demo-assessment,v1.5,en,assessment-result-high,5,assessment-result-moderate,2.5,assessment-result-low,0,,This is a generic error,{{name}} Would you like to skip this survey?,,,,,"Yes,No,Maybe,I don't know,Can you repeat the question?,Never","1.0,1.0,1.0,1.0,1.0,1.0","skip-yes,skip-no,skip-maybe,skip-i-dont-know,skip-repeat,skip-never",sem014,",,,,,"
+Demo Assessment,categorical_question,demo-assessment,demo-assessment,v1.5,en,assessment-result-high,5,assessment-result-moderate,2.5,assessment-result-low,0,,This is a generic error,{{name}} Would you like to skip this survey?,Please explain if you would skip this survey,Please answer the skip survey,,,"Yes,No,Maybe,I don't know,Can you repeat the question?,Never","1.0,1.0,1.0,1.0,1.0,1.0","skip-yes,skip-no,skip-maybe,skip-i-dont-know,skip-repeat,skip-never",sem013,",,,,,"
+Demo Assessment,freetext_question,demo-assessment,demo-assessment,v1.5,en,assessment-result-high,5,assessment-result-moderate,2.5,assessment-result-low,0,,This is a generic error,"{{name}}, Did you find the questions useful",We need to get your feedback,,,,,,,sem012,
+FreeText Text,freetext_question,freetext-test,freetext-text,v1.0,en,,,,,,0,,This is a generic error,{{name}} Can you please provide feedback on the service,We need to know this to improve,,,,,,,sem011,
+Placeholder_form_QA,categorical_question,QA,placeholder_form_qa,v2.0,en,mnch_onboarding_placeholder_form_results_01,3,mnch_onboarding_placeholder_form_results_02,1,mnch_onboarding_placeholder_form_results_03,0,,We need you to make the right choice,question 1,,,,,answer 1,1,q-a-1,sem010,""""""
+Year of Birth question,year_of_birth_question,yob-type-question,yob-type-question,v1.5,en,assessment-result-high,5,assessment-result-moderate,3,assessment-result-low,0,,This is a generic error,{{name}} In which year were you born? (_YYYY_),We need to know your year of birth in format YYYY,Your year of birth must be between {current_year} and {lower_bound}.,,,,,,sem009,
+Year of Birth question,year_of_birth_question,yob-type-question,yob-type-question,v1.5,en,assessment-result-high,5,assessment-result-moderate,3,assessment-result-low,0,,This is a generic error,{{name}} In which year were you born?,We need to know your year of birth in this format YYYY,Your year of birth must be between {current_year} and {lower_bound}.,,,,,,sem008,
+QA Assessment,multiselect_question,qa-form,qa-assessment,v1.03,en,assessment-result-high,5,assessment-result-moderate,3,assessment-result-low,0,,"Sorry, we didn't quite get that.",Multi select question 1,,,,,"answer 1,answer 2","1.0,2.0","answer 001,answer 002",Multi select question 001,","
+QA Assessment,categorical_question,qa-form,qa-assessment,v1.03,en,assessment-result-high,5,assessment-result-moderate,3,assessment-result-low,0,,"Sorry, we didn't quite get that.",How often do you check your blood pressure,We need to know your blood pressure for a proper risk assessment,Sorry we don't understand.,,,"Once a week,Twice a week,Thrice a week","1.0,3.0,4.5","test-1,test-2,test-3",cat 001,",,"
+QA Assessment,categorical_question,qa-form,qa-assessment,v1.03,en,assessment-result-high,5,assessment-result-moderate,3,assessment-result-low,0,,"Sorry, we didn't quite get that.",Have you been vaccinated against COVID-19?,We need to know if you have been vaccinated for a proper risk assessment,Sorry we didn't quite catch that.,,,"Yes,No","3.0,1.0","test-1,test-2",cov 001,","
+QA Assessment,age_question,qa-form,qa-assessment,v1.03,en,assessment-result-high,5,assessment-result-moderate,3,assessment-result-low,0,,"Sorry, we didn't quite get that.",How old are you?,Enter your age and be honest. Just kidding...,Are you serious???,,,,,,age 001,
+Placeholder_form_01,categorical_question,placeholder_form,mnch_onboarding_placeholder_form,v1.0,en,mnch_onboarding_placeholder_form_results_01,75,mnch_onboarding_placeholder_form_results_02,50,mnch_onboarding_placeholder_form_results_03,1,skip-result-page,Please choose an option that matches your answer,"Thanks, {{name}}. Now it's time you tell me if you agree or disagree with some statements about you, your life, and your health.
+
+If there are any questions you don’t want to answer right now, reply `Skip`
+
+Here’s the first statement:
+
+👤 *I’m my own boss.*",Please explain why you're a  boss?,Please try again,,,"Agree,Not sure,Disagree","0.0,1.0,0.0","boss-agree,boss-not-sure,boss-disagree",boss-question,",,"
+Placeholder_form_01,categorical_question,placeholder_form,mnch_onboarding_placeholder_form,v1.0,en,mnch_onboarding_placeholder_form_results_01,75,mnch_onboarding_placeholder_form_results_02,50,mnch_onboarding_placeholder_form_results_03,1,skip-result-page,Please choose an option that matches your answer,"Thanks for letting me know. 
+
+Here's the next one: 
+
+👤 *If I work hard, I will be successful.*",,,,,"Agree,Not sure,Disagree","0.0,1.0,0.0","success-agree,success-not-sure,success-disagree",work-question,",,"
+Placeholder_form_01,categorical_question,placeholder_form,mnch_onboarding_placeholder_form,v1.0,en,mnch_onboarding_placeholder_form_results_01,75,mnch_onboarding_placeholder_form_results_02,50,mnch_onboarding_placeholder_form_results_03,1,skip-result-page,Please choose an option that matches your answer,"How about this one?
+
+🌞 *I can get relevant health advice if and when I want it.*",,,,,"Agree,Not sure,Disagree","0.0,1.0,0.0","advice-agree,advice-not-sure,advice-disagree",advice-question,",,"
+Placeholder_form_01,categorical_question,placeholder_form,mnch_onboarding_placeholder_form,v1.0,en,mnch_onboarding_placeholder_form_results_01,75,mnch_onboarding_placeholder_form_results_02,50,mnch_onboarding_placeholder_form_results_03,1,skip-result-page,Please choose an option that matches your answer,"Thanks, and how about this statement:
+
+🌞 *What I do mainly depends on other people.*",,,,,"Agree,Not sure,Disagree","0.0,1.0,0.0","depend-agree,depend-not-sure,depend-disagree",dependence-question,",,"
+Placeholder_form_01,categorical_question,placeholder_form,mnch_onboarding_placeholder_form,v1.0,en,mnch_onboarding_placeholder_form_results_01,75,mnch_onboarding_placeholder_form_results_02,50,mnch_onboarding_placeholder_form_results_03,1,skip-result-page,Please choose an option that matches your answer,"Last one...
+
+🌞 *I have someone to talk to when I need it.*",,,,,"Yes,No,Skip this question","0.0,1.0,0.0","talk-yes,talk-no,talk-skip",talk-question,",,"
+Explainer Test,categorical_question,explainer-test,explainer-test,,en,assessment-result-high,5,assessment-result-moderate,3,assessment-result-low,0,,This is a generic error,What's your blood pressure,We need to know this to give you a proper risk assessment,Please reply with a number that matches your answer,,,"Below 120,120-130,Above 130","2.0,4.0,5.0","below-120,120-130,above-130",sem 001,",,"
+Explainer Test,age_question,explainer-test,explainer-test,,en,assessment-result-high,5,assessment-result-moderate,3,assessment-result-low,0,,This is a generic error,How old are you,It's important that we know your age for a proper assessment,Please reply with a valid age,,,,,,sem 002,
+Explainer Test,categorical_question,explainer-test,explainer-test,,en,assessment-result-high,5,assessment-result-moderate,3,assessment-result-low,0,,This is a generic error,What's your body temperature,,Please select an option that matches your answer,,,"Below 37C,Above 37C","1.0,5.0","below-37,above-37",sem 003,","

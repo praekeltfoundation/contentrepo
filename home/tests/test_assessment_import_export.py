@@ -598,7 +598,7 @@ class TestImportExport:
         return an intuitive error message
         """
         with pytest.raises(ImportAssessmentException) as e:
-            csv_impexp.import_file("bad_form_score.csv")
+            csv_impexp.import_file("bad_high_score.csv")
         assert (
             e.value.message == "Invalid number format for high inflection. "
             "The score value allows only numbers"
@@ -617,6 +617,19 @@ class TestImportExport:
             "The score value allows only numbers"
         )
         assert e.value.row_num == 2
+
+    def test_invalid_score_field(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV with invalid data in the score field value should
+        return an intuitive error message
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("bad_score_field.csv")
+        assert (
+            e.value.message == "Invalid number format for score field. "
+            "The score value allows only numbers"
+        )
+        assert e.value.row_num == 3
 
 
 @pytest.mark.usefixtures("result_content_pages")
