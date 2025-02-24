@@ -502,6 +502,8 @@ def check_inflection_type(
                 "The score value allows only numbers",
                 row_num,
             )
+
+
 def check_score_field(score: Any, row_num: int) -> None:
     if score:
         try:
@@ -512,7 +514,6 @@ def check_score_field(score: Any, row_num: int) -> None:
                 "The score value allows only numbers",
                 row_num,
             )
-
 
 
 def deserialise_list(value: str) -> list[str]:
