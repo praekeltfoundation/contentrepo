@@ -1,0 +1,32 @@
+title,question_type,tags,slug,version,locale,high_result_page,high_inflection,medium_result_page,medium_inflection,low_result_page,skip_threshold,skip_high_result_page,generic_error,question,explainer,error,min,max,answers,scores,answer_semantic_ids,question_semantic_id,answer_responses
+Test assessment pt,categorical_question,"pt,test",test-assessment-pt,,pt,,,,,,0,,Generic error,Q1,,,,,A1,0,a1,q1,""""""
+Breastfeeding Quiz,categorical_question,"mnch,breastfeeding_quiz",breastfeeding-quiz,1,en,breastfeeding-quiz-champion,75,breastfeeding-quiz-good,25,breastfeeding-quiz-learner,100,,"Sorry, I didn't understand that. Please click one of the buttons.","*Question 1*
+🟩🟩⬜⬜⬜⬜⬜⬜
+
+What’s the best food for a baby from birth to 6 months?
+
+• Formula
+• Formula + breast milk
+• Breast milk only",,,,,"Formula,Formula+breast milk,Breast milk only","test,0.0,1.0","formula,formula-and-breast milk,breast-milk-only",baby-food@,"""🤔
+
+Actually, it's best to give your baby *only breast milk* from birth to 6 months if you can.
+
+Breast milk has everything your baby needs, and your body will make as much milk as she needs.
+
+If you are struggling to breastfeed, speak to a health worker about what to try.
+
+Let's keep going ..."",""🤔
+
+Actually, it's best to give your baby *only breast milk* from birth to 6 months if you can.
+
+Breast milk has everything your baby needs, and your body will make as much milk as she needs.
+
+If you are struggling to breastfeed, speak to a health worker about what to try.
+
+Let's keep going ..."",""*Yes!* ✅
+
+It's best to give your baby only breast milk from birth to 6 months if you can.
+
+Breast milk has everything your baby needs, and your body will make as much milk as she needs.
+
+Let's keep going ..."""
