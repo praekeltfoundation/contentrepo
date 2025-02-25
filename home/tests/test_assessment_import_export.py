@@ -668,6 +668,19 @@ class TestImportExport:
         )
         assert e.value.row_num == 3
 
+    def test_trigger_deserialise_list_error(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV with invalid data that fails the deserialise_list fucntion
+        should return a valid error message
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("trigger_deserialise_list_error.csv")
+        assert (
+            e.value.message == "Invalid number format for score field. "
+            "The score value allows only a list of numbers separated by commas."
+        )
+        assert e.value.row_num == 2
+
     def test_multiple_missing_headers(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV with multiple missing headers should return an error
