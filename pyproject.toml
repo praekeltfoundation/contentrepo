@@ -163,5 +163,3 @@ ignore = [
     "I001",  # We don't care about import sorting in generated code.
     "UP",  # We don't care about new syntax in generated code.
 ]
-[tool.coverage.run]
-relative_files = true
