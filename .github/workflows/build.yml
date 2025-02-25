@@ -57,3 +57,8 @@ jobs:
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
         poetry run pytest -vv
+    - name: Coverage comment
+      id: coverage_comment
+      uses: py-cov-action/python-coverage-comment-action@v3
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
