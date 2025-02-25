@@ -158,7 +158,7 @@ class OrderedContentSetImporter:
                         f"Content page not found for slug '{page.page_slug}' in locale '{locale}'",
                         index,
                     )
-            if not page.page_slug and (
+            if (not page.page_slug or page.page_slug == "-") and (
                 page.time or page.unit or page.before_or_after or page.contact_field
             ):
                 raise ImportException(

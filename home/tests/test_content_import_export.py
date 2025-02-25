@@ -1442,6 +1442,24 @@ class TestImportExport:
         page = pages[0][1]
         assert page["contentpage"].slug == "first_time_user"
 
+    def test_import_simple_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file with ordered content sets without any contentpage should not break
+        """
+
+        content = csv_impexp.read_bytes("simple_ordered_set.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        en = Locale.objects.get(language_code="en")
+
+        ordered_set = OrderedContentSet.objects.filter(
+            slug="slug", locale=en
+        ).first()
+
+        assert ordered_set.name == "Ordered"
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 0
+
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV file with ordered content sets should not break
