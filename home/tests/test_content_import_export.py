@@ -1452,9 +1452,7 @@ class TestImportExport:
 
         en = Locale.objects.get(language_code="en")
 
-        ordered_set = OrderedContentSet.objects.filter(
-            slug="slug", locale=en
-        ).first()
+        ordered_set = OrderedContentSet.objects.filter(slug="slug", locale=en).first()
 
         assert ordered_set.name == "Ordered"
         pages = unwagtail(ordered_set.pages)
