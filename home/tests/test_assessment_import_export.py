@@ -629,29 +629,55 @@ class TestImportExport:
         )
         assert e.value.row_num == 2
 
-    def test_invalid_high_score(self, csv_impexp: ImportExport) -> None:
+    def test_invalid_high_inflection(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV with invalid data in the high inflection value should
         return an intuitive error message
         """
         with pytest.raises(ImportAssessmentException) as e:
-            csv_impexp.import_file("bad_form_score.csv")
+            csv_impexp.import_file("bad_high_inflection.csv")
         assert (
             e.value.message == "Invalid number format for high inflection. "
-            "The score value allows only numbers"
+            "The inflection value allows only numbers"
         )
         assert e.value.row_num == 2
 
-    def test_invalid_medium_score(self, csv_impexp: ImportExport) -> None:
+    def test_invalid_medium_inflection(self, csv_impexp: ImportExport) -> None:
         """
         Importing a CSV with invalid data in the medium inflection value should
         return an intuitive error message
         """
         with pytest.raises(ImportAssessmentException) as e:
-            csv_impexp.import_file("bad_medium_score.csv")
+            csv_impexp.import_file("bad_medium_inflection.csv")
         assert (
             e.value.message == "Invalid number format for medium inflection. "
-            "The score value allows only numbers"
+            "The inflection value allows only numbers"
+        )
+        assert e.value.row_num == 2
+
+    def test_invalid_score_field(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV with invalid data in the score field value should
+        return an intuitive error message
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("bad_score_field.csv")
+        assert (
+            e.value.message == "Invalid number format for score field. "
+            "The score value allows only a list of numbers separated by commas."
+        )
+        assert e.value.row_num == 3
+
+    def test_trigger_deserialise_list_error(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV with invalid data that fails the deserialise_list fucntion
+        should return a valid error message
+        """
+        with pytest.raises(ImportAssessmentException) as e:
+            csv_impexp.import_file("trigger_deserialise_list_error.csv")
+        assert (
+            e.value.message == "Invalid number format for score field. "
+            "The score value allows only a list of numbers separated by commas."
         )
         assert e.value.row_num == 2
 

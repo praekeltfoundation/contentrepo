@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CMS Forms Flexible imports and Better Error Handling
 - Contentpage warnings for media_link field
 - Test coverage report
+- Changed Assessments to CMS Forms
+- Validation for high_inflection, medium_inflection and score field on CMS Forms
 ### Removed
 - Locale field on exports
 - Menu app
