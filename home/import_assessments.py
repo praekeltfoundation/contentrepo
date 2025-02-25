@@ -505,9 +505,9 @@ def check_inflection_type(
 
 
 def check_score_field(score: Any, row_num: int) -> None:
-    if score:
-        score = deserialise_list(score)
+    if score: 
         try:
+            score = deserialise_list(score)
             [float(s) for s in score]
         except ValueError:
             raise ImportAssessmentException(
