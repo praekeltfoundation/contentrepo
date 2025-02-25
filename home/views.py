@@ -236,7 +236,7 @@ class AssessmentUploadThread(UploadThread):
             self.result_queue.put(
                 (
                     messages.ERROR,
-                    f"Assessment import failed on row {e.row_num}: {e.message}",
+                    f"CMS Forms import failed on row {e.row_num}: {e.message}",
                 )
             )
         except ImportException as e:
@@ -244,16 +244,16 @@ class AssessmentUploadThread(UploadThread):
                 (
                     messages.ERROR,
                     [
-                        f"Assessment import failed on row {e.row_num}: {msg}"
+                        f"CMS Forms import failed on row {e.row_num}: {msg}"
                         for msg in e.message
                     ],
                 )
             )
         except Exception:
-            self.result_queue.put((messages.ERROR, "Assessment import failed"))
-            logger.exception("Assessment import failed")
+            self.result_queue.put((messages.ERROR, "CMS Forms import failed"))
+            logger.exception("CMS Forms import failed")
         else:
-            self.result_queue.put((messages.SUCCESS, "Assessment import successful"))
+            self.result_queue.put((messages.SUCCESS, "CMS Forms import successful"))
         # Wait until the user has fetched the result message to close the thread
         self.result_queue.join()
 

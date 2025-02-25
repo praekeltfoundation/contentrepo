@@ -410,7 +410,9 @@ class AssessmentRow:
         high_inflection = row.get("high_inflection")
         medium_inflection = row.get("medium_inflection")
         check_punctuation(high_inflection, medium_inflection, row_num)
-        check_score_type(high_inflection, medium_inflection, row_num)
+        check_inflection_type(high_inflection, medium_inflection, row_num)
+        score = row.get("scores")
+        check_score_field(score, row_num)
 
         row = {
             key: value for key, value in row.items() if value and key in cls.fields()
@@ -479,7 +481,7 @@ def check_punctuation(
             )
 
 
-def check_score_type(
+def check_inflection_type(
     high_inflection: Any | None, medium_inflection: Any | None, row_num: int
 ) -> None:
     if high_inflection is not None and high_inflection != "":
@@ -488,7 +490,7 @@ def check_score_type(
         except ValueError:
             raise ImportAssessmentException(
                 "Invalid number format for high inflection. "
-                "The score value allows only numbers",
+                "The inflection value allows only numbers",
                 row_num,
             )
     if medium_inflection is not None and medium_inflection != "":
@@ -497,7 +499,20 @@ def check_score_type(
         except ValueError:
             raise ImportAssessmentException(
                 "Invalid number format for medium inflection. "
-                "The score value allows only numbers",
+                "The inflection value allows only numbers",
+                row_num,
+            )
+
+
+def check_score_field(score: Any, row_num: int) -> None:
+    if score:
+        try:
+            score = deserialise_list(score)
+            [float(s) for s in score]
+        except ValueError:
+            raise ImportAssessmentException(
+                "Invalid number format for score field. "
+                "The score value allows only a list of numbers separated by commas.",
                 row_num,
             )
 
