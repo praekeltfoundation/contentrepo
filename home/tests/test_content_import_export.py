@@ -1668,6 +1668,17 @@ class TestImportExport:
         src, dst = csv_impexp.csvs2dicts(new_export_content, content)
         assert dst == src
 
+    def test_button_max_length(self, csv_impexp: ImportExport) -> None:
+        """
+        Import a page that doesn't have language code set
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("button_max_length.csv")
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Validation error: message - A WhatsApp message with interactive items cannot be longer than 1024 characters, your message is 1075 characters long"
+        ]
+
     def test_hidden_characters(self, csv_impexp: ImportExport) -> None:
         """
         Import a page that has hidden characters in the whatsapp body
