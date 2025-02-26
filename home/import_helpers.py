@@ -281,6 +281,7 @@ def read_xlsx(file_content: bytes) -> Iterator[dict[str, Any]]:
     header = remove_trailing_nones(header)
 
     for row in worksheet.iter_rows(min_row=2, values_only=True):
+        row = list(row)
         row = remove_trailing_nones(row)
         r = {}
         if len(row) > len(header):
