@@ -115,16 +115,18 @@ class AssessmentImporter:
         row_iterator = helper_parse_file(self.file_content, self.file_type)
         rows = [row for _, row in row_iterator]
 
-        original_headers = rows[0].keys()
-        headers_mapping = convert_headers_to_snake_case(
-            list(original_headers), row_num=1
-        )
+        original_headers = list(rows[0].keys())
+        headers_mapping = convert_headers_to_snake_case(original_headers, row_num=1)
 
         snake_case_headers = list(headers_mapping.values())
         self.validate_headers(snake_case_headers, row_num=1)
-        transformed_rows = [
-            {headers_mapping[key]: value for key, value in row.items()} for row in rows
-        ]
+
+        transformed_rows = []
+        for _i, row in enumerate(rows, start=1):
+            transformed_row = {
+                headers_mapping.get(key, key): value for key, value in row.items()
+            }
+            transformed_rows.append(transformed_row)
 
         return [
             AssessmentRow.from_flat(row, i + 2)

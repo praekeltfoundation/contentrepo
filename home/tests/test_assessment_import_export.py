@@ -526,6 +526,18 @@ class TestImportExport:
         content_pages = Assessment.objects.all()
         assert len(content_pages) > 0
 
+    def test_import_assessment_empty_values_xlsx(
+        self, xlsx_impexp: ImportExport
+    ) -> None:
+        """
+        Importing an XLSX  Assessments file where the corresponding cell is empty
+        should not break.
+        """
+        xlsx_impexp.import_content_file("assessment_results.xlsx", purge=False)
+        xlsx_impexp.import_file("assessment_empty_values.xlsx", purge=False)
+        content_pages = Assessment.objects.all()
+        assert len(content_pages) > 0
+
     def test_invalid_high_inflecton_format(self, xlsx_impexp: ImportExport) -> None:
         """
         Importing an xlsx with a comma in high inflecton value
