@@ -1348,6 +1348,23 @@ class TestImportExport:
             "Content page not found for slug 'first_time_user' in locale 'English'"
         ]
 
+    def test_import_ordered_content_sets_missing_slug(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing CSV for ordered content sets that has a page slug, but no
+        Unit/Time/EDD/Before_or_After/Contact field, should result in a
+        error message
+        """
+        with pytest.raises(ImportException) as e:
+            content = csv_impexp.read_bytes("bad_ordered_set.csv")
+            csv_impexp.import_ordered_sets(content)
+
+        assert e.value.row_num == 2
+        assert e.value.message == [
+            "You are attempting to import an ordered content set with page details, but no page slug."
+        ]
+
     def test_import_ordered_content_sets_no_locale_error(
         self, csv_impexp: ImportExport
     ) -> None:
@@ -1424,6 +1441,22 @@ class TestImportExport:
 
         page = pages[0][1]
         assert page["contentpage"].slug == "first_time_user"
+
+    def test_import_simple_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file with ordered content sets without any contentpage should not break
+        """
+
+        content = csv_impexp.read_bytes("simple_ordered_set.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        en = Locale.objects.get(language_code="en")
+
+        ordered_set = OrderedContentSet.objects.filter(slug="slug", locale=en).first()
+
+        assert ordered_set.name == "Ordered"
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 0
 
     def test_import_ordered_sets_csv(self, csv_impexp: ImportExport) -> None:
         """
