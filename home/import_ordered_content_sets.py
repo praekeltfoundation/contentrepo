@@ -158,6 +158,13 @@ class OrderedContentSetImporter:
                         f"Content page not found for slug '{page.page_slug}' in locale '{locale}'",
                         index,
                     )
+            if (not page.page_slug or page.page_slug == "-") and (
+                page.time or page.unit or page.before_or_after or page.contact_field
+            ):
+                raise ImportException(
+                    "You are attempting to import an ordered content set with page details, but no page slug.",
+                    index,
+                )
 
     # FIXME: collect errors across all fields
     def _validate_ordered_set_using_form(
