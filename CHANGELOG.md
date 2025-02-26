@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contentpage warnings for media_link field
 - Changed Assessments to CMS Forms
 - Validation for high_inflection, medium_inflection and score field on CMS Forms
+- Validation for interactive messages
 ### Removed
 - Locale field on exports
 - Menu app
