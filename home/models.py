@@ -284,7 +284,7 @@ class GoToFormListItem(blocks.StructBlock):
 
 
 class WhatsappBlock(blocks.StructBlock):
-    MEDIA_CAPTION_MAX_LENGTH = 1024
+    WHATSAPP_MESSAGE_MAX_LENGTH = 1024
     image = ImageChooserBlock(required=False)
     document = DocumentChooserBlock(icon="document", required=False)
     media = MediaBlock(icon="media", required=False)
@@ -360,13 +360,20 @@ class WhatsappBlock(blocks.StructBlock):
                     f"The number of example values provided ({num_example_values}) "
                     f"does not match the number of variables used in the template ({num_vars_in_msg})",
                 )
-
         if (result["image"] or result["document"] or result["media"]) and len(
             result["message"]
-        ) > self.MEDIA_CAPTION_MAX_LENGTH:
+        ) > self.WHATSAPP_MESSAGE_MAX_LENGTH:
             errors["message"] = ValidationError(
                 "A WhatsApp message with media cannot be longer than "
-                f"{self.MEDIA_CAPTION_MAX_LENGTH} characters, your message is "
+                f"{self.WHATSAPP_MESSAGE_MAX_LENGTH} characters, your message is "
+                f"{len(result['message'])} characters long"
+            )
+        if (result["buttons"] or result["list_items"]) and len(
+            result["message"]
+        ) > self.WHATSAPP_MESSAGE_MAX_LENGTH:
+            errors["message"] = ValidationError(
+                "A WhatsApp message with interactive items cannot be longer than "
+                f"{self.WHATSAPP_MESSAGE_MAX_LENGTH} characters, your message is "
                 f"{len(result['message'])} characters long"
             )
 
