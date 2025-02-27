@@ -281,7 +281,7 @@ def read_xlsx(file_content: bytes) -> Iterator[dict[str, Any]]:
     header = remove_trailing_nones(header)
 
     for row in worksheet.iter_rows(min_row=2, values_only=True):
-        row = remove_trailing_nones(row)  # type: ignore
+        row = remove_trailing_nones(row)  # type: ignore # Mypy cannot guarantee row is a list; rows may be tuples so we bypass.
         r = {}
         if len(row) > len(header):
             raise ImportException(
