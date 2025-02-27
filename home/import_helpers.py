@@ -262,24 +262,33 @@ def read_csv(file_content: bytes) -> Iterator[dict[str, Any]]:
     return csv.DictReader(StringIO(file_content.decode()))
 
 
+def remove_trailing_nones(row: list[Any]) -> list[Any]:
+    while row and row[-1] is None:
+        row = row[:-1]
+    return row
+
+
+def clean_excel_cell(cell_value: str | float | datetime | None) -> str:
+    return "" if cell_value is None else str(cell_value).replace("_x000D", "").strip()
+
+
 def read_xlsx(file_content: bytes) -> Iterator[dict[str, Any]]:
     workbook = load_workbook(BytesIO(file_content), read_only=True, data_only=True)
     worksheet = get_active_sheet(workbook)
 
-    def clean_excel_cell(cell_value: str | float | datetime | None) -> str:
-        return str(cell_value).replace("_x000D", "").strip()
-
     first_row = next(worksheet.iter_rows(max_row=1, values_only=True))
     header = [clean_excel_cell(cell) if cell else None for cell in first_row]
+    header = remove_trailing_nones(header)
 
     for row in worksheet.iter_rows(min_row=2, values_only=True):
+        row = remove_trailing_nones(row)  # type: ignore # Mypy cannot guarantee row is a list; rows may be tuples so we bypass.
         r = {}
         if len(row) > len(header):
             raise ImportException(
                 "Invalid format. Please check that all row values have headers."
             )
-        for name, cell in zip(header, row):  # noqa: B905
-            if name and cell:
+        for name, cell in zip(header, row, strict=False):
+            if name:
                 r[name] = clean_excel_cell(cell)
         if r:
             yield r

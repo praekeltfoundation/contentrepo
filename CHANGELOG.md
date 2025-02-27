@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed Assessments to CMS Forms
 - Validation for high_inflection, medium_inflection and score field on CMS Forms
 - Validation for interactive messages
+- Fix cms-forms xls import
 ### Removed
 - Locale field on exports
 - Menu app
