@@ -120,4 +120,7 @@ GitHub.sublime-settings
 !.vscode/extensions.json
 .history
 
+# PyCharm #
+.idea/
+
 .DS_Store
