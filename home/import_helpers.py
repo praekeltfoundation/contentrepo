@@ -276,13 +276,12 @@ def read_xlsx(file_content: bytes) -> Iterator[dict[str, Any]]:
     workbook = load_workbook(BytesIO(file_content), read_only=True, data_only=True)
     worksheet = get_active_sheet(workbook)
 
-    first_row = list(next(worksheet.iter_rows(max_row=1, values_only=True)))
+    first_row = next(worksheet.iter_rows(max_row=1, values_only=True))
     header = [clean_excel_cell(cell) if cell else None for cell in first_row]
     header = remove_trailing_nones(header)
 
     for row in worksheet.iter_rows(min_row=2, values_only=True):
-        row = list(row)
-        row = remove_trailing_nones(row)
+        row = remove_trailing_nones(row)  # type: ignore
         r = {}
         if len(row) > len(header):
             raise ImportException(
