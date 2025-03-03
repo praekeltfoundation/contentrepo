@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Locale field on exports
 - Menu app
 - Search app
+- import_json_content and update_content management commands
 -->
 
 ## v1.4.0 - 2024-12-18
