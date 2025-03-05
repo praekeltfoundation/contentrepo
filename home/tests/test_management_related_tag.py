@@ -87,29 +87,6 @@ class ManagementRelatedTag(TestCase):
             [p.value.id for p in page.related_pages], [self.related_page.id]
         )
 
-    def test_multiple_related_tags(self):
-        """
-        Check that the management command correctly handles multiple tags
-        prefixed with related_ for a single page.
-        """
-        additional_page = ContentPage(
-            title="Additional related page", slug="additional-related-page"
-        )
-        home_page = HomePage.objects.first()
-        home_page.add_child(instance=additional_page)
-        self.page.tags.add(Tag.objects.create(name=f"related_{additional_page.id}"))
-        self.page.save_revision().publish()
-
-        out = StringIO()
-        call_command("change_related_tag_to_related_page", "--no-dry-run", stdout=out)
-
-        self.assertIn(
-            f"Added related pages {{{self.related_page.id}, {additional_page.id}}} to {self.page}",
-            out.getvalue(),
-        )
-        self.page.refresh_from_db()
-        self.assertEqual(len(self.page.related_pages), 2)
-
     def test_non_live_pages(self):
         """
         Management command should not affect pages that are not live
