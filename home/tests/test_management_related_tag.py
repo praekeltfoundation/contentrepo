@@ -29,8 +29,11 @@ class ManagementRelatedTag(TestCase):
 
         call_command("change_related_tag_to_related_page", stdout=out)
 
+        expected_ids = sorted([self.related_page.id])
+        expected_output = f"Added related pages {expected_ids} to {self.page}"
+
         self.assertIn(
-            f"Added related pages {{{self.related_page.id}}} to {self.page}",
+            expected_output,
             out.getvalue(),
         )
         self.page.refresh_from_db()
@@ -39,15 +42,18 @@ class ManagementRelatedTag(TestCase):
 
     def test_no_dry_run(self):
         """
-        With the --no-dry-run flag, the changes should be comitted to the database.
+        With the --no-dry-run flag, the changes should be committed to the database.
         Related pages should be added, but no tags should be removed
         """
         out = StringIO()
 
         call_command("change_related_tag_to_related_page", "--no-dry-run", stdout=out)
 
+        expected_ids = sorted([self.related_page.id])
+        expected_output = f"Added related pages {expected_ids} to {self.page}"
+
         self.assertIn(
-            f"Added related pages {{{self.related_page.id}}} to {self.page}",
+            expected_output,
             out.getvalue(),
         )
         self.page.refresh_from_db()
@@ -86,6 +92,32 @@ class ManagementRelatedTag(TestCase):
         self.assertEqual(
             [p.value.id for p in page.related_pages], [self.related_page.id]
         )
+
+    def test_multiple_related_tags(self):
+        """
+        Check that the management command correctly handles multiple tags
+        prefixed with related_ for a single page.
+        """
+        additional_page = ContentPage(
+            title="Additional related page", slug="additional-related-page"
+        )
+        home_page = HomePage.objects.first()
+        home_page.add_child(instance=additional_page)
+        self.page.tags.add(Tag.objects.create(name=f"related_{additional_page.id}"))
+        self.page.save_revision().publish()
+
+        out = StringIO()
+        call_command("change_related_tag_to_related_page", "--no-dry-run", stdout=out)
+
+        expected_ids = sorted([self.related_page.id, additional_page.id])
+        expected_output = f"Added related pages {expected_ids} to {self.page}"
+
+        self.assertIn(
+            expected_output,
+            out.getvalue(),
+        )
+        self.page.refresh_from_db()
+        self.assertEqual(len(self.page.related_pages), 2)
 
     def test_non_live_pages(self):
         """
