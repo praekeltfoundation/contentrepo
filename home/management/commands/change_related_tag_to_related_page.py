@@ -49,7 +49,7 @@ class Command(BaseCommand):
                     [{"type": "related_page", "value": id} for id in related_pages]
                 )
                 page.save_revision().publish()
-            self.stdout.write(f"Added related pages {related_pages} to {page}")
+            self.stdout.write(f"Added related pages {sorted(related_pages)} to {page}")
 
         if not options["no_dry_run"]:
             self.stdout.write(

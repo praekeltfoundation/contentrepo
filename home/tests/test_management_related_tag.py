@@ -29,8 +29,11 @@ class ManagementRelatedTag(TestCase):
 
         call_command("change_related_tag_to_related_page", stdout=out)
 
+        expected_ids = sorted([self.related_page.id])
+        expected_output = f"Added related pages {expected_ids} to {self.page}"
+
         self.assertIn(
-            f"Added related pages {{{self.related_page.id}}} to {self.page}",
+            expected_output,
             out.getvalue(),
         )
         self.page.refresh_from_db()
@@ -39,15 +42,18 @@ class ManagementRelatedTag(TestCase):
 
     def test_no_dry_run(self):
         """
-        With the --no-dry-run flag, the changes should be comitted to the database.
+        With the --no-dry-run flag, the changes should be committed to the database.
         Related pages should be added, but no tags should be removed
         """
         out = StringIO()
 
         call_command("change_related_tag_to_related_page", "--no-dry-run", stdout=out)
 
+        expected_ids = sorted([self.related_page.id])
+        expected_output = f"Added related pages {expected_ids} to {self.page}"
+
         self.assertIn(
-            f"Added related pages {{{self.related_page.id}}} to {self.page}",
+            expected_output,
             out.getvalue(),
         )
         self.page.refresh_from_db()
@@ -103,8 +109,11 @@ class ManagementRelatedTag(TestCase):
         out = StringIO()
         call_command("change_related_tag_to_related_page", "--no-dry-run", stdout=out)
 
+        expected_ids = sorted([self.related_page.id, additional_page.id])
+        expected_output = f"Added related pages {expected_ids} to {self.page}"
+
         self.assertIn(
-            f"Added related pages {{{self.related_page.id}, {additional_page.id}}} to {self.page}",
+            expected_output,
             out.getvalue(),
         )
         self.page.refresh_from_db()

@@ -108,6 +108,7 @@ exclude = [  # Regexes.
     '^home/tests/test_(unique_slug_hook|views|wagtail_hooks)\.py',
     '^home/tests/test_(whatsapp_template_name_migration)\.py',
     '^home/tests/test_(forms)\.py',
+    '^home/tests/test_(management|management_import_json_content_turn)\.py',
 ]
 files = "."
 follow_imports = "skip"
