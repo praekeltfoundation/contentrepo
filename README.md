@@ -21,7 +21,7 @@
 | home/export\_whatsapp\_templates.py                                                          |       96 |        2 |     98% |   51, 174 |
 | home/forms.py                                                                                |       13 |        0 |    100% |           |
 | home/import\_assessments.py                                                                  |      264 |       10 |     96% |49, 71, 143-144, 290, 292-296 |
-| home/import\_content\_pages.py                                                               |      547 |       10 |     98% |137-138, 339-340, 890-897 |
+| home/import\_content\_pages.py                                                               |      547 |       10 |     98% |140-141, 342-343, 893-900 |
 | home/import\_helpers.py                                                                      |      153 |        4 |     97% |142, 144, 164, 177 |
 | home/import\_ordered\_content\_sets.py                                                       |       91 |        1 |     99% |       231 |
 | home/import\_whatsapp\_templates.py                                                          |      117 |        4 |     97% |38, 59, 141-142 |
