@@ -1782,7 +1782,10 @@ class TestImportExport:
         importer = csv_impexp.import_content(content)
 
         assert len(importer.import_warnings) == 2
-        assert importer.import_warnings[0].message == "http://test.com/image.png"
+        assert (
+            importer.import_warnings[0].message
+            == "Media import not supported, http://test.com/image.png not added to main-menu-first-time-user"
+        )
         assert importer.import_warnings[0].row_num == 3
 
 
