@@ -1,6 +1,7 @@
 import json
 from io import StringIO
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import responses
 from django.core.management import call_command
@@ -57,12 +58,13 @@ class ImportJsonContentTestCase(TestCase):
             status=200,
         )
 
-        sample_json_path = Path("sample.json")
-        with sample_json_path.open("w") as f:
-            json.dump(self.sample_json, f)
-
         out = StringIO()
-        call_command("import_json_content_turn", str(sample_json_path), stdout=out)
+
+        with NamedTemporaryFile() as tempfile:
+            tempfile_path = Path(tempfile.name)
+            with tempfile_path.open("w") as f:
+                json.dump(self.sample_json, f)
+            call_command("import_json_content_turn", tempfile.name, stdout=out)
 
         self.assertIn("Successfully imported Content Pages", out.getvalue())
 
@@ -90,12 +92,14 @@ class ImportJsonContentTestCase(TestCase):
             ]
         }
 
-        sample_json_path = Path("sample.json")
-        with sample_json_path.open("w") as f:
-            json.dump(sample_json, f)
-
         out = StringIO()
-        call_command("import_json_content_turn", str(sample_json_path), stdout=out)
+
+        with NamedTemporaryFile() as tempfile:
+            tempfile_path = Path(tempfile.name)
+            with tempfile_path.open("w") as f:
+                json.dump(sample_json, f)
+            call_command("import_json_content_turn", tempfile.name, stdout=out)
+
         self.assertIn("Successfully imported Content Pages", out.getvalue())
 
         content_page = ContentPage.objects.first()
