@@ -14,6 +14,7 @@ from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from taggit.models import ItemBase, TagBase, TaggedItemBase
+from typing import Any
 from wagtail import blocks
 from wagtail.admin.panels import (
     FieldPanel,
@@ -1668,8 +1669,15 @@ class WhatsAppTemplate(
     get_category_display.admin_order_field = "category"
     get_category_display.short_description = "Category"
 
-    quick_replies = ClusterTaggableManager(
-        through="home.TemplateQuickReplyContent", blank=True
+    buttons = StreamField(
+        [
+            ("next_message", NextMessageButton()),
+            ("go_to_page", GoToPageButton()),
+            ("go_to_form", GoToFormButton()),
+        ],
+        use_json_field=True,
+        null=True,
+        max_num=3,
     )
 
     locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
@@ -1734,14 +1742,14 @@ class WhatsAppTemplate(
 
     def save_revision(
         self,
-        user=None,
-        submitted_for_moderation=False,
-        approved_go_live_at=None,
-        changed=True,
-        log_action=False,
-        previous_revision=None,
-        clean=True,
-    ):
+        user: Any | None = None,
+        submitted_for_moderation: bool = False,
+        approved_go_live_at: Any | None = None,
+        changed: bool = True,
+        log_action: bool = False,
+        previous_revision: Any | None = None,
+        clean: bool = True,
+    ) -> Any:
 
         previous_revision = self.get_latest_revision()
         revision = super().save_revision(

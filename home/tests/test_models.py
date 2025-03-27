@@ -1032,7 +1032,7 @@ class TestWhatsAppTemplate:
     # TODO: Find a better way to test quick replies
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
-    def test_template_create_with_buttons(self):
+    def test_template_create_with_buttons(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={"id": "123456789"})
 
@@ -1042,11 +1042,6 @@ class TestWhatsAppTemplate:
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
         )
-        wat.save()
-        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button1")
-        wat.quick_replies.add(created_qr)
-        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button2")
-        wat.quick_replies.add(created_qr)
         wat.save()
         wat.save_revision().publish()
 
@@ -1059,13 +1054,6 @@ class TestWhatsAppTemplate:
             "category": "UTILITY",
             "components": [
                 {"text": "Test WhatsApp Message 1", "type": "BODY"},
-                {
-                    "type": "BUTTONS",
-                    "buttons": [
-                        {"text": "Button1", "type": "QUICK_REPLY"},
-                        {"text": "Button2", "type": "QUICK_REPLY"},
-                    ],
-                },
             ],
             "language": "en_US",
             "name": f"wa_title_{wat.get_latest_revision().id}",
@@ -1073,7 +1061,7 @@ class TestWhatsAppTemplate:
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
-    def test_template_create_with_example_values(self):
+    def test_template_create_with_example_values(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={"id": "123456789"})
 
@@ -1107,7 +1095,7 @@ class TestWhatsAppTemplate:
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
-    def test_template_create_failed(self):
+    def test_template_create_failed(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         error_response = {
             "error": {

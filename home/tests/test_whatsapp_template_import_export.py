@@ -266,7 +266,7 @@ class TestImportExportRoundtrip:
         Importing a simple CSV file with one whatsapp template and
         one question and export it
 
-        (This uses whatsapp_template_simple.csv.)
+        (This uses whatsapp-template-simple.csv)
 
         """
 

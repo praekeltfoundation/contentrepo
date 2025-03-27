@@ -243,7 +243,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
                 FieldPanel("category"),
                 FieldPanel("image"),
                 FieldPanel("message"),
-                FieldPanel("quick_replies", heading="Quick Replies"),
+                FieldPanel("buttons"),
                 FieldPanel("locale"),
                 FieldPanel("example_values"),
                 FieldPanel("submission_name", read_only=True),
