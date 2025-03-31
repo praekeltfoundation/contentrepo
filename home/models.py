@@ -848,17 +848,17 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         self.views.create(**page_view)
 
     @property
-    def quick_reply_buttons(self):
+    def quick_reply_buttons(self) -> list[str]:
         return self.quick_reply_items.all().values_list("tag__name", flat=True)
 
     @property
-    def whatsapp_template_buttons(self):
+    def whatsapp_template_buttons(self) -> list[str]:
         # If Buttons and quick replies are present then Buttons are used
         first_msg = self.whatsapp_body.raw_data[0]["value"]
         if "buttons" in first_msg and first_msg["buttons"]:
             buttons = [b["value"]["title"] for b in first_msg["buttons"]]
             return buttons
-        return sorted(self.quick_reply_buttons)
+        return []
 
     @property
     def whatsapp_template_fields(self):
@@ -1782,7 +1782,7 @@ class WhatsAppTemplate(
                 message=self.message,
                 category=self.category,
                 locale=self.locale,
-                quick_replies=sorted(self.quick_reply_buttons),
+                quick_replies=[b.title for b in self.buttons],
                 image_obj=self.image,
                 example_values=[v["value"] for v in self.example_values.raw_data],
             )

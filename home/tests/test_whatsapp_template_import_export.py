@@ -308,19 +308,27 @@ class TestImportExportRoundtrip:
             name="wa_title",
             message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
             category="UTILITY",
+            buttons=[],
             locale=Locale.objects.get(language_code="en"),
             example_values=[
                 ("example_values", "Ev1"),
                 ("example_values", "Ev2"),
             ],
             submission_name="testname",
-            submission_status="NOT YET SUBMITTED",
+            submission_status="NOT_SUBMITTED_YET",
             submission_result="test result",
         )
 
         orig = impexp.get_whatsapp_template_json()
         impexp.export_reimport()
         imported = impexp.get_whatsapp_template_json()
+        # remove the revision and unpublished changes keys
+        for item in orig:
+            del item["fields"]["latest_revision"]
+            del item["fields"]["has_unpublished_changes"]
+        for item in imported:
+            del item["fields"]["latest_revision"]
+            del item["fields"]["has_unpublished_changes"]
         assert imported == orig
 
 

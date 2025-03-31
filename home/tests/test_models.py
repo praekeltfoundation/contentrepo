@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from requests import HTTPError
+from typing import Any
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
 from wagtail.models import (
@@ -113,8 +114,8 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_create_with_quick_reply_buttons_on_save(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         page_with_button = PageBuilder.build_cp(
@@ -124,11 +125,14 @@ class ContentPageTests(TestCase):
             bodies=[
                 WABody(
                     "Page2",
-                    [WABlk("Page2 WA Body")],
+                    [WABlk(
+                        message="Page2 WA Body",
+                        buttons=[PageBtn("Button 2", page=main_menu), PageBtn("Menu", page=main_menu)]
+                        )
+                    ],
                 )
             ],
             whatsapp_template_name="page2-template",
-            quick_replies=["Menu", "Button 2"],
         )
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
@@ -238,12 +242,12 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_updated_on_change(self, mock_create_whatsapp_template):
+    def test_template_updated_on_change(self, mock_create_whatsapp_template: Any) -> None:
         """
         If the content is changed, the template should be resubmitted with an updated
         template name
         """
-        page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        page = create_page(is_whatsapp_template=True, has_buttons=True)
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             f"wa_title_{page.get_latest_revision().pk}",
@@ -276,11 +280,11 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_not_submitted_on_no_change(self, mock_create_whatsapp_template):
+    def test_template_not_submitted_on_no_change(self, mock_create_whatsapp_template: Any) -> None:
         """
         If the content is not changed, the template should not be resubmitted
         """
-        page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        page = create_page(is_whatsapp_template=True, has_buttons=True)
         page.get_latest_revision().publish()
         page.refresh_from_db()
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
@@ -304,13 +308,13 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_submitted_when_is_whatsapp_template_is_set(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the is_whatsapp_template was not enabled on the content, but is changed,
         then it should submit, even if the content hasn't changed.
         """
-        page = create_page(is_whatsapp_template=False, has_quick_replies=True)
+        page = create_page(is_whatsapp_template=False, has_buttons=True)
         page.get_latest_revision().publish()
         page.refresh_from_db()
         mock_create_whatsapp_template.assert_not_called()
