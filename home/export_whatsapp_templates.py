@@ -50,7 +50,14 @@ class WhatsAppTemplateExporter:
             image_link = ""
             if item.image:
                 image_link = item.image.file.url
-            buttons = [{"type": v["type"],"title": v["value"]["title"],"slug": v["slug"] if "slug" in v else ""} for v in item.buttons.raw_data]
+            buttons = [
+                {
+                    "type": v["type"],
+                    "title": v["value"]["title"],
+                    "slug": v.get("slug", ""),
+                }
+                for v in item.buttons.raw_data
+            ]
             yield ExportRow(
                 name=item.name,
                 category=item.category,

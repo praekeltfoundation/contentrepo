@@ -18,9 +18,9 @@ from wagtail.rich_text import RichText  # type: ignore
 from home.import_helpers import (
     ImportException,
     ImportWarning,
+    JSON_loader,
     parse_file,
     validate_using_form,
-    JSON_loader
 )
 
 from .models import (
@@ -874,6 +874,7 @@ def deserialise_list(value: str) -> list[str]:
 
     items = list(csv.reader([value]))[0]
     return [item.strip() for item in items]
+
 
 def to_int_or_none(val: str | None) -> int | None:
     if val is None:

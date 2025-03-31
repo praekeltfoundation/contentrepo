@@ -9,15 +9,11 @@ from uuid import uuid4
 
 from openpyxl import load_workbook
 from wagtail.coreutils import get_content_languages  # type: ignore
-from wagtail.models import Locale, Page  # type: ignore
+from wagtail.models import Locale  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 
+from home.import_helpers import ImportException, JSON_loader
 from home.models import Assessment, WhatsAppTemplate  # type: ignore
-
-from home.import_helpers import (
-    ImportException,
-    JSON_loader
-)
 
 PageId = tuple[str, Locale]
 
@@ -112,7 +108,7 @@ class WhatsAppTemplateImporter:
             row.buttons, template.create_whatsapp_template_name(), locale, "button"
         )
         template.buttons = buttons
-        
+
         template.save()
         return
 
@@ -180,8 +176,8 @@ class WhatsAppTemplateImporter:
                         go_to_page = self.go_to_page_buttons
                     else:
                         raise ImportException(
-                        f"{item_type} with invalid type '{item['type']}'"
-                    )
+                            f"{item_type} with invalid type '{item['type']}'"
+                        )
                     page_gtp = go_to_page[(template_name, locale)]
                     page_gtp.append(item)
                 elif item["type"] == "go_to_form":

@@ -37,13 +37,16 @@ def create_page(
             ("media", MediaBlock()),
             ("document", DocumentChooserBlock()),
             ("variation_messages", blocks.ListBlock(VariationBlock())),
-            ("buttons", blocks.StreamBlock(
-                [
-                    ("next_message", NextMessageButton()),
-                    ("go_to_page", GoToPageButton()),
-                    ("go_to_form", GoToFormButton()),
-                ]
-            ))
+            (
+                "buttons",
+                blocks.StreamBlock(
+                    [
+                        ("next_message", NextMessageButton()),
+                        ("go_to_page", GoToPageButton()),
+                        ("go_to_form", GoToFormButton()),
+                    ]
+                ),
+            ),
         ]
     )
     message = "Test WhatsApp Message 1"
@@ -65,7 +68,14 @@ def create_page(
             "message": message,
             "image": None,
             "list_items": [],
-            "buttons": [{"type": "next_message", "value": {"title": "button 1"}}, {"type": "next_message", "value": {"title": "button 2"}}] if has_buttons else [],
+            "buttons": (
+                [
+                    {"type": "next_message", "value": {"title": "button 1"}},
+                    {"type": "next_message", "value": {"title": "button 2"}},
+                ]
+                if has_buttons
+                else []
+            ),
             "media": None,
             "document": None,
             "example_values": example_values,

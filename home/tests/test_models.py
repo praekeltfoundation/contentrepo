@@ -1,5 +1,6 @@
 import json
 from io import StringIO
+from typing import Any
 from unittest import mock
 
 import pytest
@@ -10,7 +11,6 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from requests import HTTPError
-from typing import Any
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
 from wagtail.models import (
@@ -31,7 +31,6 @@ from home.models import (
     OrderedContentSet,
     PageView,
     SMSBlock,
-    TemplateContentQuickReply,
     USSDBlock,
     WhatsappBlock,
     WhatsAppTemplate,
@@ -125,9 +124,13 @@ class ContentPageTests(TestCase):
             bodies=[
                 WABody(
                     "Page2",
-                    [WABlk(
-                        message="Page2 WA Body",
-                        buttons=[PageBtn("Button 2", page=main_menu), PageBtn("Menu", page=main_menu)]
+                    [
+                        WABlk(
+                            message="Page2 WA Body",
+                            buttons=[
+                                PageBtn("Button 2", page=main_menu),
+                                PageBtn("Menu", page=main_menu),
+                            ],
                         )
                     ],
                 )
@@ -242,7 +245,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_updated_on_change(self, mock_create_whatsapp_template: Any) -> None:
+    def test_template_updated_on_change(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the content is changed, the template should be resubmitted with an updated
         template name
@@ -280,7 +285,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_not_submitted_on_no_change(self, mock_create_whatsapp_template: Any) -> None:
+    def test_template_not_submitted_on_no_change(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the content is not changed, the template should not be resubmitted
         """
