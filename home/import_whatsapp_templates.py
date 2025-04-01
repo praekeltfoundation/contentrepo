@@ -149,7 +149,7 @@ class WhatsAppTemplateImporter:
             template = WhatsAppTemplate.objects.get(name=template_name, locale=locale)
             for button in buttons:
                 title = button["title"]
-                try:    
+                try:
                     related_page = ContentPage.objects.get(
                         slug=button["slug"], locale=locale
                     )
