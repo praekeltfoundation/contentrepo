@@ -1049,6 +1049,9 @@ class TestWhatsAppTemplate:
 
         wat = WhatsAppTemplate(
             name="wa_title",
+            buttons=[
+                ("next_message", {"title": "Test Button"}),
+            ],
             message="Test WhatsApp Message 1",
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
@@ -1065,6 +1068,12 @@ class TestWhatsAppTemplate:
             "category": "UTILITY",
             "components": [
                 {"text": "Test WhatsApp Message 1", "type": "BODY"},
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"text": "Test Button", "type": "QUICK_REPLY"},
+                    ],
+                },
             ],
             "language": "en_US",
             "name": f"wa_title_{wat.get_latest_revision().id}",

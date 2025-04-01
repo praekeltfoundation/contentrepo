@@ -1782,7 +1782,7 @@ class WhatsAppTemplate(
                 message=self.message,
                 category=self.category,
                 locale=self.locale,
-                quick_replies=[b.title for b in self.buttons],
+                quick_replies=[b["value"]["title"] for b in self.buttons.raw_data],
                 image_obj=self.image,
                 example_values=[v["value"] for v in self.example_values.raw_data],
             )
