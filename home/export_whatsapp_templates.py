@@ -54,7 +54,7 @@ class WhatsAppTemplateExporter:
                 {
                     "type": v["type"],
                     "title": v["value"]["title"],
-                    "slug": v.get("slug", ""),
+                    "slug": v.get("slug") or "",
                 }
                 for v in item.buttons.raw_data
             ]

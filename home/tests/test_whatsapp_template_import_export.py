@@ -16,6 +16,7 @@ from wagtail.models import Locale  # type: ignore
 from wagtail.snippets.models import register_snippet  # type: ignore
 
 from home.import_whatsapp_templates import ImportWhatsAppTemplateException
+from home.import_helpers import ImportException
 from home.models import (
     WhatsAppTemplate,
 )
@@ -361,3 +362,29 @@ class TestImportExport:
 
         assert e.value.row_num == 2
         assert e.value.message == "Language code not found: fakecode"
+
+    def test_go_to_page_button_missing_page(self, csv_impexp: ImportExport) -> None:
+        """
+        Go to page buttons in the import file link to other pages using the slug. But
+        if no page with that slug exists, then we should give the user an error message
+        that tells them where and how to fix it.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp-template-missing-gotopage.csv")
+        assert e.value.message == [
+            "No pages found with slug 'missing' and locale 'English' for go_to_page "
+            "button 'Missing' on template 'Test Template Missing'"
+        ]
+
+    def test_go_to_form_button_missing_form(self, csv_impexp: ImportExport) -> None:
+        """
+        Go to form buttons in the import file link to other forms using the slug. But
+        if no form with that slug exists, then we should give the user an error message
+        that tells them where and how to fix it.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp-template-missing-gotoform.csv")
+        assert e.value.message == [
+            "No form found with slug 'missing' and locale 'English' for go_to_form "
+            "button 'Missing'"
+        ]

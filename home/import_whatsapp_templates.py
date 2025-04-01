@@ -13,7 +13,7 @@ from wagtail.models import Locale  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 
 from home.import_helpers import ImportException, JSON_loader
-from home.models import Assessment, WhatsAppTemplate  # type: ignore
+from home.models import Assessment, ContentPage, WhatsAppTemplate  # type: ignore
 
 PageId = tuple[str, Locale]
 
@@ -78,6 +78,7 @@ class WhatsAppTemplateImporter:
         self.set_progress("Deleted existing WhatsApp Template", 10)
 
         self.process_rows(rows)
+        self.add_go_to_page_items(self.go_to_page_buttons, "buttons")
         # self.save_pages_assessment()
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
@@ -102,10 +103,10 @@ class WhatsAppTemplateImporter:
             submission_name=row.submission_name,
         )
         template.save()
-        template.save_revision()
+        #template.save_revision()
 
         buttons = self._create_interactive_items(
-            row.buttons, template.create_whatsapp_template_name(), locale, "button"
+            row.buttons, template.name, locale, "button"
         )
         template.buttons = buttons
 
@@ -141,6 +142,29 @@ class WhatsAppTemplateImporter:
         rows = [ContentRow.from_flat(row, i) for i, row in enumerate(reader, start=2)]
         # page_id_rows = group_rows_by_page_id(rows)
         return rows
+
+    def add_go_to_page_items(
+        self, items_dict: dict[PageId, list[dict[str, Any]]], item_type: str
+    ) -> None:
+        for (template_name, locale), buttons in items_dict.items():
+            template = WhatsAppTemplate.objects.get(name=template_name, locale=locale)
+            for button in buttons:
+                title = button["title"]
+                try:    
+                    related_page = ContentPage.objects.get(
+                        slug=button["slug"], locale=locale
+                    )
+                except ContentPage.DoesNotExist:
+                    raise ImportException(
+                        f"No pages found with slug '{button['slug']}' and locale "
+                        f"'{locale}' for go_to_page {item_type[:-1]} '{title}' on "
+                        f"template '{template_name}'",
+                    )
+                template.value[item_type].insert(
+                    button["index"],
+                    ("go_to_page", {"page": related_page, "title": title}),
+                )
+            template.save()
 
     def set_progress(self, message: str, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
