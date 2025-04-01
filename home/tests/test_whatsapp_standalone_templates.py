@@ -9,18 +9,17 @@ from responses.matchers import multipart_matcher
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
-from home.whatsapp import create_standalone_whatsapp_template, create_whatsapp_template
+from home.whatsapp import create_standalone_whatsapp_template
 
 
 @pytest.mark.django_db
-class TestWhatsApp:
+class TestWhatsAppStandaloneTemplates:
     @responses.activate
-    def test_create_whatsapp_template(self, settings: SettingsWrapper) -> None:
+    def test_create_standalone_whatsapp_template(self) -> None:
         """
         Creating a WhatsApp template results in a single HTTP call to the
         WhatsApp API containing the template data.
         """
-        settings.WHATSAPP_CREATE_TEMPLATES = True
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -28,11 +27,11 @@ class TestWhatsApp:
             "components": [{"type": "BODY", "text": "Test Body"}],
         }
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={"id": "123456789"})
+        responses.add(responses.POST, url, json={})
 
         locale = Locale.objects.get(language_code="en")
-        create_whatsapp_template(
-            name="test-template", body="Test Body", category="UTILITY", locale=locale
+        create_standalone_whatsapp_template(
+            "test-template", "Test Body", "UTILITY", locale=locale
         )
 
         request = responses.calls[0].request
@@ -41,14 +40,36 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_example_values(
-        self, settings: SettingsWrapper
-    ) -> None:
+    def test_standalone_template_name(self) -> None:
+        """
+        Creating a WhatsApp template results in a single HTTP call to the
+        WhatsApp API containing the template data.
+        """
+        data = {
+            "category": "UTILITY",
+            "name": "Test template 1",
+            "language": "en_US",
+            "components": [{"type": "BODY", "text": "Test Body"}],
+        }
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={"id": "123456789"})
+
+        locale = Locale.objects.get(language_code="en")
+        result_json = create_standalone_whatsapp_template(
+            "Test template 1", "Test Body", "UTILITY", locale=locale
+        )
+
+        assert result_json == {"id": "123456789"}
+        request = responses.calls[0].request
+        assert request.headers["Authorization"] == "Bearer fake-access-token"
+        assert json.loads(request.body) == data
+
+    @responses.activate
+    def test_create_standalone_whatsapp_template_with_example_values(self) -> None:
         """
         When we create a WhatsApp template with example values, the examples
         are included in the HTTP request's template body component.
         """
-        settings.WHATSAPP_CREATE_TEMPLATES = True
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -72,7 +93,7 @@ class TestWhatsApp:
         responses.add(responses.POST, url, json={"id": "123456789"})
 
         locale = Locale.objects.get(language_code="en")
-        create_whatsapp_template(
+        create_standalone_whatsapp_template(
             "test-template",
             "Hi {{1}}. You are testing as a {{2}}",
             "UTILITY",
@@ -85,14 +106,11 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_buttons(
-        self, settings: SettingsWrapper
-    ) -> None:
+    def test_create_standalone_whatsapp_template_with_buttons(self) -> None:
         """
         When we create a WhatsApp template with quick-reply buttons, the
         template data includes a buttons component that contains the buttons.
         """
-        settings.WHATSAPP_CREATE_TEMPLATES = True
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -109,10 +127,10 @@ class TestWhatsApp:
             ],
         }
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={"id": "123456789"})
+        responses.add(responses.POST, url, json={})
 
         locale = Locale.objects.get(language_code="en")
-        create_whatsapp_template(
+        create_standalone_whatsapp_template(
             "test-template",
             "Test Body",
             "UTILITY",
@@ -126,7 +144,7 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_image(
+    def test_create_standalone_whatsapp_template_with_image(
         self, tmp_path: Path, settings: SettingsWrapper
     ) -> None:
         """
@@ -138,7 +156,6 @@ class TestWhatsApp:
          * A POST containing the template data, with the image handle in a
            header/image component.
         """
-        settings.WHATSAPP_CREATE_TEMPLATES = True
         settings.MEDIA_ROOT = tmp_path
         img_name = "test.jpeg"
         img_path = Path("home/tests/test_static") / img_name
@@ -175,11 +192,11 @@ class TestWhatsApp:
         responses.add(responses.POST, template_url, json={})
 
         locale = Locale.objects.get(language_code="en")
-        create_whatsapp_template(
+        create_standalone_whatsapp_template(
             "test-template",
             "Test Body",
             "UTILITY",
-            image_id=saved_image.id,
+            image_obj=saved_image,
             locale=locale,
         )
 
@@ -198,12 +215,12 @@ class TestWhatsApp:
             "name": "test-template",
             "language": "en_US",
             "components": [
-                {"type": "BODY", "text": "Test Body"},
                 {
                     "type": "HEADER",
                     "format": "IMAGE",
                     "example": {"header_handle": [mock_image_handle]},
                 },
+                {"type": "BODY", "text": "Test Body"},
             ],
         }
 
@@ -211,19 +228,20 @@ class TestWhatsApp:
         assert json.loads(ct_req.body) == mock_create_template_data
 
     @responses.activate
-    def test_create_whatsapp_template_with_language(self) -> None:
+    def test_create_standalone_whatsapp_template_with_language(self) -> None:
         """
         When we create a WhatsApp template, the language is converted to the
         appropriate WhatsApp language code.
         """
-
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
         # The default English locale gives us a language of "en_US".
         # FIXME: Should this be "en" instead?
         en = Locale.objects.get(language_code="en")
-        create_whatsapp_template("test-template", "Test Body", "UTILITY", locale=en)
+        create_standalone_whatsapp_template(
+            "test-template", "Test Body", "UTILITY", locale=en
+        )
         assert json.loads(responses.calls[-1].request.body) == {
             "category": "UTILITY",
             "name": "test-template",
@@ -234,7 +252,9 @@ class TestWhatsApp:
         # WhatsApp doesn't support Portuguese without a country code, so we
         # pick "pt_PT" rather than "pt_BR".
         pt, _created = Locale.objects.get_or_create(language_code="pt")
-        create_whatsapp_template("test-pt", "Corpo de Teste", "UTILITY", locale=pt)
+        create_standalone_whatsapp_template(
+            "test-pt", "Corpo de Teste", "UTILITY", locale=pt
+        )
         assert json.loads(responses.calls[-1].request.body) == {
             "category": "UTILITY",
             "name": "test-pt",
@@ -245,7 +265,9 @@ class TestWhatsApp:
         # If we specifically want Brazillian Portuguese, we can use a locale
         # specifically for that.
         ptbr, _created = Locale.objects.get_or_create(language_code="pt_BR")
-        create_whatsapp_template("test-pt-br", "Corpo de Teste", "UTILITY", locale=ptbr)
+        create_standalone_whatsapp_template(
+            "test-pt-br", "Corpo de Teste", "UTILITY", locale=ptbr
+        )
         assert json.loads(responses.calls[-1].request.body) == {
             "category": "UTILITY",
             "name": "test-pt-br",
