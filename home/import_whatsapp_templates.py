@@ -103,7 +103,6 @@ class WhatsAppTemplateImporter:
             submission_name=row.submission_name,
         )
         template.save()
-        #template.save_revision()
 
         buttons = self._create_interactive_items(
             row.buttons, template.name, locale, "button"
