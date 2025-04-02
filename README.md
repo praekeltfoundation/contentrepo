@@ -18,13 +18,13 @@
 | home/content\_import\_export.py                                                              |       38 |        8 |     79% |41-45, 49-53 |
 | home/export\_assessments.py                                                                  |      108 |        1 |     99% |       227 |
 | home/export\_content\_pages.py                                                               |      228 |        2 |     99% |  160, 194 |
-| home/export\_whatsapp\_templates.py                                                          |       96 |        2 |     98% |   51, 174 |
+| home/export\_whatsapp\_templates.py                                                          |       98 |        2 |     98% |   52, 183 |
 | home/forms.py                                                                                |       13 |        0 |    100% |           |
 | home/import\_assessments.py                                                                  |      264 |       10 |     96% |49, 71, 143-144, 290, 292-296 |
-| home/import\_content\_pages.py                                                               |      547 |       10 |     98% |140-141, 342-343, 893-900 |
-| home/import\_helpers.py                                                                      |      153 |        4 |     97% |142, 144, 164, 177 |
+| home/import\_content\_pages.py                                                               |      537 |       10 |     98% |139-140, 341-342, 880-887 |
+| home/import\_helpers.py                                                                      |      163 |        4 |     98% |144, 146, 166, 179 |
 | home/import\_ordered\_content\_sets.py                                                       |       91 |        1 |     99% |       231 |
-| home/import\_whatsapp\_templates.py                                                          |      117 |        4 |     97% |38, 59, 141-142 |
+| home/import\_whatsapp\_templates.py                                                          |      158 |       12 |     92% |42, 64, 162-166, 175-176, 201, 213-226, 230 |
 | home/management/commands/broken\_links\_clean\_up.py                                         |       31 |        0 |    100% |           |
 | home/management/commands/change\_related\_tag\_to\_related\_page.py                          |       26 |        0 |    100% |           |
 | home/management/commands/import\_json\_content\_turn.py                                      |       57 |        5 |     91% |     88-92 |
@@ -125,9 +125,10 @@
 | home/migrations/0089\_alter\_assessment\_options.py                                          |        4 |        0 |    100% |           |
 | home/migrations/0090\_alter\_orderedcontentset\_pages.py                                     |        6 |        0 |    100% |           |
 | home/migrations/0091\_alter\_assessment\_slug.py                                             |        4 |        0 |    100% |           |
+| home/migrations/0092\_remove\_whatsapptemplate\_quick\_replies\_and\_more.py                 |        8 |        0 |    100% |           |
 | home/migrations/\_\_init\_\_.py                                                              |        0 |        0 |    100% |           |
 | home/mixins.py                                                                               |      101 |       15 |     85% |47-49, 53, 57, 98-100, 104, 108, 149-151, 155, 159 |
-| home/models.py                                                                               |      708 |       38 |     95% |182, 353, 383, 417, 462, 773, 939-947, 995, 999, 1003, 1016-1021, 1025-1030, 1048, 1211, 1218, 1225, 1232, 1237, 1246-1248, 1251, 1333, 1653, 1666, 1729, 1762-1763, 1768, 1805, 1822, 1827 |
+| home/models.py                                                                               |      709 |       39 |     94% |183, 354, 384, 418, 463, 774, 852, 940-948, 996, 1000, 1004, 1017-1022, 1026-1031, 1049, 1212, 1219, 1226, 1233, 1238, 1247-1249, 1252, 1334, 1654, 1667, 1737, 1770-1771, 1776, 1813, 1830, 1835 |
 | home/panels.py                                                                               |       13 |        2 |     85% |     15-16 |
 | home/serializers.py                                                                          |      292 |       73 |     75% |21, 24-25, 53, 56, 69, 72, 177, 180-181, 325, 328-329, 333-334, 340-358, 452, 455-456, 459-489, 507-508, 510-511, 513-514, 516-517, 519-520 |
 | home/views.py                                                                                |      343 |      150 |     56% |63, 131, 169-173, 178-180, 183-221, 226-228, 231-258, 263-264, 267-288, 305-324, 331-344, 358-381, 388-398, 413-433, 440-452, 459-461, 464-483, 500-520, 527-539, 594, 598-603 |
@@ -135,7 +136,7 @@
 | home/whatsapp.py                                                                             |      160 |        0 |    100% |           |
 | home/whatsapp\_template\_import\_export.py                                                   |       24 |        3 |     88% |     48-50 |
 | home/xlsx\_helpers.py                                                                        |        5 |        0 |    100% |           |
-|                                                                                    **TOTAL** | **4612** |  **390** | **92%** |           |
+|                                                                                    **TOTAL** | **4664** |  **399** | **91%** |           |
 
 
 ## Setup coverage badge
