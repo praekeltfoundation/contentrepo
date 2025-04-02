@@ -9,7 +9,7 @@ from responses.matchers import multipart_matcher
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
-from home.whatsapp import create_standalone_whatsapp_template, create_whatsapp_template
+from home.whatsapp import create_whatsapp_template
 
 
 @pytest.mark.django_db

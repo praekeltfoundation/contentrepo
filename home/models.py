@@ -1499,7 +1499,6 @@ class AssessmentTag(TaggedItemBase):
 
 
 class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel):
-
     class Meta:
         verbose_name = "CMS Form"
         verbose_name_plural = "CMS Forms"
@@ -1614,7 +1613,6 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
 
 
 class TemplateContentQuickReply(TagBase):
-
     class Meta:
         verbose_name = "quick reply"
         verbose_name_plural = "quick replies"
@@ -1742,7 +1740,6 @@ class WhatsAppTemplate(
         previous_revision=None,
         clean=True,
     ):
-
         previous_revision = self.get_latest_revision()
         revision = super().save_revision(
             user,
@@ -1796,6 +1793,22 @@ class WhatsAppTemplate(
         revision.save(update_fields=["content"])
         return revision
 
+    def check_matching_braces(self, message=message):
+        result = ""
+        print("Starting to check")
+        # current_char = ""
+        # previous_char = ""
+        count_opening_braces = 0
+
+        for i in range(len(message)):
+            if message[i : i + 2] == "{{":
+                print("Found opening braces here ")
+                count_opening_braces += 1
+                next_char = i + 3
+
+        print(f"We found {count_opening_braces} sets of opening brackets")
+        return result
+
     def clean(self):
         result = super().clean()
         errors = {}
@@ -1807,21 +1820,21 @@ class WhatsAppTemplate(
             )
 
         message = self.message
-
-        # TODO: Explain what this does, or find a cleaner implementation
-
-        # Checks for mismatches in the number of opening and closing brackets.  First from right to left, then from left to right
-        # TODO: Currently "{1}" is allowed to pass and throws an error.  Add a check for this, or redo this section in a cleaner way
-        right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
-        left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
-        mismatches = right_mismatch + left_mismatch
+        print(f"Message is {message}")
 
         example_values = self.example_values.raw_data
+        count_example_values = 0
         for ev in example_values:
+            count_example_values += 1
+
+            print(f"EV = {ev}")
             if "," in ev["value"]:
                 errors["example_values"] = ValidationError(
                     "Example values cannot contain commas"
                 )
+
+        print(f"Found {count_example_values} example values")
+        mismatches = self.check_matching_braces(message)
 
         if mismatches:
             errors.setdefault("message", []).append(

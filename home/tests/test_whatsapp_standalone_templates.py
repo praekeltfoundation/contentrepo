@@ -9,11 +9,13 @@ from responses.matchers import multipart_matcher
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
+from home.models import WhatsAppTemplate
 from home.whatsapp import create_standalone_whatsapp_template
 
 
 @pytest.mark.django_db
-class TestWhatsAppStandaloneTemplates:
+class TestStandaloneWhatsAppTemplates:
+    # Standalone template tests below
     @responses.activate
     def test_create_standalone_whatsapp_template(self) -> None:
         """
@@ -104,6 +106,25 @@ class TestWhatsAppStandaloneTemplates:
         request = responses.calls[0].request
         assert request.headers["Authorization"] == "Bearer fake-access-token"
         assert json.loads(request.body) == data
+
+    @responses.activate
+    def test_create_whatsapp_template_with_variable_placeholders(
+        self, settings: SettingsWrapper
+    ) -> None:
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1 {{1}} and a broken var here {{2}",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[
+                ("example_values", "Ev1"),
+                ("example_values", "Ev2"),
+            ],
+        )
+        wat.save()
+        wat.save_revision()
+
+        assert "This" == "Not that"
 
     @responses.activate
     def test_create_standalone_whatsapp_template_with_buttons(self) -> None:
