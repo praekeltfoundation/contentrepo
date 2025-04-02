@@ -1,8 +1,10 @@
 # The error messages are processed and parsed into a list of messages we return to the user
 import csv
+import json
 from collections.abc import Iterator
 from datetime import datetime
 from io import BytesIO, StringIO
+from json.decoder import JSONDecodeError
 from typing import Any
 
 from django.core.exceptions import ValidationError  # type: ignore
@@ -292,3 +294,15 @@ def read_xlsx(file_content: bytes) -> Iterator[dict[str, Any]]:
                 r[name] = clean_excel_cell(cell)
         if r:
             yield r
+
+
+def JSON_loader(row_num: int, value: str) -> list[dict[str, Any]]:
+    if not value:
+        return []
+
+    try:
+        button = json.loads(value)
+    except JSONDecodeError:
+        raise ImportException(f"Bad JSON button, you have: {value}", row_num)
+
+    return button

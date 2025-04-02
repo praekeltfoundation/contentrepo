@@ -13,19 +13,23 @@ from home.models import (  # isort:skip
     HomePage,
     MediaBlock,
     VariationBlock,
+    NextMessageButton,
+    GoToPageButton,
+    GoToFormButton,
 )
 
 
 def create_page(
-    title="Test Title",
-    parent=None,
-    tags=(),
-    is_whatsapp_template=False,
-    add_example_values=False,
-    add_variation=False,
-    has_quick_replies=False,
-    whatsapp_template_name="",
-):
+    title: str = "Test Title",
+    parent: ContentPage | None = None,
+    tags: tuple[str, ...] = (),
+    is_whatsapp_template: bool = False,
+    add_example_values: bool = False,
+    add_variation: bool = False,
+    has_quick_replies: bool = False,
+    whatsapp_template_name: str = "",
+    has_buttons: bool = False,
+) -> ContentPage:
     block = blocks.StructBlock(
         [
             ("message", blocks.TextBlock()),
@@ -33,6 +37,16 @@ def create_page(
             ("media", MediaBlock()),
             ("document", DocumentChooserBlock()),
             ("variation_messages", blocks.ListBlock(VariationBlock())),
+            (
+                "buttons",
+                blocks.StreamBlock(
+                    [
+                        ("next_message", NextMessageButton()),
+                        ("go_to_page", GoToPageButton()),
+                        ("go_to_form", GoToFormButton()),
+                    ]
+                ),
+            ),
         ]
     )
     message = "Test WhatsApp Message 1"
@@ -54,6 +68,14 @@ def create_page(
             "message": message,
             "image": None,
             "list_items": [],
+            "buttons": (
+                [
+                    {"type": "next_message", "value": {"title": "button 1"}},
+                    {"type": "next_message", "value": {"title": "button 2"}},
+                ]
+                if has_buttons
+                else []
+            ),
             "media": None,
             "document": None,
             "example_values": example_values,

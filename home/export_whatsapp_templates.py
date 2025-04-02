@@ -1,6 +1,7 @@
 import copy
 import csv
 import io
+import json
 from collections.abc import Iterable
 from dataclasses import asdict, astuple, dataclass, fields
 from math import ceil
@@ -17,7 +18,7 @@ from wagtail.query import PageQuerySet  # type: ignore
 class ExportRow:
     name: str = ""
     category: str = ""
-    quick_replies: str = ""
+    buttons: str = ""
     locale: str = ""
     image: str = ""
     message: str = ""
@@ -49,10 +50,18 @@ class WhatsAppTemplateExporter:
             image_link = ""
             if item.image:
                 image_link = item.image.file.url
+            buttons = [
+                {
+                    "type": v["type"],
+                    "title": v["value"]["title"],
+                    "slug": v.get("slug") or "",
+                }
+                for v in item.buttons.raw_data
+            ]
             yield ExportRow(
                 name=item.name,
                 category=item.category,
-                quick_replies=serialize_list(item.quick_replies.all()),
+                buttons=json.dumps(buttons),
                 locale=str(item.locale.language_code),
                 image=str(image_link),
                 message=str(item.message),
@@ -115,7 +124,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
     column_widths_in_pts = {
         "name": 110,
         "category": 110,
-        "quick_replies": 110,
+        "buttons": 110,
         "locale": 118,
         "image": 110,
         "message": 110,

@@ -1,5 +1,6 @@
 import json
 from io import StringIO
+from typing import Any
 from unittest import mock
 
 import pytest
@@ -30,7 +31,6 @@ from home.models import (
     OrderedContentSet,
     PageView,
     SMSBlock,
-    TemplateContentQuickReply,
     USSDBlock,
     WhatsappBlock,
     WhatsAppTemplate,
@@ -113,8 +113,8 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_create_with_quick_reply_buttons_on_save(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         page_with_button = PageBuilder.build_cp(
@@ -124,11 +124,18 @@ class ContentPageTests(TestCase):
             bodies=[
                 WABody(
                     "Page2",
-                    [WABlk("Page2 WA Body")],
+                    [
+                        WABlk(
+                            message="Page2 WA Body",
+                            buttons=[
+                                PageBtn("Button 2", page=main_menu),
+                                PageBtn("Menu", page=main_menu),
+                            ],
+                        )
+                    ],
                 )
             ],
             whatsapp_template_name="page2-template",
-            quick_replies=["Menu", "Button 2"],
         )
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
@@ -238,12 +245,14 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_updated_on_change(self, mock_create_whatsapp_template):
+    def test_template_updated_on_change(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the content is changed, the template should be resubmitted with an updated
         template name
         """
-        page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        page = create_page(is_whatsapp_template=True, has_buttons=True)
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             f"wa_title_{page.get_latest_revision().pk}",
@@ -276,11 +285,13 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_not_submitted_on_no_change(self, mock_create_whatsapp_template):
+    def test_template_not_submitted_on_no_change(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the content is not changed, the template should not be resubmitted
         """
-        page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        page = create_page(is_whatsapp_template=True, has_buttons=True)
         page.get_latest_revision().publish()
         page.refresh_from_db()
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
@@ -304,13 +315,13 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_submitted_when_is_whatsapp_template_is_set(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the is_whatsapp_template was not enabled on the content, but is changed,
         then it should submit, even if the content hasn't changed.
         """
-        page = create_page(is_whatsapp_template=False, has_quick_replies=True)
+        page = create_page(is_whatsapp_template=False, has_buttons=True)
         page.get_latest_revision().publish()
         page.refresh_from_db()
         mock_create_whatsapp_template.assert_not_called()
@@ -1032,21 +1043,19 @@ class TestWhatsAppTemplate:
     # TODO: Find a better way to test quick replies
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
-    def test_template_create_with_buttons(self):
+    def test_template_create_with_buttons(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={"id": "123456789"})
 
         wat = WhatsAppTemplate(
             name="wa_title",
+            buttons=[
+                ("next_message", {"title": "Test Button"}),
+            ],
             message="Test WhatsApp Message 1",
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
         )
-        wat.save()
-        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button1")
-        wat.quick_replies.add(created_qr)
-        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button2")
-        wat.quick_replies.add(created_qr)
         wat.save()
         wat.save_revision().publish()
 
@@ -1062,8 +1071,7 @@ class TestWhatsAppTemplate:
                 {
                     "type": "BUTTONS",
                     "buttons": [
-                        {"text": "Button1", "type": "QUICK_REPLY"},
-                        {"text": "Button2", "type": "QUICK_REPLY"},
+                        {"text": "Test Button", "type": "QUICK_REPLY"},
                     ],
                 },
             ],
@@ -1073,7 +1081,7 @@ class TestWhatsAppTemplate:
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
-    def test_template_create_with_example_values(self):
+    def test_template_create_with_example_values(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={"id": "123456789"})
 
@@ -1107,7 +1115,7 @@ class TestWhatsAppTemplate:
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
-    def test_template_create_failed(self):
+    def test_template_create_failed(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         error_response = {
             "error": {

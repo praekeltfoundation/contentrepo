@@ -1,5 +1,6 @@
 import logging
 import re
+from typing import Any
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -847,17 +848,17 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         self.views.create(**page_view)
 
     @property
-    def quick_reply_buttons(self):
+    def quick_reply_buttons(self) -> list[str]:
         return self.quick_reply_items.all().values_list("tag__name", flat=True)
 
     @property
-    def whatsapp_template_buttons(self):
+    def whatsapp_template_buttons(self) -> list[str]:
         # If Buttons and quick replies are present then Buttons are used
         first_msg = self.whatsapp_body.raw_data[0]["value"]
         if "buttons" in first_msg and first_msg["buttons"]:
             buttons = [b["value"]["title"] for b in first_msg["buttons"]]
             return buttons
-        return sorted(self.quick_reply_buttons)
+        return []
 
     @property
     def whatsapp_template_fields(self):
@@ -1668,8 +1669,15 @@ class WhatsAppTemplate(
     get_category_display.admin_order_field = "category"
     get_category_display.short_description = "Category"
 
-    quick_replies = ClusterTaggableManager(
-        through="home.TemplateQuickReplyContent", blank=True
+    buttons = StreamField(
+        [
+            ("next_message", NextMessageButton()),
+            ("go_to_page", GoToPageButton()),
+            ("go_to_form", GoToFormButton()),
+        ],
+        use_json_field=True,
+        null=True,
+        max_num=3,
     )
 
     locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
@@ -1734,14 +1742,14 @@ class WhatsAppTemplate(
 
     def save_revision(
         self,
-        user=None,
-        submitted_for_moderation=False,
-        approved_go_live_at=None,
-        changed=True,
-        log_action=False,
-        previous_revision=None,
-        clean=True,
-    ):
+        user: Any | None = None,
+        submitted_for_moderation: bool = False,
+        approved_go_live_at: Any | None = None,
+        changed: bool = True,
+        log_action: bool = False,
+        previous_revision: Any | None = None,
+        clean: bool = True,
+    ) -> Any:
 
         previous_revision = self.get_latest_revision()
         revision = super().save_revision(
@@ -1774,7 +1782,7 @@ class WhatsAppTemplate(
                 message=self.message,
                 category=self.category,
                 locale=self.locale,
-                quick_replies=sorted(self.quick_reply_buttons),
+                quick_replies=[b["value"]["title"] for b in self.buttons.raw_data],
                 image_obj=self.image,
                 example_values=[v["value"] for v in self.example_values.raw_data],
             )

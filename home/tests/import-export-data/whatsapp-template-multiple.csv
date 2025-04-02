@@ -1,3 +1,3 @@
-name,category,quick_replies,locale,image,message,example_values,submission_name,submission_status,submission_result
-Multiple template 1,MARKETING,"Quick Reply 2,Quick Reply 1",en,,Message {{1}} {{2}},"Eval 1,Eval 2",very_new_indeed_3_272,SUBMITTED,Success! Template ID = 418074557823888
-Multiple template 2,MARKETING,,en,,Message {{1}} {{2}},"Eval 1,Eval 2",very_new_27something,SUBMITTED,Success! Template ID = 3788143708073382
+name,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
+Multiple template 1,MARKETING,[],en,,Message {{1}} {{2}},"Eval 1,Eval 2",very_new_indeed_3_272,SUBMITTED,Success! Template ID = 418074557823888
+Multiple template 2,MARKETING,[],en,,Message {{1}} {{2}},"Eval 1,Eval 2",very_new_27something,SUBMITTED,Success! Template ID = 3788143708073382
