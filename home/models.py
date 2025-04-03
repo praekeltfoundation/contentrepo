@@ -1835,18 +1835,24 @@ class WhatsAppTemplate(
                 )
 
         print(f"Found {count_example_values} example values")
-        # mismatches = self.check_matching_braces(message)
 
         message = self.message
         print(f"Message is {message}")
-        right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
-        left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
-        mismatches = right_mismatch + left_mismatch
+        single_braces = re.findall(r"{(.*?)}", message)
 
-        if mismatches:
+        if single_braces:
             errors.setdefault("message", []).append(
                 ValidationError(
-                    f"Please provide variables with matching braces. You provided {mismatches}."
+                    f"Please provide variables with valid double braces. You provided single braces {single_braces}."
+                )
+            )
+
+        brace_mismatches = self.check_matching_braces(message)
+
+        if brace_mismatches:
+            errors.setdefault("message", []).append(
+                ValidationError(
+                    f"Please provide variables with matching braces. You provided {brace_mismatches}."
                 )
             )
 

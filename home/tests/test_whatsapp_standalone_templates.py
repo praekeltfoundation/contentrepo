@@ -142,7 +142,7 @@ class TestStandaloneWhatsAppTemplates:
         wat.save()
         wat.save_revision()
 
-        assert "This" == "This"
+        assert "This" == "That"
 
     @responses.activate
     def test_create_standalone_whatsapp_template_with_buttons(self) -> None:
