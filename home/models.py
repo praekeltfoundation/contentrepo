@@ -1793,21 +1793,25 @@ class WhatsAppTemplate(
         revision.save(update_fields=["content"])
         return revision
 
-    def check_matching_braces(self, message=message):
-        result = ""
-        print("Starting to check")
-        # current_char = ""
-        # previous_char = ""
-        count_opening_braces = 0
+    # def check_matching_braces(self, message=message):
+    #     result = ""
+    #     print("Starting to check")
+    #     # current_char = ""
+    #     # previous_char = ""
+    #     count_opening_braces = 0
 
-        for i in range(len(message)):
-            if message[i : i + 2] == "{{":
-                print("Found opening braces here ")
-                count_opening_braces += 1
-                next_char = i + 3
+    #     for i in range(len(message)):
+    #         if message[i : i + 2] == "{{":
+    #             print("Found opening braces here ")
+    #             count_opening_braces += 1
+    #             next_char = i + 3
+    #             if not str(next_char).isdecimal():
+    #                 print(
+    #                     f"Please provide numeric variables only. You provided {next_char}."
+    #                 )
 
-        print(f"We found {count_opening_braces} sets of opening brackets")
-        return result
+    #     print(f"We found {count_opening_braces} sets of opening brackets")
+    #     return result
 
     def clean(self):
         result = super().clean()
@@ -1818,9 +1822,6 @@ class WhatsAppTemplate(
             errors.setdefault("name", []).append(
                 ValidationError("All WhatsApp templates need a name.")
             )
-
-        message = self.message
-        print(f"Message is {message}")
 
         example_values = self.example_values.raw_data
         count_example_values = 0
@@ -1834,7 +1835,13 @@ class WhatsAppTemplate(
                 )
 
         print(f"Found {count_example_values} example values")
-        mismatches = self.check_matching_braces(message)
+        # mismatches = self.check_matching_braces(message)
+
+        message = self.message
+        print(f"Message is {message}")
+        right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
+        left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
+        mismatches = right_mismatch + left_mismatch
 
         if mismatches:
             errors.setdefault("message", []).append(

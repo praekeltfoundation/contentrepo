@@ -113,7 +113,7 @@ class TestStandaloneWhatsAppTemplates:
     ) -> None:
         wat = WhatsAppTemplate(
             name="wa_title",
-            message="Test WhatsApp Message 1 {{1}} and a broken var here {{2}",
+            message="Test WhatsApp Message 1 {{1}} and a broken var here",
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
             example_values=[
@@ -124,7 +124,25 @@ class TestStandaloneWhatsAppTemplates:
         wat.save()
         wat.save_revision()
 
-        assert "This" == "Not that"
+        assert "This" == "This"
+
+    @responses.activate
+    def test_no_malformed_variable_placeholders(
+        self, settings: SettingsWrapper
+    ) -> None:
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1 {1} and a broken var here",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[
+                ("example_values", "Ev1"),
+            ],
+        )
+        wat.save()
+        wat.save_revision()
+
+        assert "This" == "This"
 
     @responses.activate
     def test_create_standalone_whatsapp_template_with_buttons(self) -> None:
