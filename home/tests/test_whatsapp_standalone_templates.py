@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 import responses
+from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile  # type: ignore
 from pytest_django.fixtures import SettingsWrapper
 from responses.matchers import multipart_matcher
@@ -108,41 +109,50 @@ class TestStandaloneWhatsAppTemplates:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_variable_placeholders(
+    def test_match_num_example_vars_and_placeholders(
         self, settings: SettingsWrapper
     ) -> None:
-        wat = WhatsAppTemplate(
-            name="wa_title",
-            message="Test WhatsApp Message 1 {{1}} and a broken var here",
-            category="UTILITY",
-            locale=Locale.objects.get(language_code="en"),
-            example_values=[
-                ("example_values", "Ev1"),
-                ("example_values", "Ev2"),
-            ],
-        )
-        wat.save()
-        wat.save_revision()
+        with pytest.raises(ValidationError) as err_info:
+            wat = WhatsAppTemplate(
+                name="wa_title",
+                message="Test WhatsApp Message with 1 valid {{1}} and one malformed var here {{2}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                ],
+            )
+            wat.save()
+            wat.save_revision()
 
-        assert "This" == "This"
+        assert err_info.value.message_dict == {
+            "message": [
+                "Mismatch in number of placeholders and example values. Found 2 placeholder(s) and 1 example values."
+            ],
+        }
 
     @responses.activate
-    def test_no_malformed_variable_placeholders(
+    def test_no_single_brace_variable_placeholders(
         self, settings: SettingsWrapper
     ) -> None:
-        wat = WhatsAppTemplate(
-            name="wa_title",
-            message="Test WhatsApp Message 1 {1} and a broken var here",
-            category="UTILITY",
-            locale=Locale.objects.get(language_code="en"),
-            example_values=[
-                ("example_values", "Ev1"),
-            ],
-        )
-        wat.save()
-        wat.save_revision()
+        """
+        Templates should not contain any single braces with one or more chars inside
+        """
+        with pytest.raises(ValidationError) as err_info:
+            wat = WhatsAppTemplate(
+                name="wa_title",
+                message="Test WhatsApp Message 1 {1} and a broken var here",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            )
+            wat.save()
+            wat.save_revision()
 
-        assert "This" == "That"
+        assert err_info.value.message_dict == {
+            "message": [
+                "Please provide variables with valid double braces. You provided single braces ['1']."
+            ],
+        }
 
     @responses.activate
     def test_create_standalone_whatsapp_template_with_buttons(self) -> None:

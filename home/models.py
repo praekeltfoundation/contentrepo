@@ -1824,21 +1824,18 @@ class WhatsAppTemplate(
             )
 
         example_values = self.example_values.raw_data
-        count_example_values = 0
         for ev in example_values:
-            count_example_values += 1
-
-            print(f"EV = {ev}")
             if "," in ev["value"]:
                 errors["example_values"] = ValidationError(
                     "Example values cannot contain commas"
                 )
 
-        print(f"Found {count_example_values} example values")
+        print(f"Found {len(example_values)} len example values")
 
         message = self.message
         print(f"Message is {message}")
-        single_braces = re.findall(r"{(.*?)}", message)
+        # Matches "{1}" and "{11}", not "{{1}", "{a}" or "{1 "
+        single_braces = re.findall(r"[^{]{(\d*?)}", message)
 
         if single_braces:
             errors.setdefault("message", []).append(
@@ -1857,6 +1854,7 @@ class WhatsAppTemplate(
             )
 
         vars_in_msg = re.findall(r"{{(.*?)}}", message)
+        print(f"Num vars in msg {len(vars_in_msg)}")
         non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
 
         if non_digit_variables:
@@ -1865,8 +1863,8 @@ class WhatsAppTemplate(
                     f"Please provide numeric variables only. You provided {non_digit_variables}."
                 )
             )
-        # TODO: Add tests for these checks
-        # Check variable order
+
+        # Check variables are sequential
         actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
         expected_variables = [str(j + 1) for j in range(len(actual_digit_variables))]
         if actual_digit_variables != expected_variables:
@@ -1874,6 +1872,16 @@ class WhatsAppTemplate(
                 {
                     "message": ValidationError(
                         f'Variables must be sequential, starting with "{{1}}". You provided "{actual_digit_variables}"'
+                    )
+                }
+            )
+
+        # Check matching number of placeholders and example values
+        if len(example_values) != len(vars_in_msg):
+            errors.setdefault("message", []).append(
+                {
+                    "message": ValidationError(
+                        f"Mismatch in number of placeholders and example values. Found {len(vars_in_msg)} placeholder(s) and {len(example_values)} example values."
                     )
                 }
             )
