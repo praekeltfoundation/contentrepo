@@ -266,5 +266,5 @@ EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", None)
 
 # Flag for turning on Standalone Whatsapp Templates, still in development
 ENABLE_STANDALONE_WHATSAPP_TEMPLATES = env.bool(
-    "ENABLE_STANDALONE_WHATSAPP_TEMPLATES", False
+    "ENABLE_STANDALONE_WHATSAPP_TEMPLATES", True
 )

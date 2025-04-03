@@ -249,7 +249,7 @@ def xlsx_impexp(request: Any, admin_client: Any) -> ImportExport:
 
 
 # Needs this here while standalone templates are hidden behind feature flag
-register_snippet(WhatsAppTemplateAdmin)
+#register_snippet(WhatsAppTemplateAdmin)
 
 
 @pytest.mark.django_db()

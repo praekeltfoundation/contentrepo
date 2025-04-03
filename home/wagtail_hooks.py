@@ -2,11 +2,13 @@ from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse
+from typing import Any
 from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, TitleFieldPanel
 from wagtail.admin.widgets.slug import SlugInput
+from wagtail.models import Page
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
@@ -25,9 +27,8 @@ from .views import (  # isort:skip
     WhatsAppTemplateUploadView,
 )
 
-
 @hooks.register("before_delete_page")
-def prevent_deletion_if_linked(request, page):
+def prevent_deletion_if_linked(request: Any, page: Page) -> Any:
     """
     Check if the page is a ContentPage and if it has any links to prevent
     the deletion of a page if it is linked to other content.
@@ -54,7 +55,7 @@ def prevent_deletion_if_linked(request, page):
 
 
 @hooks.register("register_admin_urls")
-def get_import_urls():
+def get_import_urls() -> list[Any]:
     """
     Create additional admin URLs for various content import views.
     """
@@ -79,7 +80,7 @@ def get_import_urls():
 
 
 @hooks.register("register_page_listing_buttons")
-def get_import_content_button(page, page_perms, is_parent=False, next_url=None):
+def get_import_content_button(page: Page, page_perms: Any, is_parent:bool=False, next_url:str|None=None) -> Any:
     """
     Generate buttons to add to action list for importing content.
     """
@@ -89,7 +90,7 @@ def get_import_content_button(page, page_perms, is_parent=False, next_url=None):
 
 
 @hooks.register("register_reports_menu_item")
-def get_stale_content_report_menu_item():
+def get_stale_content_report_menu_item() -> Any:
     """
     Create a admin only sub menu item for the Stale Content report.
     """
@@ -102,7 +103,7 @@ def get_stale_content_report_menu_item():
 
 
 @hooks.register("register_admin_urls")
-def get_stale_content_report_url():
+def get_stale_content_report_url() -> list[Any]:
     """
     Create additional URL for the State Content Report.
     """
@@ -116,7 +117,7 @@ def get_stale_content_report_url():
 
 
 @hooks.register("register_reports_menu_item")
-def get_page_views_report_menu_item():
+def get_page_views_report_menu_item() -> Any:
     """
     Create an admin only sub menu item for the Page Views report.
     """
@@ -129,7 +130,7 @@ def get_page_views_report_menu_item():
 
 
 @hooks.register("register_admin_urls")
-def get_page_views_report_url():
+def get_page_views_report_url() -> list[Any]:
     """
     Create additional URL for the Page Views report.
     """
