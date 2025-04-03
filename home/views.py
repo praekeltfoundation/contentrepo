@@ -31,7 +31,7 @@ from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTempla
 from .assessment_import_export import import_assessment
 from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
-from .import_helpers import ImportException, ImportAssessmentException
+from .import_helpers import ImportAssessmentException, ImportException
 from .mixins import (
     SpreadsheetExportMixin,
     SpreadsheetExportMixinAssessment,

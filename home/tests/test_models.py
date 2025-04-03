@@ -90,7 +90,9 @@ class ContentPageTests(TestCase):
         self.assertEqual(view.data, {"save": "this"})
 
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_on_save_deactivated(self, mock_create_whatsapp_template: Any) -> None:
+    def test_template_create_on_save_deactivated(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         create_page(is_whatsapp_template=True)
         mock_create_whatsapp_template.assert_not_called()
 
@@ -150,7 +152,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_with_proper_buttons_on_save(self, mock_create_whatsapp_template: Any) -> None:
+    def test_template_create_with_proper_buttons_on_save(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         page_with_button = PageBuilder.build_cp(
@@ -187,7 +191,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_created_with_proper_buttons_not_quick_replies(self, mock_create_whatsapp_template: Any) -> None:
+    def test_template_created_with_proper_buttons_not_quick_replies(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         page_with_button = PageBuilder.build_cp(
@@ -224,7 +230,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_with_example_values_on_save(self, mock_create_whatsapp_template: Any) -> None:
+    def test_template_create_with_example_values_on_save(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         page = create_page(is_whatsapp_template=True, add_example_values=True)
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
@@ -339,7 +347,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_submitted_with_no_whatsapp_previous_revision(self, mock_create_whatsapp_template: Any) -> None:
+    def test_template_submitted_with_no_whatsapp_previous_revision(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the previous revision didn't have any whatsapp messages, it should still
         successfully submit a whatsapp template
@@ -371,7 +381,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_not_submitted_with_no_message(self, mock_create_whatsapp_template: Any) -> None:
+    def test_template_not_submitted_with_no_message(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the page doesn't have any whatsapp messages, then it shouldn't be submitted
         """
@@ -390,7 +402,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_not_submitted_with_no_title(self, mock_create_whatsapp_template: Any) -> None:
+    def test_template_not_submitted_with_no_title(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the page is a WA template and how no title, then it shouldn't be submitted
         """
@@ -435,7 +449,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_create_whatsapp_template_submit_no_error_message(self, mock_create_whatsapp_template: Any) -> None:
+    def test_create_whatsapp_template_submit_no_error_message(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         Should not return an error message if template was submitted successfully
         """
@@ -455,7 +471,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_create_whatsapp_template_submit_return_error(self, mock_create_whatsapp_template: Any) -> None:
+    def test_create_whatsapp_template_submit_return_error(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         Test the error message on template submission failure
         If template submission fails user should get descriptive error instead of internal server error
@@ -553,7 +571,9 @@ class ContentPageTests(TestCase):
         reason="This fails because we can't get locale to create the page, "
         "these tests will be changed once whatsapp templates are separated."
     )
-    def test_template_create_with_pt_language(self, mock_create_whatsapp_template: Any) -> None:
+    def test_template_create_with_pt_language(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         page = create_page(is_whatsapp_template=True)
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         mock_create_whatsapp_template.assert_called_with(
@@ -776,16 +796,16 @@ class OrderedContentSetTests(TestCase):
 class WhatsappBlockTests(TestCase):
     def create_message_value(
         self,
-        image: Any=None,
-        document: Any=None,
-        media: Any=None,
-        message: str="",
-        variation_messages: Any=None,
-        example_values: Any=None,
-        next_prompt: str="",
-        buttons: Any=None,
-        list_items: Any=None,
-        footer: str="",
+        image: Any = None,
+        document: Any = None,
+        media: Any = None,
+        message: str = "",
+        variation_messages: Any = None,
+        example_values: Any = None,
+        next_prompt: str = "",
+        buttons: Any = None,
+        list_items: Any = None,
+        footer: str = "",
     ) -> dict[str, Any]:
         return {
             "image": image,
@@ -800,7 +820,7 @@ class WhatsappBlockTests(TestCase):
             "footer": footer,
         }
 
-    def create_image(self, width: int=0, height: int=0) -> Any:
+    def create_image(self, width: int = 0, height: int = 0) -> Any:
         Image = get_image_model()
         return Image.objects.create(width=width, height=height)
 
@@ -906,7 +926,7 @@ class WhatsappBlockTests(TestCase):
 class USSDBlockTests(TestCase):
     def create_message_value(
         self,
-        message: str="",
+        message: str = "",
     ) -> dict[str, str]:
         return {
             "message": message,
@@ -924,7 +944,7 @@ class USSDBlockTests(TestCase):
 class SMSBlockTests(TestCase):
     def create_message_value(
         self,
-        message: str="",
+        message: str = "",
     ) -> dict[str, str]:
         return {
             "message": message,

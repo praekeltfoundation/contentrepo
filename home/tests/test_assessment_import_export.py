@@ -14,7 +14,7 @@ from wagtail.models import Locale  # type: ignore
 
 from home.assessment_import_export import import_assessment
 from home.content_import_export import import_content
-from home.import_helpers import ImportException, ImportAssessmentException
+from home.import_helpers import ImportAssessmentException, ImportException
 from home.models import (
     Assessment,
     ContentPage,

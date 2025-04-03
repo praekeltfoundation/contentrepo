@@ -181,7 +181,9 @@ class SiteSettings(BaseSiteSetting):
 
 
 class MediaBlock(AbstractMediaChooserBlock):
-    def render_basic(self, value: dict[str, Any], context: dict[str, Any] | None = None) -> None:
+    def render_basic(
+        self, value: dict[str, Any], context: dict[str, Any] | None = None
+    ) -> None:
         pass
 
 
@@ -596,7 +598,12 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                     help_text="Each message will be sent with the text and media"
                 ),
             ),
-            ("Whatsapp_Template", SnippetChooserBlock("home.WhatsAppTemplate", help_text="WhatsAppTemplate to use")),
+            (
+                "Whatsapp_Template",
+                SnippetChooserBlock(
+                    "home.WhatsAppTemplate", help_text="WhatsAppTemplate to use"
+                ),
+            ),
         ],
         blank=True,
         null=True,
@@ -1009,7 +1016,10 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     @short_description("Whatsapp Body")
     def wa_body(self) -> str:
         body = (
-            "\n".join(m.value["message"] if is_subscriptable(m.value) else "" for m in self.whatsapp_body)
+            "\n".join(
+                m.value["message"] if is_subscriptable(m.value) else ""
+                for m in self.whatsapp_body
+            )
             if self.whatsapp_body
             else ""
         )

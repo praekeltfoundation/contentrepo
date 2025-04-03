@@ -1,15 +1,16 @@
+from typing import Any
+
 from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse
-from typing import Any
 from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, TitleFieldPanel
 from wagtail.admin.widgets.slug import SlugInput
-from wagtail.models import Page
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
+from wagtail.models import Page
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
@@ -26,6 +27,7 @@ from .views import (  # isort:skip
     CustomIndexViewWhatsAppTemplate,
     WhatsAppTemplateUploadView,
 )
+
 
 @hooks.register("before_delete_page")
 def prevent_deletion_if_linked(request: Any, page: Page) -> Any:
@@ -80,7 +82,9 @@ def get_import_urls() -> list[Any]:
 
 
 @hooks.register("register_page_listing_buttons")
-def get_import_content_button(page: Page, page_perms: Any, is_parent:bool=False, next_url:str|None=None) -> Any:
+def get_import_content_button(
+    page: Page, page_perms: Any, is_parent: bool = False, next_url: str | None = None
+) -> Any:
     """
     Generate buttons to add to action list for importing content.
     """

@@ -45,6 +45,7 @@ class ImportException(Exception):
         self.locale = locale
         super().__init__()
 
+
 class ImportAssessmentException(Exception):
     """
     Base exception for all import related issues.

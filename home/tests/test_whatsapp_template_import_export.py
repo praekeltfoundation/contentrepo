@@ -13,14 +13,12 @@ from django.core import serializers  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
 from wagtail.models import Locale  # type: ignore
-from wagtail.snippets.models import register_snippet  # type: ignore
 
 from home.import_helpers import ImportException
 from home.import_whatsapp_templates import ImportWhatsAppTemplateException
 from home.models import (
     WhatsAppTemplate,
 )
-from home.wagtail_hooks import WhatsAppTemplateAdmin
 from home.whatsapp_template_import_export import import_whatsapptemplate
 
 TTemplate = TypeVar("TTemplate", bound=WhatsAppTemplate)
@@ -249,7 +247,7 @@ def xlsx_impexp(request: Any, admin_client: Any) -> ImportExport:
 
 
 # Needs this here while standalone templates are hidden behind feature flag
-#register_snippet(WhatsAppTemplateAdmin)
+# register_snippet(WhatsAppTemplateAdmin)
 
 
 @pytest.mark.django_db()

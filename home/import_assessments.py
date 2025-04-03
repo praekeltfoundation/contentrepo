@@ -12,10 +12,10 @@ from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 
 from home.import_helpers import (
+    ImportAssessmentException,
     ImportException,
     convert_headers_to_snake_case,
     validate_using_form,
-    ImportAssessmentException,
 )
 from home.import_helpers import (
     parse_file as helper_parse_file,
