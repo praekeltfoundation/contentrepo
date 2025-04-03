@@ -1793,25 +1793,25 @@ class WhatsAppTemplate(
         revision.save(update_fields=["content"])
         return revision
 
-    # def check_matching_braces(self, message=message):
-    #     result = ""
-    #     print("Starting to check")
-    #     # current_char = ""
-    #     # previous_char = ""
-    #     count_opening_braces = 0
+    def check_matching_braces(self, message=message):
+        result = ""
+        print("Starting to check")
+        # current_char = ""
+        # previous_char = ""
+        count_opening_braces = 0
 
-    #     for i in range(len(message)):
-    #         if message[i : i + 2] == "{{":
-    #             print("Found opening braces here ")
-    #             count_opening_braces += 1
-    #             next_char = i + 3
-    #             if not str(next_char).isdecimal():
-    #                 print(
-    #                     f"Please provide numeric variables only. You provided {next_char}."
-    #                 )
+        for i in range(len(message)):
+            if message[i : i + 2] == "{{":
+                print("Found opening braces here ")
+                count_opening_braces += 1
+                next_char = i + 3
+                if not str(next_char).isdecimal():
+                    print(
+                        f"Please provide numeric variables only. You provided {next_char}."
+                    )
 
-    #     print(f"We found {count_opening_braces} sets of opening brackets")
-    #     return result
+        print(f"We found {count_opening_braces} sets of opening brackets")
+        return result
 
     def clean(self):
         result = super().clean()
