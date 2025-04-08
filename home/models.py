@@ -1019,7 +1019,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                 (
                     m.value["message"]
                     if m.block_type == "Whatsapp_Message"
-                    else m.value.name
+                    else m.value.message
                 )
                 for m in self.whatsapp_body
             )
