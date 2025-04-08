@@ -62,7 +62,6 @@ from .constants import (  # isort:skip
     RELATIONSHIP_STATUS_CHOICES,
 )
 
-from .helpers import is_subscriptable
 
 logger = logging.getLogger(__name__)
 

@@ -4,8 +4,8 @@ from wagtail.blocks import StreamValue, StructValue  # type: ignore
 from wagtail.blocks.list_block import ListValue  # type: ignore
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.rich_text import RichText  # type: ignore
 from wagtail.models import Locale
+from wagtail.rich_text import RichText  # type: ignore
 
 from home.models import (  # isort:skip
     ContentPage,
