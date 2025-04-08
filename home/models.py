@@ -50,7 +50,8 @@ from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
 from .whatsapp import (
-    TemplateSubmissionException,
+    TemplateSubmissionClientException,
+    TemplateSubmissionServerException,
     create_standalone_whatsapp_template,
     create_whatsapp_template,
 )
@@ -1632,11 +1633,20 @@ class TemplateQuickReplyContent(ItemBase):
 
 
 class WhatsAppTemplate(
-    DraftStateMixin, ClusterableModel, RevisionMixin, index.Indexed, models.Model
+    DraftStateMixin,
+    ClusterableModel,
+    RevisionMixin,
+    index.Indexed,
+    models.Model,
 ):
     class Meta:  # noqa
         verbose_name = "WhatsApp Template"
         verbose_name_plural = "WhatsApp Templates"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "locale"], name="unique_name_locale"
+            )
+        ]
 
     class Category(models.TextChoices):
         UTILITY = "UTILITY", _("Utility")
@@ -1781,36 +1791,35 @@ class WhatsAppTemplate(
             revision.content["submission_result"] = (
                 f"Success! Template ID = {response_json['id']}"
             )
-        except TemplateSubmissionException as e:
-            # The submission failed
-            revision.content["name"] = self.name
-            revision.content["submission_name"] = self.template_name
-            revision.content["submission_status"] = self.SubmissionStatus.FAILED
-            revision.content["submission_result"] = (
-                f"Error! {e.response_json['error']['error_user_msg']} "
-            )
+        except (
+            TemplateSubmissionServerException,
+            TemplateSubmissionClientException,
+        ) as e:
+            if isinstance(e, TemplateSubmissionServerException):
+                print("TemplateSubmissionServerException caught")
+                revision.content["name"] = self.name
+                revision.content["submission_name"] = self.template_name
+                revision.content["submission_status"] = self.SubmissionStatus.FAILED
+                revision.content["submission_result"] = (
+                    f"Error! {e.response_json['error']['error_user_msg']} "
+                )
+        else:
+            print("Other exception, likely TemplateSubmissionClientException")
 
         revision.save(update_fields=["content"])
         return revision
 
     def check_matching_braces(self, message=message):
         result = ""
-        print("Starting to check")
-        # current_char = ""
-        # previous_char = ""
         count_opening_braces = 0
 
         for i in range(len(message)):
             if message[i : i + 2] == "{{":
-                print("Found opening braces here ")
                 count_opening_braces += 1
                 next_char = i + 3
                 if not str(next_char).isdecimal():
-                    print(
-                        f"Please provide numeric variables only. You provided {next_char}."
-                    )
+                    result = f"Please provide numeric variables only. You provided {next_char}."
 
-        print(f"We found {count_opening_braces} sets of opening brackets")
         return result
 
     def clean(self):
@@ -1830,10 +1839,7 @@ class WhatsAppTemplate(
                     "Example values cannot contain commas"
                 )
 
-        print(f"Found {len(example_values)} len example values")
-
         message = self.message
-        print(f"Message is {message}")
         # Matches "{1}" and "{11}", not "{{1}", "{a}" or "{1 "
         single_braces = re.findall(r"[^{]{(\d*?)}", message)
 
@@ -1908,3 +1914,50 @@ class WhatsAppTemplate(
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.prefix}_{self.get_latest_revision().pk}"
+
+
+class UniqueWhatsAppTemplateMixin:
+    """
+    Ensures that names are unique per locale
+    """
+
+    def is_name_available(self, name, TO=WhatsAppTemplate):
+        templates = TO.objects.filter(
+            locale=self.locale_id or self.get_default_locale(), name=name
+        )
+        if self.pk is not None:
+            templates = templates.exclude(pk=self.pk)
+        return not templates.exists()
+
+    def get_unique_name(self, name, TO):
+        suffix = 1
+        candidate_name = name
+        while not self.is_name_available(candidate_name, TO):
+            suffix += 1
+            candidate_name = f"{name}-{suffix}"
+        return candidate_name
+
+    def clean(self, TO=WhatsAppTemplate):
+        super().clean()
+
+        if not self.is_name_available(self.name, TO):
+            template = TO.objects.get(locale=self.locale, name=self.name)
+            template_url = (
+                template.url
+                if isinstance(template, WhatsAppTemplate)
+                else template.name
+            )
+            raise ValidationError(
+                {
+                    "slug": ValidationError(
+                        _(
+                            "The slug '%(template_name)s' is already in use at '%(template_url)s'"
+                        ),
+                        params={
+                            "template_name": self.name,
+                            "template_url": template_url,
+                        },
+                        code="name-in-use",
+                    )
+                }
+            )
