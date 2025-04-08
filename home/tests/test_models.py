@@ -610,9 +610,10 @@ class ContentPageTests(TestCase):
         self.assertEqual(page.mess_body()[-5:], "test…")
         self.assertEqual(page.vib_body()[-5:], "test…")
 
-
     def test_new_template_displays_correctly(self) -> None:
-        page = create_page(is_new_whatsapp_template=True, whatsapp_template_name="Test Template")
+        page = create_page(
+            is_new_whatsapp_template=True, whatsapp_template_name="Test Template"
+        )
 
         self.assertEqual(page.wa_body(), "Test Template\nTest WhatsApp Message 1")
 

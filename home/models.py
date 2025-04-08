@@ -1016,7 +1016,11 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     def wa_body(self) -> str:
         body = (
             "\n".join(
-                m.value["message"] if m.block_type == "Whatsapp_Message" else m.value.name
+                (
+                    m.value["message"]
+                    if m.block_type == "Whatsapp_Message"
+                    else m.value.name
+                )
                 for m in self.whatsapp_body
             )
             if self.whatsapp_body

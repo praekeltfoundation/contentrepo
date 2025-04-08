@@ -13,7 +13,7 @@ from django.core import serializers  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
 from wagtail.models import Locale  # type: ignore
-from wagtail.snippets.models import register_snippet
+from wagtail.snippets.models import register_snippet # type: ignore
 
 from home.import_helpers import ImportException
 from home.import_whatsapp_templates import ImportWhatsAppTemplateException
