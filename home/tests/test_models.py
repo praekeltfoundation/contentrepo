@@ -615,7 +615,9 @@ class ContentPageTests(TestCase):
             is_new_whatsapp_template=True, whatsapp_template_name="Test Template"
         )
 
-        self.assertEqual(page.wa_body(), "Test Whatsapp Template message\nTest WhatsApp Message 1")
+        self.assertEqual(
+            page.wa_body(), "Test Whatsapp Template message\nTest WhatsApp Message 1"
+        )
 
 
 class OrderedContentSetTests(TestCase):
