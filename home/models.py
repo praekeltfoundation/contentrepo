@@ -1803,8 +1803,13 @@ class WhatsAppTemplate(
                 revision.content["submission_result"] = (
                     f"Error! {e.response_json['error']['error_user_msg']} "
                 )
-        else:
-            print("Other exception, likely TemplateSubmissionClientException")
+            else:
+                revision.content["name"] = self.name
+                revision.content["submission_name"] = self.template_name
+                revision.content["submission_status"] = self.SubmissionStatus.FAILED
+                revision.content["submission_result"] = (
+                    "Error. A non-server related error has occurred. Likely a TemplateSubmissionClientException"
+                )
 
         revision.save(update_fields=["content"])
         return revision
