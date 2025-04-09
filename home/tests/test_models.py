@@ -944,7 +944,6 @@ class SMSBlockTests(TestCase):
 
 @pytest.mark.django_db
 class TestWhatsAppTemplate:
-
     def test_variables_are_numeric(self) -> None:
         """
         Template variables are numeric.
@@ -955,6 +954,9 @@ class TestWhatsAppTemplate:
                 message="{{foo}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                ],
             ).full_clean()
 
         assert err_info.value.message_dict == {
@@ -971,6 +973,10 @@ class TestWhatsAppTemplate:
                 message="{{2}} {{1}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                    ("example_values", "Ev2"),
+                ],
             ).full_clean()
 
         assert err_info.value.message_dict == {
