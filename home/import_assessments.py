@@ -12,6 +12,7 @@ from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 
 from home.import_helpers import (
+    ImportAssessmentException,
     ImportException,
     convert_headers_to_snake_case,
     validate_using_form,
@@ -23,17 +24,6 @@ from home.models import Assessment, ContentPage, HomePage  # type: ignore
 
 AssessmentId = tuple[str, Locale]
 MANDATORY_HEADERS = ["title", "question", "slug", "generic_error", "locale"]
-
-
-class ImportAssessmentException(Exception):
-    """
-    Base exception for all import related issues.
-    """
-
-    def __init__(self, message: str, row_num: int | None = None):
-        self.row_num = row_num
-        self.message = message
-        super().__init__()
 
 
 class AssessmentImporter:

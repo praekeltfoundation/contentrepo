@@ -46,6 +46,17 @@ class ImportException(Exception):
         super().__init__()
 
 
+class ImportAssessmentException(Exception):
+    """
+    Base exception for all import related issues.
+    """
+
+    def __init__(self, message: str, row_num: int | None = None):
+        self.row_num = row_num
+        self.message = message
+        super().__init__()
+
+
 class ImportWarning:
     """
     Base warnings for all import related issues.

@@ -31,8 +31,7 @@ from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTempla
 from .assessment_import_export import import_assessment
 from .content_import_export import import_content, import_ordered_sets
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
-from .import_assessments import ImportAssessmentException
-from .import_helpers import ImportException
+from .import_helpers import ImportAssessmentException, ImportException
 from .mixins import (
     SpreadsheetExportMixin,
     SpreadsheetExportMixinAssessment,
@@ -43,7 +42,6 @@ from .models import (
     ContentPageRating,
     OrderedContentSet,
     PageView,
-    WhatsAppTemplate,
 )
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
 from .whatsapp_template_import_export import (
@@ -620,13 +618,3 @@ class ContentPageRatingViewSet(GenericListViewset, CreateModelMixin):
                 raise ValidationError({"page": ["Page matching query does not exist."]})
 
         return super().create(request, *args, **kwargs)
-
-
-class WhatsAppTemplateViewSet(GenericListViewset):
-    # queryset = WhatsAppTemplate.objects.all()
-    model = WhatsAppTemplate
-    form_fields = ["name", "body", "category", "locale", "status"]
-    icon = "user"
-    add_to_admin_menu = True
-    copy_view_enabled = False
-    inspect_view_enabled = True
