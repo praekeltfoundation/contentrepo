@@ -133,6 +133,27 @@ class TestStandaloneWhatsAppTemplates:
         }
 
     @responses.activate
+    def test_invalid_placeholders(self, settings: SettingsWrapper) -> None:
+        with pytest.raises(ValidationError) as err_info:
+            wat = WhatsAppTemplate(
+                name="wa_title",
+                message="Test WhatsApp Message with 1 valid {{name}} ",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                ],
+            )
+            wat.save()
+            wat.save_revision()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Please provide numeric variables only. You provided ['name']."
+            ],
+        }
+
+    @responses.activate
     def test_no_single_brace_variable_placeholders(
         self, settings: SettingsWrapper
     ) -> None:
