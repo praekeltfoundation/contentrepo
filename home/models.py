@@ -1883,7 +1883,6 @@ class WhatsAppTemplate(
             )
 
         vars_in_msg = re.findall(r"{{(.*?)}}", message)
-        print(f"Num vars in msg {len(vars_in_msg)}")
         non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
 
         if non_digit_variables:

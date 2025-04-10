@@ -196,16 +196,11 @@ def submit_whatsapp_template(
     )
 
     if response.ok:
-        print("Submission OK")
         return response.json()
     else:
-        # TODO: Add better error handling to differentiate between user error or server error
-        print("Submission NOT OK")
         if response.status_code >= 500:
-            print("5xx Server Error:")
             raise TemplateSubmissionServerException(str(response.content))
         if 400 <= response.status_code < 500:
-            print("4xx Client Error:")
             if "application/json" in response.headers.get("Content-Type", ""):
                 raise TemplateSubmissionClientException(response.json())
     return
