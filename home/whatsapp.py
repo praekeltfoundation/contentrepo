@@ -174,7 +174,6 @@ def submit_whatsapp_template(
     locale: Locale,
     components: list[dict[str, Any]],
 ) -> dict[str, str]:
-
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
@@ -199,14 +198,25 @@ def submit_whatsapp_template(
     if response.ok:
         return response.json()
     else:
-        # TODO: Add better error handling to differentiate between user error or server error
-        raise TemplateSubmissionException(response.json())
+        if response.status_code >= 500:
+            raise TemplateSubmissionServerException(str(response.content))
+        if 400 <= response.status_code < 500:
+            if "application/json" in response.headers.get("Content-Type", ""):
+                raise TemplateSubmissionClientException(response.json())
+
+    return {}
 
 
-class TemplateSubmissionException(Exception):
+class TemplateSubmissionServerException(Exception):
+    def __init__(self, response_content: str):
+        self.response_content = response_content
+        super().__init__(f"{response_content}")
+
+
+class TemplateSubmissionClientException(Exception):
     def __init__(self, response_json: dict[str, Any]):
         self.response_json = response_json
-        super().__init__(f"Error. {response_json['error']['error_user_msg']}")
+        super().__init__(f"Error! {response_json['error']['error_user_msg']}")
 
 
 ###### ALL CODE ABOVE THIS LINE IS SHARED BY THE OLD CONTENTPAGE EMBEDDED TEMPLATES, AS WELL AS THE NEW STANDALONE TEMPLATES ######
@@ -267,7 +277,6 @@ def create_whatsapp_template_submission(
         components.append({"type": "BODY", "text": body_text})
 
     if quick_replies:
-
         buttons = []
         for button in quick_replies:
             buttons.append({"type": "QUICK_REPLY", "text": button})
@@ -308,7 +317,6 @@ def create_standalone_template_body_components(
         components.append({"type": "BODY", "text": message})
 
     if quick_replies:
-
         buttons = []
         for button in quick_replies:
             buttons.append({"type": "QUICK_REPLY", "text": button})

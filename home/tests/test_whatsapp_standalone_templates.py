@@ -3,24 +3,27 @@ from pathlib import Path
 
 import pytest
 import responses
+from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
+from django.db.utils import IntegrityError  # type: ignore
 from pytest_django.fixtures import SettingsWrapper
 from responses.matchers import multipart_matcher
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
-from home.whatsapp import create_whatsapp_template
+from home.models import WhatsAppTemplate
+from home.whatsapp import create_standalone_whatsapp_template
 
 
 @pytest.mark.django_db
-class TestWhatsApp:
+class TestStandaloneWhatsAppTemplates:
+    # Standalone template tests below
     @responses.activate
-    def test_create_whatsapp_template(self, settings: SettingsWrapper) -> None:
+    def test_create_standalone_whatsapp_template(self) -> None:
         """
         Creating a WhatsApp template results in a single HTTP call to the
         WhatsApp API containing the template data.
         """
-        settings.WHATSAPP_CREATE_TEMPLATES = True
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -28,11 +31,11 @@ class TestWhatsApp:
             "components": [{"type": "BODY", "text": "Test Body"}],
         }
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={"id": "123456789"})
+        responses.add(responses.POST, url, json={})
 
         locale = Locale.objects.get(language_code="en")
-        create_whatsapp_template(
-            name="test-template", body="Test Body", category="UTILITY", locale=locale
+        create_standalone_whatsapp_template(
+            "test-template", "Test Body", "UTILITY", locale=locale
         )
 
         request = responses.calls[0].request
@@ -41,14 +44,36 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_example_values(
-        self, settings: SettingsWrapper
-    ) -> None:
+    def test_standalone_template_name(self) -> None:
+        """
+        Creating a WhatsApp template results in a single HTTP call to the
+        WhatsApp API containing the template data.
+        """
+        data = {
+            "category": "UTILITY",
+            "name": "Test template 1",
+            "language": "en_US",
+            "components": [{"type": "BODY", "text": "Test Body"}],
+        }
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={"id": "123456789"})
+
+        locale = Locale.objects.get(language_code="en")
+        result_json = create_standalone_whatsapp_template(
+            "Test template 1", "Test Body", "UTILITY", locale=locale
+        )
+
+        assert result_json == {"id": "123456789"}
+        request = responses.calls[0].request
+        assert request.headers["Authorization"] == "Bearer fake-access-token"
+        assert json.loads(request.body) == data
+
+    @responses.activate
+    def test_create_standalone_whatsapp_template_with_example_values(self) -> None:
         """
         When we create a WhatsApp template with example values, the examples
         are included in the HTTP request's template body component.
         """
-        settings.WHATSAPP_CREATE_TEMPLATES = True
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -72,7 +97,7 @@ class TestWhatsApp:
         responses.add(responses.POST, url, json={"id": "123456789"})
 
         locale = Locale.objects.get(language_code="en")
-        create_whatsapp_template(
+        create_standalone_whatsapp_template(
             "test-template",
             "Hi {{1}}. You are testing as a {{2}}",
             "UTILITY",
@@ -85,14 +110,96 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_buttons(
+    def test_match_num_example_vars_and_placeholders(
         self, settings: SettingsWrapper
     ) -> None:
+        with pytest.raises(ValidationError) as err_info:
+            wat = WhatsAppTemplate(
+                name="wa_title",
+                message="Test WhatsApp Message with 1 valid {{1}} and one malformed var here {{2}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                ],
+            )
+            wat.save()
+            wat.save_revision()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Mismatch in number of placeholders and example values. Found 2 placeholder(s) and 1 example values."
+            ],
+        }
+
+    @responses.activate
+    def test_invalid_placeholders(self, settings: SettingsWrapper) -> None:
+        with pytest.raises(ValidationError) as err_info:
+            wat = WhatsAppTemplate(
+                name="wa_title",
+                message="Test WhatsApp Message with 1 valid {{name}} ",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                ],
+            )
+            wat.save()
+            wat.save_revision()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Please provide numeric variables only. You provided ['name']."
+            ],
+        }
+
+    @responses.activate
+    def test_brace_mismatch(self, settings: SettingsWrapper) -> None:
+        with pytest.raises(ValidationError) as err_info:
+            wat = WhatsAppTemplate(
+                name="wa_title",
+                message="Test WhatsApp Message with 1 valid {{name ",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            )
+            wat.save()
+            wat.save_revision()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Please provide variables with matching sets of braces. You provided 1 sets of opening braces, and 0 sets of closing braces."
+            ],
+        }
+
+    @responses.activate
+    def test_no_single_brace_variable_placeholders(
+        self, settings: SettingsWrapper
+    ) -> None:
+        """
+        Templates should not contain any single braces with one or more chars inside
+        """
+        with pytest.raises(ValidationError) as err_info:
+            wat = WhatsAppTemplate(
+                name="wa_title",
+                message="Test WhatsApp Message 1 {1} and a broken var here",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            )
+            wat.save()
+            wat.save_revision()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Please provide variables with valid double braces. You provided single braces ['1']."
+            ],
+        }
+
+    @responses.activate
+    def test_create_standalone_whatsapp_template_with_buttons(self) -> None:
         """
         When we create a WhatsApp template with quick-reply buttons, the
         template data includes a buttons component that contains the buttons.
         """
-        settings.WHATSAPP_CREATE_TEMPLATES = True
         data = {
             "category": "UTILITY",
             "name": "test-template",
@@ -109,10 +216,10 @@ class TestWhatsApp:
             ],
         }
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={"id": "123456789"})
+        responses.add(responses.POST, url, json={})
 
         locale = Locale.objects.get(language_code="en")
-        create_whatsapp_template(
+        create_standalone_whatsapp_template(
             "test-template",
             "Test Body",
             "UTILITY",
@@ -126,7 +233,7 @@ class TestWhatsApp:
         assert json.loads(request.body) == data
 
     @responses.activate
-    def test_create_whatsapp_template_with_image(
+    def test_create_standalone_whatsapp_template_with_image(
         self, tmp_path: Path, settings: SettingsWrapper
     ) -> None:
         """
@@ -138,7 +245,6 @@ class TestWhatsApp:
          * A POST containing the template data, with the image handle in a
            header/image component.
         """
-        settings.WHATSAPP_CREATE_TEMPLATES = True
         settings.MEDIA_ROOT = tmp_path
         img_name = "test.jpeg"
         img_path = Path("home/tests/test_static") / img_name
@@ -175,11 +281,11 @@ class TestWhatsApp:
         responses.add(responses.POST, template_url, json={})
 
         locale = Locale.objects.get(language_code="en")
-        create_whatsapp_template(
+        create_standalone_whatsapp_template(
             "test-template",
             "Test Body",
             "UTILITY",
-            image_id=saved_image.id,
+            image_obj=saved_image,
             locale=locale,
         )
 
@@ -198,12 +304,12 @@ class TestWhatsApp:
             "name": "test-template",
             "language": "en_US",
             "components": [
-                {"type": "BODY", "text": "Test Body"},
                 {
                     "type": "HEADER",
                     "format": "IMAGE",
                     "example": {"header_handle": [mock_image_handle]},
                 },
+                {"type": "BODY", "text": "Test Body"},
             ],
         }
 
@@ -211,12 +317,11 @@ class TestWhatsApp:
         assert json.loads(ct_req.body) == mock_create_template_data
 
     @responses.activate
-    def test_create_whatsapp_template_with_language(self) -> None:
+    def test_create_standalone_whatsapp_template_with_language(self) -> None:
         """
         When we create a WhatsApp template, the language is converted to the
         appropriate WhatsApp language code.
         """
-
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
@@ -224,7 +329,9 @@ class TestWhatsApp:
         # FIXME: Should this be "en" instead?
         # Fritz -> Have talked to Jeremy about this.  We feel like we need to understand the locale mappings/translations between the various parts of this solution better.  We feel this should be a separate ticket
         en = Locale.objects.get(language_code="en")
-        create_whatsapp_template("test-template", "Test Body", "UTILITY", locale=en)
+        create_standalone_whatsapp_template(
+            "test-template", "Test Body", "UTILITY", locale=en
+        )
         assert json.loads(responses.calls[-1].request.body) == {
             "category": "UTILITY",
             "name": "test-template",
@@ -235,7 +342,9 @@ class TestWhatsApp:
         # WhatsApp doesn't support Portuguese without a country code, so we
         # pick "pt_PT" rather than "pt_BR".
         pt, _created = Locale.objects.get_or_create(language_code="pt")
-        create_whatsapp_template("test-pt", "Corpo de Teste", "UTILITY", locale=pt)
+        create_standalone_whatsapp_template(
+            "test-pt", "Corpo de Teste", "UTILITY", locale=pt
+        )
         assert json.loads(responses.calls[-1].request.body) == {
             "category": "UTILITY",
             "name": "test-pt",
@@ -246,10 +355,38 @@ class TestWhatsApp:
         # If we specifically want Brazillian Portuguese, we can use a locale
         # specifically for that.
         ptbr, _created = Locale.objects.get_or_create(language_code="pt_BR")
-        create_whatsapp_template("test-pt-br", "Corpo de Teste", "UTILITY", locale=ptbr)
+        create_standalone_whatsapp_template(
+            "test-pt-br", "Corpo de Teste", "UTILITY", locale=ptbr
+        )
         assert json.loads(responses.calls[-1].request.body) == {
             "category": "UTILITY",
             "name": "test-pt-br",
             "language": "pt_BR",
             "components": [{"type": "BODY", "text": "Corpo de Teste"}],
         }
+
+    @responses.activate
+    def test_create_duplicate_name_and_locale_template(self) -> None:
+        """
+        We cannot create templates with a combination of name & locale that is not unique
+        """
+        with pytest.raises(IntegrityError) as err_info:
+            wat1 = WhatsAppTemplate(
+                name="Test Template Name",
+                message="Test WhatsApp Message 1",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            )
+            wat1.save()
+            wat1.save_revision()
+
+            wat2 = WhatsAppTemplate(
+                name="Test Template Name",
+                message="Test WhatsApp Message 2",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            )
+            wat2.save()
+            wat2.save_revision()
+
+        assert err_info.type is IntegrityError

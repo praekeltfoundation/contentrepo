@@ -129,9 +129,8 @@ def validate_using_form(edit_handler: Any, model: Model, row_num: int) -> None:
 
 
 def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
-
     def _extract_errors(
-        data: dict[str | int, Any] | list[str]
+        data: dict[str | int, Any] | list[str],
     ) -> Iterator[tuple[list[str], str]]:
         if isinstance(data, dict):
             items = list(data.items())

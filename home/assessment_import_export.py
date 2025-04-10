@@ -11,14 +11,12 @@ logger = getLogger(__name__)
 
 
 def export_xlsx_assessment(queryset: PageQuerySet, response: HttpResponse) -> None:
-
     exporter = AssessmentExporter(queryset)
     export_rows = exporter.perform_export()
     AssessmentExportWriter(export_rows).write_xlsx(response)
 
 
 def export_csv_assessment(queryset: PageQuerySet, response: HttpResponse) -> None:
-
     exporter = AssessmentExporter(queryset)
     export_rows = exporter.perform_export()
     AssessmentExportWriter(export_rows).write_csv(response)
