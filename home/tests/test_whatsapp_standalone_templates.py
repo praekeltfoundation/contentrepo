@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 import responses
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from django.db.utils import IntegrityError  # type: ignore
 from pytest_django.fixtures import SettingsWrapper

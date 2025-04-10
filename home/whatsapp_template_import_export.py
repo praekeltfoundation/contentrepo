@@ -30,9 +30,13 @@ def export_csv_whatsapp_template(
 
 
 @transaction.atomic
-def import_whatsapptemplate(
-    file, filetype, progress_queue, purge=True, locale=None
-) -> None:  # type: ignore
+def import_whatsapptemplate(  # type: ignore
+    file,
+    filetype,
+    progress_queue,
+    purge=True,
+    locale=None,
+) -> None:
     importer = WhatsAppTemplateImporter(
         file.read(), filetype, progress_queue, purge, locale
     )

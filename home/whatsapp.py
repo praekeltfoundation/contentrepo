@@ -203,7 +203,8 @@ def submit_whatsapp_template(
         if 400 <= response.status_code < 500:
             if "application/json" in response.headers.get("Content-Type", ""):
                 raise TemplateSubmissionClientException(response.json())
-    return
+
+    return {}
 
 
 class TemplateSubmissionServerException(Exception):
