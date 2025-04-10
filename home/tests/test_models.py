@@ -1,5 +1,6 @@
 import json
 from io import StringIO
+from typing import Any
 from unittest import mock
 
 import pytest
@@ -30,7 +31,6 @@ from home.models import (
     OrderedContentSet,
     PageView,
     SMSBlock,
-    TemplateContentQuickReply,
     USSDBlock,
     WhatsappBlock,
     WhatsAppTemplate,
@@ -40,13 +40,13 @@ from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
 
 
-def create_user():
+def create_user() -> User:
     user = User.objects.create(username="testuser", email="testuser@example.com")
     return user
 
 
 class MyPageTests(WagtailPageTests):
-    def test_contentpage_structure(self):
+    def test_contentpage_structure(self) -> None:
         """
         A ContentPage can only be created under a ContentPageIndex or another ContentPage.
         A ContentIndexPage can only be created under the HomePage.
@@ -58,7 +58,7 @@ class MyPageTests(WagtailPageTests):
 
 
 class ContentPageTests(TestCase):
-    def test_page_and_revision_rating(self):
+    def test_page_and_revision_rating(self) -> None:
         page = create_page()
 
         self.assertEqual(page.page_rating, "(no ratings yet)")
@@ -75,7 +75,7 @@ class ContentPageTests(TestCase):
         create_page_rating(page)
         self.assertEqual(page.latest_revision_rating, "1/1 (100%)")
 
-    def test_save_page_view(self):
+    def test_save_page_view(self) -> None:
         page = create_page()
 
         self.assertEqual(PageView.objects.count(), 0)
@@ -90,13 +90,15 @@ class ContentPageTests(TestCase):
         self.assertEqual(view.data, {"save": "this"})
 
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_on_save_deactivated(self, mock_create_whatsapp_template):
+    def test_template_create_on_save_deactivated(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         create_page(is_whatsapp_template=True)
         mock_create_whatsapp_template.assert_not_called()
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
-    def test_template_create_on_save(self):
+    def test_template_create_on_save(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
 
@@ -113,8 +115,8 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_create_with_quick_reply_buttons_on_save(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         page_with_button = PageBuilder.build_cp(
@@ -124,11 +126,18 @@ class ContentPageTests(TestCase):
             bodies=[
                 WABody(
                     "Page2",
-                    [WABlk("Page2 WA Body")],
+                    [
+                        WABlk(
+                            message="Page2 WA Body",
+                            buttons=[
+                                PageBtn("Button 2", page=main_menu),
+                                PageBtn("Menu", page=main_menu),
+                            ],
+                        )
+                    ],
                 )
             ],
             whatsapp_template_name="page2-template",
-            quick_replies=["Menu", "Button 2"],
         )
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
@@ -144,8 +153,8 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_create_with_proper_buttons_on_save(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         page_with_button = PageBuilder.build_cp(
@@ -183,8 +192,8 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_created_with_proper_buttons_not_quick_replies(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
         page_with_button = PageBuilder.build_cp(
@@ -222,8 +231,8 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_create_with_example_values_on_save(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         page = create_page(is_whatsapp_template=True, add_example_values=True)
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_with(
@@ -238,12 +247,14 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_updated_on_change(self, mock_create_whatsapp_template):
+    def test_template_updated_on_change(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the content is changed, the template should be resubmitted with an updated
         template name
         """
-        page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        page = create_page(is_whatsapp_template=True, has_buttons=True)
         en = Locale.objects.get(language_code="en")
         mock_create_whatsapp_template.assert_called_once_with(
             f"wa_title_{page.get_latest_revision().pk}",
@@ -276,11 +287,13 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_not_submitted_on_no_change(self, mock_create_whatsapp_template):
+    def test_template_not_submitted_on_no_change(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the content is not changed, the template should not be resubmitted
         """
-        page = create_page(is_whatsapp_template=True, has_quick_replies=True)
+        page = create_page(is_whatsapp_template=True, has_buttons=True)
         page.get_latest_revision().publish()
         page.refresh_from_db()
         expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
@@ -304,13 +317,13 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_submitted_when_is_whatsapp_template_is_set(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the is_whatsapp_template was not enabled on the content, but is changed,
         then it should submit, even if the content hasn't changed.
         """
-        page = create_page(is_whatsapp_template=False, has_quick_replies=True)
+        page = create_page(is_whatsapp_template=False, has_buttons=True)
         page.get_latest_revision().publish()
         page.refresh_from_db()
         mock_create_whatsapp_template.assert_not_called()
@@ -335,8 +348,8 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_submitted_with_no_whatsapp_previous_revision(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the previous revision didn't have any whatsapp messages, it should still
         successfully submit a whatsapp template
@@ -369,8 +382,8 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_template_not_submitted_with_no_message(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the page doesn't have any whatsapp messages, then it shouldn't be submitted
         """
@@ -389,7 +402,9 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_not_submitted_with_no_title(self, mock_create_whatsapp_template):
+    def test_template_not_submitted_with_no_title(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         If the page is a WA template and how no title, then it shouldn't be submitted
         """
@@ -408,7 +423,7 @@ class ContentPageTests(TestCase):
 
         mock_create_whatsapp_template.assert_not_called()
 
-    def test_clean_text_valid_variables(self):
+    def test_clean_text_valid_variables(self) -> None:
         """
         The message should accept variables if and only if they are numeric and ordered
         """
@@ -435,8 +450,8 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_create_whatsapp_template_submit_no_error_message(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         Should not return an error message if template was submitted successfully
         """
@@ -457,8 +472,8 @@ class ContentPageTests(TestCase):
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
     def test_create_whatsapp_template_submit_return_error(
-        self, mock_create_whatsapp_template
-    ):
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         """
         Test the error message on template submission failure
         If template submission fails user should get descriptive error instead of internal server error
@@ -471,7 +486,7 @@ class ContentPageTests(TestCase):
         self.assertRaises(ValidationError)
         self.assertEqual(e.exception.message, "Failed to submit template")
 
-    def test_for_missing_migrations(self):
+    def test_for_missing_migrations(self) -> None:
         output = StringIO()
         call_command("makemigrations", no_input=True, dry_run=True, stdout=output)
         self.assertEqual(
@@ -480,7 +495,7 @@ class ContentPageTests(TestCase):
             "There are missing migrations:\n %s" % output.getvalue(),
         )
 
-    def test_get_all_links(self):
+    def test_get_all_links(self) -> None:
         """
         ContentPage.get_all_links() should return two lists with all ContentPage and
         OrderedContentSet links.
@@ -535,7 +550,7 @@ class ContentPageTests(TestCase):
             ocs_links,
         )
 
-    def test_get_all_links_no_links(self):
+    def test_get_all_links_no_links(self) -> None:
         """
         ContentPage.get_all_links() should return two empty lists if there are no links
         """
@@ -556,7 +571,9 @@ class ContentPageTests(TestCase):
         reason="This fails because we can't get locale to create the page, "
         "these tests will be changed once whatsapp templates are separated."
     )
-    def test_template_create_with_pt_language(self, mock_create_whatsapp_template):
+    def test_template_create_with_pt_language(
+        self, mock_create_whatsapp_template: Any
+    ) -> None:
         page = create_page(is_whatsapp_template=True)
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         mock_create_whatsapp_template.assert_called_with(
@@ -569,7 +586,7 @@ class ContentPageTests(TestCase):
             [],
         )
 
-    def test_body_text_truncation(self):
+    def test_body_text_truncation(self) -> None:
         """
         Body text for web, whatsapp, messenger, and viber, should be truncated in this
         list view
@@ -593,9 +610,18 @@ class ContentPageTests(TestCase):
         self.assertEqual(page.mess_body()[-5:], "test…")
         self.assertEqual(page.vib_body()[-5:], "test…")
 
+    def test_new_template_displays_correctly(self) -> None:
+        page = create_page(
+            is_new_whatsapp_template=True, whatsapp_template_name="Test Template"
+        )
+
+        self.assertEqual(
+            page.wa_body(), "Test Whatsapp Template message\nTest WhatsApp Message 1"
+        )
+
 
 class OrderedContentSetTests(TestCase):
-    def test_get_gender_none(self):
+    def test_get_gender_none(self) -> None:
         """
         Ordered Content Sets without a gender selected should return None
         """
@@ -607,7 +633,7 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save()
         self.assertIsNone(ordered_content_set.get_gender())
 
-    def test_get_gender(self):
+    def test_get_gender(self) -> None:
         """
         Ordered Content Sets with a gender selected should return the appropriate gender
         """
@@ -620,7 +646,7 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.get_gender(), "female")
 
-    def test_status_draft(self):
+    def test_status_draft(self) -> None:
         """
         Draft Ordered Content Sets should return a draft status
         """
@@ -634,7 +660,7 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.unpublish()
         self.assertEqual(ordered_content_set.status(), "Draft")
 
-    def test_status_live(self):
+    def test_status_live(self) -> None:
         """
         Live Ordered Content Sets should return a live status
         """
@@ -647,7 +673,7 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.status(), "Live")
 
-    def test_status_live_plus_draft(self):
+    def test_status_live_plus_draft(self) -> None:
         """
         An Ordered Content Sets that is published and being drafted should return a live and draft status
         """
@@ -661,7 +687,7 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save_revision()
         self.assertEqual(ordered_content_set.status(), "Live + Draft")
 
-    def test_get_relationship(self):
+    def test_get_relationship(self) -> None:
         """
         Ordered Content Sets with a relationship selected should return the appropriate relationship
         """
@@ -674,7 +700,7 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.get_relationship(), "single")
 
-    def test_get_age(self):
+    def test_get_age(self) -> None:
         """
         Ordered Content Sets with an age selected should return the choosen age
         """
@@ -687,7 +713,7 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.get_age(), "15-18")
 
-    def test_get_page(self):
+    def test_get_page(self) -> None:
         """
         Ordered Content Sets with an page selected should return a list of the choosen page. We compare
         the unique slug of a page
@@ -718,7 +744,7 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.page(), ["ha-menu", "page2-menu"])
 
-    def test_get_none_page(self):
+    def test_get_none_page(self) -> None:
         """
         Ordered Content Sets with no page selected should return the default value -
         """
@@ -730,7 +756,7 @@ class OrderedContentSetTests(TestCase):
         ordered_content_set.save()
         self.assertEqual(ordered_content_set.page(), ["-"])
 
-    def test_status_live_plus_in_moderation(self):
+    def test_status_live_plus_in_moderation(self) -> None:
         requested_by = create_user()
         ordered_content_set = OrderedContentSet(
             name="Test Title",
@@ -752,7 +778,7 @@ class OrderedContentSetTests(TestCase):
 
         assert ordered_content_set.status() == "Live + In Moderation"
 
-    def test_status_in_moderation(self):
+    def test_status_in_moderation(self) -> None:
         requested_by = create_user()
         ordered_content_set = OrderedContentSet(
             name="Test Title",
@@ -779,17 +805,17 @@ class OrderedContentSetTests(TestCase):
 class WhatsappBlockTests(TestCase):
     def create_message_value(
         self,
-        image=None,
-        document=None,
-        media=None,
-        message="",
-        variation_messages=None,
-        example_values=None,
-        next_prompt="",
-        buttons=None,
-        list_items=None,
-        footer="",
-    ):
+        image: Any = None,
+        document: Any = None,
+        media: Any = None,
+        message: str = "",
+        variation_messages: Any = None,
+        example_values: Any = None,
+        next_prompt: str = "",
+        buttons: Any = None,
+        list_items: Any = None,
+        footer: str = "",
+    ) -> dict[str, Any]:
         return {
             "image": image,
             "document": document,
@@ -803,11 +829,11 @@ class WhatsappBlockTests(TestCase):
             "footer": footer,
         }
 
-    def create_image(self, width=0, height=0):
+    def create_image(self, width: int = 0, height: int = 0) -> Any:
         Image = get_image_model()
         return Image.objects.create(width=width, height=height)
 
-    def test_clean_text_char_limit(self):
+    def test_clean_text_char_limit(self) -> None:
         """Text messages should be limited to 4096 characters"""
         WhatsappBlock().clean(self.create_message_value(message="a" * 4096))
 
@@ -815,7 +841,7 @@ class WhatsappBlockTests(TestCase):
             WhatsappBlock().clean(self.create_message_value(message="a" * 4097))
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
 
-    def test_clean_media_char_limit(self):
+    def test_clean_media_char_limit(self) -> None:
         """Media messages should be limited to 1024 characters"""
         image = self.create_image()
         WhatsappBlock().clean(
@@ -828,7 +854,7 @@ class WhatsappBlockTests(TestCase):
             )
         self.assertEqual(list(e.exception.block_errors.keys()), ["message"])
 
-    def test_buttons_limit(self):
+    def test_buttons_limit(self) -> None:
         """WhatsApp messages can only have up to 3 buttons"""
         buttons_block = WhatsappBlock().child_blocks["buttons"]
         buttons = buttons_block.to_python(
@@ -845,7 +871,7 @@ class WhatsappBlockTests(TestCase):
             )
         self.assertEqual(list(e.exception.block_errors.keys()), ["buttons"])
 
-    def test_buttons_char_limit(self):
+    def test_buttons_char_limit(self) -> None:
         """WhatsApp button labels have a character limit"""
         NextMessageButton().clean({"title": "test"})
         GoToPageButton().clean({"title": "test", "page": 1})
@@ -858,7 +884,7 @@ class WhatsappBlockTests(TestCase):
             GoToPageButton().clean({"title": "a" * 21})
         self.assertEqual(list(e.exception.block_errors.keys()), ["title"])
 
-    def test_list_items_limit(self):
+    def test_list_items_limit(self) -> None:
         """WhatsApp messages can only have up to 10 list items"""
         list_item = WhatsappBlock().child_blocks["list_items"]
         items = list_item.to_python(
@@ -874,7 +900,7 @@ class WhatsappBlockTests(TestCase):
             )
         self.assertEqual(list(e.exception.block_errors.keys()), ["list_items"])
 
-    def test_list_items_character_limit(self):
+    def test_list_items_character_limit(self) -> None:
         """WhatsApp list item title can only have up to 24 char"""
         list_item = WhatsappBlock().child_blocks["list_items"]
 
@@ -909,13 +935,13 @@ class WhatsappBlockTests(TestCase):
 class USSDBlockTests(TestCase):
     def create_message_value(
         self,
-        message="",
-    ):
+        message: str = "",
+    ) -> dict[str, str]:
         return {
             "message": message,
         }
 
-    def test_clean_text_char_limit(self):
+    def test_clean_text_char_limit(self) -> None:
         """Text messages should be limited to 160 characters"""
         USSDBlock().clean(self.create_message_value(message="a" * 160))
 
@@ -927,13 +953,13 @@ class USSDBlockTests(TestCase):
 class SMSBlockTests(TestCase):
     def create_message_value(
         self,
-        message="",
-    ):
+        message: str = "",
+    ) -> dict[str, str]:
         return {
             "message": message,
         }
 
-    def test_clean_text_char_limit(self):
+    def test_clean_text_char_limit(self) -> None:
         """Text messages should be limited to 160 characters"""
         SMSBlock().clean(self.create_message_value(message="a" * 459))
 
@@ -1038,21 +1064,19 @@ class TestWhatsAppTemplate:
     # TODO: Find a better way to test quick replies
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
-    def test_template_create_with_buttons(self):
+    def test_template_create_with_buttons(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={"id": "123456789"})
 
         wat = WhatsAppTemplate(
             name="wa_title",
+            buttons=[
+                ("next_message", {"title": "Test Button"}),
+            ],
             message="Test WhatsApp Message 1",
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
         )
-        wat.save()
-        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button1")
-        wat.quick_replies.add(created_qr)
-        created_qr, _ = TemplateContentQuickReply.objects.get_or_create(name="Button2")
-        wat.quick_replies.add(created_qr)
         wat.save()
         wat.save_revision().publish()
 
@@ -1068,8 +1092,7 @@ class TestWhatsAppTemplate:
                 {
                     "type": "BUTTONS",
                     "buttons": [
-                        {"text": "Button1", "type": "QUICK_REPLY"},
-                        {"text": "Button2", "type": "QUICK_REPLY"},
+                        {"text": "Test Button", "type": "QUICK_REPLY"},
                     ],
                 },
             ],
@@ -1079,7 +1102,7 @@ class TestWhatsAppTemplate:
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
-    def test_template_create_with_example_values(self):
+    def test_template_create_with_example_values(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={"id": "123456789"})
 
@@ -1113,7 +1136,7 @@ class TestWhatsAppTemplate:
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
-    def test_template_create_failed(self):
+    def test_template_create_failed(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         error_response = {
             "error": {
@@ -1143,15 +1166,15 @@ class TestWhatsAppTemplate:
 class IntegerQuestionBlockTests(TestCase):
     def create_min_max_value(
         self,
-        min,
-        max,
-    ):
+        min: int,
+        max: int,
+    ) -> dict[str, int]:
         return {
             "min": min,
             "max": max,
         }
 
-    def test_clean_identical_min_max(self):
+    def test_clean_identical_min_max(self) -> None:
         """Min and Max values must not be the same"""
         IntegerQuestionBlock().clean(self.create_min_max_value(min=40, max=50))
 

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!--
 ## Unreleased
 ### Added
+- Use buttons for Whatsapp Templates instead of quick replies
+- Allow pages to link to Whatsapp templates
 ### Removed
 ### Fixed
 ### Security

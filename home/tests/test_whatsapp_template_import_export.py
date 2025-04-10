@@ -15,6 +15,7 @@ from pytest_django.fixtures import SettingsWrapper
 from wagtail.models import Locale  # type: ignore
 from wagtail.snippets.models import register_snippet  # type: ignore
 
+from home.import_helpers import ImportException
 from home.import_whatsapp_templates import ImportWhatsAppTemplateException
 from home.models import (
     WhatsAppTemplate,
@@ -266,7 +267,7 @@ class TestImportExportRoundtrip:
         Importing a simple CSV file with one whatsapp template and
         one question and export it
 
-        (This uses whatsapp_template_simple.csv.)
+        (This uses whatsapp-template-simple.csv)
 
         """
 
@@ -308,19 +309,27 @@ class TestImportExportRoundtrip:
             name="wa_title",
             message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
             category="UTILITY",
+            buttons=[],
             locale=Locale.objects.get(language_code="en"),
             example_values=[
                 ("example_values", "Ev1"),
                 ("example_values", "Ev2"),
             ],
             submission_name="testname",
-            submission_status="NOT YET SUBMITTED",
+            submission_status="NOT_SUBMITTED_YET",
             submission_result="test result",
         )
 
         orig = impexp.get_whatsapp_template_json()
         impexp.export_reimport()
         imported = impexp.get_whatsapp_template_json()
+        # remove the revision and unpublished changes keys
+        for item in orig:
+            del item["fields"]["latest_revision"]
+            del item["fields"]["has_unpublished_changes"]
+        for item in imported:
+            del item["fields"]["latest_revision"]
+            del item["fields"]["has_unpublished_changes"]
         assert imported == orig
 
 
@@ -353,3 +362,29 @@ class TestImportExport:
 
         assert e.value.row_num == 2
         assert e.value.message == "Language code not found: fakecode"
+
+    def test_go_to_page_button_missing_page(self, csv_impexp: ImportExport) -> None:
+        """
+        Go to page buttons in the import file link to other pages using the slug. But
+        if no page with that slug exists, then we should give the user an error message
+        that tells them where and how to fix it.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp-template-missing-gotopage.csv")
+        assert e.value.message == [
+            "No pages found with slug 'missing' and locale 'English' for go_to_page "
+            "button 'Missing' on template 'Test Template Missing'"
+        ]
+
+    def test_go_to_form_button_missing_form(self, csv_impexp: ImportExport) -> None:
+        """
+        Go to form buttons in the import file link to other forms using the slug. But
+        if no form with that slug exists, then we should give the user an error message
+        that tells them where and how to fix it.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp-template-missing-gotoform.csv")
+        assert e.value.message == [
+            "No form found with slug 'missing' and locale 'English' for go_to_form "
+            "button 'Missing'"
+        ]

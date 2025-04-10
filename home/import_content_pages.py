@@ -1,9 +1,7 @@
 import contextlib
 import csv
-import json
 from collections import defaultdict
 from dataclasses import dataclass, field, fields
-from json.decoder import JSONDecodeError
 from queue import Queue
 from typing import Any
 from uuid import uuid4
@@ -20,6 +18,7 @@ from wagtail.rich_text import RichText  # type: ignore
 from home.import_helpers import (
     ImportException,
     ImportWarning,
+    JSON_loader,
     parse_file,
     validate_using_form,
 )
@@ -875,18 +874,6 @@ def deserialise_list(value: str) -> list[str]:
 
     items = list(csv.reader([value]))[0]
     return [item.strip() for item in items]
-
-
-def JSON_loader(row_num: int, value: str) -> list[dict[str, Any]]:
-    if not value:
-        return []
-
-    try:
-        button = json.loads(value)
-    except JSONDecodeError:
-        raise ImportException(f"Bad JSON button, you have: {value}", row_num)
-
-    return button
 
 
 def to_int_or_none(val: str | None) -> int | None:

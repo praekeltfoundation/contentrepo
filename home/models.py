@@ -1,5 +1,6 @@
 import logging
 import re
+from typing import Any
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -62,6 +63,7 @@ from .constants import (  # isort:skip
     RELATIONSHIP_STATUS_CHOICES,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -70,7 +72,7 @@ class UniqueSlugMixin:
     Ensures that slugs are unique per locale
     """
 
-    def is_slug_available(self, slug, PO=Page):
+    def is_slug_available(self, slug: str, PO: type[Page] = Page) -> bool:
         pages = PO.objects.filter(
             locale=self.locale_id or self.get_default_locale(), slug=slug
         )
@@ -78,7 +80,7 @@ class UniqueSlugMixin:
             pages = pages.exclude(pk=self.pk)
         return not pages.exists()
 
-    def get_unique_slug(self, slug, PO):
+    def get_unique_slug(self, slug: str, PO: type[Page] = Page) -> str:
         suffix = 1
         candidate_slug = slug
         while not self.is_slug_available(candidate_slug, PO):
@@ -86,7 +88,7 @@ class UniqueSlugMixin:
             candidate_slug = f"{slug}-{suffix}"
         return candidate_slug
 
-    def clean(self, PO=Page):
+    def clean(self, PO: type[Page] = Page) -> None:
         super().clean()
 
         if not self.is_slug_available(self.slug, PO):
@@ -179,11 +181,13 @@ class SiteSettings(BaseSiteSetting):
 
 
 class MediaBlock(AbstractMediaChooserBlock):
-    def render_basic(self, value, context=None):
+    def render_basic(
+        self, value: dict[str, Any], context: dict[str, Any] | None = None
+    ) -> None:
         pass
 
 
-def get_valid_profile_values(field):
+def get_valid_profile_values(field: str) -> list[str]:
     site = Site.objects.get(is_default_site=True)
     site_settings = SiteSettings.for_site(site)
 
@@ -197,19 +201,19 @@ def get_valid_profile_values(field):
         return []
 
 
-def get_gender_choices():
+def get_gender_choices() -> list[tuple[str, str]]:
     # Wrapper for get_profile_field_choices that can be passed as a callable
     choices = dict(GENDER_CHOICES)
     return [(g, choices[g]) for g in get_valid_profile_values("gender")]
 
 
-def get_age_choices():
+def get_age_choices() -> list[tuple[str, str]]:
     # Wrapper for get_profile_field_choices that can be passed as a callable
     choices = dict(AGE_CHOICES)
     return [(a, choices[a]) for a in get_valid_profile_values("age")]
 
 
-def get_relationship_choices():
+def get_relationship_choices() -> list[tuple[str, str]]:
     # Wrapper for get_profile_field_choices that can be passed as a callable
     choices = dict(RELATIONSHIP_STATUS_CHOICES)
     return [(r, choices[r]) for r in get_valid_profile_values("relationship")]
@@ -344,7 +348,7 @@ class WhatsappBlock(blocks.StructBlock):
         icon = "user"
         form_classname = "whatsapp-message-block struct-block"
 
-    def clean(self, value):
+    def clean(self, value: dict[str, Any]) -> dict[str, Any]:
         result = super().clean(value)
         num_vars_in_msg = len(re.findall(r"{{\d+}}", result["message"]))
         errors = {}
@@ -410,9 +414,9 @@ class USSDBlock(blocks.StructBlock):
         icon = "user"
         form_classname = "whatsapp-message-block struct-block"
 
-    def clean(self, value):
+    def clean(self, value: dict[str, Any]) -> dict[str, Any]:
         result = super().clean(value)
-        errors = {}
+        errors: dict[str, Any] = {}
 
         if errors:
             raise StructBlockValidationError(errors)
@@ -459,7 +463,7 @@ class ContentPageIndex(UniqueSlugMixin, Page):
     include_in_homepage = models.BooleanField(default=False)
 
     @property
-    def has_children(self):
+    def has_children(self) -> bool:
         return self.get_children_count() > 0
 
     api_fields = [
@@ -592,6 +596,12 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                 "Whatsapp_Message",
                 WhatsappBlock(
                     help_text="Each message will be sent with the text and media"
+                ),
+            ),
+            (
+                "Whatsapp_Template",
+                SnippetChooserBlock(
+                    "home.WhatsAppTemplate", help_text="WhatsAppTemplate to use"
                 ),
             ),
         ],
@@ -848,17 +858,17 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         self.views.create(**page_view)
 
     @property
-    def quick_reply_buttons(self):
+    def quick_reply_buttons(self) -> list[str]:
         return self.quick_reply_items.all().values_list("tag__name", flat=True)
 
     @property
-    def whatsapp_template_buttons(self):
+    def whatsapp_template_buttons(self) -> list[str]:
         # If Buttons and quick replies are present then Buttons are used
         first_msg = self.whatsapp_body.raw_data[0]["value"]
         if "buttons" in first_msg and first_msg["buttons"]:
             buttons = [b["value"]["title"] for b in first_msg["buttons"]]
             return buttons
-        return sorted(self.quick_reply_buttons)
+        return []
 
     @property
     def whatsapp_template_fields(self):
@@ -1004,9 +1014,16 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         return list(self.tags.all())
 
     @short_description("Whatsapp Body")
-    def wa_body(self):
+    def wa_body(self) -> str:
         body = (
-            "\n".join(m.value["message"] for m in self.whatsapp_body)
+            "\n".join(
+                (
+                    m.value["message"]
+                    if m.block_type == "Whatsapp_Message"
+                    else m.value.message
+                )
+                for m in self.whatsapp_body
+            )
             if self.whatsapp_body
             else ""
         )
@@ -1676,8 +1693,15 @@ class WhatsAppTemplate(
     get_category_display.admin_order_field = "category"
     get_category_display.short_description = "Category"
 
-    quick_replies = ClusterTaggableManager(
-        through="home.TemplateQuickReplyContent", blank=True
+    buttons = StreamField(
+        [
+            ("next_message", NextMessageButton()),
+            ("go_to_page", GoToPageButton()),
+            ("go_to_form", GoToFormButton()),
+        ],
+        use_json_field=True,
+        null=True,
+        max_num=3,
     )
 
     locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
@@ -1690,7 +1714,7 @@ class WhatsAppTemplate(
         related_name="image",
     )
     message = models.TextField(
-        help_text="each template message cannot exceed 1024 characters",
+        help_text="Each template message cannot exceed 1024 characters",
         max_length=1024,
     )
 
@@ -1742,14 +1766,14 @@ class WhatsAppTemplate(
 
     def save_revision(
         self,
-        user=None,
-        submitted_for_moderation=False,
-        approved_go_live_at=None,
-        changed=True,
-        log_action=False,
-        previous_revision=None,
-        clean=True,
-    ):
+        user: Any | None = None,
+        submitted_for_moderation: bool = False,
+        approved_go_live_at: Any | None = None,
+        changed: bool = True,
+        log_action: bool = False,
+        previous_revision: Any | None = None,
+        clean: bool = True,
+    ) -> Any:
         previous_revision = self.get_latest_revision()
         revision = super().save_revision(
             user,
@@ -1781,7 +1805,7 @@ class WhatsAppTemplate(
                 message=self.message,
                 category=self.category,
                 locale=self.locale,
-                quick_replies=sorted(self.quick_reply_buttons),
+                quick_replies=[b["value"]["title"] for b in self.buttons.raw_data],
                 image_obj=self.image,
                 example_values=[v["value"] for v in self.example_values.raw_data],
             )

@@ -4,6 +4,7 @@ from wagtail.blocks import StreamValue, StructValue  # type: ignore
 from wagtail.blocks.list_block import ListValue  # type: ignore
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.images.blocks import ImageChooserBlock
+from wagtail.models import Locale
 from wagtail.rich_text import RichText  # type: ignore
 
 from home.models import (  # isort:skip
@@ -13,19 +14,25 @@ from home.models import (  # isort:skip
     HomePage,
     MediaBlock,
     VariationBlock,
+    NextMessageButton,
+    GoToPageButton,
+    GoToFormButton,
+    WhatsAppTemplate,
 )
 
 
 def create_page(
-    title="Test Title",
-    parent=None,
-    tags=(),
-    is_whatsapp_template=False,
-    add_example_values=False,
-    add_variation=False,
-    has_quick_replies=False,
-    whatsapp_template_name="",
-):
+    title: str = "Test Title",
+    parent: ContentPage | None = None,
+    tags: tuple[str, ...] = (),
+    is_whatsapp_template: bool = False,
+    is_new_whatsapp_template: bool = False,
+    add_example_values: bool = False,
+    add_variation: bool = False,
+    has_quick_replies: bool = False,
+    whatsapp_template_name: str = "",
+    has_buttons: bool = False,
+) -> ContentPage:
     block = blocks.StructBlock(
         [
             ("message", blocks.TextBlock()),
@@ -33,6 +40,16 @@ def create_page(
             ("media", MediaBlock()),
             ("document", DocumentChooserBlock()),
             ("variation_messages", blocks.ListBlock(VariationBlock())),
+            (
+                "buttons",
+                blocks.StreamBlock(
+                    [
+                        ("next_message", NextMessageButton()),
+                        ("go_to_page", GoToPageButton()),
+                        ("go_to_form", GoToFormButton()),
+                    ]
+                ),
+            ),
         ]
     )
     message = "Test WhatsApp Message 1"
@@ -49,11 +66,19 @@ def create_page(
                 "message": f"{title} - female variation",
             }
         ]
-    block_value = block.to_python(
+    whatsapp_message = block.to_python(
         {
             "message": message,
             "image": None,
             "list_items": [],
+            "buttons": (
+                [
+                    {"type": "next_message", "value": {"title": "button 1"}},
+                    {"type": "next_message", "value": {"title": "button 2"}},
+                ]
+                if has_buttons
+                else []
+            ),
             "media": None,
             "document": None,
             "example_values": example_values,
@@ -61,12 +86,46 @@ def create_page(
         }
     )
 
+    whatsapp_body = [
+        ("Whatsapp_Message", whatsapp_message),
+    ]
+
+    if is_new_whatsapp_template:
+        if add_example_values:
+            message = "Test WhatsApp Message with two variables, {{1}} and {{2}}"
+            template_example_values = [
+                ("example_values", "Ev1"),
+                ("example_values", "Ev2"),
+            ]
+        else:
+            message = "Test Whatsapp Template message"
+            template_example_values = []
+        whatsapp_template = WhatsAppTemplate.objects.create(
+            name=whatsapp_template_name,
+            category="UTILITY",
+            message=message,
+            buttons=(
+                [
+                    {"type": "next_message", "value": {"title": "button 1"}},
+                    {"type": "next_message", "value": {"title": "button 2"}},
+                ]
+                if has_buttons
+                else []
+            ),
+            locale=Locale.objects.get(language_code="en"),
+            example_values=template_example_values,
+            submission_name="testname",
+            submission_status="NOT_SUBMITTED_YET",
+            submission_result="test result",
+        )
+        whatsapp_body.insert(0, ("Whatsapp_Template", whatsapp_template))
+
     contentpage = ContentPage(
         title=title,
         subtitle="Test Subtitle",
         enable_whatsapp=True,
         whatsapp_title="WA Title",
-        whatsapp_body=[("Whatsapp_Message", block_value)],
+        whatsapp_body=whatsapp_body,
         is_whatsapp_template=is_whatsapp_template,
         whatsapp_template_name=whatsapp_template_name,
     )
