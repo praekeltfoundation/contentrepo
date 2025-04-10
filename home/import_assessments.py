@@ -259,7 +259,6 @@ class ShadowAssessment:
 
     # FIXME: collect errors across all fields
     def validate_snippet_using_form(self, model: Assessment) -> None:
-
         edit_handler = get_edit_handler(Assessment)
         validate_using_form(edit_handler, model, self.row_num)
 

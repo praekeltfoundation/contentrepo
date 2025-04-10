@@ -335,7 +335,6 @@ class ContentImporter:
         )
 
     def _get_shadow_page(self, slug: str, locale: Locale) -> Page:
-
         try:
             return self.shadow_pages[(slug, locale)]
         except KeyError:
