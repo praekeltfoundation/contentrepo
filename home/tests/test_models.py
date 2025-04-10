@@ -1020,6 +1020,9 @@ class TestWhatsAppTemplate:
 
         TODO: Should this be an error when template submission is its own
             separate action?
+            Fritz -> I would think yes.  So that we can set a site as unable
+            to create templates via the env var,
+            regardless of which mechamism is used
         """
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
@@ -1062,6 +1065,7 @@ class TestWhatsAppTemplate:
         }
 
     # TODO: Find a better way to test quick replies
+    # Fritz -> I'm not sure what I meant here, nor do I have any ideas.  Will ask Rudi and/or Jeremy
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
     def test_template_create_with_buttons(self) -> None:

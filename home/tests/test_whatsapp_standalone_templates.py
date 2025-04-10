@@ -5,6 +5,7 @@ import pytest
 import responses
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile  # type: ignore
+from django.db.utils import IntegrityError  # type: ignore
 from pytest_django.fixtures import SettingsWrapper
 from responses.matchers import multipart_matcher
 from wagtail.images.models import Image  # type: ignore
@@ -287,6 +288,7 @@ class TestStandaloneWhatsAppTemplates:
 
         # The default English locale gives us a language of "en_US".
         # FIXME: Should this be "en" instead?
+        # Fritz -> Have talked to Jeremy about this.  We feel like we need to understand the locale mappings/translations between the various parts of this solution better.  We feel this should be a separate ticket
         en = Locale.objects.get(language_code="en")
         create_standalone_whatsapp_template(
             "test-template", "Test Body", "UTILITY", locale=en
@@ -323,3 +325,29 @@ class TestStandaloneWhatsAppTemplates:
             "language": "pt_BR",
             "components": [{"type": "BODY", "text": "Corpo de Teste"}],
         }
+
+    @responses.activate
+    def test_create_duplicate_name_and_locale_template(self) -> None:
+        """
+        We cannot create templates with a combination of name & locale that is not unique
+        """
+        with pytest.raises(IntegrityError) as err_info:
+            wat1 = WhatsAppTemplate(
+                name="Test Template Name",
+                message="Test WhatsApp Message 1",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            )
+            wat1.save()
+            wat1.save_revision()
+
+            wat2 = WhatsAppTemplate(
+                name="Test Template Name",
+                message="Test WhatsApp Message 2",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+            )
+            wat2.save()
+            wat2.save_revision()
+
+        assert err_info.type is IntegrityError

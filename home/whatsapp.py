@@ -203,22 +203,24 @@ def submit_whatsapp_template(
         print("Submission NOT OK")
         if response.status_code >= 500:
             print("5xx Server Error:")
-            raise TemplateSubmissionServerException(response.json())
+            raise TemplateSubmissionServerException(str(response.content))
         if 400 <= response.status_code < 500:
             print("4xx Client Error:")
-            raise TemplateSubmissionClientException(response.content)
+            if "application/json" in response.headers.get("Content-Type", ""):
+                raise TemplateSubmissionClientException(response.json())
+    return
 
 
 class TemplateSubmissionServerException(Exception):
-    def __init__(self, response_json: dict[str, Any]):
-        self.response_json = response_json
-        super().__init__(f"Server Error. {response_json['error']['error_user_msg']}")
+    def __init__(self, response_content: str):
+        self.response_content = response_content
+        super().__init__(f"{response_content}")
 
 
 class TemplateSubmissionClientException(Exception):
     def __init__(self, response_json: dict[str, Any]):
         self.response_json = response_json
-        super().__init__(f"Client Error. {response_json}")
+        super().__init__(f"Error! {response_json['error']['error_user_msg']}")
 
 
 ###### ALL CODE ABOVE THIS LINE IS SHARED BY THE OLD CONTENTPAGE EMBEDDED TEMPLATES, AS WELL AS THE NEW STANDALONE TEMPLATES ######

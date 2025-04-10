@@ -1815,25 +1815,19 @@ class WhatsAppTemplate(
             revision.content["submission_result"] = (
                 f"Success! Template ID = {response_json['id']}"
             )
-        except (
-            TemplateSubmissionServerException,
-            TemplateSubmissionClientException,
-        ) as e:
-            if isinstance(e, TemplateSubmissionServerException):
-                print("TemplateSubmissionServerException caught")
-                revision.content["name"] = self.name
-                revision.content["submission_name"] = self.template_name
-                revision.content["submission_status"] = self.SubmissionStatus.FAILED
-                revision.content["submission_result"] = (
-                    f"Error! {e.response_json['error']['error_user_msg']} "
-                )
-            else:
-                revision.content["name"] = self.name
-                revision.content["submission_name"] = self.template_name
-                revision.content["submission_status"] = self.SubmissionStatus.FAILED
-                revision.content["submission_result"] = (
-                    "Error. A non-server related error has occurred. Likely a TemplateSubmissionClientException"
-                )
+        except TemplateSubmissionServerException:
+            revision.content["name"] = self.name
+            revision.content["submission_name"] = self.template_name
+            revision.content["submission_status"] = self.SubmissionStatus.FAILED
+            revision.content["submission_result"] = (
+                "An Internal Server Error has occurred.  Please try again later or contact developer support"
+            )
+
+        except TemplateSubmissionClientException as tsce:
+            revision.content["name"] = self.name
+            revision.content["submission_name"] = self.template_name
+            revision.content["submission_status"] = self.SubmissionStatus.FAILED
+            revision.content["submission_result"] = str(tsce)
 
         revision.save(update_fields=["content"])
         return revision

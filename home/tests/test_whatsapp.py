@@ -222,6 +222,7 @@ class TestWhatsApp:
 
         # The default English locale gives us a language of "en_US".
         # FIXME: Should this be "en" instead?
+        # Fritz -> Have talked to Jeremy about this.  We feel like we need to understand the locale mappings/translations between the various parts of this solution better.  We feel this should be a separate ticket
         en = Locale.objects.get(language_code="en")
         create_whatsapp_template("test-template", "Test Body", "UTILITY", locale=en)
         assert json.loads(responses.calls[-1].request.body) == {
