@@ -1834,14 +1834,11 @@ class WhatsAppTemplate(
 
     def check_matching_braces(self, message=message):
         result = ""
-        count_opening_braces = 0
+        count_opening_braces = message.count("{{")
+        count_closing_braces = message.count("}}")
 
-        for i in range(len(message)):
-            if message[i : i + 2] == "{{":
-                count_opening_braces += 1
-                next_char = i + 3
-                if not str(next_char).isdecimal():
-                    result = f"Please provide numeric variables only. You provided {next_char}."
+        if count_opening_braces != count_closing_braces:
+            result = f"Please provide variables with matching sets of braces. You provided {count_opening_braces} sets of opening braces, and {count_closing_braces} sets of closing braces."
 
         return result
 
@@ -1876,11 +1873,7 @@ class WhatsAppTemplate(
         brace_mismatches = self.check_matching_braces(message)
 
         if brace_mismatches:
-            errors.setdefault("message", []).append(
-                ValidationError(
-                    f"Please provide variables with matching braces. You provided {brace_mismatches}."
-                )
-            )
+            errors.setdefault("message", []).append(ValidationError(brace_mismatches))
 
         vars_in_msg = re.findall(r"{{(.*?)}}", message)
         non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
