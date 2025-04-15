@@ -274,6 +274,16 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("whatsapp-template-simple.csv")
         content = csv_impexp.export_whatsapp_template()
         csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        iterator = iter(export)
+        first = next(iterator)
+        # if submission status is blank in csv, it should come through as not_submitted_yet
+        assert first["submission_status"] == "NOT_SUBMITTED_YET"
+        del first["submission_status"]
+
+        iterator = iter(csv)
+        first = next(iterator)
+        del first["submission_status"]
         assert export == csv
 
     def test_less_simple_with_quick_replies(self, csv_impexp: ImportExport) -> None:
@@ -350,6 +360,16 @@ class TestImportExport:
         assert e.value.message == "Language code not found: "
         content = csv_impexp.export_whatsapp_template()
         csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        iterator = iter(export)
+        first = next(iterator)
+        # if submission status is blank in csv, it should come through as not_submitted_yet
+        assert first["submission_status"] == "NOT_SUBMITTED_YET"
+        del first["submission_status"]
+
+        iterator = iter(csv)
+        first = next(iterator)
+        del first["submission_status"]
         assert export == csv
 
     def test_invalid_locale_code(self, csv_impexp: ImportExport) -> None:
@@ -388,3 +408,18 @@ class TestImportExport:
             "No form found with slug 'missing' and locale 'English' for go_to_form "
             "button 'Missing'"
         ]
+
+    def test_invalid_wa_template_category(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a WhatsApp template with an invalid category should raise an
+        error that results in an error message that gets sent back to the user.
+        """
+        with pytest.raises(ImportWhatsAppTemplateException) as e:
+            csv_impexp.import_file("bad-whatsapp-template-category.csv")
+
+        assert e.value.row_num == 2
+
+        assert (
+            e.value.message
+            == "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices."
+        )

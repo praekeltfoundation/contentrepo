@@ -54,7 +54,6 @@ class ExportRow:
     whatsapp_title: str = ""
     whatsapp_body: str = ""
     whatsapp_template_name: str = ""
-    whatsapp_template_category: str = ""
     example_values: str = ""
     variation_title: str = ""
     variation_body: str = ""
@@ -217,7 +216,6 @@ class ContentExporter:
             web_body=str(page.body),
             whatsapp_title=page.whatsapp_title,
             whatsapp_template_name=page.whatsapp_template_name,
-            whatsapp_template_category=page.whatsapp_template_category,
             sms_title=page.sms_title,
             ussd_title=page.ussd_title,
             messenger_title=page.messenger_title,
@@ -334,7 +332,6 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "whatsapp_title": 118,
         "whatsapp_body": 370,
         "whatsapp_template_name": 118,
-        "whatsapp_template_category": 118,
         "variation_title": 118,
         "variation_body": 370,
         "sms_title": 118,

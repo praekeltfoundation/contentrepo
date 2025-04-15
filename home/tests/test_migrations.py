@@ -3,7 +3,7 @@ import importlib
 from django.test import TestCase  # type: ignore
 from wagtail.models import Locale, Page, Site  # type: ignore
 
-from home.models import ContentPage, OrderedContentSet
+from home.models import ContentPage, OrderedContentSet, WhatsAppTemplate
 
 rename_duplicate_slugs_0029 = importlib.import_module(
     "home.migrations.0029_deduplicate_slugs"
@@ -16,6 +16,10 @@ rename_duplicate_slugs_0085 = importlib.import_module(
 set_locale_from_instance = importlib.import_module(
     "home.migrations.0086_orderedcontentset_set_locale_and_add_slug"
 ).set_locale_from_instance
+
+set_blank_submission_status_to_not_submitted_yet = importlib.import_module(
+    "home.migrations.0095_migrate_empty_submission_status_to_not_submitted_yet"
+).set_blank_submission_status_to_not_submitted_yet
 
 
 class MigrationTests(TestCase):
@@ -140,3 +144,26 @@ class MigrationTests(TestCase):
         # Verify the locale was set from the default site's root page
         ordered_content_set.refresh_from_db()
         self.assertEqual(ordered_content_set.locale, default_site.root_page.locale)
+
+    def test_migrate_empty_submission_status_to_not_submitted_yet(self) -> None:
+        """
+        When a WhatsAppTemplate has an empty submission status, it should be set to
+        "NOT_SUBMITTED_YET".
+        """
+        # Create a WhatsAppTemplate with an empty submission status
+        template = WhatsAppTemplate.objects.create(
+            name="Test Template",
+            submission_status="",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        template.save()
+
+        # Run the migration function
+        set_blank_submission_status_to_not_submitted_yet(WhatsAppTemplate)
+
+        # Verify the submission status was set to NOT_SUBMITTED_YET
+        template.refresh_from_db()
+        self.assertEqual(
+            template.submission_status,
+            WhatsAppTemplate.SubmissionStatus.NOT_SUBMITTED_YET,
+        )

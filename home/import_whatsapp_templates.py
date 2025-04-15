@@ -92,13 +92,22 @@ class WhatsAppTemplateImporter:
     def create_whatsapp_template_from_row(self, row: "ContentRow") -> None:
         locale = self.locale_from_language_code(row.locale)
 
+        if row.category not in WhatsAppTemplate.Category.values:
+            raise ImportWhatsAppTemplateException(
+                f"Validation error: whatsapp_template_category - Select a valid choice. {row.category} is not one of the available choices."
+            )
+
         template = WhatsAppTemplate(
             name=row.name,
             category=row.category,
             locale=locale,
             message=row.message,
             example_values=[("example_values", v) for v in row.example_values],
-            submission_status=row.submission_status,
+            submission_status=(
+                row.submission_status
+                if row.submission_status
+                else WhatsAppTemplate.SubmissionStatus.NOT_SUBMITTED_YET
+            ),
             submission_result=row.submission_result,
             submission_name=row.submission_name,
         )

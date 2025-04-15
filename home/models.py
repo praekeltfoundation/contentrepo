@@ -25,7 +25,6 @@ from wagtail.admin.panels import (
 )
 from wagtail.api import APIField
 from wagtail.blocks import (
-    StreamBlockValidationError,
     StreamValue,
     StructBlockValidationError,
 )
@@ -1086,66 +1085,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             errors.setdefault("whatsapp_title", []).append(
                 ValidationError("All WhatsApp templates need a title.")
             )
-        # The variable check is only for templates
-        if self.is_whatsapp_template and len(self.whatsapp_body.raw_data) > 0:
-            whatsapp_message = self.whatsapp_body.raw_data[0]["value"]["message"]
-
-            right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", whatsapp_message)
-            left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", whatsapp_message)
-            mismatches = right_mismatch + left_mismatch
-
-            if mismatches:
-                errors.setdefault("whatsapp_body", []).append(
-                    StreamBlockValidationError(
-                        {
-                            0: StreamBlockValidationError(
-                                {
-                                    "message": ValidationError(
-                                        f"Please provide variables with matching braces. You provided {mismatches}."
-                                    )
-                                }
-                            )
-                        }
-                    )
-                )
-
-            vars_in_msg = re.findall(r"{{(.*?)}}", whatsapp_message)
-            non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
-
-            if non_digit_variables:
-                errors.setdefault("whatsapp_body", []).append(
-                    StreamBlockValidationError(
-                        {
-                            0: StreamBlockValidationError(
-                                {
-                                    "message": ValidationError(
-                                        f"Please provide numeric variables only. You provided {non_digit_variables}."
-                                    )
-                                }
-                            )
-                        }
-                    )
-                )
-
-            # Check variable order
-            actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
-            expected_variables = [
-                str(j + 1) for j in range(len(actual_digit_variables))
-            ]
-            if actual_digit_variables != expected_variables:
-                errors.setdefault("whatsapp_body", []).append(
-                    StreamBlockValidationError(
-                        {
-                            0: StreamBlockValidationError(
-                                {
-                                    "message": ValidationError(
-                                        f'Variables must be sequential, starting with "{{1}}". Your first variable was "{actual_digit_variables}"'
-                                    )
-                                }
-                            )
-                        }
-                    )
-                )
 
         if errors:
             raise ValidationError(errors)
@@ -1666,7 +1605,7 @@ class WhatsAppTemplate(
         SUBMITTED = "SUBMITTED", _("Submitted")
         FAILED = "FAILED", _("Failed")
 
-    def get_submission_status_display(self):
+    def get_submission_status_display(self) -> str:
         return self.SubmissionStatus(self.submission_status).label
 
     get_submission_status_display.admin_order_field = "submission status"
@@ -1679,7 +1618,7 @@ class WhatsAppTemplate(
         default=Category.MARKETING,
     )
 
-    def get_category_display(self):
+    def get_category_display(self) -> str:
         return self.Category(self.category).label
 
     get_category_display.admin_order_field = "category"
@@ -1720,7 +1659,6 @@ class WhatsAppTemplate(
     submission_status = models.CharField(
         max_length=30,
         choices=SubmissionStatus.choices,
-        blank=True,
         default=SubmissionStatus.NOT_SUBMITTED_YET,
     )
 

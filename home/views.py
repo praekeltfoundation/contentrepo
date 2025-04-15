@@ -458,7 +458,7 @@ class WhatsAppTemplateUploadThread(UploadThread):
         self.locale = locale
         super().__init__(**kwargs)
 
-    def run(self):
+    def run(self) -> None:
         try:
             import_whatsapptemplate(
                 self.file, self.file_type, self.progress_queue, self.purge, self.locale
@@ -467,7 +467,7 @@ class WhatsAppTemplateUploadThread(UploadThread):
             self.result_queue.put(
                 (
                     messages.ERROR,
-                    f"WhatsAppTemplate import failed: {e.message}",
+                    f"WhatsAppTemplate import failed on row {e.row_num}: {e.message}",
                 )
             )
         except Exception:

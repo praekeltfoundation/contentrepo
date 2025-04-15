@@ -3,7 +3,7 @@ import csv
 from collections import defaultdict
 from dataclasses import dataclass, field, fields
 from queue import Queue
-from typing import Any
+from typing import Any, Union
 from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
@@ -35,6 +35,7 @@ from .models import (
     USSDBlock,
     ViberBlock,
     WhatsappBlock,
+    WhatsAppTemplate,
 )
 
 PageId = tuple[str, Locale]
@@ -294,7 +295,15 @@ class ContentImporter:
             if row.is_whatsapp_template_message:
                 page.is_whatsapp_template = True
                 page.whatsapp_template_name = row.whatsapp_template_name
-                page.whatsapp_template_category = row.whatsapp_template_category
+                # Link the template to the page
+                wa_template = WhatsAppTemplate.objects.get(
+                    name=row.whatsapp_template_name, locale=locale
+                )
+                page.whatsapp_body.append(
+                    ShadowWhatsAppTemplate(
+                        name=wa_template.name, locale=wa_template.locale
+                    )
+                )
             # TODO: Media
             # Currently media is exported as a URL, which just has an ID. This doesn't
             # actually help us much, as IDs can differ between instances, so we need
@@ -328,11 +337,13 @@ class ContentImporter:
             )
         whatsapp_block = page.whatsapp_body[-1]
 
-        whatsapp_block.variation_messages.append(
-            ShadowVariationBlock(
-                message=row.variation_body, variation_restrictions=row.variation_title
+        if isinstance(whatsapp_block, ShadowWhatsappBlock):
+            whatsapp_block.variation_messages.append(
+                ShadowVariationBlock(
+                    message=row.variation_body,
+                    variation_restrictions=row.variation_title,
+                )
             )
-        )
 
     def _get_shadow_page(self, slug: str, locale: Locale) -> Page:
 
@@ -472,9 +483,10 @@ class ShadowContentPage:
     enable_whatsapp: bool = False
     is_whatsapp_template: bool = False
     whatsapp_title: str = ""
-    whatsapp_body: list["ShadowWhatsappBlock"] = field(default_factory=list)
+    whatsapp_body: list[Union["ShadowWhatsappBlock", "ShadowWhatsAppTemplate"]] = field(
+        default_factory=list
+    )
     whatsapp_template_name: str = ""
-    whatsapp_template_category: str = "UTILITY"
     enable_sms: bool = False
     sms_title: str = ""
     sms_body: list["ShadowSMSBlock"] = field(default_factory=list)
@@ -543,10 +555,12 @@ class ShadowContentPage:
         page.is_whatsapp_template = self.is_whatsapp_template
         page.whatsapp_title = self.whatsapp_title
         page.whatsapp_template_name = self.whatsapp_template_name
-        page.whatsapp_template_category = self.whatsapp_template_category
         page.whatsapp_body.clear()
         for message in self.formatted_whatsapp_body:
-            page.whatsapp_body.append(("Whatsapp_Message", message))
+            if isinstance(message, WhatsAppTemplate):
+                page.whatsapp_body.insert(0, ("Whatsapp_Template", message))
+            else:
+                page.whatsapp_body.append(("Whatsapp_Message", message))
 
     def add_sms_to_page(self, page: ContentPage) -> None:
         page.enable_sms = self.enable_sms
@@ -624,7 +638,15 @@ class ShadowContentPage:
 
     @property
     def formatted_whatsapp_body(self) -> list[StructValue]:
-        return [WhatsappBlock().to_python(m.wagtail_format) for m in self.whatsapp_body]
+        formatted = []
+        for m in self.whatsapp_body:
+            if isinstance(m, ShadowWhatsAppTemplate):
+                template = WhatsAppTemplate.objects.get(name=m.name, locale=m.locale)
+                formatted.append(template)
+            else:
+                formatted.append(WhatsappBlock().to_python(m.wagtail_format))
+
+        return formatted
 
     @property
     def formatted_sms_body(self) -> list[StructValue]:
@@ -669,6 +691,19 @@ class ShadowWhatsappBlock:
             "list_title": self.list_title,
             "list_items": self.list_items,
             "footer": self.footer,
+        }
+
+
+@dataclass
+class ShadowWhatsAppTemplate:
+    name: str = ""
+    locale: Locale | str | None = None
+
+    @property
+    def wagtail_format(self) -> dict[str, str | None]:
+        return {
+            "name": self.name,
+            "locale": self.locale,
         }
 
 
@@ -733,7 +768,6 @@ class ContentRow:
     whatsapp_title: str = ""
     whatsapp_body: str = ""
     whatsapp_template_name: str = ""
-    whatsapp_template_category: str = ""
     example_values: list[str] = field(default_factory=list)
     variation_title: dict[str, str] = field(default_factory=dict)
     variation_body: str = ""
@@ -835,6 +869,7 @@ class ContentRow:
 
     @property
     def is_whatsapp_template_message(self) -> bool:
+        print(f"Template name: {self.whatsapp_template_name}")
         return bool(self.whatsapp_template_name)
 
     @property
