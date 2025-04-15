@@ -17,7 +17,6 @@ from home.whatsapp import create_standalone_whatsapp_template
 
 @pytest.mark.django_db
 class TestStandaloneWhatsAppTemplates:
-    # Standalone template tests below
     @responses.activate
     def test_create_standalone_whatsapp_template(self) -> None:
         """
@@ -42,6 +41,31 @@ class TestStandaloneWhatsAppTemplates:
 
         assert request.headers["Authorization"] == "Bearer fake-access-token"
         assert json.loads(request.body) == data
+
+    @responses.activate
+    def test_create_template_response_incorrect_content_type(self) -> None:
+        """
+        Creating a WhatsApp template with incorrect headers should fail
+        """
+        with pytest.raises(TypeError) as err_info:
+            url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+            responses.add(
+                responses.POST,
+                url,
+                json={"here": "Isthing"},
+                status=409,
+                content_type="text/html",
+            )
+
+            locale = Locale.objects.get(language_code="en")
+            create_standalone_whatsapp_template(
+                "test-template", "Test Body", "UTILITY", locale=locale
+            )
+
+        assert (
+            str(err_info.value)
+            == "Incorrect Content-Type detected.  Expecting 'application/json' but found text/html"
+        )
 
     @responses.activate
     def test_standalone_template_name(self) -> None:
