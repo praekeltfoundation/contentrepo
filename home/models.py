@@ -1862,6 +1862,7 @@ class WhatsAppTemplate(
         message = self.message
         # Matches "{1}" and "{11}", not "{{1}", "{a}" or "{1 "
         single_braces = re.findall(r"[^{]{(\d*?)}", message)
+        # TODO: Replace with PyParsing
 
         if single_braces:
             errors.setdefault("message", []).append(
@@ -1874,6 +1875,7 @@ class WhatsAppTemplate(
 
         if brace_mismatches:
             errors.setdefault("message", []).append(ValidationError(brace_mismatches))
+            # TODO: Replace with PyParsing
 
         vars_in_msg = re.findall(r"{{(.*?)}}", message)
         non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]

@@ -1064,8 +1064,6 @@ class TestWhatsAppTemplate:
             "name": f"wa_title_{wat.get_latest_revision().id}",
         }
 
-    # TODO: Find a better way to test quick replies
-    # Fritz -> I'm not sure what I meant here, nor do I have any ideas.  Will ask Rudi and/or Jeremy
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
     def test_template_create_with_buttons(self) -> None:
