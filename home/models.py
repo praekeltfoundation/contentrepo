@@ -1815,14 +1815,14 @@ class WhatsAppTemplate(
             revision.content["submission_result"] = (
                 f"Success! Template ID = {response_json['id']}"
             )
-        except TemplateSubmissionServerException:
+        except TemplateSubmissionServerException as tsse:
+            logger.exception(f"TemplateSubmissionServerException: {str(tsse)} ")
             revision.content["name"] = self.name
             revision.content["submission_name"] = self.template_name
             revision.content["submission_status"] = self.SubmissionStatus.FAILED
             revision.content["submission_result"] = (
                 "An Internal Server Error has occurred.  Please try again later or contact developer support"
             )
-
         except TemplateSubmissionClientException as tsce:
             revision.content["name"] = self.name
             revision.content["submission_name"] = self.template_name
