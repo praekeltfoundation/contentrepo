@@ -51,7 +51,8 @@ from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
 from .whatsapp import (
-    TemplateSubmissionException,
+    TemplateSubmissionClientException,
+    TemplateSubmissionServerException,
     create_standalone_whatsapp_template,
     create_whatsapp_template,
 )
@@ -1516,7 +1517,6 @@ class AssessmentTag(TaggedItemBase):
 
 
 class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel):
-
     class Meta:
         verbose_name = "CMS Form"
         verbose_name_plural = "CMS Forms"
@@ -1631,7 +1631,6 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
 
 
 class TemplateContentQuickReply(TagBase):
-
     class Meta:
         verbose_name = "quick reply"
         verbose_name_plural = "quick replies"
@@ -1651,11 +1650,20 @@ class TemplateQuickReplyContent(ItemBase):
 
 
 class WhatsAppTemplate(
-    DraftStateMixin, ClusterableModel, RevisionMixin, index.Indexed, models.Model
+    DraftStateMixin,
+    ClusterableModel,
+    RevisionMixin,
+    index.Indexed,
+    models.Model,
 ):
     class Meta:  # noqa
         verbose_name = "WhatsApp Template"
         verbose_name_plural = "WhatsApp Templates"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "locale"], name="unique_name_locale"
+            )
+        ]
 
     class Category(models.TextChoices):
         UTILITY = "UTILITY", _("Utility")
@@ -1766,7 +1774,6 @@ class WhatsAppTemplate(
         previous_revision: Any | None = None,
         clean: bool = True,
     ) -> Any:
-
         previous_revision = self.get_latest_revision()
         revision = super().save_revision(
             user,
@@ -1808,17 +1815,32 @@ class WhatsAppTemplate(
             revision.content["submission_result"] = (
                 f"Success! Template ID = {response_json['id']}"
             )
-        except TemplateSubmissionException as e:
-            # The submission failed
+        except TemplateSubmissionServerException as tsse:
+            logger.exception(f"TemplateSubmissionServerException: {str(tsse)} ")
             revision.content["name"] = self.name
             revision.content["submission_name"] = self.template_name
             revision.content["submission_status"] = self.SubmissionStatus.FAILED
             revision.content["submission_result"] = (
-                f"Error! {e.response_json['error']['error_user_msg']} "
+                "An Internal Server Error has occurred.  Please try again later or contact developer support"
             )
+        except TemplateSubmissionClientException as tsce:
+            revision.content["name"] = self.name
+            revision.content["submission_name"] = self.template_name
+            revision.content["submission_status"] = self.SubmissionStatus.FAILED
+            revision.content["submission_result"] = str(tsce)
 
         revision.save(update_fields=["content"])
         return revision
+
+    def check_matching_braces(self, message=message):
+        result = ""
+        count_opening_braces = message.count("{{")
+        count_closing_braces = message.count("}}")
+
+        if count_opening_braces != count_closing_braces:
+            result = f"Please provide variables with matching sets of braces. You provided {count_opening_braces} sets of opening braces, and {count_closing_braces} sets of closing braces."
+
+        return result
 
     def clean(self):
         result = super().clean()
@@ -1830,16 +1852,6 @@ class WhatsAppTemplate(
                 ValidationError("All WhatsApp templates need a name.")
             )
 
-        message = self.message
-
-        # TODO: Explain what this does, or find a cleaner implementation
-
-        # Checks for mismatches in the number of opening and closing brackets.  First from right to left, then from left to right
-        # TODO: Currently "{1}" is allowed to pass and throws an error.  Add a check for this, or redo this section in a cleaner way
-        right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
-        left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
-        mismatches = right_mismatch + left_mismatch
-
         example_values = self.example_values.raw_data
         for ev in example_values:
             if "," in ev["value"]:
@@ -1847,12 +1859,23 @@ class WhatsAppTemplate(
                     "Example values cannot contain commas"
                 )
 
-        if mismatches:
+        message = self.message
+        # Matches "{1}" and "{11}", not "{{1}", "{a}" or "{1 "
+        single_braces = re.findall(r"[^{]{(\d*?)}", message)
+        # TODO: Replace with PyParsing
+
+        if single_braces:
             errors.setdefault("message", []).append(
                 ValidationError(
-                    f"Please provide variables with matching braces. You provided {mismatches}."
+                    f"Please provide variables with valid double braces. You provided single braces {single_braces}."
                 )
             )
+
+        brace_mismatches = self.check_matching_braces(message)
+
+        if brace_mismatches:
+            errors.setdefault("message", []).append(ValidationError(brace_mismatches))
+            # TODO: Replace with PyParsing
 
         vars_in_msg = re.findall(r"{{(.*?)}}", message)
         non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
@@ -1863,8 +1886,8 @@ class WhatsAppTemplate(
                     f"Please provide numeric variables only. You provided {non_digit_variables}."
                 )
             )
-        # TODO: Add tests for these checks
-        # Check variable order
+
+        # Check variables are sequential
         actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
         expected_variables = [str(j + 1) for j in range(len(actual_digit_variables))]
         if actual_digit_variables != expected_variables:
@@ -1872,6 +1895,16 @@ class WhatsAppTemplate(
                 {
                     "message": ValidationError(
                         f'Variables must be sequential, starting with "{{1}}". You provided "{actual_digit_variables}"'
+                    )
+                }
+            )
+
+        # Check matching number of placeholders and example values
+        if len(example_values) != len(vars_in_msg):
+            errors.setdefault("message", []).append(
+                {
+                    "message": ValidationError(
+                        f"Mismatch in number of placeholders and example values. Found {len(vars_in_msg)} placeholder(s) and {len(example_values)} example values."
                     )
                 }
             )

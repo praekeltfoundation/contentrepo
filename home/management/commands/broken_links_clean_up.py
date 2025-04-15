@@ -8,7 +8,6 @@ class Command(BaseCommand):
     help = "Clean broken links for pages"
 
     def handle(self, *args, **options):
-
         # Query all pages
         content_pages = ContentPage.objects.all()
 

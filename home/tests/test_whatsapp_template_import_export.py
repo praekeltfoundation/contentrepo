@@ -34,7 +34,7 @@ ExpDictsPair = tuple[ExpDicts, ExpDicts]
 
 
 def filter_both(
-    filter_func: Callable[[ExpDict], ExpDict]
+    filter_func: Callable[[ExpDict], ExpDict],
 ) -> Callable[[ExpDict, ExpDict], ExpPair]:
     @wraps(filter_func)
     def ff(src: ExpDict, dst: ExpDict) -> ExpPair:
@@ -73,7 +73,7 @@ def _is_json_field(field_name: str) -> bool:
 
 
 def per_template(
-    filter_func: Callable[[DbDict], DbDict]
+    filter_func: Callable[[DbDict], DbDict],
 ) -> Callable[[DbDicts], DbDicts]:
     @wraps(filter_func)
     def fp(templates: DbDicts) -> DbDicts:
@@ -84,7 +84,6 @@ def per_template(
 
 @per_template
 def decode_json_fields(template: DbDict) -> DbDict:
-
     fields = {
         k: json.loads(v) if _is_json_field(k) else v
         for k, v in template["fields"].items()

@@ -970,7 +970,6 @@ class SMSBlockTests(TestCase):
 
 @pytest.mark.django_db
 class TestWhatsAppTemplate:
-
     def test_variables_are_numeric(self) -> None:
         """
         Template variables are numeric.
@@ -981,6 +980,9 @@ class TestWhatsAppTemplate:
                 message="{{foo}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                ],
             ).full_clean()
 
         assert err_info.value.message_dict == {
@@ -997,6 +999,10 @@ class TestWhatsAppTemplate:
                 message="{{2}} {{1}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                    ("example_values", "Ev2"),
+                ],
             ).full_clean()
 
         assert err_info.value.message_dict == {
@@ -1014,6 +1020,9 @@ class TestWhatsAppTemplate:
 
         TODO: Should this be an error when template submission is its own
             separate action?
+            Fritz -> I would think yes.  So that we can set a site as unable
+            to create templates via the env var,
+            regardless of which mechamism is used
         """
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={})
@@ -1055,7 +1064,6 @@ class TestWhatsAppTemplate:
             "name": f"wa_title_{wat.get_latest_revision().id}",
         }
 
-    # TODO: Find a better way to test quick replies
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
     def test_template_create_with_buttons(self) -> None:
