@@ -1,8 +1,8 @@
 import json
+import logging
 import mimetypes
 from collections.abc import Iterable
 from enum import Enum
-from json import JSONDecodeError
 from typing import Any
 from urllib.parse import urljoin
 
@@ -12,6 +12,8 @@ from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
 from .constants import WHATSAPP_LANGUAGE_MAPPING
+
+logger = logging.getLogger(__name__)
 
 
 class WhatsAppLanguage(Enum):
@@ -198,35 +200,16 @@ def submit_whatsapp_template(
 
     if response.ok:
         return response.json()
-    else:
-        if response.status_code >= 500:
-            raise TemplateSubmissionServerException(str(response.content))
-        if 400 <= response.status_code < 500:
-            resp_content_type = response.headers.get("Content-Type", "")
-            if "application/json" in resp_content_type:
-                raise TemplateSubmissionClientException(response.json())
-            else:
-                raise TypeError(
-                    f"Incorrect Content-Type detected.  Expecting 'application/json' but found {resp_content_type}"
-                )
 
-            if True:
-                raise JSONDecodeError("Some sort of json decode issue")
-        # try:
-        #     raise TemplateSubmissionClientException(
-        #         response.json()["error"]["error_user_msg"]
-        #     )
-        # except (JSONDecodeError, KeyError, TypeError):
-        #     if 400 <= response.status_code < 500:
-        #         resp_content_type = response.headers.get("Content-Type", "")
-        #     if "application/json" not in resp_content_type:
-        #         raise TypeError(
-        #             f"Incorrect Content-Type detected.  Expecting 'application/json' but found {resp_content_type}"
-        #         )
+    logger.warning(f"Error submitting template {response.content}")
+    try:
+        err_msg = response.json()["error"]["error_user_msg"]
+    except Exception:
+        raise TemplateSubmissionServerException(
+            f"Couldn't parse error response: {response.content}"
+        )
 
-        #     raise TemplateSubmissionClientException(str(response.content))
-
-    return response
+    raise TemplateSubmissionClientException(err_msg)
 
 
 class TemplateSubmissionServerException(Exception):
@@ -236,9 +219,9 @@ class TemplateSubmissionServerException(Exception):
 
 
 class TemplateSubmissionClientException(Exception):
-    def __init__(self, response_json: dict[str, Any]):
-        self.response_json = response_json
-        super().__init__(f"Error! {response_json['error']['error_user_msg']}")
+    def __init__(self, error_msg: str):
+        self.error_msg = error_msg
+        super().__init__(f"Error! {error_msg}")
 
 
 ###### ALL CODE ABOVE THIS LINE IS SHARED BY THE OLD CONTENTPAGE EMBEDDED TEMPLATES, AS WELL AS THE NEW STANDALONE TEMPLATES ######
