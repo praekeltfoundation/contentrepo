@@ -1,4 +1,5 @@
 import json
+from json import JSONDecodeError
 from pathlib import Path
 
 import pytest
@@ -41,31 +42,6 @@ class TestStandaloneWhatsAppTemplates:
 
         assert request.headers["Authorization"] == "Bearer fake-access-token"
         assert json.loads(request.body) == data
-
-    @responses.activate
-    def test_create_template_response_incorrect_content_type(self) -> None:
-        """
-        Creating a WhatsApp template with incorrect headers should fail
-        """
-        with pytest.raises(TypeError) as err_info:
-            url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-            responses.add(
-                responses.POST,
-                url,
-                json={"here": "Isthing"},
-                status=409,
-                content_type="text/html",
-            )
-
-            locale = Locale.objects.get(language_code="en")
-            create_standalone_whatsapp_template(
-                "test-template", "Test Body", "UTILITY", locale=locale
-            )
-
-        assert (
-            str(err_info.value)
-            == "Incorrect Content-Type detected.  Expecting 'application/json' but found text/html"
-        )
 
     @responses.activate
     def test_standalone_template_name(self) -> None:
@@ -414,3 +390,76 @@ class TestStandaloneWhatsAppTemplates:
             wat2.save_revision()
 
         assert err_info.type is IntegrityError
+
+    @responses.activate
+    def test_create_template_response_incorrect_content_type(self) -> None:
+        """
+        Creating a WhatsApp template and receiving a response with incorrect content type
+        """
+        with pytest.raises(TypeError) as err_info:
+            url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+            responses.add(
+                responses.POST,
+                url,
+                json={},
+                status=400,
+                content_type="text/html",
+            )
+
+            locale = Locale.objects.get(language_code="en")
+            create_standalone_whatsapp_template(
+                "test-template", "Test Body", "UTILITY", locale=locale
+            )
+
+        assert (
+            str(err_info.value)
+            == "Incorrect Content-Type detected.  Expecting 'application/json' but found text/html"
+        )
+
+    @responses.activate
+    def test_create_template_response_incorrect_key(self) -> None:
+        """
+        Creating a WhatsApp template and receiving a client error response without the correct key
+        """
+        with pytest.raises(KeyError) as err_info:
+            url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+            responses.add(
+                responses.POST,
+                url,
+                json={"not_this_key": "not_this_value"},
+                status=400,
+                content_type="application/json",
+            )
+
+            locale = Locale.objects.get(language_code="en")
+            create_standalone_whatsapp_template(
+                "test-template", "Test Body", "UTILITY", locale=locale
+            )
+        # If there is a client side issue with the template submission,
+        # we expect a 400 response with a JSON message with an "error" key
+        assert str(err_info.typename) == "KeyError"
+        assert str(err_info.value) == "'error'"
+
+    @responses.activate
+    def test_create_template_response_json_decode_error(self) -> None:
+        """
+        Creating a WhatsApp template and cannot decode the JSON response
+        """
+        with pytest.raises(JSONDecodeError) as err_info:
+            url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+            responses.add(
+                responses.POST,
+                url,
+                body="",
+                status=400,
+                content_type="application/json",
+            )
+
+            locale = Locale.objects.get(language_code="en")
+            create_standalone_whatsapp_template(
+                "test-template", "Test Body", "UTILITY", locale=locale
+            )
+        # If there is a client side issue with the template submission,
+        # we expect a 400 response with a JSON response, not a string body as sent here
+        assert str(err_info.typename) == "JSONDecodeError"
+        assert str(err_info.value) == "Expecting value: line 1 column 1 (char 0)"

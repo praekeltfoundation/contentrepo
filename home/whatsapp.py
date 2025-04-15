@@ -2,6 +2,7 @@ import json
 import mimetypes
 from collections.abc import Iterable
 from enum import Enum
+from json import JSONDecodeError
 from typing import Any
 from urllib.parse import urljoin
 
@@ -208,6 +209,22 @@ def submit_whatsapp_template(
                 raise TypeError(
                     f"Incorrect Content-Type detected.  Expecting 'application/json' but found {resp_content_type}"
                 )
+
+            if True:
+                raise JSONDecodeError("Some sort of json decode issue")
+        # try:
+        #     raise TemplateSubmissionClientException(
+        #         response.json()["error"]["error_user_msg"]
+        #     )
+        # except (JSONDecodeError, KeyError, TypeError):
+        #     if 400 <= response.status_code < 500:
+        #         resp_content_type = response.headers.get("Content-Type", "")
+        #     if "application/json" not in resp_content_type:
+        #         raise TypeError(
+        #             f"Incorrect Content-Type detected.  Expecting 'application/json' but found {resp_content_type}"
+        #         )
+
+        #     raise TemplateSubmissionClientException(str(response.content))
 
     return response
 
