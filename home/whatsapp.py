@@ -201,12 +201,12 @@ def submit_whatsapp_template(
     if response.ok:
         return response.json()
 
-    logger.warning(f"Error submitting template {response.content}")
+    logger.warning(f"Error submitting template {response.content!r}")
     try:
         err_msg = response.json()["error"]["error_user_msg"]
     except Exception:
         raise TemplateSubmissionServerException(
-            f"Couldn't parse error response: {response.content}"
+            f"Couldn't parse error response: {response.content!r}"
         )
 
     raise TemplateSubmissionClientException(err_msg)
