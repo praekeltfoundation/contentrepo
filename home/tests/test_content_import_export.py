@@ -68,7 +68,7 @@ ExpDictsPair = tuple[ExpDicts, ExpDicts]
 
 
 def filter_both(
-    filter_func: Callable[[ExpDict], ExpDict]
+    filter_func: Callable[[ExpDict], ExpDict],
 ) -> Callable[[ExpDict, ExpDict], ExpPair]:
     @wraps(filter_func)
     def ff(src: ExpDict, dst: ExpDict) -> ExpPair:
@@ -139,7 +139,6 @@ def csv2dicts(csv_bytes: bytes) -> ExpDicts:
 
 
 def xlsx2dicts(xlsx_bytes: bytes) -> ExpDicts:
-
     workbook = load_workbook(BytesIO(xlsx_bytes))
     worksheet = get_active_sheet(workbook)
     header = next(worksheet.iter_rows(max_row=1, values_only=True))
@@ -1252,7 +1251,7 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         assert e.value.message == [
-            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (2)",
+            "Validation error: message - Mismatch in number of placeholders and example values. Found 2 placeholder(s) and 1 example values.",
             "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices.",
         ]
 

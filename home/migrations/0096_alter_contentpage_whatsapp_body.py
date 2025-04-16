@@ -13,7 +13,7 @@ import wagtail.snippets.blocks
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("home", "0095_migrate_empty_submission_status_to_not_submitted_yet"),
+        ("home", "0095_alter_whatsapptemplate_submission_status"),
     ]
 
     operations = [

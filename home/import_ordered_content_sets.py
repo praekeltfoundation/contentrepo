@@ -170,7 +170,6 @@ class OrderedContentSetImporter:
     def _validate_ordered_set_using_form(
         self, index: int, model: OrderedContentSet
     ) -> None:
-
         edit_handler = get_edit_handler(OrderedContentSet)
         validate_using_form(edit_handler, model, index)
 

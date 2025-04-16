@@ -33,7 +33,7 @@ ExpDictsPair = tuple[ExpDicts, ExpDicts]
 
 
 def filter_both(
-    filter_func: Callable[[ExpDict], ExpDict]
+    filter_func: Callable[[ExpDict], ExpDict],
 ) -> Callable[[ExpDict, ExpDict], ExpPair]:
     @wraps(filter_func)
     def ff(src: ExpDict, dst: ExpDict) -> ExpPair:
@@ -72,7 +72,7 @@ def _is_json_field(field_name: str) -> bool:
 
 
 def per_template(
-    filter_func: Callable[[DbDict], DbDict]
+    filter_func: Callable[[DbDict], DbDict],
 ) -> Callable[[DbDicts], DbDicts]:
     @wraps(filter_func)
     def fp(templates: DbDicts) -> DbDicts:
@@ -83,7 +83,6 @@ def per_template(
 
 @per_template
 def decode_json_fields(template: DbDict) -> DbDict:
-
     fields = {
         k: json.loads(v) if _is_json_field(k) else v
         for k, v in template["fields"].items()
@@ -433,8 +432,8 @@ class TestImportExport:
         assert e.value.row_num == 2
 
         assert e.value.message == [
-            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)",
             "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
+            "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
         ]
 
     def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
@@ -454,8 +453,8 @@ class TestImportExport:
         assert e.value.row_num == 2
 
         assert e.value.message == [
-            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)",
             "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
+            "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
         ]
 
     def test_invalid_template_already_in_db(self, csv_impexp: ImportExport) -> None:
@@ -483,6 +482,6 @@ class TestImportExport:
         assert e.value.row_num == 2
 
         assert e.value.message == [
-            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)",
             "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
+            "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
         ]
