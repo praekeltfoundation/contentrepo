@@ -1033,6 +1033,19 @@ class TestImportExport:
         assert len(content_page.whatsapp_body) == 1
         assert content_page.whatsapp_body[0].value.message == "Message"
 
+    def test_missing_wa_template(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a page with a non existent WhatsApp template should raise an error
+        that results in an error message that gets sent back to the user.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("content_with_missing_wa_template.csv")
+
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "The template 'Missing Template' does not exist for locale 'English'"
+        ]
+
     def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
         """
         Importing a ContentPageIndex with an invalid translation key should
