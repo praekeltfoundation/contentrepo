@@ -45,7 +45,6 @@ from .models import (
 )
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
 from .whatsapp_template_import_export import (
-    ImportWhatsAppTemplateException,
     import_whatsapptemplate,
 )
 
@@ -463,7 +462,7 @@ class WhatsAppTemplateUploadThread(UploadThread):
             import_whatsapptemplate(
                 self.file, self.file_type, self.progress_queue, self.purge, self.locale
             )
-        except ImportWhatsAppTemplateException as e:
+        except ImportException as e:
             self.result_queue.put(
                 (
                     messages.ERROR,

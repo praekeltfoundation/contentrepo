@@ -296,15 +296,6 @@ class WhatsappBlock(blocks.StructBlock):
         "media cannot exceed 1024 characters.",
         validators=(MaxLengthValidator(4096),),
     )
-
-    example_values = blocks.ListBlock(
-        blocks.CharBlock(
-            label="Example Value",
-        ),
-        default=[],
-        label="Variable Example Values",
-        help_text="Please add example values for all variables used in a WhatsApp template",
-    )
     variation_messages = blocks.ListBlock(VariationBlock(), default=[])
     # TODO: next_prompt is deprecated, and should be removed in the next major version
     next_prompt = blocks.CharBlock(
@@ -348,21 +339,8 @@ class WhatsappBlock(blocks.StructBlock):
 
     def clean(self, value: dict[str, Any]) -> dict[str, Any]:
         result = super().clean(value)
-        num_vars_in_msg = len(re.findall(r"{{\d+}}", result["message"]))
         errors = {}
-        example_values = result["example_values"]
-        for ev in example_values:
-            if "," in ev:
-                errors["example_values"] = ValidationError(
-                    "Example values cannot contain commas"
-                )
-        if num_vars_in_msg > 0:
-            num_example_values = len(example_values)
-            if num_vars_in_msg != num_example_values:
-                errors["example_values"] = ValidationError(
-                    f"The number of example values provided ({num_example_values}) "
-                    f"does not match the number of variables used in the template ({num_vars_in_msg})",
-                )
+
         if (result["image"] or result["document"] or result["media"]) and len(
             result["message"]
         ) > self.WHATSAPP_MESSAGE_MAX_LENGTH:
@@ -799,13 +777,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     def whatsapp_template_image(self):
         return self.whatsapp_body.raw_data[0]["value"]["image"]
 
-    @property
-    def whatsapp_template_example_values(self):
-        example_values = self.whatsapp_body.raw_data[0]["value"].get(
-            "example_values", []
-        )
-        return [v["value"] for v in example_values]
-
     def create_whatsapp_template_name(self) -> str:
         return f"{self.whatsapp_template_prefix}_{self.get_latest_revision().pk}"
 
@@ -914,7 +885,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             self.locale,
             self.whatsapp_template_buttons,
             self.whatsapp_template_image,
-            self.whatsapp_template_example_values,
         )
 
         return self.whatsapp_template_name
@@ -1079,12 +1049,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                     ).strip()
 
                     block.value["message"] = cleaned_message
-
-        # The WA title is needed for all templates to generate a name for the template
-        if self.is_whatsapp_template and not self.whatsapp_title:
-            errors.setdefault("whatsapp_title", []).append(
-                ValidationError("All WhatsApp templates need a title.")
-            )
 
         if errors:
             raise ValidationError(errors)
@@ -1758,9 +1722,9 @@ class WhatsAppTemplate(
         revision.save(update_fields=["content"])
         return revision
 
-    def clean(self):
+    def clean(self) -> None:
         result = super().clean()
-        errors = {}
+        errors: dict[str, list[ValidationError]] = {}
 
         # The name is needed for all templates to generate a name for the template
         if not self.name:
@@ -1784,6 +1748,16 @@ class WhatsAppTemplate(
                 errors["example_values"] = ValidationError(
                     "Example values cannot contain commas"
                 )
+
+        num_example_values = len(example_values)
+        num_variables = len(re.findall(r"{{(.*?)}}", message))
+
+        if num_example_values != num_variables:
+            errors.setdefault("example_values", []).append(
+                ValidationError(
+                    f"The number of example values provided ({num_example_values}) does not match the number of variables used in the template ({num_variables})"
+                )
+            )
 
         if mismatches:
             errors.setdefault("message", []).append(

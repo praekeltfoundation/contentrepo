@@ -827,7 +827,6 @@ class TestWhatsAppMessages:
         whatsapp_template_category=None,
         whatsapp_template_name=None,
         variation_messages=None,
-        example_values=None,
     ):
         """
         Helper function to create pages needed for each test.
@@ -850,8 +849,6 @@ class TestWhatsAppMessages:
             Name of the WhatsApp template
         variation_messages : [VarMsg]
             Variation messages added to the WhatsApp content block
-        example_values : [str]
-            example values for whatsapp templates
         """
         title = "default page"
         home_page = HomePage.objects.first()
@@ -873,7 +870,6 @@ class TestWhatsAppMessages:
                             next_prompt=next_prompt or "",
                             footer=footer or "",
                             variation_messages=variation_messages or [],
-                            example_values=example_values or [],
                         )
                     ],
                 )
@@ -978,22 +974,6 @@ class TestWhatsAppMessages:
         assert PageView.objects.count() == 1
         view = PageView.objects.last()
         assert view.message == 1
-
-    def test_whatsapp_template_variables(self, uclient):
-        """
-        Variables in WhatsApp templates are present in the message body.
-        """
-        page = self.create_content_page(
-            example_values=["test value 1"],
-        )
-
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
-        content = response.json()
-
-        [example_values_content] = content["body"]["text"]["value"]["example_values"]
-        example_values_content.pop("id")
-
-        assert example_values_content == {"type": "item", "value": "test value 1"}
 
     def test_list_items_no_title(self, uclient):
         """
@@ -1122,7 +1102,6 @@ class TestWhatsAppMessages:
             "list_title": "",
             "list_items": [],
             "next_prompt": "",
-            "example_values": [],
             "variation_messages": [],
         }
 

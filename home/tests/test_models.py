@@ -147,7 +147,6 @@ class ContentPageTests(TestCase):
             en,
             ["Button 2", "Menu"],
             None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -186,7 +185,6 @@ class ContentPageTests(TestCase):
             en,
             ["Menu", "Button 2"],
             None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -225,24 +223,6 @@ class ContentPageTests(TestCase):
             en,
             ["Home", "Button 1"],
             None,
-            [],
-        )
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_with_example_values_on_save(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        page = create_page(is_whatsapp_template=True, add_example_values=True)
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_with(
-            f"wa_title_{page.get_latest_revision().id}",
-            "Test WhatsApp Message with two variables, {{1}} and {{2}}",
-            "UTILITY",
-            en,
-            [],
-            None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -263,7 +243,6 @@ class ContentPageTests(TestCase):
             en,
             ["button 1", "button 2"],
             None,
-            [],
         )
 
         mock_create_whatsapp_template.reset_mock()
@@ -279,7 +258,6 @@ class ContentPageTests(TestCase):
             en,
             ["button 1", "button 2"],
             None,
-            [],
         )
         page.refresh_from_db()
         self.assertEqual(page.whatsapp_template_name, expected_title)
@@ -305,7 +283,6 @@ class ContentPageTests(TestCase):
             en,
             ["button 1", "button 2"],
             None,
-            [],
         )
 
         mock_create_whatsapp_template.reset_mock()
@@ -342,7 +319,6 @@ class ContentPageTests(TestCase):
             en,
             ["button 1", "button 2"],
             None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -376,7 +352,6 @@ class ContentPageTests(TestCase):
             en,
             [],
             None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -419,7 +394,6 @@ class ContentPageTests(TestCase):
             en,
             [],
             None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -763,7 +737,6 @@ class WhatsappBlockTests(TestCase):
         media: Any = None,
         message: str = "",
         variation_messages: Any = None,
-        example_values: Any = None,
         next_prompt: str = "",
         buttons: Any = None,
         list_items: Any = None,
@@ -774,7 +747,6 @@ class WhatsappBlockTests(TestCase):
             "document": document,
             "media": media,
             "message": message,
-            "example_values": example_values,
             "variation_messages": variation_messages,
             "next_prompt": next_prompt,
             "buttons": buttons or [],
@@ -938,6 +910,9 @@ class TestWhatsAppTemplate:
 
         assert err_info.value.message_dict == {
             "message": ["Please provide numeric variables only. You provided ['foo']."],
+            "example_values": [
+                "The number of example values provided (0) does not match the number of variables used in the template (1)"
+            ],
         }
 
     def test_variables_are_ordered(self) -> None:
@@ -955,6 +930,9 @@ class TestWhatsAppTemplate:
         assert err_info.value.message_dict == {
             "message": [
                 "Variables must be sequential, starting with \"{1}\". You provided \"['2', '1']\""
+            ],
+            "example_values": [
+                "The number of example values provided (0) does not match the number of variables used in the template (2)"
             ],
         }
 

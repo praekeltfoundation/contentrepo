@@ -116,7 +116,6 @@ def test_build_simple_pages() -> None:
                 "message": "*Welcome to HealthAlert* WA",
                 "next_prompt": None,
                 "buttons": [],
-                "example_values": [],
                 "variation_messages": [],
                 "footer": "",
             },
@@ -236,7 +235,6 @@ def test_build_variations() -> None:
             "message": "Message 1",
             "next_prompt": "Next message",
             "buttons": [("next_message", {"title": "Next message"})],
-            "example_values": [],
             "variation_messages": [
                 {"message": "Single male", "variation_restrictions": v_single_male},
                 {"message": "Comp male", "variation_restrictions": v_complicated_male},
@@ -249,7 +247,6 @@ def test_build_variations() -> None:
             "buttons": [
                 ("go_to_page", {"title": "Import Export", "page": page_for(imp_exp)}),
             ],
-            "example_values": [],
             "variation_messages": [
                 {"message": "Teen", "variation_restrictions": [("age", "15-18")]}
             ],
@@ -259,7 +256,6 @@ def test_build_variations() -> None:
             "message": "Message 3 with no variation",
             "next_prompt": "end",
             "buttons": [("next_message", {"title": "end"})],
-            "example_values": [],
             "variation_messages": [],
             "footer": "",
         },
@@ -302,7 +298,6 @@ def test_build_variations() -> None:
                 "list_title": "",
                 "list_items": [],
                 "media": None,
-                "example_values": None,
             }
             | msg,
         )

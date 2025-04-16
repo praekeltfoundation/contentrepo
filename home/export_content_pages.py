@@ -54,7 +54,6 @@ class ExportRow:
     whatsapp_title: str = ""
     whatsapp_body: str = ""
     whatsapp_template_name: str = ""
-    example_values: str = ""
     variation_title: str = ""
     variation_body: str = ""
     list_title: str = ""
@@ -133,8 +132,6 @@ class ExportRow:
                 self.next_prompt = whatsapp.value["next_prompt"]
             if "buttons" in whatsapp.value:
                 self.buttons = self.serialise_buttons(whatsapp.value["buttons"])
-            if "example_values" in whatsapp.value:
-                self.example_values = ", ".join(whatsapp.value["example_values"])
             if "footer" in whatsapp.value:
                 self.footer = whatsapp.value["footer"]
             if "list_title" in whatsapp.value:

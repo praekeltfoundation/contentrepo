@@ -288,22 +288,30 @@ class ContentImporter:
 
         self.shadow_pages[(row.slug, locale)] = page
 
-        self.add_message_to_shadow_content_page_from_row(row, locale)
-
         if row.is_whatsapp_message:
             page.whatsapp_title = row.whatsapp_title
-            if row.is_whatsapp_template_message:
-                page.is_whatsapp_template = True
-                page.whatsapp_template_name = row.whatsapp_template_name
-                # Link the template to the page
+
+        if row.is_whatsapp_template_message:
+            try:
                 wa_template = WhatsAppTemplate.objects.get(
                     name=row.whatsapp_template_name, locale=locale
                 )
-                page.whatsapp_body.append(
-                    ShadowWhatsAppTemplate(
-                        name=wa_template.name, locale=wa_template.locale
-                    )
+                page.is_whatsapp_template = True
+                page.whatsapp_template_name = row.whatsapp_template_name
+            except WhatsAppTemplate.DoesNotExist:
+                raise ImportException(
+                    f"The template '{row.whatsapp_template_name}' does not exist for locale '{locale}'"
                 )
+            page.whatsapp_body.append(
+                ShadowWhatsAppTemplate(name=wa_template.name, locale=wa_template.locale)
+            )
+
+            if row.is_whatsapp_message:
+                # TODO: log a warning
+                pass
+
+        else:
+            self.add_message_to_shadow_content_page_from_row(row, locale)
             # TODO: Media
             # Currently media is exported as a URL, which just has an ID. This doesn't
             # actually help us much, as IDs can differ between instances, so we need
@@ -557,10 +565,12 @@ class ShadowContentPage:
         page.whatsapp_template_name = self.whatsapp_template_name
         page.whatsapp_body.clear()
         for message in self.formatted_whatsapp_body:
-            if isinstance(message, WhatsAppTemplate):
-                page.whatsapp_body.insert(0, ("Whatsapp_Template", message))
-            else:
-                page.whatsapp_body.append(("Whatsapp_Message", message))
+            body_type = (
+                "Whatsapp_Template"
+                if isinstance(message, WhatsAppTemplate)
+                else "Whatsapp_Message"
+            )
+            page.whatsapp_body.append((body_type, message))
 
     def add_sms_to_page(self, page: ContentPage) -> None:
         page.enable_sms = self.enable_sms
@@ -869,7 +879,6 @@ class ContentRow:
 
     @property
     def is_whatsapp_template_message(self) -> bool:
-        print(f"Template name: {self.whatsapp_template_name}")
         return bool(self.whatsapp_template_name)
 
     @property
