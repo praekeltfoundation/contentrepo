@@ -109,6 +109,7 @@ def test_build_simple_pages() -> None:
             "Whatsapp_Message",
             {
                 "document": None,
+                "example_values": [],
                 "image": None,
                 "list_title": "",
                 "list_items": [],
@@ -294,6 +295,7 @@ def test_build_variations() -> None:
             "Whatsapp_Message",
             {
                 "document": None,
+                "example_values": [],
                 "image": None,
                 "list_title": "",
                 "list_items": [],

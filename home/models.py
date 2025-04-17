@@ -297,6 +297,14 @@ class WhatsappBlock(blocks.StructBlock):
         "media cannot exceed 1024 characters.",
         validators=(MaxLengthValidator(4096),),
     )
+    example_values = blocks.ListBlock(
+        blocks.CharBlock(
+            label="Example Value",
+        ),
+        default=[],
+        label="Variable Example Values",
+        help_text="Please add example values for all variables used in a WhatsApp template",
+    )
     variation_messages = blocks.ListBlock(VariationBlock(), default=[])
     # TODO: next_prompt is deprecated, and should be removed in the next major version
     next_prompt = blocks.CharBlock(

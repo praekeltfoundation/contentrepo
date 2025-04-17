@@ -18,7 +18,7 @@ set_locale_from_instance = importlib.import_module(
 ).set_locale_from_instance
 
 set_blank_submission_status_to_not_submitted_yet = importlib.import_module(
-    "home.migrations.0097_migrate_empty_submission_status_to_not_submitted_yet"
+    "home.migrations.0096_migrate_empty_submission_status_to_not_submitted_yet"
 ).set_blank_submission_status_to_not_submitted_yet
 
 

@@ -1099,6 +1099,7 @@ class TestWhatsAppMessages:
             "buttons": [],
             "message": "Test WhatsApp Message 1",
             "document": None,
+            "example_values": [],
             "list_title": "",
             "list_items": [],
             "next_prompt": "",
