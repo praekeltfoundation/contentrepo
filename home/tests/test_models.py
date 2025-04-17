@@ -147,7 +147,6 @@ class ContentPageTests(TestCase):
             en,
             ["Button 2", "Menu"],
             None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -186,7 +185,6 @@ class ContentPageTests(TestCase):
             en,
             ["Menu", "Button 2"],
             None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -225,24 +223,6 @@ class ContentPageTests(TestCase):
             en,
             ["Home", "Button 1"],
             None,
-            [],
-        )
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_with_example_values_on_save(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        page = create_page(is_whatsapp_template=True, add_example_values=True)
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_with(
-            f"wa_title_{page.get_latest_revision().id}",
-            "Test WhatsApp Message with two variables, {{1}} and {{2}}",
-            "UTILITY",
-            en,
-            [],
-            None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -263,7 +243,6 @@ class ContentPageTests(TestCase):
             en,
             ["button 1", "button 2"],
             None,
-            [],
         )
 
         mock_create_whatsapp_template.reset_mock()
@@ -279,7 +258,6 @@ class ContentPageTests(TestCase):
             en,
             ["button 1", "button 2"],
             None,
-            [],
         )
         page.refresh_from_db()
         self.assertEqual(page.whatsapp_template_name, expected_title)
@@ -305,7 +283,6 @@ class ContentPageTests(TestCase):
             en,
             ["button 1", "button 2"],
             None,
-            [],
         )
 
         mock_create_whatsapp_template.reset_mock()
@@ -342,7 +319,6 @@ class ContentPageTests(TestCase):
             en,
             ["button 1", "button 2"],
             None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -376,7 +352,6 @@ class ContentPageTests(TestCase):
             en,
             [],
             None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -402,53 +377,6 @@ class ContentPageTests(TestCase):
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @mock.patch("home.models.create_whatsapp_template")
-    def test_template_not_submitted_with_no_title(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        """
-        If the page is a WA template and how no title, then it shouldn't be submitted
-        """
-
-        with self.assertRaises(ValidationError):
-            home_page = HomePage.objects.first()
-            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-
-            PageBuilder.build_cp(
-                parent=main_menu,
-                slug="template-no-title",
-                title="HealthAlert menu",
-                bodies=[WABody("", [])],
-                whatsapp_template_name="WA_Title_1",
-            )
-
-        mock_create_whatsapp_template.assert_not_called()
-
-    def test_clean_text_valid_variables(self) -> None:
-        """
-        The message should accept variables if and only if they are numeric and ordered
-        """
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        with self.assertRaises(ValidationError):
-            PageBuilder.build_cp(
-                parent=main_menu,
-                slug="ha-menu",
-                title="HealthAlert menu",
-                bodies=[
-                    WABody(
-                        "WA Title",
-                        [
-                            WABlk(
-                                "{{2}}{{1}} {{foo}} {{mismatch1} {mismatch2}}",
-                            )
-                        ],
-                    )
-                ],
-                whatsapp_template_name="WA_Title_1",
-            )
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
     def test_create_whatsapp_template_submit_no_error_message(
         self, mock_create_whatsapp_template: Any
     ) -> None:
@@ -466,7 +394,6 @@ class ContentPageTests(TestCase):
             en,
             [],
             None,
-            [],
         )
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -810,7 +737,6 @@ class WhatsappBlockTests(TestCase):
         media: Any = None,
         message: str = "",
         variation_messages: Any = None,
-        example_values: Any = None,
         next_prompt: str = "",
         buttons: Any = None,
         list_items: Any = None,
@@ -821,7 +747,6 @@ class WhatsappBlockTests(TestCase):
             "document": document,
             "media": media,
             "message": message,
-            "example_values": example_values,
             "variation_messages": variation_messages,
             "next_prompt": next_prompt,
             "buttons": buttons or [],
@@ -1008,7 +933,7 @@ class TestWhatsAppTemplate:
         assert err_info.value.message_dict == {
             "message": [
                 "Variables must be sequential, starting with \"{1}\". You provided \"['2', '1']\""
-            ],
+            ]
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=False)

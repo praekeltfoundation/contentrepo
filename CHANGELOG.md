@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Use buttons for Whatsapp Templates instead of quick replies
 - Allow pages to link to Whatsapp templates
+- Updated standalone template import / export and pages import / export to link to templates
 ### Removed
 ### Fixed
 ### Security

@@ -33,6 +33,7 @@ from home.models import (
     HomePage,
     OrderedContentSet,
 )
+from home.whatsapp_template_import_export import import_whatsapptemplate
 from home.xlsx_helpers import get_active_sheet
 
 from .helpers import set_profile_field_options
@@ -107,6 +108,7 @@ def ignore_certain_fields(entry: ExpDict) -> ExpDict:
 @filter_both
 def strip_leading_whitespace(entry: ExpDict) -> ExpDict:
     # FIXME: Do we expect imported content to have leading spaces removed?
+    print(f"Entry: {entry}")
     bodies = {k: v.lstrip(" ") for k, v in entry.items() if k.endswith("_body")}
     return {**entry, **bodies}
 
@@ -490,6 +492,9 @@ class ImportExport:
     def import_ordered_sets(self, content_bytes: bytes) -> None:
         import_ordered_sets(BytesIO(content_bytes), self.format.upper(), Queue())
 
+    def import_whatsapp_template(self, content_bytes: bytes) -> None:
+        import_whatsapptemplate(BytesIO(content_bytes), self.format.upper(), Queue())
+
     def read_bytes(self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE) -> bytes:
         return (path_base / path_str).read_bytes()
 
@@ -511,6 +516,16 @@ class ImportExport:
         """
         content = self.read_bytes(path_str, path_base)
         self.import_ordered_sets(content, **kw)
+        return content
+
+    def import_whatsapp_template_file(
+        self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE, **kw: Any
+    ) -> bytes:
+        """
+        Import given WhatsApp template file in the configured format with the configured importer.
+        """
+        content = self.read_bytes(path_str, path_base)
+        self.import_whatsapp_template(content, **kw)
         return content
 
     def export_reimport(self) -> None:
@@ -1004,54 +1019,30 @@ class TestImportExport:
             "'English'"
         ]
 
-    def test_invalid_wa_template_category(self, csv_impexp: ImportExport) -> None:
+    def test_link_wa_template(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a WhatsApp template with an invalid category should raise an
-        error that results in an error message that gets sent back to the user.
+        Importing a page with a linked WhatsApp template should link the template
+        to the page.
         """
-        with pytest.raises(ImportException) as e:
-            csv_impexp.import_file("bad-whatsapp-template-category.csv")
+        csv_impexp.import_whatsapp_template_file("whatsapp-template-simple.csv")
+        csv_impexp.import_file("content_with_simple_wa_template.csv")
 
-        assert e.value.row_num == 3
-        # FIXME: Find a better way to represent this.
+        [content_page] = ContentPage.objects.all()
 
-        # print(e.value.message)
-        assert e.value.message == [
-            "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices."
-        ]
+        assert len(content_page.whatsapp_body) == 1
+        assert content_page.whatsapp_body[0].value.message == "Message"
 
-    def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
+    def test_missing_wa_template(self, csv_impexp: ImportExport) -> None:
         """
-        Importing a WhatsApp template with invalid variables should raise an
-        error that results in an error message that gets sent back to the user.
+        Importing a page with a non existent WhatsApp template should raise an error
+        that results in an error message that gets sent back to the user.
         """
         with pytest.raises(ImportException) as e:
-            csv_impexp.import_file("bad-whatsapp-template-vars.csv")
+            csv_impexp.import_file("content_with_missing_wa_template.csv")
 
         assert e.value.row_num == 3
-        # FIXME: Find a better way to represent this.
         assert e.value.message == [
-            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
-        ]
-
-    def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
-        """
-        Updating a valid WhatsApp template with invalid variables should raise
-        an error that results in an error message that gets sent back to the
-        user. The update validation happens in a different code path from the
-        initial import.
-        """
-        csv_impexp.import_file("good-whatsapp-template-vars.csv")
-
-        # Update an existing page, which does the validation in
-        # `page.save_revision()` rather than `parent.add_child()`.
-        with pytest.raises(ImportException) as e:
-            csv_impexp.import_file("bad-whatsapp-template-vars.csv", purge=False)
-
-        assert e.value.row_num == 3
-        # FIXME: Find a better way to represent this.
-        assert e.value.message == [
-            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
+            "The template 'Missing Template' does not exist for locale 'English'"
         ]
 
     def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
@@ -1260,7 +1251,7 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         assert e.value.message == [
-            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (2)",
+            "Validation error: message - Mismatch in number of placeholders and example values. Found 2 placeholder(s) and 1 example values.",
             "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices.",
         ]
 
@@ -1661,30 +1652,6 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         assert e.value.message == ["Bad JSON button, you have: Broken Button"]
-
-    def test_invalid_page_already_in_db(self, csv_impexp: ImportExport) -> None:
-        """
-        Import an invalid page that matches an invalid page already in the db
-        """
-
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        wa_block = [WABlk("Vars {1} {2} {3}", example_values=["Example value 1"])]
-        _ha_menu = PageBuilder.build_cp(
-            parent=main_menu,
-            slug="main-menu-first-time-user",
-            title="main menu first time user",
-            bodies=[WABody("HA menu ", wa_block)],
-        )
-
-        with pytest.raises(ImportException) as e:
-            csv_impexp.import_file("bad-whatsapp-template-vars.csv")
-
-        assert e.value.row_num == 3
-        # FIXME: Find a better way to represent this.
-        assert e.value.message == [
-            "Validation error: example_values - The number of example values provided (1) does not match the number of variables used in the template (3)"
-        ]
 
     def test_language_code_import(self, csv_impexp: ImportExport) -> None:
         """
@@ -2244,32 +2211,6 @@ class TestExportImportRoundtrip:
         imported = impexp.get_page_json()
         assert imported == orig
 
-    def test_whatsapp_template(self, impexp: ImportExport) -> None:
-        """
-        ContentPages that are whatsapp templates are preserved across
-        export/import.
-        """
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        ha_menu = PageBuilder.build_cp(
-            parent=main_menu,
-            slug="ha-menu",
-            title="HealthAlert menu",
-            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
-        )
-        _health_info = PageBuilder.build_cp(
-            parent=ha_menu,
-            slug="health-info",
-            title="health info",
-            bodies=[WABody("health info", [WABlk("*Health information* WA")])],
-            whatsapp_template_name="template-health-info",
-        )
-
-        orig = impexp.get_page_json()
-        impexp.export_reimport()
-        imported = impexp.get_page_json()
-        assert imported == orig
-
     def test_translations(self, impexp: ImportExport) -> None:
         """
         ContentPages in multiple languages (with unique-per-locale slugs and
@@ -2591,41 +2532,6 @@ class TestExportImportRoundtrip:
                     [WABlk("*Health information* WA", footer=footer)],
                 )
             ],
-            whatsapp_template_name="template-health-info",
-        )
-
-        orig = impexp.get_page_json()
-        impexp.export_reimport()
-        imported = impexp.get_page_json()
-        assert imported == orig
-
-    def test_example_values(self, impexp: ImportExport) -> None:
-        """
-        ContentPages with example values in whatsapp messages are preserved
-        across export/import.
-        """
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-
-        ha_menu = PageBuilder.build_cp(
-            parent=main_menu,
-            slug="ha-menu",
-            title="HealthAlert menu",
-            bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
-        )
-
-        example_values = ["Example value 1", "Example value 2"]
-        _health_info = PageBuilder.build_cp(
-            parent=ha_menu,
-            slug="health-info",
-            title="health info",
-            bodies=[
-                WABody(
-                    "health info",
-                    [WABlk("*Health information* WA", example_values=example_values)],
-                )
-            ],
-            whatsapp_template_name="template-health-info",
         )
 
         orig = impexp.get_page_json()
@@ -2755,7 +2661,6 @@ class TestExportImportRoundtrip:
                     [WABlk("*Health information* WA", list_items=list_items)],
                 )
             ],
-            whatsapp_template_name="template-health-info",
         )
 
         orig = impexp.get_page_json()
