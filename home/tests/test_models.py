@@ -492,7 +492,7 @@ class ContentPageTests(TestCase):
         self.assertEqual(
             output.getvalue().strip(),
             "No changes detected",
-            "There are missing migrations:\n %s" % output.getvalue(),
+            f"There are missing migrations:\n {output.getvalue()}",
         )
 
     def test_get_all_links(self) -> None:
@@ -970,7 +970,6 @@ class SMSBlockTests(TestCase):
 
 @pytest.mark.django_db
 class TestWhatsAppTemplate:
-
     def test_variables_are_numeric(self) -> None:
         """
         Template variables are numeric.

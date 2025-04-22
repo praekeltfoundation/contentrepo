@@ -227,7 +227,7 @@ elif "AWS_ACCESS_KEY_ID" in os.environ:
     _aws_creds_found = True
 
 if AWS_STORAGE_BUCKET_NAME and _aws_creds_found:
-    MEDIA_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
     STORAGES["default"] = {
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
     }
