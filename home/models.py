@@ -1702,7 +1702,6 @@ class WhatsAppTemplate(
         if previous_revision:
             previous_revision = previous_revision.as_object()
             previous_revision_fields = previous_revision.fields
-            print(f"Previous revision fields: {previous_revision_fields}")
             previous_revision_button_titles = [
                 b["value"]["title"] for b in previous_revision.buttons.raw_data
             ]
