@@ -41,14 +41,3 @@ def import_whatsapptemplate(  # type: ignore
         file.read(), filetype, progress_queue, purge, locale
     )
     importer.perform_import()
-
-
-class ImportWhatsAppTemplateException(Exception):
-    """
-    Base exception for all import related issues.
-    """
-
-    def __init__(self, message: str, row_num: int | None = None):
-        self.row_num = row_num
-        self.message = message
-        super().__init__()

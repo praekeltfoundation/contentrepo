@@ -470,9 +470,9 @@ class TestFormatMessage:
             "value": {
                 "image": None,
                 "document": None,
+                "example_values": [],
                 "media": None,
                 "message": "WhatsApp 1",
-                "example_values": [],
                 "variation_messages": [
                     {
                         "profile_field": "gender",
@@ -502,9 +502,9 @@ class TestFormatMessage:
             "value": {
                 "image": None,
                 "document": None,
+                "example_values": [],
                 "media": None,
                 "message": "WhatsApp 1",
-                "example_values": [],
                 "variation_messages": [],
                 "next_prompt": None,
                 "buttons": [],
