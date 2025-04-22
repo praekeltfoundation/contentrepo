@@ -861,7 +861,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             self.whatsapp_template_category,
         )
 
-    def submit_whatsapp_template(self, previous_revision):
+    def submit_whatsapp_template(self, previous_revision: Revision) -> str | None:
         """
         Submits a request to the WhatsApp API to create a template for this content
 
@@ -869,9 +869,9 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         template, and if the template fields are different to the previous revision
         """
         if not settings.WHATSAPP_CREATE_TEMPLATES:
-            return
+            return None
         if not self.is_whatsapp_template:
-            return
+            return None
         # If there are any missing fields in the previous revision, then carry on
         try:
             previous_revision = previous_revision.as_object()
@@ -881,9 +881,9 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         # If there are any missing fields in this revision, then don't submit template
         try:
             if self.whatsapp_template_fields == previous_revision_fields:
-                return
+                return None
         except (IndexError, AttributeError):
-            return
+            return None
 
         self.whatsapp_template_name = self.create_whatsapp_template_name()
 
@@ -1702,10 +1702,19 @@ class WhatsAppTemplate(
         if previous_revision:
             previous_revision = previous_revision.as_object()
             previous_revision_fields = previous_revision.fields
+            print(f"Previous revision fields: {previous_revision_fields}")
+            previous_revision_button_titles = [
+                b["value"]["title"] for b in previous_revision.buttons.raw_data
+            ]
         else:
             previous_revision_fields = ()
+            previous_revision_button_titles = []
 
-        if self.fields == previous_revision_fields:
+        current_button_titles = [b["value"]["title"] for b in self.buttons.raw_data]
+        if (
+            self.fields == previous_revision_fields
+            and current_button_titles == previous_revision_button_titles
+        ):
             return revision
 
         self.template_name = self.create_whatsapp_template_name()
