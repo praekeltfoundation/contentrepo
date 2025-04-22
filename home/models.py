@@ -861,7 +861,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             self.whatsapp_template_category,
         )
 
-    def submit_whatsapp_template(self, previous_revision):
+    def submit_whatsapp_template(self, previous_revision: Revision) -> str | None:
         """
         Submits a request to the WhatsApp API to create a template for this content
 
@@ -869,9 +869,9 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         template, and if the template fields are different to the previous revision
         """
         if not settings.WHATSAPP_CREATE_TEMPLATES:
-            return
+            return None
         if not self.is_whatsapp_template:
-            return
+            return None
         # If there are any missing fields in the previous revision, then carry on
         try:
             previous_revision = previous_revision.as_object()
@@ -881,9 +881,9 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         # If there are any missing fields in this revision, then don't submit template
         try:
             if self.whatsapp_template_fields == previous_revision_fields:
-                return
+                return None
         except (IndexError, AttributeError):
-            return
+            return None
 
         self.whatsapp_template_name = self.create_whatsapp_template_name()
 
@@ -1704,7 +1704,6 @@ class WhatsAppTemplate(
             previous_revision_fields = previous_revision.fields
         else:
             previous_revision_fields = ()
-
         if self.fields == previous_revision_fields:
             return revision
 
@@ -1829,7 +1828,7 @@ class WhatsAppTemplate(
         return result
 
     @property
-    def fields(self):
+    def fields(self) -> tuple[Any, Any, Any, Any, list[Any], Any, Any, list[str]]:
         """
         Returns a tuple of fields that can be used to determine template equality
         """
@@ -1841,6 +1840,7 @@ class WhatsAppTemplate(
             sorted(self.quick_reply_buttons),
             self.image,
             self.example_values,
+            [b["value"]["title"] for b in self.buttons.raw_data],
         )
 
     def create_whatsapp_template_name(self) -> str:

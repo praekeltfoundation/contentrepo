@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated standalone template import / export and pages import / export to link to templates
 ### Removed
 ### Fixed
+- Resubmit templates when button titles change
 ### Security
 -->
 

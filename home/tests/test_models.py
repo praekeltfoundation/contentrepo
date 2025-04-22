@@ -1029,6 +1029,52 @@ class TestWhatsAppTemplate:
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @responses.activate
+    def test_template_resubmits_when_button_labels_change(self) -> None:
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={"id": "123456789"})
+
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            buttons=[
+                ("next_message", {"title": "Test Button"}),
+            ],
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        wat.save_revision().publish()
+
+        assert len(responses.calls) == 1
+
+        wat.buttons = [
+            ("next_message", {"title": "Test Button 2"}),
+        ]
+        wat.save_revision().publish()
+
+        wat_from_db = WhatsAppTemplate.objects.last()
+
+        assert wat_from_db.submission_status == "SUBMITTED"
+        assert "Success! Template ID " in wat_from_db.submission_result
+        assert len(responses.calls) == 2
+        request = responses.calls[1].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {"text": "Test WhatsApp Message 1", "type": "BODY"},
+                {
+                    "type": "BUTTONS",
+                    "buttons": [
+                        {"text": "Test Button 2", "type": "QUICK_REPLY"},
+                    ],
+                },
+            ],
+            "language": "en_US",
+            "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
     def test_template_create_with_example_values(self) -> None:
         url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
         responses.add(responses.POST, url, json={"id": "123456789"})
