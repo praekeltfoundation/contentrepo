@@ -1702,18 +1702,9 @@ class WhatsAppTemplate(
         if previous_revision:
             previous_revision = previous_revision.as_object()
             previous_revision_fields = previous_revision.fields
-            previous_revision_button_titles = [
-                b["value"]["title"] for b in previous_revision.buttons.raw_data
-            ]
         else:
             previous_revision_fields = ()
-            previous_revision_button_titles = []
-
-        current_button_titles = [b["value"]["title"] for b in self.buttons.raw_data]
-        if (
-            self.fields == previous_revision_fields
-            and current_button_titles == previous_revision_button_titles
-        ):
+        if self.fields == previous_revision_fields:
             return revision
 
         self.template_name = self.create_whatsapp_template_name()
@@ -1837,7 +1828,7 @@ class WhatsAppTemplate(
         return result
 
     @property
-    def fields(self):
+    def fields(self) -> tuple[Any, Any, Any, Any, list[Any], Any, Any, list[str]]:
         """
         Returns a tuple of fields that can be used to determine template equality
         """
@@ -1849,6 +1840,7 @@ class WhatsAppTemplate(
             sorted(self.quick_reply_buttons),
             self.image,
             self.example_values,
+            [b["value"]["title"] for b in self.buttons.raw_data],
         )
 
     def create_whatsapp_template_name(self) -> str:
