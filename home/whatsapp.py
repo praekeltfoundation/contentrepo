@@ -397,7 +397,7 @@ def validate_positional_variables(variables: list[str]) -> str:
     expected_positional_variable_values = [str(j + 1) for j in range(len(variables))]
     if variables != expected_positional_variable_values:
         raise TemplateVariableError(
-            f'Variables must be sequential, starting with "{{1}}". You provided "{variables}"'
+            f'Positional variables must increase sequentially, starting at 1. You provided "{variables}"'
         )
 
     return "Some string"
@@ -409,8 +409,16 @@ def validate_named_variables(variables: list[str]) -> str:
 
 def validate_template_variables(body: str) -> list[str]:
     print(f"Body is |{body}|")
-    variables = list(template_body.parse_string(body, parse_all=True))
+    variables = []
+    try:
+        variables = list(template_body.parse_string(body, parse_all=True))
+    except pp.ParseException as pe:
+        print(f"PE {pe.loc}")
+        raise TemplateVariableError(
+            f"Unable to parse the variable starting at character {pe.loc}"
+        )
     if not variables:
+        print("Whoops")
         return []
 
     # for var in variables:

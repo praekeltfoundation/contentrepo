@@ -432,7 +432,7 @@ class TestImportExport:
         assert e.value.row_num == 2
 
         assert e.value.message == [
-            "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
+            "Validation error: message - Positional variables must increase sequentially, starting at 1. You provided \"['1', '2', '4']\"",
             "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
         ]
 
@@ -453,7 +453,7 @@ class TestImportExport:
         assert e.value.row_num == 2
 
         assert e.value.message == [
-            "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
+            "Validation error: message - Positional variables must increase sequentially, starting at 1. You provided \"['1', '2', '4']\"",
             "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
         ]
 
@@ -482,6 +482,6 @@ class TestImportExport:
         assert e.value.row_num == 2
 
         assert e.value.message == [
-            "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
+            "Validation error: message - Positional variables must increase sequentially, starting at 1. You provided \"['1', '2', '4']\"",
             "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
         ]

@@ -906,9 +906,7 @@ class TestWhatsAppTemplate:
                 message="This is a message with 2 variables, {{1}} and {{foo}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
-                example_values=[
-                    ("example_values", "Ev1"),
-                ],
+                example_values=[("example_values", "Ev1"), ("example_values", "Ev2")],
             ).full_clean()
 
         assert err_info.value.message_dict == {
@@ -936,7 +934,7 @@ class TestWhatsAppTemplate:
 
         assert err_info.value.message_dict == {
             "message": [
-                "Variables must be sequential, starting with \"{1}\". You provided \"['2', '1']\""
+                "Positional variables must increase sequentially, starting at 1. You provided \"['2', '1']\""
             ]
         }
 
