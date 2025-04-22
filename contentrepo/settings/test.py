@@ -8,6 +8,7 @@ WHATSAPP_ACCESS_TOKEN = "fake-access-token"  # noqa: S105 (This is a test config
 FB_BUSINESS_ID = "27121231234"
 
 WHATSAPP_CREATE_TEMPLATES = False
+WHATSAPP_ALLOW_NAMED_VARIABLES = True
 
 # Switch back from ManifestStaticFilesStorage so we don't need collectstatic in tests.
 STORAGES["staticfiles"] = {

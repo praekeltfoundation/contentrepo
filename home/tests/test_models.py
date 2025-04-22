@@ -970,6 +970,7 @@ class SMSBlockTests(TestCase):
 
 @pytest.mark.django_db
 class TestWhatsAppTemplate:
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=False)
     def test_variables_are_numeric(self) -> None:
         """
         Template variables are numeric.
@@ -977,14 +978,17 @@ class TestWhatsAppTemplate:
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
                 name="non-numeric-variable",
-                message="{{foo}}",
+                message="This is a message with 2 variables, {{1}} and {{foo}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
             ).full_clean()
 
         assert err_info.value.message_dict == {
-            "message": ["Please provide numeric variables only. You provided ['foo']."],
+            "message": [
+                "Please provide numeric variables only. You provided ['1', 'foo']."
+            ],
         }
+        # raise AssertionError
 
     def test_variables_are_ordered(self) -> None:
         """
@@ -993,7 +997,7 @@ class TestWhatsAppTemplate:
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
                 name="misordered-variables",
-                message="{{2}} {{1}}",
+                message="These 2 vars are the wrong way around. {{2}} and {{1}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
             ).full_clean()

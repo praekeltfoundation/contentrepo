@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Any
 from urllib.parse import urljoin
 
+import pyparsing as pp
 import requests
 from django.conf import settings  # type: ignore
 from wagtail.images.models import Image  # type: ignore
@@ -174,7 +175,6 @@ def submit_whatsapp_template(
     locale: Locale,
     components: list[dict[str, Any]],
 ) -> dict[str, str]:
-
     url = urljoin(
         settings.WHATSAPP_API_URL,
         f"graph/v14.0/{settings.FB_BUSINESS_ID}/message_templates",
@@ -199,7 +199,6 @@ def submit_whatsapp_template(
     if response.ok:
         return response.json()
     else:
-        # TODO: Add better error handling to differentiate between user error or server error
         raise TemplateSubmissionException(response.json())
 
 
@@ -267,7 +266,6 @@ def create_whatsapp_template_submission(
         components.append({"type": "BODY", "text": body_text})
 
     if quick_replies:
-
         buttons = []
         for button in quick_replies:
             buttons.append({"type": "QUICK_REPLY", "text": button})
@@ -308,7 +306,6 @@ def create_standalone_template_body_components(
         components.append({"type": "BODY", "text": message})
 
     if quick_replies:
-
         buttons = []
         for button in quick_replies:
             buttons.append({"type": "QUICK_REPLY", "text": button})
@@ -362,3 +359,66 @@ def create_standalone_whatsapp_template(
     )
 
     return submit_whatsapp_template(name, category, locale, components)
+
+
+# Define parser grammar here
+vstart = pp.Literal("{{").suppress()
+vend = pp.Literal("}}").suppress()
+nonvar = pp.CharsNotIn("{}").suppress()
+variable = (vstart + pp.Word(pp.alphanums + "_") + vend).set_name("variable")
+template_body = pp.OneOrMore(variable | nonvar)
+
+
+class TemplateVariableError(Exception):
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
+
+
+def validate_positional_variables(variables: list) -> str:
+    # Check what the expected positional variables would be
+    expected_positional_variable_values = [str(j + 1) for j in range(len(variables))]
+    if variables != expected_positional_variable_values:
+        raise TemplateVariableError(
+            f'Variables must be sequential, starting with "{{1}}". You provided "{variables}"'
+        )
+
+    return "Some string"
+
+
+def validate_named_variables(variables: list) -> str:
+    return "Somestring"
+
+
+def validate_template_variables(body: str) -> list:
+    print(f"Body is |{body}|")
+    variables = list(template_body.parse_string(body, parse_all=True))
+    if not variables:
+        return []
+
+    # for var in variables:
+    #     print(f"Var is {var}")
+    #     print(f"Var type is {type(var)}")
+
+    # If all the variables are ints, validate as positional variables
+    if all(
+        isinstance(var, int) or isinstance(var, str) and var.isdigit()
+        for var in variables
+    ):
+        validate_positional_variables(variables)
+    else:
+        print("Not all ints")
+        if settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
+            # if all variables are digits, validate these as positional variables
+            print("Support for named variables enabled. Validating now")
+        else:
+            print(
+                f"These vars {variables} are not ALL ints, and named vars not enabled"
+            )
+            raise TemplateVariableError(
+                f"Please provide numeric variables only. You provided {variables}."
+            )
+
+    # Add validation code here
+    print(f"Variables validated: {variables}")
+    return variables

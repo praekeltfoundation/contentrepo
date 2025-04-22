@@ -52,8 +52,10 @@ from wagtailmedia.blocks import AbstractMediaChooserBlock
 from .panels import PageRatingPanel
 from .whatsapp import (
     TemplateSubmissionException,
+    TemplateVariableError,
     create_standalone_whatsapp_template,
     create_whatsapp_template,
+    validate_template_variables,
 )
 
 from .constants import (  # isort:skip
@@ -1516,7 +1518,6 @@ class AssessmentTag(TaggedItemBase):
 
 
 class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel):
-
     class Meta:
         verbose_name = "CMS Form"
         verbose_name_plural = "CMS Forms"
@@ -1631,7 +1632,6 @@ class Assessment(DraftStateMixin, RevisionMixin, index.Indexed, ClusterableModel
 
 
 class TemplateContentQuickReply(TagBase):
-
     class Meta:
         verbose_name = "quick reply"
         verbose_name_plural = "quick replies"
@@ -1766,7 +1766,6 @@ class WhatsAppTemplate(
         previous_revision: Any | None = None,
         clean: bool = True,
     ) -> Any:
-
         previous_revision = self.get_latest_revision()
         revision = super().save_revision(
             user,
@@ -1831,14 +1830,19 @@ class WhatsAppTemplate(
             )
 
         message = self.message
+        try:
+            variables = validate_template_variables(message)
+            print(f"Variables validated: {variables}")
+        except TemplateVariableError as tve:
+            errors.setdefault("message", []).append(ValidationError(tve.message))
 
         # TODO: Explain what this does, or find a cleaner implementation
 
         # Checks for mismatches in the number of opening and closing brackets.  First from right to left, then from left to right
         # TODO: Currently "{1}" is allowed to pass and throws an error.  Add a check for this, or redo this section in a cleaner way
-        right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
-        left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
-        mismatches = right_mismatch + left_mismatch
+        # right_mismatch = re.findall(r"(?<!\{){[^{}]*}\}", message)
+        # left_mismatch = re.findall(r"\{{[^{}]*}(?!\})", message)
+        # mismatches = right_mismatch + left_mismatch
 
         example_values = self.example_values.raw_data
         for ev in example_values:
@@ -1847,34 +1851,35 @@ class WhatsAppTemplate(
                     "Example values cannot contain commas"
                 )
 
-        if mismatches:
-            errors.setdefault("message", []).append(
-                ValidationError(
-                    f"Please provide variables with matching braces. You provided {mismatches}."
-                )
-            )
+        # if mismatches:
+        #     errors.setdefault("message", []).append(
+        #         ValidationError(
+        #             f"Please provide variables with matching braces. You provided {mismatches}."
+        #         )
+        #     )
 
-        vars_in_msg = re.findall(r"{{(.*?)}}", message)
-        non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
+        # vars_in_msg = re.findall(r"{{(.*?)}}", message)
+        # non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
 
-        if non_digit_variables:
-            errors.setdefault("message", []).append(
-                ValidationError(
-                    f"Please provide numeric variables only. You provided {non_digit_variables}."
-                )
-            )
+        # if non_digit_variables:
+        #     errors.setdefault("message", []).append(
+        #         ValidationError(
+        #             f"Please provide numeric variables only. You provided {non_digit_variables}."
+        #         )
+        #     )
         # TODO: Add tests for these checks
         # Check variable order
-        actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
-        expected_variables = [str(j + 1) for j in range(len(actual_digit_variables))]
-        if actual_digit_variables != expected_variables:
-            errors.setdefault("message", []).append(
-                {
-                    "message": ValidationError(
-                        f'Variables must be sequential, starting with "{{1}}". You provided "{actual_digit_variables}"'
-                    )
-                }
-            )
+
+        # actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
+        # expected_variables = [str(j + 1) for j in range(len(actual_digit_variables))]
+        # if actual_digit_variables != expected_variables:
+        #     errors.setdefault("message", []).append(
+        #         {
+        #             "message": ValidationError(
+        #                 f'Variables must be sequential, starting with "{{1}}". You provided "{actual_digit_variables}"'
+        #             )
+        #         }
+        #     )
 
         if errors:
             raise ValidationError(errors)
