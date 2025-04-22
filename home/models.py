@@ -1770,8 +1770,7 @@ class WhatsAppTemplate(
 
         message = self.message
         try:
-            variables = validate_template_variables(message)
-            print(f"Variables validated: {variables}")
+            validate_template_variables(message)
         except TemplateVariableError as tve:
             errors.setdefault("message", []).append(ValidationError(tve.message))
 

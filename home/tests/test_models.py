@@ -914,7 +914,26 @@ class TestWhatsAppTemplate:
                 "Please provide numeric variables only. You provided ['1', 'foo']."
             ],
         }
-        # raise AssertionError
+
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
+    def test_named_variables_are_valid(self) -> None:
+        """
+        Named template variables must be alphanumeric or underscore
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="non-valid-named-variable",
+                message="This is a message with a non valid named var {{1_ok_not.ok}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[("example_values", "Ev1")],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "ParseException: Named variable can only contain alphanumberic and underscore characters. You provided '1_ok_not.ok'"
+            ],
+        }
 
     def test_variables_are_ordered(self) -> None:
         """

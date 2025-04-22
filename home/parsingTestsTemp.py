@@ -21,7 +21,7 @@ template_body = pp.OneOrMore(variable | nonvar)
 print("******************  Start ******************")
 
 
-def extract_vars(body):
+def extract_vars(body: str) -> None:
     try:
         print("*********")
 
@@ -51,18 +51,20 @@ def extract_vars(body):
     print("***********************************************************")
 
 
-def main():
+def main() -> None:
     print("String 1")
     extract_vars("foo {{1}} bar")
     print("String 2")
     extract_vars("Hi {{1_heresyour_thing}}")
     print("String 3")
-    extract_vars("Hi {{1_heresyour_thing}")
+    extract_vars("Hi {{2_theresyour.thing}}")
     print("String 4")
-    extract_vars("""
+    extract_vars(
+        """
     Lots of text Lots of text {{1}}Lots of text Lots of text Lots of text{{2}}
     Lots of text Lots of text Lots of text Lots of text Lots of text Lots of {{no_good}}text Lots of text
-    """)
+    """
+    )
 
 
 # Check first variable

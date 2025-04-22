@@ -1,6 +1,7 @@
 import json
 import logging
 import mimetypes
+import re
 from collections.abc import Iterable
 from enum import Enum
 from typing import Any
@@ -404,26 +405,37 @@ def validate_positional_variables(variables: list[str]) -> str:
 
 
 def validate_named_variables(variables: list[str]) -> str:
+    # Check named vars for alphanums and _
+
     return "Somestring"
 
 
 def validate_template_variables(body: str) -> list[str]:
-    print(f"Body is |{body}|")
     variables = []
     try:
         variables = list(template_body.parse_string(body, parse_all=True))
     except pp.ParseException as pe:
-        print(f"PE {pe.loc}")
+        print("Parse Failed")
+        closing_braces = body.find("}}", pe.loc)
+        if closing_braces > -1:
+            var_name = body[pe.loc + 2 : closing_braces]
+            print(f"Var name = {var_name}")
+            if not re.match("^[a-zA-Z0-9_]+$", var_name):
+                raise TemplateVariableError(
+                    f"ParseException: Named variable can only contain alphanumberic and underscore characters. You provided '{var_name}'"
+                )
+            else:
+                raise TemplateVariableError(
+                    f"There was a problem parsing the variable starting at character {pe.loc}"
+                )
+        else:
+            print("woop")
         raise TemplateVariableError(
-            f"Unable to parse the variable starting at character {pe.loc}"
+            f"ParseException: Unable to parse the variable starting at character {pe.loc}"
         )
-    if not variables:
-        print("Whoops")
-        return []
 
-    # for var in variables:
-    #     print(f"Var is {var}")
-    #     print(f"Var type is {type(var)}")
+    if not variables:
+        return []
 
     # If all the variables are ints, validate as positional variables
     if all(
@@ -432,9 +444,8 @@ def validate_template_variables(body: str) -> list[str]:
     ):
         validate_positional_variables(variables)
     else:
-        print("Not all ints")
         if settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
-            print("Support for named variables enabled. Validating now")
+            validate_named_variables(variables)
         else:
             print(
                 f"These vars {variables} are not ALL ints, and named vars not enabled"

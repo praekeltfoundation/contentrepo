@@ -170,7 +170,9 @@ class TestStandaloneWhatsAppTemplates:
             wat.save_revision()
 
         assert err_info.value.message_dict == {
-            "message": ["Unable to parse the variable starting at character 42"],
+            "message": [
+                "ParseException: Unable to parse the variable starting at character 42"
+            ],
         }
 
     @responses.activate
@@ -191,7 +193,9 @@ class TestStandaloneWhatsAppTemplates:
             wat.save_revision()
 
         assert err_info.value.message_dict == {
-            "message": ["Unable to parse the variable starting at character 24"],
+            "message": [
+                "ParseException: Unable to parse the variable starting at character 24"
+            ],
         }
 
     @responses.activate
