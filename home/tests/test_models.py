@@ -1045,6 +1045,8 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision().publish()
 
+        assert len(responses.calls) == 1
+
         wat.buttons = [
             ("next_message", {"title": "Test Button 2"}),
         ]
