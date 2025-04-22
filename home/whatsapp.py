@@ -375,7 +375,7 @@ class TemplateVariableError(Exception):
         super().__init__(message)
 
 
-def validate_positional_variables(variables: list) -> str:
+def validate_positional_variables(variables: list[str]) -> str:
     # Check what the expected positional variables would be
     expected_positional_variable_values = [str(j + 1) for j in range(len(variables))]
     if variables != expected_positional_variable_values:
@@ -386,11 +386,11 @@ def validate_positional_variables(variables: list) -> str:
     return "Some string"
 
 
-def validate_named_variables(variables: list) -> str:
+def validate_named_variables(variables: list[str]) -> str:
     return "Somestring"
 
 
-def validate_template_variables(body: str) -> list:
+def validate_template_variables(body: str) -> list[str]:
     print(f"Body is |{body}|")
     variables = list(template_body.parse_string(body, parse_all=True))
     if not variables:
@@ -409,7 +409,6 @@ def validate_template_variables(body: str) -> list:
     else:
         print("Not all ints")
         if settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
-            # if all variables are digits, validate these as positional variables
             print("Support for named variables enabled. Validating now")
         else:
             print(
