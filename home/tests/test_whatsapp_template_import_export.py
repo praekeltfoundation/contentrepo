@@ -16,7 +16,6 @@ from wagtail.models import Locale  # type: ignore
 from wagtail.snippets.models import register_snippet  # type: ignore
 
 from home.import_helpers import ImportException
-from home.import_whatsapp_templates import ImportWhatsAppTemplateException
 from home.models import (
     WhatsAppTemplate,
 )
@@ -34,7 +33,7 @@ ExpDictsPair = tuple[ExpDicts, ExpDicts]
 
 
 def filter_both(
-    filter_func: Callable[[ExpDict], ExpDict]
+    filter_func: Callable[[ExpDict], ExpDict],
 ) -> Callable[[ExpDict, ExpDict], ExpPair]:
     @wraps(filter_func)
     def ff(src: ExpDict, dst: ExpDict) -> ExpPair:
@@ -73,7 +72,7 @@ def _is_json_field(field_name: str) -> bool:
 
 
 def per_template(
-    filter_func: Callable[[DbDict], DbDict]
+    filter_func: Callable[[DbDict], DbDict],
 ) -> Callable[[DbDicts], DbDicts]:
     @wraps(filter_func)
     def fp(templates: DbDicts) -> DbDicts:
@@ -84,7 +83,6 @@ def per_template(
 
 @per_template
 def decode_json_fields(template: DbDict) -> DbDict:
-
     fields = {
         k: json.loads(v) if _is_json_field(k) else v
         for k, v in template["fields"].items()
@@ -274,6 +272,16 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("whatsapp-template-simple.csv")
         content = csv_impexp.export_whatsapp_template()
         csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        iterator = iter(export)
+        first = next(iterator)
+        # if submission status is blank in csv, it should come through as not_submitted_yet
+        assert first["submission_status"] == "NOT_SUBMITTED_YET"
+        del first["submission_status"]
+
+        iterator = iter(csv)
+        first = next(iterator)
+        del first["submission_status"]
         assert export == csv
 
     def test_less_simple_with_quick_replies(self, csv_impexp: ImportExport) -> None:
@@ -345,11 +353,21 @@ class TestImportExport:
         Importing an invalid CSV file leaves the db as-is.
         """
         csv_bytes = csv_impexp.import_file("whatsapp-template-simple.csv")
-        with pytest.raises(ImportWhatsAppTemplateException) as e:
+        with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp-template-broken.csv")
-        assert e.value.message == "Language code not found: "
+        assert e.value.message == ["Language code not found: "]
         content = csv_impexp.export_whatsapp_template()
         csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        iterator = iter(export)
+        first = next(iterator)
+        # if submission status is blank in csv, it should come through as not_submitted_yet
+        assert first["submission_status"] == "NOT_SUBMITTED_YET"
+        del first["submission_status"]
+
+        iterator = iter(csv)
+        first = next(iterator)
+        del first["submission_status"]
         assert export == csv
 
     def test_invalid_locale_code(self, csv_impexp: ImportExport) -> None:
@@ -357,11 +375,11 @@ class TestImportExport:
         Importing whatsapp templates with invalid locale code should raise an error that results
         in an error message that gets sent back to the user
         """
-        with pytest.raises(ImportWhatsAppTemplateException) as e:
+        with pytest.raises(ImportException) as e:
             csv_impexp.import_file("invalid-whatsapp-template-locale-name.csv")
 
         assert e.value.row_num == 2
-        assert e.value.message == "Language code not found: fakecode"
+        assert e.value.message == ["Language code not found: fakecode"]
 
     def test_go_to_page_button_missing_page(self, csv_impexp: ImportExport) -> None:
         """
@@ -387,4 +405,83 @@ class TestImportExport:
         assert e.value.message == [
             "No form found with slug 'missing' and locale 'English' for go_to_form "
             "button 'Missing'"
+        ]
+
+    def test_invalid_wa_template_category(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a WhatsApp template with an invalid category should raise an
+        error that results in an error message that gets sent back to the user.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("bad-whatsapp-template-category.csv")
+
+        assert e.value.row_num == 2
+
+        assert e.value.message == [
+            "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices."
+        ]
+
+    def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a WhatsApp template with invalid variables should raise an
+        error that results in an error message that gets sent back to the user.
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("bad-whatsapp-template-vars.csv")
+
+        assert e.value.row_num == 2
+
+        assert e.value.message == [
+            "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
+            "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
+        ]
+
+    def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
+        """
+        Updating a valid WhatsApp template with invalid variables should raise
+        an error that results in an error message that gets sent back to the
+        user. The update validation happens in a different code path from the
+        initial import.
+        """
+        csv_impexp.import_file("good-whatsapp-template-vars.csv")
+
+        # Update an existing page, which does the validation in
+        # `page.save_revision()` rather than `parent.add_child()`.
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("bad-whatsapp-template-vars.csv", purge=False)
+
+        assert e.value.row_num == 2
+
+        assert e.value.message == [
+            "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
+            "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
+        ]
+
+    def test_invalid_template_already_in_db(self, csv_impexp: ImportExport) -> None:
+        """
+        Import an invalid template that matches an invalid template already in the db
+        """
+
+        WhatsAppTemplate.objects.create(
+            name="wa_title",
+            message="Vars {1} {2} {3}",
+            category="UTILITY",
+            buttons=[],
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[
+                ("example_values", "Ev1"),
+            ],
+            submission_name="testname",
+            submission_status="NOT_SUBMITTED_YET",
+            submission_result="test result",
+        )
+
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("bad-whatsapp-template-vars.csv")
+
+        assert e.value.row_num == 2
+
+        assert e.value.message == [
+            "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
+            "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
         ]

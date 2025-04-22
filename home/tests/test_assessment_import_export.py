@@ -756,7 +756,6 @@ class TestImportExport:
 @pytest.mark.usefixtures("result_content_pages")
 @pytest.mark.django_db()
 class TestImportMultipleLanguages:
-
     def test_create_content_page(self, csv_impexp: ImportExport) -> None:
         """
         Importing a csv with a results page that has the same slug

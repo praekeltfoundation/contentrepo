@@ -7,6 +7,7 @@ from queue import Queue
 from typing import Any
 from uuid import uuid4
 
+from django.core.exceptions import ValidationError  # type: ignore
 from openpyxl import load_workbook
 from wagtail.coreutils import get_content_languages  # type: ignore
 from wagtail.models import Locale  # type: ignore
@@ -16,17 +17,6 @@ from home.import_helpers import ImportException, JSON_loader
 from home.models import Assessment, ContentPage, WhatsAppTemplate  # type: ignore
 
 PageId = tuple[str, Locale]
-
-
-class ImportWhatsAppTemplateException(Exception):
-    """
-    Base exception for all import related issues.
-    """
-
-    def __init__(self, message: str, row_num: int | None = None):
-        self.row_num = row_num
-        self.message = message
-        super().__init__()
 
 
 class WhatsAppTemplateImporter:
@@ -57,11 +47,9 @@ class WhatsAppTemplateImporter:
                     lang_name = lang_dn
                     codes.append(lang_code)
             if not codes:
-                raise ImportWhatsAppTemplateException(
-                    f"Language code not found: {lang_code_entry}"
-                )
+                raise ImportException(f"Language code not found: {lang_code_entry}")
             if len(codes) > 1:
-                raise ImportWhatsAppTemplateException(
+                raise ImportException(
                     f"Multiple codes for language: {lang_name} -> {codes}"
                 )
             self.locale_map[lang_code_entry] = Locale.objects.get(
@@ -79,18 +67,31 @@ class WhatsAppTemplateImporter:
 
         self.process_rows(rows)
         self.add_go_to_page_items(self.go_to_page_buttons, "buttons")
-        # self.save_pages_assessment()
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         for i, row in reversed(list(enumerate(rows, start=2))):
             try:
                 self.create_whatsapp_template_from_row(row)
-            except ImportWhatsAppTemplateException as e:
+            except ImportException as e:
                 e.row_num = i
                 raise e
+            except ValidationError as errors:
+                err = []
+                for error in errors:
+                    field_name = error[0]
+                    for msg in error[1]:
+                        err.append(f"{field_name} - {msg}")
+                raise ImportException(
+                    [f"Validation error: {msg}" for msg in err], i, locale=row.locale
+                )
 
     def create_whatsapp_template_from_row(self, row: "ContentRow") -> None:
         locale = self.locale_from_language_code(row.locale)
+
+        if row.category not in WhatsAppTemplate.Category.values:
+            raise ImportException(
+                f"Validation error: whatsapp_template_category - Select a valid choice. {row.category} is not one of the available choices."
+            )
 
         template = WhatsAppTemplate(
             name=row.name,
@@ -98,10 +99,15 @@ class WhatsAppTemplateImporter:
             locale=locale,
             message=row.message,
             example_values=[("example_values", v) for v in row.example_values],
-            submission_status=row.submission_status,
+            submission_status=(
+                row.submission_status
+                if row.submission_status
+                else WhatsAppTemplate.SubmissionStatus.NOT_SUBMITTED_YET
+            ),
             submission_result=row.submission_result,
             submission_name=row.submission_name,
         )
+        template.full_clean()
         template.save()
 
         buttons = self._create_interactive_items(
@@ -109,6 +115,7 @@ class WhatsAppTemplateImporter:
         )
         template.buttons = buttons
 
+        template.full_clean()
         template.save()
         return
 
@@ -163,6 +170,7 @@ class WhatsAppTemplateImporter:
                     button["index"],
                     ("go_to_page", {"page": related_page, "title": title}),
                 )
+            template.full_clean()
             template.save()
 
     def set_progress(self, message: str, progress: int) -> None:

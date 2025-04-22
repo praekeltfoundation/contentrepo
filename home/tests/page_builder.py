@@ -159,7 +159,6 @@ class WABlk(ContentBlock):
     # TODO: More body things.
     next_prompt: str | None = None
     variation_messages: list[VarMsg] = field(default_factory=list)
-    example_values: list[str] = field(default_factory=list)
     buttons: list[Btn] = field(default_factory=list)
     list_title: str = ""
     list_items: list[ListItem] = field(default_factory=list)

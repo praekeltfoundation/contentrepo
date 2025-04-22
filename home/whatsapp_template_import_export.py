@@ -16,7 +16,6 @@ logger = getLogger(__name__)
 def export_xlsx_whatsapp_template(
     queryset: PageQuerySet, response: HttpResponse
 ) -> None:
-
     exporter = WhatsAppTemplateExporter(queryset)
     export_rows = exporter.perform_export()
     WhatsAppTemplateExportWriter(export_rows).write_xlsx(response)
@@ -25,26 +24,20 @@ def export_xlsx_whatsapp_template(
 def export_csv_whatsapp_template(
     queryset: PageQuerySet, response: HttpResponse
 ) -> None:
-
     exporter = WhatsAppTemplateExporter(queryset)
     export_rows = exporter.perform_export()
     WhatsAppTemplateExportWriter(export_rows).write_csv(response)
 
 
 @transaction.atomic
-def import_whatsapptemplate(file, filetype, progress_queue, purge=True, locale=None) -> None:  # type: ignore
+def import_whatsapptemplate(  # type: ignore
+    file,
+    filetype,
+    progress_queue,
+    purge=True,
+    locale=None,
+) -> None:
     importer = WhatsAppTemplateImporter(
         file.read(), filetype, progress_queue, purge, locale
     )
     importer.perform_import()
-
-
-class ImportWhatsAppTemplateException(Exception):
-    """
-    Base exception for all import related issues.
-    """
-
-    def __init__(self, message: str, row_num: int | None = None):
-        self.row_num = row_num
-        self.message = message
-        super().__init__()

@@ -1,4 +1,5 @@
 import json
+import logging
 import mimetypes
 from collections.abc import Iterable
 from enum import Enum
@@ -12,6 +13,8 @@ from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
 from .constants import WHATSAPP_LANGUAGE_MAPPING
+
+logger = logging.getLogger(__name__)
 
 
 class WhatsAppLanguage(Enum):
@@ -198,14 +201,28 @@ def submit_whatsapp_template(
 
     if response.ok:
         return response.json()
-    else:
-        raise TemplateSubmissionException(response.json())
+
+    logger.warning(f"Error submitting template {response.content!r}")
+    try:
+        err_msg = response.json()["error"]["error_user_msg"]
+    except Exception:
+        raise TemplateSubmissionServerException(
+            f"Couldn't parse error response: {response.content!r}"
+        )
+
+    raise TemplateSubmissionClientException(err_msg)
 
 
-class TemplateSubmissionException(Exception):
-    def __init__(self, response_json: dict[str, Any]):
-        self.response_json = response_json
-        super().__init__(f"Error. {response_json['error']['error_user_msg']}")
+class TemplateSubmissionServerException(Exception):
+    def __init__(self, response_content: str):
+        self.response_content = response_content
+        super().__init__(f"{response_content}")
+
+
+class TemplateSubmissionClientException(Exception):
+    def __init__(self, error_msg: str):
+        self.error_msg = error_msg
+        super().__init__(f"Error! {error_msg}")
 
 
 ###### ALL CODE ABOVE THIS LINE IS SHARED BY THE OLD CONTENTPAGE EMBEDDED TEMPLATES, AS WELL AS THE NEW STANDALONE TEMPLATES ######
