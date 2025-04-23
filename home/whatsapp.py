@@ -396,7 +396,7 @@ class TemplateVariableError(Exception):
         super().__init__(message)
 
 
-def validate_positional_variables(variables: list[str]):
+def validate_positional_variables(variables: list[str]) -> None:
     # Check what the expected positional variables would be
     expected_positional_variable_values = [str(j + 1) for j in range(len(variables))]
     if variables != expected_positional_variable_values:
