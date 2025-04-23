@@ -409,6 +409,7 @@ def validate_template_variables(body: str) -> list[str]:
 
     except pp.ParseException as pe:
         raise TemplateVariableError(
+            # TODO: Better error handling here, with the invalid var highlighted as part of the text
             f"ParseException: Unable to parse the variable starting at character {pe.loc}"
         )
 

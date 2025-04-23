@@ -171,6 +171,7 @@ class TestStandaloneWhatsAppTemplates:
 
         assert err_info.value.message_dict == {
             "message": [
+                # TODO: Add more specific error handling here
                 "ParseException: Unable to parse the variable starting at character 42"
             ],
         }
