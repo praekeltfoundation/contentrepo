@@ -383,7 +383,10 @@ def create_standalone_whatsapp_template(
 vstart = pp.Literal("{{").suppress()
 vend = pp.Literal("}}").suppress()
 nonvar = pp.CharsNotIn("{}").suppress()
-variable = (vstart + pp.Word(pp.alphanums + "_") + vend).set_name("variable")
+if settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
+    variable = (vstart + pp.Word(pp.alphanums + "_") + vend).set_name("variable")
+else:
+    variable = (vstart + pp.Word(pp.nums) + vend).set_name("variable")
 template_body = pp.OneOrMore(variable | nonvar)
 
 
@@ -393,7 +396,7 @@ class TemplateVariableError(Exception):
         super().__init__(message)
 
 
-def validate_positional_variables(variables: list[str]) -> str:
+def validate_positional_variables(variables: list[str]):
     # Check what the expected positional variables would be
     expected_positional_variable_values = [str(j + 1) for j in range(len(variables))]
     if variables != expected_positional_variable_values:
@@ -401,12 +404,12 @@ def validate_positional_variables(variables: list[str]) -> str:
             f'Positional variables must increase sequentially, starting at 1. You provided "{variables}"'
         )
 
-    return "Some string"
 
-
-def validate_named_variables(variables: list[str]) -> str:
+def validate_named_variables(variables: list[str]):
     # Check named vars for alphanums and _
 
+    for var in variables:
+        print(f"VAR HERE {var}")
     return "Somestring"
 
 
@@ -414,9 +417,11 @@ def validate_template_variables(body: str) -> list[str]:
     variables = []
     try:
         variables = list(template_body.parse_string(body, parse_all=True))
+
     except pp.ParseException as pe:
         closing_braces = body.find("}}", pe.loc)
         if closing_braces > -1:
+            print("braces found")
             var_name = body[pe.loc + 2 : closing_braces]
 
             if settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
@@ -426,8 +431,12 @@ def validate_template_variables(body: str) -> list[str]:
                     )
                 else:
                     raise TemplateVariableError(
-                        f"There was a problem parsing the variable starting at character {pe.loc}"
+                        f"ParseException: There was a problem parsing the variable starting at character {pe.loc}"
                     )
+            else:
+                raise TemplateVariableError(
+                    f"ParseException: Please provide numeric variables only. You provided a non-numeric variable name '{var_name}'."
+                )
 
         else:
             raise TemplateVariableError(
@@ -443,12 +452,5 @@ def validate_template_variables(body: str) -> list[str]:
         for var in variables
     ):
         validate_positional_variables(variables)
-    else:
-        if settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
-            validate_named_variables(variables)
-        else:
-            raise TemplateVariableError(
-                f"Please provide numeric variables only. You provided {variables}."
-            )
 
     return variables

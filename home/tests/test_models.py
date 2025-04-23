@@ -911,7 +911,7 @@ class TestWhatsAppTemplate:
 
         assert err_info.value.message_dict == {
             "message": [
-                "Please provide numeric variables only. You provided ['1', 'foo']."
+                "ParseException: Please provide numeric variables only. You provided a non-numeric variable name 'foo'."
             ],
         }
 
@@ -927,6 +927,26 @@ class TestWhatsAppTemplate:
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
                 example_values=[("example_values", "Ev1")],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "ParseException: Named variable can only contain alphanumberic and underscore characters. You provided '1_ok_not.ok'"
+            ],
+        }
+
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
+    def test_int_and_named_variables_are_valid(self) -> None:
+        """
+        Named template variables must be alphanumeric or underscore
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="non-valid-named-variable",
+                message="This is a message with a valid positional var here {{1}} and a named var here{{1_ok_not.ok}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[("example_values", "Ev1"), ("example_values", "Ev2")],
             ).full_clean()
 
         assert err_info.value.message_dict == {
@@ -1080,6 +1100,50 @@ class TestWhatsAppTemplate:
             ],
             "language": "en_US",
             "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
+    @responses.activate
+    def test_template_with_all_ints_gets_validated_as_positional_variables(
+        self,
+    ) -> None:
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="all-int-pos-vars",
+                message="Test WhatsApp Message all int placeholders {{2}} and {{1}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                    ("example_values", "Ev2"),
+                ],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Positional variables must increase sequentially, starting at 1. You provided \"['2', '1']\""
+            ]
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_with_more_example_values_than_vars_fails(self) -> None:
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="more-ev-than-variables",
+                message="Test WhatsApp Message with less placeholders {{1}} than example values",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                    ("example_values", "Ev2"),
+                ],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Mismatch in number of placeholders and example values. Found 1 placeholder(s) and 2 example values."
+            ]
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)

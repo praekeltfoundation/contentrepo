@@ -151,7 +151,7 @@ class TestStandaloneWhatsAppTemplates:
 
         assert err_info.value.message_dict == {
             "message": [
-                "Please provide numeric variables only. You provided ['name']."
+                "ParseException: Please provide numeric variables only. You provided a non-numeric variable name 'name'."
             ],
         }
 
