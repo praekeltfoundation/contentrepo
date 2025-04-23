@@ -13,6 +13,7 @@ from wagtail.admin.widgets.slug import SlugInput
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.models import Page
 from wagtail.snippets.action_menu import ActionMenuItem
+from wagtail.snippets.bulk_actions.snippet_bulk_action import SnippetBulkAction
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
@@ -169,6 +170,26 @@ def register_submit_to_meta_menu_item(model: Any) -> Any:
     if model == WhatsAppTemplate:
         return SubmitToMetaMenuItem(order=10)
     return None
+
+
+@hooks.register("register_bulk_action")
+class SubmitToMetaBulkAction(SnippetBulkAction):
+    display_name = "Submit to Meta"
+    aria_label = "Submit selected objects to Meta"
+    action_type = "submit_to_meta"
+    template_name = (
+        "wagtailsnippets/snippets/home/whatsapptemplate/confirm_bulk_submit.html"
+    )
+    models = [WhatsAppTemplate]
+
+    @classmethod
+    def execute_action(cls, objects: Any, **kwargs: Any) -> int:
+        for obj in objects:
+            submit_to_meta_menu_action(obj)
+        return len(objects)
+
+    def get_success_message(self, num_objects: int) -> str:
+        return f"{num_objects} objects have been submitted to Meta"
 
 
 class ContentPageAdmin(ModelAdmin):
