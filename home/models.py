@@ -2,7 +2,6 @@ import logging
 import re
 from typing import Any
 
-from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
@@ -49,12 +48,6 @@ from wagtail_content_import.models import ContentImportMixin
 from wagtailmedia.blocks import AbstractMediaChooserBlock
 
 from .panels import PageRatingPanel
-from .whatsapp import (
-    TemplateSubmissionClientException,
-    TemplateSubmissionServerException,
-    create_standalone_whatsapp_template,
-    create_whatsapp_template,
-)
 
 from .constants import (  # isort:skip
     AGE_CHOICES,
@@ -861,44 +854,9 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             self.whatsapp_template_category,
         )
 
-    def submit_whatsapp_template(self, previous_revision: Revision) -> str | None:
-        """
-        Submits a request to the WhatsApp API to create a template for this content
-
-        Only submits if the create templates is enabled, if the page is a whatsapp
-        template, and if the template fields are different to the previous revision
-        """
-        if not settings.WHATSAPP_CREATE_TEMPLATES:
-            return None
-        if not self.is_whatsapp_template:
-            return None
-        # If there are any missing fields in the previous revision, then carry on
-        try:
-            previous_revision = previous_revision.as_object()
-            previous_revision_fields = previous_revision.whatsapp_template_fields
-        except (IndexError, AttributeError):
-            previous_revision_fields = ()
-        # If there are any missing fields in this revision, then don't submit template
-        try:
-            if self.whatsapp_template_fields == previous_revision_fields:
-                return None
-        except (IndexError, AttributeError):
-            return None
-
-        self.whatsapp_template_name = self.create_whatsapp_template_name()
-
-        create_whatsapp_template(
-            self.whatsapp_template_name,
-            self.whatsapp_template_body,
-            str(self.whatsapp_template_category),
-            self.locale,
-            self.whatsapp_template_buttons,
-            self.whatsapp_template_image,
-        )
-
-        return self.whatsapp_template_name
-
-    def get_all_links(self):
+    def get_all_links(
+        self,
+    ) -> tuple[list[tuple[str, str]], list[tuple[str, str]], list[tuple[str, str]]]:
         page_links = []
         orderedcontentset_links = []
         whatsapp_template_links = []
@@ -938,14 +896,14 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
     def save_revision(
         self,
-        user=None,
-        submitted_for_moderation=False,
-        approved_go_live_at=None,
-        changed=True,
-        log_action=False,
-        previous_revision=None,
-        clean=True,
-    ):
+        user: Any | None = None,
+        submitted_for_moderation: bool = False,
+        approved_go_live_at: Any | None = None,
+        changed: bool = True,
+        log_action: bool = False,
+        previous_revision: Revision | None = None,
+        clean: bool = True,
+    ) -> Revision:
         previous_revision = self.get_latest_revision()
         revision = super().save_revision(
             user,
@@ -956,19 +914,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             previous_revision,
             clean,
         )
-
-        try:
-            template_name = self.submit_whatsapp_template(previous_revision)
-        except Exception:
-            # Log the error to sentry and send error message to the user
-            logger.exception(
-                f"Failed to submit template name:  {self.whatsapp_template_name}"
-            )
-            raise ValidationError("Failed to submit template")
-
-        if template_name:
-            revision.content["whatsapp_template_name"] = template_name
-            revision.save(update_fields=["content"])
         return revision
 
     def short_description(description):
@@ -1695,50 +1640,6 @@ class WhatsAppTemplate(
             clean,
         )
 
-        if not settings.WHATSAPP_CREATE_TEMPLATES:
-            return revision
-
-        # If there are any missing fields in the previous revision, then carry on
-        if previous_revision:
-            previous_revision = previous_revision.as_object()
-            previous_revision_fields = previous_revision.fields
-        else:
-            previous_revision_fields = ()
-        if self.fields == previous_revision_fields:
-            return revision
-
-        self.template_name = self.create_whatsapp_template_name()
-        try:
-            response_json = create_standalone_whatsapp_template(
-                name=self.template_name,
-                message=self.message,
-                category=self.category,
-                locale=self.locale,
-                quick_replies=[b["value"]["title"] for b in self.buttons.raw_data],
-                image_obj=self.image,
-                example_values=[v["value"] for v in self.example_values.raw_data],
-            )
-            revision.content["name"] = self.name
-            revision.content["submission_name"] = self.template_name
-            revision.content["submission_status"] = self.SubmissionStatus.SUBMITTED
-            revision.content["submission_result"] = (
-                f"Success! Template ID = {response_json['id']}"
-            )
-        except TemplateSubmissionServerException as tsse:
-            logger.exception(f"TemplateSubmissionServerException: {str(tsse)} ")
-            revision.content["name"] = self.name
-            revision.content["submission_name"] = self.template_name
-            revision.content["submission_status"] = self.SubmissionStatus.FAILED
-            revision.content["submission_result"] = (
-                "An Internal Server Error has occurred.  Please try again later or contact developer support"
-            )
-        except TemplateSubmissionClientException as tsce:
-            revision.content["name"] = self.name
-            revision.content["submission_name"] = self.template_name
-            revision.content["submission_status"] = self.SubmissionStatus.FAILED
-            revision.content["submission_result"] = str(tsce)
-
-        revision.save(update_fields=["content"])
         return revision
 
     def check_matching_braces(self, message: str = message) -> str:

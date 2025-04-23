@@ -283,6 +283,9 @@ class DummyRevisionObj:
     def create_whatsapp_template_name(self) -> str:
         return "template_123"
 
+    def save(self) -> None:
+        pass
+
 
 class DummyRevision:
     def as_object(self) -> DummyRevisionObj:

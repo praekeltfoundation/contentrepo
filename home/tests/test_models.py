@@ -10,7 +10,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
-from requests import HTTPError
 from wagtail.blocks import StructBlockValidationError
 from wagtail.images import get_image_model
 from wagtail.models import (
@@ -35,6 +34,7 @@ from home.models import (
     WhatsappBlock,
     WhatsAppTemplate,
 )
+from home.whatsapp import submit_to_meta_menu_action
 
 from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
@@ -88,330 +88,6 @@ class ContentPageTests(TestCase):
         self.assertEqual(view.page.id, page.id)
         self.assertEqual(view.revision.id, page.get_latest_revision().id)
         self.assertEqual(view.data, {"save": "this"})
-
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_on_save_deactivated(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        create_page(is_whatsapp_template=True)
-        mock_create_whatsapp_template.assert_not_called()
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @responses.activate
-    def test_template_create_on_save(self) -> None:
-        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
-        responses.add(responses.POST, url, json={})
-
-        page = create_page(is_whatsapp_template=True)
-
-        request = responses.calls[0].request
-        assert json.loads(request.body) == {
-            "category": "UTILITY",
-            "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
-            "language": "en_US",
-            "name": f"wa_title_{page.get_latest_revision().id}",
-        }
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_with_quick_reply_buttons_on_save(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        page_with_button = PageBuilder.build_cp(
-            parent=main_menu,
-            slug="page2",
-            title="Page2",
-            bodies=[
-                WABody(
-                    "Page2",
-                    [
-                        WABlk(
-                            message="Page2 WA Body",
-                            buttons=[
-                                PageBtn("Button 2", page=main_menu),
-                                PageBtn("Menu", page=main_menu),
-                            ],
-                        )
-                    ],
-                )
-            ],
-            whatsapp_template_name="page2-template",
-        )
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_with(
-            f"page2_{page_with_button.get_latest_revision().id}",
-            "Page2 WA Body",
-            "UTILITY",
-            en,
-            ["Button 2", "Menu"],
-            None,
-        )
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_create_with_proper_buttons_on_save(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        page_with_button = PageBuilder.build_cp(
-            parent=main_menu,
-            slug="page2",
-            title="Page2",
-            bodies=[
-                WABody(
-                    "Page2",
-                    [
-                        WABlk(
-                            "Page2 WA Body",
-                            buttons=[
-                                PageBtn("Menu", page=main_menu),
-                                PageBtn("Button 2", page=main_menu),
-                            ],
-                        )
-                    ],
-                )
-            ],
-            whatsapp_template_name="page2-template",
-            whatsapp_template_category="UTILITY",
-        )
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_with(
-            f"page2_{page_with_button.get_latest_revision().id}",
-            "Page2 WA Body",
-            "UTILITY",
-            en,
-            ["Menu", "Button 2"],
-            None,
-        )
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_created_with_proper_buttons_not_quick_replies(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        page_with_button = PageBuilder.build_cp(
-            parent=main_menu,
-            slug="page2",
-            title="Page2",
-            bodies=[
-                WABody(
-                    "Page2",
-                    [
-                        WABlk(
-                            "Page2 WA Body",
-                            buttons=[
-                                PageBtn("Home", page=main_menu),
-                                PageBtn("Button 1", page=main_menu),
-                            ],
-                        )
-                    ],
-                )
-            ],
-            whatsapp_template_name="page2-template",
-            quick_replies=["Menu", "Button 2"],
-        )
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_with(
-            f"page2_{page_with_button.get_latest_revision().id}",
-            "Page2 WA Body",
-            "UTILITY",
-            en,
-            ["Home", "Button 1"],
-            None,
-        )
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_updated_on_change(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        """
-        If the content is changed, the template should be resubmitted with an updated
-        template name
-        """
-        page = create_page(is_whatsapp_template=True, has_buttons=True)
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_once_with(
-            f"wa_title_{page.get_latest_revision().pk}",
-            "Test WhatsApp Message 1",
-            "UTILITY",
-            en,
-            ["button 1", "button 2"],
-            None,
-        )
-
-        mock_create_whatsapp_template.reset_mock()
-        page.whatsapp_body.raw_data[0]["value"]["message"] = "Test WhatsApp Message 2"
-        revision = page.save_revision()
-        revision.publish()
-
-        expected_title = f"wa_title_{page.get_latest_revision().pk}"
-        mock_create_whatsapp_template.assert_called_once_with(
-            expected_title,
-            "Test WhatsApp Message 2",
-            "UTILITY",
-            en,
-            ["button 1", "button 2"],
-            None,
-        )
-        page.refresh_from_db()
-        self.assertEqual(page.whatsapp_template_name, expected_title)
-        self.assertEqual(revision.as_object().whatsapp_template_name, expected_title)
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_not_submitted_on_no_change(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        """
-        If the content is not changed, the template should not be resubmitted
-        """
-        page = create_page(is_whatsapp_template=True, has_buttons=True)
-        page.get_latest_revision().publish()
-        page.refresh_from_db()
-        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_once_with(
-            expected_template_name,
-            "Test WhatsApp Message 1",
-            "UTILITY",
-            en,
-            ["button 1", "button 2"],
-            None,
-        )
-
-        mock_create_whatsapp_template.reset_mock()
-        page.save_revision().publish()
-        mock_create_whatsapp_template.assert_not_called()
-        page.refresh_from_db()
-        self.assertEqual(page.whatsapp_template_name, expected_template_name)
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_submitted_when_is_whatsapp_template_is_set(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        """
-        If the is_whatsapp_template was not enabled on the content, but is changed,
-        then it should submit, even if the content hasn't changed.
-        """
-        page = create_page(is_whatsapp_template=False, has_buttons=True)
-        page.get_latest_revision().publish()
-        page.refresh_from_db()
-        mock_create_whatsapp_template.assert_not_called()
-
-        page.is_whatsapp_template = True
-        page.save_revision().publish()
-
-        page.refresh_from_db()
-        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
-        self.assertEqual(page.whatsapp_template_name, expected_template_name)
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_once_with(
-            expected_template_name,
-            "Test WhatsApp Message 1",
-            "UTILITY",
-            en,
-            ["button 1", "button 2"],
-            None,
-        )
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_submitted_with_no_whatsapp_previous_revision(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        """
-        If the previous revision didn't have any whatsapp messages, it should still
-        successfully submit a whatsapp template
-        """
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-        page = PageBuilder.build_cp(
-            parent=main_menu,
-            slug="ha-menu",
-            title="HealthAlert menu",
-            bodies=[],
-        )
-        wa_block = WABody("WA Title", [WABlk("Test WhatsApp Message 1")])
-        wa_block.set_on(page)
-        page.is_whatsapp_template = True
-        page.save_revision()
-
-        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_once_with(
-            expected_template_name,
-            "Test WhatsApp Message 1",
-            "UTILITY",
-            en,
-            [],
-            None,
-        )
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_template_not_submitted_with_no_message(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        """
-        If the page doesn't have any whatsapp messages, then it shouldn't be submitted
-        """
-        home_page = HomePage.objects.first()
-        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-
-        PageBuilder.build_cp(
-            parent=main_menu,
-            slug="ha-menu",
-            title="HealthAlert menu",
-            bodies=[WABody("WA Title", [])],
-            whatsapp_template_name="WA_Title_1",
-        )
-
-        mock_create_whatsapp_template.assert_not_called()
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_create_whatsapp_template_submit_no_error_message(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        """
-        Should not return an error message if template was submitted successfully
-        """
-        page = create_page(is_whatsapp_template=True)
-        page.get_latest_revision().publish()
-        expected_template_name = f"wa_title_{page.get_latest_revision().pk}"
-        en = Locale.objects.get(language_code="en")
-        mock_create_whatsapp_template.assert_called_once_with(
-            expected_template_name,
-            "Test WhatsApp Message 1",
-            "UTILITY",
-            en,
-            [],
-            None,
-        )
-
-    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
-    @mock.patch("home.models.create_whatsapp_template")
-    def test_create_whatsapp_template_submit_return_error(
-        self, mock_create_whatsapp_template: Any
-    ) -> None:
-        """
-        Test the error message on template submission failure
-        If template submission fails user should get descriptive error instead of internal server error
-        """
-        mock_create_whatsapp_template.side_effect = HTTPError("Failed")
-
-        with self.assertRaises(ValidationError) as e:
-            create_page(is_whatsapp_template=True)
-
-        self.assertRaises(ValidationError)
-        self.assertEqual(e.exception.message, "Failed to submit template")
 
     def test_for_missing_migrations(self) -> None:
         output = StringIO()
@@ -981,6 +657,8 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision()
 
+        submit_to_meta_menu_action(wat)
+
         request = responses.calls[0].request
         assert json.loads(request.body) == {
             "category": "UTILITY",
@@ -1006,6 +684,8 @@ class TestWhatsAppTemplate:
         )
         wat.save()
         wat.save_revision().publish()
+
+        submit_to_meta_menu_action(wat)
 
         wat_from_db = WhatsAppTemplate.objects.last()
 
@@ -1045,12 +725,16 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision().publish()
 
+        submit_to_meta_menu_action(wat)
+
         assert len(responses.calls) == 1
 
         wat.buttons = [
             ("next_message", {"title": "Test Button 2"}),
         ]
         wat.save_revision().publish()
+
+        submit_to_meta_menu_action(wat)
 
         wat_from_db = WhatsAppTemplate.objects.last()
 
@@ -1092,6 +776,8 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision()
 
+        submit_to_meta_menu_action(wat)
+
         request = responses.calls[0].request
 
         assert json.loads(request.body) == {
@@ -1130,6 +816,8 @@ class TestWhatsAppTemplate:
         )
         wat.save()
         wat.save_revision().publish()
+
+        submit_to_meta_menu_action(wat)
 
         wat_from_db = WhatsAppTemplate.objects.last()
         assert wat_from_db.submission_status == "FAILED"

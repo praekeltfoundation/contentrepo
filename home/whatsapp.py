@@ -383,6 +383,8 @@ def submit_to_meta_menu_action(model: Any) -> None:
         revision_object.submission_status = revision_object.SubmissionStatus.FAILED
         revision_object.submission_result = str(tsce)
 
+    revision_object.save()
+
 
 def create_standalone_whatsapp_template(
     name: str,
