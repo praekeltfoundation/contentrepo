@@ -244,6 +244,8 @@ WHATSAPP_ACCESS_TOKEN = env.str("WHATSAPP_ACCESS_TOKEN", "")
 FB_BUSINESS_ID = env.str("FB_BUSINESS_ID", "")
 # Whether or not to create WhatsApp templates for content marked as a template.
 WHATSAPP_CREATE_TEMPLATES = env.bool("WHATSAPP_CREATE_TEMPLATES", False)
+# Whether or not to support named variables in templates
+WHATSAPP_ALLOW_NAMED_VARIABLES = env.bool("WHATSAPP_ALLOW_NAMED_VARIABLES", False)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
