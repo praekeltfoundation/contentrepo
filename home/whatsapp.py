@@ -1,7 +1,6 @@
 import json
 import logging
 import mimetypes
-import re
 from collections.abc import Iterable
 from enum import Enum
 from typing import Any
@@ -383,10 +382,7 @@ def create_standalone_whatsapp_template(
 vstart = pp.Literal("{{").suppress()
 vend = pp.Literal("}}").suppress()
 nonvar = pp.CharsNotIn("{}").suppress()
-if settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
-    variable = (vstart + pp.Word(pp.alphanums + "_") + vend).set_name("variable")
-else:
-    variable = (vstart + pp.Word(pp.nums) + vend).set_name("variable")
+variable = (vstart + pp.Word(pp.alphanums + "_") + vend).set_name("variable")
 template_body = pp.OneOrMore(variable | nonvar)
 
 
@@ -406,42 +402,25 @@ def validate_positional_variables(variables: list[str]) -> None:
 
 
 def validate_template_variables(body: str) -> list[str]:
-    variables = []
     try:
         variables = list(template_body.parse_string(body, parse_all=True))
 
     except pp.ParseException as pe:
-        closing_braces = body.find("}}", pe.loc)
-        if closing_braces > -1:
-            var_name = body[pe.loc + 2 : closing_braces]
-
-            if settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
-                if not re.match("^[a-zA-Z0-9_]+$", var_name):
-                    raise TemplateVariableError(
-                        f"ParseException: Named variable can only contain alphanumberic and underscore characters. You provided '{var_name}'"
-                    )
-                else:
-                    raise TemplateVariableError(
-                        f"ParseException: There was a problem parsing the variable starting at character {pe.loc}"
-                    )
-            else:
-                raise TemplateVariableError(
-                    f"ParseException: Please provide numeric variables only. You provided a non-numeric variable name '{var_name}'."
-                )
-
-        else:
-            raise TemplateVariableError(
-                f"ParseException: Unable to parse the variable starting at character {pe.loc}"
-            )
+        raise TemplateVariableError(
+            # TODO: Add more specific error handling
+            f"ParseException: Unable to parse the variable starting at character {pe.loc}"
+        )
 
     if not variables:
         return []
 
     # If all the variables are ints, validate as positional variables
-    if all(
-        isinstance(var, int) or isinstance(var, str) and var.isdigit()
-        for var in variables
-    ):
+    if all(var.isdecimal() for var in variables):
         validate_positional_variables(variables)
+    elif not settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
+        raise TemplateVariableError(
+            # TODO: Add more specific error handling once named vars are a thing
+            "ParseException: Please provide numeric variables only."
+        )
 
     return variables

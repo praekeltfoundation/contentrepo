@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Any
 
 from django.conf import settings
@@ -1756,9 +1755,10 @@ class WhatsAppTemplate(
 
         message = self.message
         try:
-            validate_template_variables(message)
+            vars_in_msg = validate_template_variables(message)
         except TemplateVariableError as tve:
             errors.setdefault("message", []).append(ValidationError(tve.message))
+            raise ValidationError(errors)
 
         example_values = self.example_values.raw_data
         for ev in example_values:
@@ -1766,9 +1766,6 @@ class WhatsAppTemplate(
                 errors["example_values"] = ValidationError(
                     "Example values cannot contain commas"
                 )
-        message = self.message
-
-        vars_in_msg = re.findall(r"{{(.*?)}}", message)
 
         # Check matching number of placeholders and example values
         if len(example_values) != len(vars_in_msg):

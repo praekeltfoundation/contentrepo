@@ -139,7 +139,7 @@ class TestStandaloneWhatsAppTemplates:
         with pytest.raises(ValidationError) as err_info:
             wat = WhatsAppTemplate(
                 name="wa_title",
-                message="Test WhatsApp Message with 1 valid {{name}} ",
+                message="Test WhatsApp Message with 1 invalid {{name}} ",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
                 example_values=[
@@ -151,7 +151,8 @@ class TestStandaloneWhatsAppTemplates:
 
         assert err_info.value.message_dict == {
             "message": [
-                "ParseException: Please provide numeric variables only. You provided a non-numeric variable name 'name'."
+                # TODO: Add more specific error handling once named vars are a thing
+                "ParseException: Please provide numeric variables only."
             ],
         }
 

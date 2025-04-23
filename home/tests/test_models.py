@@ -896,9 +896,9 @@ class SMSBlockTests(TestCase):
 @pytest.mark.django_db
 class TestWhatsAppTemplate:
     @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=False)
-    def test_positional_variables_are_numeric(self) -> None:
+    def test_non_numeric_positional_variables_are_invalid(self) -> None:
         """
-        Template variables are numeric.
+        Non-numeric variables are invalid as positional vars.
         """
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
@@ -911,12 +911,51 @@ class TestWhatsAppTemplate:
 
         assert err_info.value.message_dict == {
             "message": [
-                "ParseException: Please provide numeric variables only. You provided a non-numeric variable name 'foo'."
+                # TODO: Add more specific error handling once named vars are a thing
+                "ParseException: Please provide numeric variables only."
             ],
         }
 
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
     @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
+    @responses.activate
     def test_named_variables_are_valid(self) -> None:
+        """
+        Named template variables must be alphanumeric or underscore
+        """
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={"id": "123456789"})
+
+        wat = WhatsAppTemplate(
+            name="valid-named-variables",
+            message="This is a message with 2 valid named vars {{xxx}} and {{yyy}}",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[("example_values", "Ev1"), ("example_values", "Ev2")],
+        )
+        wat.save()
+        wat.save_revision().publish()
+
+        wat_from_db = WhatsAppTemplate.objects.last()
+
+        assert wat_from_db.submission_status == "SUBMITTED"
+        assert "Success! Template ID " in wat_from_db.submission_result
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {
+                    "text": "This is a message with 2 valid named vars {{xxx}} and {{yyy}}",
+                    "type": "BODY",
+                    "example": {"body_text": [["Ev1", "Ev2"]]},
+                },
+            ],
+            "language": "en_US",
+            "name": f"valid-named-variables_{wat.get_latest_revision().id}",
+        }
+
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
+    def test_named_variables_are_not_valid(self) -> None:
         """
         Named template variables must be alphanumeric or underscore
         """
@@ -931,14 +970,15 @@ class TestWhatsAppTemplate:
 
         assert err_info.value.message_dict == {
             "message": [
-                "ParseException: Named variable can only contain alphanumberic and underscore characters. You provided '1_ok_not.ok'"
+                # TODO: Add more specific error handling
+                "ParseException: Unable to parse the variable starting at character 45"
             ],
         }
 
     @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
-    def test_int_and_named_variables_are_valid(self) -> None:
+    def test_named_variables_dont_include_invalid_chars(self) -> None:
         """
-        Named template variables must be alphanumeric or underscore
+        Named template variables must not contain invalid chars. Only alphanumeric or underscore allowed
         """
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
@@ -951,8 +991,32 @@ class TestWhatsAppTemplate:
 
         assert err_info.value.message_dict == {
             "message": [
-                "ParseException: Named variable can only contain alphanumberic and underscore characters. You provided '1_ok_not.ok'"
+                # TODO: Add more specific error handling
+                "ParseException: Unable to parse the variable starting at character 77"
             ],
+        }
+
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
+    @responses.activate
+    def test_template_with_all_ints_gets_validated_as_positional_variables(
+        self,
+    ) -> None:
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="all-int-pos-vars",
+                message="Test WhatsApp Message all int placeholders {{2}} and {{1}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                    ("example_values", "Ev2"),
+                ],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Positional variables must increase sequentially, starting at 1. You provided \"['2', '1']\""
+            ]
         }
 
     def test_variables_are_ordered(self) -> None:
@@ -1100,29 +1164,6 @@ class TestWhatsAppTemplate:
             ],
             "language": "en_US",
             "name": f"wa_title_{wat.get_latest_revision().id}",
-        }
-
-    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
-    @responses.activate
-    def test_template_with_all_ints_gets_validated_as_positional_variables(
-        self,
-    ) -> None:
-        with pytest.raises(ValidationError) as err_info:
-            WhatsAppTemplate(
-                name="all-int-pos-vars",
-                message="Test WhatsApp Message all int placeholders {{2}} and {{1}}",
-                category="UTILITY",
-                locale=Locale.objects.get(language_code="en"),
-                example_values=[
-                    ("example_values", "Ev1"),
-                    ("example_values", "Ev2"),
-                ],
-            ).full_clean()
-
-        assert err_info.value.message_dict == {
-            "message": [
-                "Positional variables must increase sequentially, starting at 1. You provided \"['2', '1']\""
-            ]
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
