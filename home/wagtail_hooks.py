@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from django.conf import settings
@@ -11,6 +12,7 @@ from wagtail.admin.panels import FieldPanel, MultiFieldPanel, TitleFieldPanel
 from wagtail.admin.widgets.slug import SlugInput
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.models import Page
+from wagtail.snippets.action_menu import ActionMenuItem
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
@@ -27,6 +29,10 @@ from .views import (  # isort:skip
     CustomIndexViewWhatsAppTemplate,
     WhatsAppTemplateUploadView,
 )
+
+from .whatsapp import submit_to_meta_menu_action
+
+logger = logging.getLogger(__name__)
 
 
 @hooks.register("before_delete_page")
@@ -145,6 +151,24 @@ def get_page_views_report_url() -> list[Any]:
             name="page_view_report",
         ),
     ]
+
+
+class SubmitToMetaMenuItem(ActionMenuItem):
+    name = "action-submit-to-meta"
+    label = "Submit to Meta"
+    icon_name = "globe"
+
+    def get_url(self, context: Any) -> None:
+        model = context.model
+        submit_to_meta_menu_action(model)
+        return None
+
+
+@hooks.register("register_snippet_action_menu_item")
+def register_submit_to_meta_menu_item(model: Any) -> Any:
+    if model == WhatsAppTemplate:
+        return SubmitToMetaMenuItem(order=10)
+    return None
 
 
 class ContentPageAdmin(ModelAdmin):

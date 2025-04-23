@@ -345,6 +345,45 @@ def create_standalone_template_header_components(
     return components
 
 
+def submit_to_meta_menu_action(model: Any) -> None:
+    from .models import WhatsAppTemplate
+
+    revision = model.get_latest_revision()
+    if not revision:
+        # TODO: Should we display an error here?
+        return None
+    revision_object: WhatsAppTemplate = revision.as_object()
+    template_name = revision_object.create_whatsapp_template_name()
+    try:
+        response_json = create_standalone_whatsapp_template(
+            name=template_name,
+            message=revision_object.message,
+            category=revision_object.category,
+            locale=revision_object.locale,
+            quick_replies=[
+                b["value"]["title"] for b in revision_object.buttons.raw_data
+            ],
+            image_obj=revision_object.image,
+            example_values=[
+                v["value"] for v in revision_object.example_values.raw_data
+            ],
+        )
+        revision_object.submission_name = template_name
+        revision_object.submission_status = revision_object.SubmissionStatus.SUBMITTED
+        revision_object.submission_result = (
+            f"Success! Template ID = {response_json['id']}"
+        )
+    except TemplateSubmissionServerException as tsse:
+        logger.exception(f"TemplateSubmissionServerException: {str(tsse)} ")
+        revision_object.submission_name = template_name
+        revision_object.submission_status = revision_object.SubmissionStatus.FAILED
+        revision_object.submission_result = "An Internal Server Error has occurred.  Please try again later or contact developer support"
+    except TemplateSubmissionClientException as tsce:
+        revision_object.submission_name = template_name
+        revision_object.submission_status = revision_object.SubmissionStatus.FAILED
+        revision_object.submission_result = str(tsce)
+
+
 def create_standalone_whatsapp_template(
     name: str,
     message: str,
