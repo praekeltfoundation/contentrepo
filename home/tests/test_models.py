@@ -896,6 +896,24 @@ class SMSBlockTests(TestCase):
 @pytest.mark.django_db
 class TestWhatsAppTemplate:
     @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=False)
+    def test_whitespace_in_positional_variables_are_invalid(self) -> None:
+        """
+        Whitespace in variables are invalid
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="non-numeric-variable",
+                message="This is a message with 1 variables, containing whitespace {{ 1 }}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[("example_values", "Ev1")],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": ["Invalid variable name: ' 1 '"],
+        }
+
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=False)
     def test_non_numeric_positional_variables_are_invalid(self) -> None:
         """
         Non-numeric variables are invalid as positional vars.
@@ -911,8 +929,7 @@ class TestWhatsAppTemplate:
 
         assert err_info.value.message_dict == {
             "message": [
-                # TODO: Add more specific error handling once named vars are a thing
-                "ParseException: Please provide numeric variables only."
+                "ParseException: Please provide numeric variables only. You provided '['1', 'foo']'"
             ],
         }
 
@@ -969,10 +986,7 @@ class TestWhatsAppTemplate:
             ).full_clean()
 
         assert err_info.value.message_dict == {
-            "message": [
-                # TODO: Add more specific error handling
-                "ParseException: Unable to parse the variable starting at character 45"
-            ],
+            "message": ["Invalid variable name: '1_ok_not.ok'"],
         }
 
     @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
@@ -990,10 +1004,7 @@ class TestWhatsAppTemplate:
             ).full_clean()
 
         assert err_info.value.message_dict == {
-            "message": [
-                # TODO: Add more specific error handling
-                "ParseException: Unable to parse the variable starting at character 77"
-            ],
+            "message": ["Invalid variable name: '1_ok_not.ok'"],
         }
 
     @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)

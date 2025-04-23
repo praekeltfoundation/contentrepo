@@ -382,8 +382,10 @@ def create_standalone_whatsapp_template(
 vstart = pp.Literal("{{").suppress()
 vend = pp.Literal("}}").suppress()
 nonvar = pp.CharsNotIn("{}").suppress()
-variable = (vstart + pp.Word(pp.alphanums + "_") + vend).set_name("variable")
+variable = pp.Combine(vstart + pp.CharsNotIn("{}") + vend).set_name("variable")
 template_body = pp.OneOrMore(variable | nonvar)
+# Valid variable names
+var_name = pp.Word(pp.alphanums + "_").leave_whitespace()
 
 
 class TemplateVariableError(Exception):
@@ -403,24 +405,28 @@ def validate_positional_variables(variables: list[str]) -> None:
 
 def validate_template_variables(body: str) -> list[str]:
     try:
-        variables = list(template_body.parse_string(body, parse_all=True))
+        variables = template_body.parse_string(body, parse_all=True).as_list()
 
     except pp.ParseException as pe:
         raise TemplateVariableError(
-            # TODO: Add more specific error handling
             f"ParseException: Unable to parse the variable starting at character {pe.loc}"
         )
 
     if not variables:
         return []
 
+    for var in variables:
+        try:
+            var_name.parse_string(var, parse_all=True)
+        except pp.ParseException as e:
+            raise TemplateVariableError(f"Invalid variable name: '{e.line}'")
+
     # If all the variables are ints, validate as positional variables
     if all(var.isdecimal() for var in variables):
         validate_positional_variables(variables)
     elif not settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
         raise TemplateVariableError(
-            # TODO: Add more specific error handling once named vars are a thing
-            "ParseException: Please provide numeric variables only."
+            f"ParseException: Please provide numeric variables only. You provided '{variables}'"
         )
 
     return variables
