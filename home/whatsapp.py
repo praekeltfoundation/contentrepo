@@ -415,24 +415,24 @@ def validate_template_variables(body: str) -> list[str]:
     try:
         variables = list(template_body.parse_string(body, parse_all=True))
     except pp.ParseException as pe:
-        print("Parse Failed")
         closing_braces = body.find("}}", pe.loc)
         if closing_braces > -1:
             var_name = body[pe.loc + 2 : closing_braces]
-            print(f"Var name = {var_name}")
-            if not re.match("^[a-zA-Z0-9_]+$", var_name):
-                raise TemplateVariableError(
-                    f"ParseException: Named variable can only contain alphanumberic and underscore characters. You provided '{var_name}'"
-                )
-            else:
-                raise TemplateVariableError(
-                    f"There was a problem parsing the variable starting at character {pe.loc}"
-                )
+
+            if settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
+                if not re.match("^[a-zA-Z0-9_]+$", var_name):
+                    raise TemplateVariableError(
+                        f"ParseException: Named variable can only contain alphanumberic and underscore characters. You provided '{var_name}'"
+                    )
+                else:
+                    raise TemplateVariableError(
+                        f"There was a problem parsing the variable starting at character {pe.loc}"
+                    )
+
         else:
-            print("woop")
-        raise TemplateVariableError(
-            f"ParseException: Unable to parse the variable starting at character {pe.loc}"
-        )
+            raise TemplateVariableError(
+                f"ParseException: Unable to parse the variable starting at character {pe.loc}"
+            )
 
     if not variables:
         return []
@@ -447,13 +447,8 @@ def validate_template_variables(body: str) -> list[str]:
         if settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
             validate_named_variables(variables)
         else:
-            print(
-                f"These vars {variables} are not ALL ints, and named vars not enabled"
-            )
             raise TemplateVariableError(
                 f"Please provide numeric variables only. You provided {variables}."
             )
 
-    # Add validation code here
-    print(f"Variables validated: {variables}")
     return variables

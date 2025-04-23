@@ -1744,19 +1744,19 @@ class WhatsAppTemplate(
         revision.save(update_fields=["content"])
         return revision
 
-    def check_matching_braces(self, message: str = message) -> str:
-        """
-        Check if the number of opening and closing braces match in the message.
-        Returns an error message if they don't match, otherwise returns an empty string.
-        """
-        result = ""
-        count_opening_braces = message.count("{{")
-        count_closing_braces = message.count("}}")
+    # def check_matching_braces(self, message: str = message) -> str:
+    #     """
+    #     Check if the number of opening and closing braces match in the message.
+    #     Returns an error message if they don't match, otherwise returns an empty string.
+    #     """
+    #     result = ""
+    #     count_opening_braces = message.count("{{")
+    #     count_closing_braces = message.count("}}")
 
-        if count_opening_braces != count_closing_braces:
-            result = f"Please provide variables with matching sets of braces. You provided {count_opening_braces} sets of opening braces, and {count_closing_braces} sets of closing braces."
+    #     if count_opening_braces != count_closing_braces:
+    #         result = f"Please provide variables with matching sets of braces. You provided {count_opening_braces} sets of opening braces, and {count_closing_braces} sets of closing braces."
 
-        return result
+    #     return result
 
     def clean(self) -> None:
         result = super().clean()

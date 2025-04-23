@@ -896,7 +896,7 @@ class SMSBlockTests(TestCase):
 @pytest.mark.django_db
 class TestWhatsAppTemplate:
     @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=False)
-    def test_variables_are_numeric(self) -> None:
+    def test_positional_variables_are_numeric(self) -> None:
         """
         Template variables are numeric.
         """
