@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use buttons for Whatsapp Templates instead of quick replies
 - Allow pages to link to Whatsapp templates
 - Updated standalone template import / export and pages import / export to link to templates
+- Added setting WHATSAPP_ALLOW_NAMED_VARIABLES for future named variable support (Not supported by Turn yet)
+- Added PyParsing for parsing of template variables
 ### Removed
 ### Fixed
 ### Security
