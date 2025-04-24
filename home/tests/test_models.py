@@ -629,6 +629,8 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision().publish()
 
+        submit_to_meta_menu_action(wat)
+
         wat_from_db = WhatsAppTemplate.objects.last()
 
         assert wat_from_db.submission_status == "SUBMITTED"
