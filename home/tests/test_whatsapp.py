@@ -277,7 +277,7 @@ class DummyRevisionObj:
         self.example_values = mock.Mock(raw_data=[{"value": "val1"}])
         self.submission_name = None
         self.submission_status = None
-        self.submission_result = None
+        self.submission_result: str = ""
         self.SubmissionStatus = DummySubmissionStatus
 
     def create_whatsapp_template_name(self) -> str:
@@ -304,22 +304,24 @@ class DummyModel:
 def test_submit_to_meta_menu_action_success(monkeypatch: pytest.MonkeyPatch) -> None:
     dummy_revision_obj = DummyRevisionObj()
     dummy_revision = DummyRevision()
-    dummy_revision.as_object = lambda: dummy_revision_obj
-    model = DummyModel(revision=dummy_revision)
+    with mock.patch.object(DummyRevision, "as_object", return_value=dummy_revision_obj):
+        model = DummyModel(revision=dummy_revision)
 
-    def fake_create_standalone_whatsapp_template(
-        **kwargs: dict[str, Any]
-    ) -> dict[str, Any]:
-        return {"id": "fakeid123"}
+        def fake_create_standalone_whatsapp_template(
+            **kwargs: dict[str, Any]
+        ) -> dict[str, Any]:
+            return {"id": "fakeid123"}
 
-    monkeypatch.setattr(
-        "home.whatsapp.create_standalone_whatsapp_template",
-        fake_create_standalone_whatsapp_template,
-    )
+        monkeypatch.setattr(
+            "home.whatsapp.create_standalone_whatsapp_template",
+            fake_create_standalone_whatsapp_template,
+        )
 
-    submit_to_meta_menu_action(model)
-    assert dummy_revision_obj.submission_status == DummySubmissionStatus.SUBMITTED
-    assert dummy_revision_obj.submission_result.startswith("Success! Template ID = ")
+        submit_to_meta_menu_action(model)
+        assert dummy_revision_obj.submission_status == DummySubmissionStatus.SUBMITTED
+        assert dummy_revision_obj.submission_result.startswith(
+            "Success! Template ID = "
+        )
 
 
 @pytest.mark.django_db
@@ -328,22 +330,22 @@ def test_submit_to_meta_menu_action_server_error(
 ) -> None:
     dummy_revision_obj = DummyRevisionObj()
     dummy_revision = DummyRevision()
-    dummy_revision.as_object = lambda: dummy_revision_obj
-    model = DummyModel(revision=dummy_revision)
+    with mock.patch.object(DummyRevision, "as_object", return_value=dummy_revision_obj):
+        model = DummyModel(revision=dummy_revision)
 
-    def fake_create_standalone_whatsapp_template(
-        **kwargs: dict[str, Any]
-    ) -> dict[str, Any]:
-        raise TemplateSubmissionServerException("server error")
+        def fake_create_standalone_whatsapp_template(
+            **kwargs: dict[str, Any]
+        ) -> dict[str, Any]:
+            raise TemplateSubmissionServerException("server error")
 
-    monkeypatch.setattr(
-        "home.whatsapp.create_standalone_whatsapp_template",
-        fake_create_standalone_whatsapp_template,
-    )
+        monkeypatch.setattr(
+            "home.whatsapp.create_standalone_whatsapp_template",
+            fake_create_standalone_whatsapp_template,
+        )
 
-    submit_to_meta_menu_action(model)
-    assert dummy_revision_obj.submission_status == DummySubmissionStatus.FAILED
-    assert "Internal Server Error" in dummy_revision_obj.submission_result
+        submit_to_meta_menu_action(model)
+        assert dummy_revision_obj.submission_status == DummySubmissionStatus.FAILED
+        assert "Internal Server Error" in dummy_revision_obj.submission_result
 
 
 @pytest.mark.django_db
@@ -352,19 +354,19 @@ def test_submit_to_meta_menu_action_client_error(
 ) -> None:
     dummy_revision_obj = DummyRevisionObj()
     dummy_revision = DummyRevision()
-    dummy_revision.as_object = lambda: dummy_revision_obj
-    model = DummyModel(revision=dummy_revision)
+    with mock.patch.object(DummyRevision, "as_object", return_value=dummy_revision_obj):
+        model = DummyModel(revision=dummy_revision)
 
-    def fake_create_standalone_whatsapp_template(
-        **kwargs: dict[str, Any]
-    ) -> dict[str, Any]:
-        raise TemplateSubmissionClientException("client error")
+        def fake_create_standalone_whatsapp_template(
+            **kwargs: dict[str, Any]
+        ) -> dict[str, Any]:
+            raise TemplateSubmissionClientException("client error")
 
-    monkeypatch.setattr(
-        "home.whatsapp.create_standalone_whatsapp_template",
-        fake_create_standalone_whatsapp_template,
-    )
+        monkeypatch.setattr(
+            "home.whatsapp.create_standalone_whatsapp_template",
+            fake_create_standalone_whatsapp_template,
+        )
 
-    submit_to_meta_menu_action(model)
-    assert dummy_revision_obj.submission_status == DummySubmissionStatus.FAILED
-    assert dummy_revision_obj.submission_result == "Error! client error"
+        submit_to_meta_menu_action(model)
+        assert dummy_revision_obj.submission_status == DummySubmissionStatus.FAILED
+        assert dummy_revision_obj.submission_result == "Error! client error"
