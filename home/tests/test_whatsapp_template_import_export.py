@@ -432,8 +432,7 @@ class TestImportExport:
         assert e.value.row_num == 2
 
         assert e.value.message == [
-            "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
-            "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
+            "Validation error: message - Positional variables must increase sequentially, starting at 1. You provided \"['1', '2', '4']\"",
         ]
 
     def test_invalid_wa_template_vars_update(self, csv_impexp: ImportExport) -> None:
@@ -453,9 +452,10 @@ class TestImportExport:
         assert e.value.row_num == 2
 
         assert e.value.message == [
-            "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
-            "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
+            "Validation error: message - Positional variables must increase sequentially, starting at 1. You provided \"['1', '2', '4']\"",
         ]
+
+    # TODO: Once named templates are supported, add checks here for import/export of them
 
     def test_invalid_template_already_in_db(self, csv_impexp: ImportExport) -> None:
         """
@@ -482,6 +482,5 @@ class TestImportExport:
         assert e.value.row_num == 2
 
         assert e.value.message == [
-            "Validation error: message - Variables must be sequential, starting with \"{1}\". You provided \"['1', '2', '4']\"",
-            "Validation error: message - Mismatch in number of placeholders and example values. Found 3 placeholder(s) and 1 example values.",
+            "Validation error: message - Positional variables must increase sequentially, starting at 1. You provided \"['1', '2', '4']\"",
         ]
