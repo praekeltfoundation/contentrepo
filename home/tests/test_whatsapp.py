@@ -11,6 +11,7 @@ from responses.matchers import multipart_matcher
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
+from home.models import WhatsAppTemplate
 from home.whatsapp import (
     TemplateSubmissionClientException,
     TemplateSubmissionServerException,
@@ -375,3 +376,39 @@ def test_submit_to_meta_menu_action_client_error(
     submit_to_meta_menu_action(model)
     assert model.submission_status == DummySubmissionStatus.FAILED
     assert model.submission_result == "Error! client error"
+
+
+@pytest.mark.django_db
+def test_submit_real_whatsapp_template(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    Test that submitting a WhatsAppTemplate doesn't create additional revisions
+    """
+    wat = WhatsAppTemplate(
+        name="valid-named-variables",
+        message="This is a message with 2 valid named vars {{1}} and {{2}}",
+        category="UTILITY",
+        locale=Locale.objects.get(language_code="en"),
+        example_values=[("example_values", "Ev1"), ("example_values", "Ev2")],
+    )
+    wat.save()
+    wat.save_revision().publish()
+
+    wat = wat.get_latest_revision().as_object()
+
+    def fake_create_standalone_whatsapp_template(
+        **kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {"id": "fakeid123"}
+
+    monkeypatch.setattr(
+        "home.whatsapp.create_standalone_whatsapp_template",
+        fake_create_standalone_whatsapp_template,
+    )
+
+    submit_to_meta_menu_action(wat)
+
+    assert wat.submission_name == "valid-named-variables_1"
+    assert wat.submission_status == DummySubmissionStatus.SUBMITTED
+    assert wat.submission_result.startswith("Success! Template ID = ")
+
+    assert wat.get_latest_revision().id == 1
