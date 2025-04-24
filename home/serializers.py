@@ -626,3 +626,11 @@ class QuestionField(serializers.Field):
 class AssessmentSerializer(BaseSerializer):
     locale = PageLocaleField(read_only=True)
     questions = QuestionField(read_only=True)
+
+
+class WhatsAppTemplateSerializer(BaseSerializer):
+    name = TitleField(read_only=True)
+    # subtitle = SubtitleField(read_only=True)
+    message = BodyField(read_only=True)
+    # has_children = HasChildrenField(read_only=True)
+    # related_pages = RelatedPagesField(read_only=True)

@@ -14,6 +14,7 @@ from .serializers import (
     AssessmentSerializer,
     ContentPageSerializer,
     OrderedContentSetSerializer,
+    WhatsAppTemplateSerializer,
 )
 
 from .models import (  # isort:skip
@@ -245,14 +246,17 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
 
 class WhatsAppTemplateViewset(BaseAPIViewSet):
     model = WhatsAppTemplate
+    base_serializer_class = WhatsAppTemplateSerializer
+    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(
+        [
+            "qa",
+        ]
+    )
     listing_default_fields = BaseAPIViewSet.listing_default_fields + [
         "name",
-        "body",
+        "message",
     ]
-    known_query_parameters = BaseAPIViewSet.known_query_parameters.union(["qa"])
-    pagination_class = PageNumberPagination
-    search_fields = ["name", "body"]
-    filter_backends = (SearchFilter,)
+    search_fields = ["name", "message"]
 
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
@@ -261,18 +265,21 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
             # return the latest revision for each WhatsApp Template
             queryset = WhatsAppTemplate.objects.all().order_by("latest_revision_id")
             for wat in queryset:
+                print("HERE")
                 latest_revision = wat.revisions.order_by("-created_at").first()
                 if latest_revision:
                     latest_revision = latest_revision.as_object()
                     wat.name = latest_revision.name
-                    wat.pages = latest_revision.pages
-                    wat.profile_fields = latest_revision.profile_fields
+                    wat.message = latest_revision.message
 
         else:
             queryset = WhatsAppTemplate.objects.filter(live=True).order_by(
                 "last_published_at"
             )
         return queryset
+
+    def listing_view(self, request, *args, **kwargs):
+        return super().listing_view(request)
 
 
 class AssessmentViewSet(BaseAPIViewSet):
