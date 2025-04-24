@@ -392,8 +392,13 @@ def test_submit_real_whatsapp_template(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     wat.save()
     wat.save_revision().publish()
+    rev1 = wat.get_latest_revision().as_object()
+    wat.category = "MARKETING"
+    wat.save_revision()
 
-    wat = wat.get_latest_revision().as_object()
+    rev2 = wat.get_latest_revision()
+    pk = rev2.id
+    rev_object = rev2.as_object()
 
     def fake_create_standalone_whatsapp_template(
         **kwargs: dict[str, Any]
@@ -405,10 +410,12 @@ def test_submit_real_whatsapp_template(monkeypatch: pytest.MonkeyPatch) -> None:
         fake_create_standalone_whatsapp_template,
     )
 
-    submit_to_meta_menu_action(wat)
+    submit_to_meta_menu_action(rev_object)
 
-    assert wat.submission_name == "valid-named-variables_1"
-    assert wat.submission_status == DummySubmissionStatus.SUBMITTED
-    assert wat.submission_result.startswith("Success! Template ID = ")
+    assert rev_object.submission_name == f"valid-named-variables_{pk}"
+    assert rev_object.submission_status == DummySubmissionStatus.SUBMITTED
+    assert rev_object.submission_result.startswith("Success! Template ID = ")
 
-    assert wat.get_latest_revision().id == 1
+    assert rev1 == wat
+
+    assert wat.get_latest_revision().id == 2
