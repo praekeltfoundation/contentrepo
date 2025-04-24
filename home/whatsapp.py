@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Any
 from urllib.parse import urljoin
 
+import pyparsing as pp
 import requests
 from django.conf import settings  # type: ignore
 from wagtail.images.models import Image  # type: ignore
@@ -375,3 +376,58 @@ def create_standalone_whatsapp_template(
     )
 
     return submit_whatsapp_template(name, category, locale, components)
+
+
+# Define parser grammar here
+vstart = pp.Literal("{{").suppress()
+vend = pp.Literal("}}").suppress()
+nonvar = pp.CharsNotIn("{}").suppress()
+variable = pp.Combine(vstart + pp.CharsNotIn("{}") + vend).set_name("variable")
+template_body = pp.OneOrMore(variable | nonvar)
+# Valid variable names
+var_name = pp.Word(pp.alphanums + "_").leave_whitespace()
+
+
+class TemplateVariableError(Exception):
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
+
+
+def validate_positional_variables(variables: list[str]) -> None:
+    # Check what the expected positional variables would be
+    expected_positional_variable_values = [str(j + 1) for j in range(len(variables))]
+    if variables != expected_positional_variable_values:
+        raise TemplateVariableError(
+            f'Positional variables must increase sequentially, starting at 1. You provided "{variables}"'
+        )
+
+
+def validate_template_variables(body: str) -> list[str]:
+    try:
+        variables = template_body.parse_string(body, parse_all=True).as_list()
+
+    except pp.ParseException as pe:
+        raise TemplateVariableError(
+            # TODO: Better error handling here, with the invalid var highlighted as part of the text
+            f"ParseException: Unable to parse the variable starting at character {pe.loc}"
+        )
+
+    if not variables:
+        return []
+
+    for var in variables:
+        try:
+            var_name.parse_string(var, parse_all=True)
+        except pp.ParseException as e:
+            raise TemplateVariableError(f"Invalid variable name: '{e.line}'")
+
+    # If all the variables are ints, validate as positional variables
+    if all(var.isdecimal() for var in variables):
+        validate_positional_variables(variables)
+    elif not settings.WHATSAPP_ALLOW_NAMED_VARIABLES:
+        raise TemplateVariableError(
+            f"ParseException: Please provide numeric variables only. You provided '{variables}'"
+        )
+
+    return variables

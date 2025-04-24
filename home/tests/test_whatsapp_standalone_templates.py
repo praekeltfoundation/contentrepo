@@ -139,7 +139,7 @@ class TestStandaloneWhatsAppTemplates:
         with pytest.raises(ValidationError) as err_info:
             wat = WhatsAppTemplate(
                 name="wa_title",
-                message="Test WhatsApp Message with 1 valid {{name}} ",
+                message="Test WhatsApp Message with 1 invalid {{name}} ",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
                 example_values=[
@@ -151,16 +151,18 @@ class TestStandaloneWhatsAppTemplates:
 
         assert err_info.value.message_dict == {
             "message": [
-                "Please provide numeric variables only. You provided ['name']."
+                "ParseException: Please provide numeric variables only. You provided '['name']'"
             ],
         }
 
     @responses.activate
-    def test_brace_mismatch(self, settings: SettingsWrapper) -> None:
+    def test_invalid_variables_single_open_brace(
+        self, settings: SettingsWrapper
+    ) -> None:
         with pytest.raises(ValidationError) as err_info:
             wat = WhatsAppTemplate(
                 name="wa_title",
-                message="Test WhatsApp Message with 1 valid {{name ",
+                message="Test WhatsApp Message with an invalid var {1 ",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
             )
@@ -169,7 +171,8 @@ class TestStandaloneWhatsAppTemplates:
 
         assert err_info.value.message_dict == {
             "message": [
-                "Please provide variables with matching sets of braces. You provided 1 sets of opening braces, and 0 sets of closing braces."
+                # TODO: Add more specific error handling here
+                "ParseException: Unable to parse the variable starting at character 42"
             ],
         }
 
@@ -192,7 +195,7 @@ class TestStandaloneWhatsAppTemplates:
 
         assert err_info.value.message_dict == {
             "message": [
-                "Please provide variables with valid double braces. You provided single braces ['1']."
+                "ParseException: Unable to parse the variable starting at character 24"
             ],
         }
 
