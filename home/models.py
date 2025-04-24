@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Any
 
 from django.conf import settings
@@ -52,8 +51,10 @@ from .panels import PageRatingPanel
 from .whatsapp import (
     TemplateSubmissionClientException,
     TemplateSubmissionServerException,
+    TemplateVariableError,
     create_standalone_whatsapp_template,
     create_whatsapp_template,
+    validate_template_variables,
 )
 
 from .constants import (  # isort:skip
@@ -1741,20 +1742,6 @@ class WhatsAppTemplate(
         revision.save(update_fields=["content"])
         return revision
 
-    def check_matching_braces(self, message: str = message) -> str:
-        """
-        Check if the number of opening and closing braces match in the message.
-        Returns an error message if they don't match, otherwise returns an empty string.
-        """
-        result = ""
-        count_opening_braces = message.count("{{")
-        count_closing_braces = message.count("}}")
-
-        if count_opening_braces != count_closing_braces:
-            result = f"Please provide variables with matching sets of braces. You provided {count_opening_braces} sets of opening braces, and {count_closing_braces} sets of closing braces."
-
-        return result
-
     def clean(self) -> None:
         result = super().clean()
         errors: dict[str, list[ValidationError]] = {}
@@ -1765,52 +1752,19 @@ class WhatsAppTemplate(
                 ValidationError("All WhatsApp templates need a name.")
             )
 
+        message = self.message
+        try:
+            vars_in_msg = validate_template_variables(message)
+        except TemplateVariableError as tve:
+            errors.setdefault("message", []).append(ValidationError(tve.message))
+            raise ValidationError(errors)
+
         example_values = self.example_values.raw_data
         for ev in example_values:
             if "," in ev["value"]:
                 errors["example_values"] = ValidationError(
                     "Example values cannot contain commas"
                 )
-        message = self.message
-
-        # Matches "{1}" and "{11}", not "{{1}", "{a}" or "{1 "
-        single_braces = re.findall(r"[^{]{(\d*?)}", message)
-        # TODO: Replace with PyParsing
-
-        if single_braces:
-            errors.setdefault("message", []).append(
-                ValidationError(
-                    f"Please provide variables with valid double braces. You provided single braces {single_braces}."
-                )
-            )
-
-        brace_mismatches = self.check_matching_braces(message)
-
-        if brace_mismatches:
-            errors.setdefault("message", []).append(ValidationError(brace_mismatches))
-            # TODO: Replace with PyParsing
-
-        vars_in_msg = re.findall(r"{{(.*?)}}", message)
-        non_digit_variables = [var for var in vars_in_msg if not var.isdecimal()]
-
-        if non_digit_variables:
-            errors.setdefault("message", []).append(
-                ValidationError(
-                    f"Please provide numeric variables only. You provided {non_digit_variables}."
-                )
-            )
-
-        # Check variables are sequential
-        actual_digit_variables = [var for var in vars_in_msg if var.isdecimal()]
-        expected_variables = [str(j + 1) for j in range(len(actual_digit_variables))]
-        if actual_digit_variables != expected_variables:
-            errors.setdefault("message", []).append(
-                {
-                    "message": ValidationError(
-                        f'Variables must be sequential, starting with "{{1}}". You provided "{actual_digit_variables}"'
-                    )
-                }
-            )
 
         # Check matching number of placeholders and example values
         if len(example_values) != len(vars_in_msg):

@@ -419,7 +419,7 @@ class ContentPageTests(TestCase):
         self.assertEqual(
             output.getvalue().strip(),
             "No changes detected",
-            "There are missing migrations:\n %s" % output.getvalue(),
+            f"There are missing migrations:\n {output.getvalue()}",
         )
 
     def test_get_all_links(self) -> None:
@@ -895,33 +895,127 @@ class SMSBlockTests(TestCase):
 
 @pytest.mark.django_db
 class TestWhatsAppTemplate:
-    def test_variables_are_numeric(self) -> None:
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=False)
+    def test_whitespace_in_positional_variables_are_invalid(self) -> None:
         """
-        Template variables are numeric.
+        Whitespace in variables are invalid
         """
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
                 name="non-numeric-variable",
-                message="{{foo}}",
+                message="This is a message with 1 variables, containing whitespace {{ 1 }}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
-                example_values=[
-                    ("example_values", "Ev1"),
-                ],
+                example_values=[("example_values", "Ev1")],
             ).full_clean()
 
         assert err_info.value.message_dict == {
-            "message": ["Please provide numeric variables only. You provided ['foo']."],
+            "message": ["Invalid variable name: ' 1 '"],
         }
 
-    def test_variables_are_ordered(self) -> None:
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=False)
+    def test_non_numeric_positional_variables_are_invalid(self) -> None:
         """
-        Template variables are ordered.
+        Non-numeric variables are invalid as positional vars.
         """
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
-                name="misordered-variables",
-                message="{{2}} {{1}}",
+                name="non-numeric-variable",
+                message="This is a message with 2 variables, {{1}} and {{foo}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[("example_values", "Ev1"), ("example_values", "Ev2")],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "ParseException: Please provide numeric variables only. You provided '['1', 'foo']'"
+            ],
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
+    @responses.activate
+    def test_named_variables_are_valid(self) -> None:
+        """
+        Named template variables must be alphanumeric or underscore
+        """
+        url = "http://whatsapp/graph/v14.0/27121231234/message_templates"
+        responses.add(responses.POST, url, json={"id": "123456789"})
+
+        wat = WhatsAppTemplate(
+            name="valid-named-variables",
+            message="This is a message with 2 valid named vars {{xxx}} and {{yyy}}",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[("example_values", "Ev1"), ("example_values", "Ev2")],
+        )
+        wat.save()
+        wat.save_revision().publish()
+
+        wat_from_db = WhatsAppTemplate.objects.last()
+
+        assert wat_from_db.submission_status == "SUBMITTED"
+        assert "Success! Template ID " in wat_from_db.submission_result
+        request = responses.calls[0].request
+        assert json.loads(request.body) == {
+            "category": "UTILITY",
+            "components": [
+                {
+                    "text": "This is a message with 2 valid named vars {{xxx}} and {{yyy}}",
+                    "type": "BODY",
+                    "example": {"body_text": [["Ev1", "Ev2"]]},
+                },
+            ],
+            "language": "en_US",
+            "name": f"valid-named-variables_{wat.get_latest_revision().id}",
+        }
+
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
+    def test_named_variables_are_not_valid(self) -> None:
+        """
+        Named template variables must be alphanumeric or underscore
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="non-valid-named-variable",
+                message="This is a message with a non valid named var {{1_ok_not.ok}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[("example_values", "Ev1")],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": ["Invalid variable name: '1_ok_not.ok'"],
+        }
+
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
+    def test_named_variables_dont_include_invalid_chars(self) -> None:
+        """
+        Named template variables must not contain invalid chars. Only alphanumeric or underscore allowed
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="non-valid-named-variable",
+                message="This is a message with a valid positional var here {{1}} and a named var here{{1_ok_not.ok}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[("example_values", "Ev1"), ("example_values", "Ev2")],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": ["Invalid variable name: '1_ok_not.ok'"],
+        }
+
+    @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
+    @responses.activate
+    def test_template_with_all_ints_gets_validated_as_positional_variables(
+        self,
+    ) -> None:
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="all-int-pos-vars",
+                message="Test WhatsApp Message all int placeholders {{2}} and {{1}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
                 example_values=[
@@ -932,7 +1026,29 @@ class TestWhatsAppTemplate:
 
         assert err_info.value.message_dict == {
             "message": [
-                "Variables must be sequential, starting with \"{1}\". You provided \"['2', '1']\""
+                "Positional variables must increase sequentially, starting at 1. You provided \"['2', '1']\""
+            ]
+        }
+
+    def test_variables_are_ordered(self) -> None:
+        """
+        Template variables are ordered.
+        """
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="misordered-variables",
+                message="These 2 vars are the wrong way around. {{2}} and {{1}}",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                    ("example_values", "Ev2"),
+                ],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Positional variables must increase sequentially, starting at 1. You provided \"['2', '1']\""
             ]
         }
 
@@ -1105,6 +1221,27 @@ class TestWhatsAppTemplate:
             ],
             "language": "en_US",
             "name": f"wa_title_{wat.get_latest_revision().id}",
+        }
+
+    @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
+    @responses.activate
+    def test_template_create_with_more_example_values_than_vars_fails(self) -> None:
+        with pytest.raises(ValidationError) as err_info:
+            WhatsAppTemplate(
+                name="more-ev-than-variables",
+                message="Test WhatsApp Message with less placeholders {{1}} than example values",
+                category="UTILITY",
+                locale=Locale.objects.get(language_code="en"),
+                example_values=[
+                    ("example_values", "Ev1"),
+                    ("example_values", "Ev2"),
+                ],
+            ).full_clean()
+
+        assert err_info.value.message_dict == {
+            "message": [
+                "Mismatch in number of placeholders and example values. Found 1 placeholder(s) and 2 example values."
+            ]
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)

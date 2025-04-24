@@ -227,7 +227,7 @@ elif "AWS_ACCESS_KEY_ID" in os.environ:
     _aws_creds_found = True
 
 if AWS_STORAGE_BUCKET_NAME and _aws_creds_found:
-    MEDIA_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
     STORAGES["default"] = {
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
     }
@@ -244,6 +244,8 @@ WHATSAPP_ACCESS_TOKEN = env.str("WHATSAPP_ACCESS_TOKEN", "")
 FB_BUSINESS_ID = env.str("FB_BUSINESS_ID", "")
 # Whether or not to create WhatsApp templates for content marked as a template.
 WHATSAPP_CREATE_TEMPLATES = env.bool("WHATSAPP_CREATE_TEMPLATES", False)
+# Whether or not to support named variables in templates
+WHATSAPP_ALLOW_NAMED_VARIABLES = env.bool("WHATSAPP_ALLOW_NAMED_VARIABLES", False)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
