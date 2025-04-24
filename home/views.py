@@ -2,6 +2,7 @@ import json
 import logging
 import queue
 import threading
+from typing import Any
 
 import django_filters
 from django.contrib import messages
@@ -10,8 +11,8 @@ from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
 from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
-from django.http import JsonResponse
-from django.shortcuts import render
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django_filters import rest_framework as filters
@@ -25,8 +26,11 @@ from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 from wagtail.contrib.modeladmin.views import IndexView
+from wagtail.snippets.models import get_snippet_models
 from wagtail.snippets.views.snippets import IndexView as IndexViewAssessment
 from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTemplate
+
+from home.whatsapp import submit_to_meta_menu_action
 
 from .assessment_import_export import import_assessment
 from .content_import_export import import_content, import_ordered_sets
@@ -617,3 +621,16 @@ class ContentPageRatingViewSet(GenericListViewset, CreateModelMixin):
                 raise ValidationError({"page": ["Page matching query does not exist."]})
 
         return super().create(request, *args, **kwargs)
+
+
+def submit_to_meta_view(request: Any, snippet_id: int) -> HttpResponse:
+    # Find the WhatsAppTemplate model from all snippet models
+    WhatsAppTemplate = next(
+        m for m in get_snippet_models() if m.__name__ == "WhatsAppTemplate"
+    )
+    obj = get_object_or_404(WhatsAppTemplate, pk=snippet_id)
+    # For the edit view we submit the latest revision because that's what's displayed
+    revision = obj.get_latest_revision()
+    submit_to_meta_menu_action(revision)
+    # Redirect back to the snippet list or detail page
+    return redirect(request.META.get("HTTP_REFERER", "/admin/"))

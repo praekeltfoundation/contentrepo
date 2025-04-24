@@ -897,28 +897,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
         return page_links, orderedcontentset_links, whatsapp_template_links
 
-    def save_revision(
-        self,
-        user: Any | None = None,
-        submitted_for_moderation: bool = False,
-        approved_go_live_at: Any | None = None,
-        changed: bool = True,
-        log_action: bool = False,
-        previous_revision: Revision | None = None,
-        clean: bool = True,
-    ) -> Revision:
-        previous_revision = self.get_latest_revision()
-        revision = super().save_revision(
-            user,
-            submitted_for_moderation,
-            approved_go_live_at,
-            changed,
-            log_action,
-            previous_revision,
-            clean,
-        )
-        return revision
-
     def short_description(description):
         def set_short_description(func):
             func.short_description = description
@@ -1621,29 +1599,6 @@ class WhatsAppTemplate(
     def __str__(self):
         """String repr of this snippet."""
         return self.name
-
-    def save_revision(
-        self,
-        user: Any | None = None,
-        submitted_for_moderation: bool = False,
-        approved_go_live_at: Any | None = None,
-        changed: bool = True,
-        log_action: bool = False,
-        previous_revision: Any | None = None,
-        clean: bool = True,
-    ) -> Any:
-        previous_revision = self.get_latest_revision()
-        revision = super().save_revision(
-            user,
-            submitted_for_moderation,
-            approved_go_live_at,
-            changed,
-            log_action,
-            previous_revision,
-            clean,
-        )
-
-        return revision
 
     def clean(self) -> None:
         result = super().clean()

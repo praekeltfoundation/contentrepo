@@ -159,10 +159,9 @@ class SubmitToMetaMenuItem(ActionMenuItem):
     label = "Submit to Meta"
     icon_name = "globe"
 
-    def get_url(self, context: Any) -> None:
-        model = context.model
-        submit_to_meta_menu_action(model)
-        return None
+    def get_url(self, context: Any) -> str:
+        instance = context["instance"]
+        return reverse("submit_to_meta", args=[instance.pk])
 
 
 @hooks.register("register_snippet_action_menu_item")
@@ -183,13 +182,17 @@ class SubmitToMetaBulkAction(SnippetBulkAction):
     models = [WhatsAppTemplate]
 
     @classmethod
-    def execute_action(cls, objects: Any, **kwargs: Any) -> int:
+    def execute_action(cls, objects: Any, **kwargs: Any) -> tuple[int, int]:
+        num_parent_objects, num_child_objects = 0, 0
         for obj in objects:
+            num_parent_objects += 1
             submit_to_meta_menu_action(obj)
-        return len(objects)
+        return num_parent_objects, num_child_objects
 
-    def get_success_message(self, num_objects: int) -> str:
-        return f"{num_objects} objects have been submitted to Meta"
+    def get_success_message(
+        self, num_parent_objects: int, num_child_objects: int
+    ) -> str:
+        return f"{num_parent_objects} objects have been submitted to Meta"
 
 
 class ContentPageAdmin(ModelAdmin):

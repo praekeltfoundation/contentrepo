@@ -10,6 +10,7 @@ from wagtail.documents import urls as wagtaildocs_urls
 
 from home import views as home_views
 from home.api import api_router
+from home.views import submit_to_meta_view
 
 from drf_spectacular.views import (  # isort:skip
     SpectacularAPIView,
@@ -37,6 +38,11 @@ urlpatterns = [
         "api/schema/redoc/",
         SpectacularRedocView.as_view(url_name="schema"),
         name="redoc",
+    ),
+    path(
+        "snippets/home/whatsapptemplate/<int:snippet_id>/submit_to_meta/",
+        submit_to_meta_view,
+        name="submit_to_meta",
     ),
 ]
 
