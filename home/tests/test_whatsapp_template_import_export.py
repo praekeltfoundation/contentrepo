@@ -204,11 +204,11 @@ class ImportExport:
         self.import_whatsapp_template(content, **kw)
         return content
 
-    def export_reimport(self) -> None:
+    def export_reimport(self, **kw: Any) -> None:
         """
         Export all content, then immediately reimport it.
         """
-        self.import_whatsapp_template(self.export_whatsapp_template())
+        self.import_whatsapp_template(self.export_whatsapp_template(), **kw)
 
     def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
         src = csv2dicts(src_bytes)
@@ -329,7 +329,7 @@ class TestImportExportRoundtrip:
         )
 
         orig = impexp.get_whatsapp_template_json()
-        impexp.export_reimport()
+        impexp.export_reimport(purge=False)
         imported = impexp.get_whatsapp_template_json()
         # remove the revision and unpublished changes keys
         for item in orig:
