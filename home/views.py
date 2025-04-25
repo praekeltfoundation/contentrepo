@@ -30,7 +30,7 @@ from wagtail.snippets.models import get_snippet_models
 from wagtail.snippets.views.snippets import IndexView as IndexViewAssessment
 from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTemplate
 
-from home.whatsapp import submit_to_meta_menu_action
+from home.whatsapp import submit_to_meta_action
 
 from .assessment_import_export import import_assessment
 from .content_import_export import import_content, import_ordered_sets
@@ -631,6 +631,6 @@ def submit_to_meta_view(request: Any, snippet_id: int) -> HttpResponse:
     obj = get_object_or_404(WhatsAppTemplate, pk=snippet_id)
     # For the edit view we submit the latest revision because that's what's displayed
     revision = obj.get_latest_revision()
-    submit_to_meta_menu_action(revision)
+    submit_to_meta_action(revision)
     # Redirect back to the snippet list or detail page
     return redirect(request.META.get("HTTP_REFERER", "/admin/"))

@@ -10,7 +10,7 @@ import pyparsing as pp
 import requests
 from django.conf import settings  # type: ignore
 from wagtail.images.models import Image  # type: ignore
-from wagtail.models import Locale  # type: ignore
+from wagtail.models import Locale, Revision  # type: ignore
 
 from .constants import WHATSAPP_LANGUAGE_MAPPING
 
@@ -349,7 +349,10 @@ def create_standalone_template_header_components(
     return components
 
 
-def submit_to_meta_menu_action(template: "WhatsAppTemplate") -> None:
+def submit_to_meta_action(template: "WhatsAppTemplate | Revision") -> None:
+    is_revision = isinstance(template, Revision)
+    if is_revision:
+        template = template.as_object()
 
     template_name = template.create_whatsapp_template_name()
     try:
@@ -375,7 +378,11 @@ def submit_to_meta_menu_action(template: "WhatsAppTemplate") -> None:
         template.submission_status = template.SubmissionStatus.FAILED
         template.submission_result = str(tsce)
 
-    template.save()
+    # if we give a revision, save a new revision, otherwise overwrite the current live template
+    if is_revision:
+        template.save_revision()
+    else:
+        template.save()
 
 
 def create_standalone_whatsapp_template(

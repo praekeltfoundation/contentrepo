@@ -34,7 +34,7 @@ from home.models import (
     WhatsappBlock,
     WhatsAppTemplate,
 )
-from home.whatsapp import submit_to_meta_menu_action
+from home.whatsapp import submit_to_meta_action
 
 from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 from .utils import create_page, create_page_rating
@@ -629,7 +629,7 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision().publish()
 
-        submit_to_meta_menu_action(wat)
+        submit_to_meta_action(wat)
 
         wat_from_db = WhatsAppTemplate.objects.last()
 
@@ -775,7 +775,7 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision()
 
-        submit_to_meta_menu_action(wat)
+        submit_to_meta_action(wat)
 
         request = responses.calls[0].request
         assert json.loads(request.body) == {
@@ -803,7 +803,7 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision().publish()
 
-        submit_to_meta_menu_action(wat)
+        submit_to_meta_action(wat)
 
         wat_from_db = WhatsAppTemplate.objects.last()
 
@@ -843,7 +843,7 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision().publish()
 
-        submit_to_meta_menu_action(wat)
+        submit_to_meta_action(wat)
 
         assert len(responses.calls) == 1
 
@@ -852,7 +852,7 @@ class TestWhatsAppTemplate:
         ]
         wat.save_revision().publish()
 
-        submit_to_meta_menu_action(wat)
+        submit_to_meta_action(wat)
 
         wat_from_db = WhatsAppTemplate.objects.last()
 
@@ -894,7 +894,7 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision()
 
-        submit_to_meta_menu_action(wat)
+        submit_to_meta_action(wat)
 
         request = responses.calls[0].request
 
@@ -956,7 +956,7 @@ class TestWhatsAppTemplate:
         wat.save()
         wat.save_revision().publish()
 
-        submit_to_meta_menu_action(wat)
+        submit_to_meta_action(wat)
 
         wat_from_db = WhatsAppTemplate.objects.last()
         assert wat_from_db.submission_status == "FAILED"

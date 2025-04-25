@@ -31,7 +31,7 @@ from .views import (  # isort:skip
     WhatsAppTemplateUploadView,
 )
 
-from .whatsapp import submit_to_meta_menu_action
+from .whatsapp import submit_to_meta_action
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +186,7 @@ class SubmitToMetaBulkAction(SnippetBulkAction):
         num_parent_objects, num_child_objects = 0, 0
         for obj in objects:
             num_parent_objects += 1
-            submit_to_meta_menu_action(obj)
+            submit_to_meta_action(obj)
         return num_parent_objects, num_child_objects
 
     def get_success_message(
