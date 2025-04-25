@@ -340,6 +340,37 @@ class TestImportExportRoundtrip:
             del item["fields"]["has_unpublished_changes"]
         assert imported == orig
 
+    def test_single_whatsapp_template_purge_true(self, impexp: ImportExport) -> None:
+        """
+        Exporting then reimporting leaves the database in the same state we started with
+        """
+        WhatsAppTemplate.objects.create(
+            name="wa_title",
+            message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+            category="UTILITY",
+            buttons=[],
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[
+                ("example_values", "Ev1"),
+                ("example_values", "Ev2"),
+            ],
+            submission_name="testname",
+            submission_status="NOT_SUBMITTED_YET",
+            submission_result="test result",
+        )
+
+        orig = impexp.get_whatsapp_template_json()
+        impexp.export_reimport(purge=True)
+        imported = impexp.get_whatsapp_template_json()
+        # remove the revision and unpublished changes keys
+        for item in orig:
+            del item["fields"]["latest_revision"]
+            del item["fields"]["has_unpublished_changes"]
+        for item in imported:
+            del item["fields"]["latest_revision"]
+            del item["fields"]["has_unpublished_changes"]
+        assert imported == orig
+
 
 @pytest.mark.django_db()
 class TestImportExport:
@@ -347,6 +378,39 @@ class TestImportExport:
     Test import and export scenarios that aren't specifically round
     trips.
     """
+
+    def test_import_overwrites_existing(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV file with existing templates should overwrite them.
+        """
+        WhatsAppTemplate.objects.create(
+            name="Test Template Simple",
+            message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
+            category="UTILITY",
+            buttons=[],
+            locale=Locale.objects.get(language_code="en"),
+            example_values=[
+                ("example_values", "Ev1"),
+                ("example_values", "Ev2"),
+            ],
+            submission_name="testname",
+            submission_status="NOT_SUBMITTED_YET",
+            submission_result="test result",
+        )
+        csv_bytes = csv_impexp.import_file("whatsapp-template-simple.csv")
+        content = csv_impexp.export_whatsapp_template()
+        csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
+
+        iterator = iter(export)
+        first = next(iterator)
+        # if submission status is blank in csv, it should come through as not_submitted_yet
+        assert first["submission_status"] == "NOT_SUBMITTED_YET"
+        del first["submission_status"]
+
+        iterator = iter(csv)
+        first = next(iterator)
+        del first["submission_status"]
+        assert export == csv
 
     def test_import_error(elf, csv_impexp: ImportExport) -> None:
         """

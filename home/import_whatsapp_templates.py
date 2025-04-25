@@ -110,7 +110,20 @@ class WhatsAppTemplateImporter:
         self, row: "ContentRow", locale: Locale
     ) -> WhatsAppTemplate:
         try:
-            return WhatsAppTemplate.objects.get(name=row.name, locale=locale)
+            template = WhatsAppTemplate.objects.get(name=row.name, locale=locale)
+            template.category = row.category
+            template.message = row.message
+            template.example_values = [
+                ("example_values", v) for v in row.example_values
+            ]
+            template.submission_status = (
+                row.submission_status
+                if row.submission_status
+                else WhatsAppTemplate.SubmissionStatus.NOT_SUBMITTED_YET
+            )
+            template.submission_result = row.submission_result
+            template.submission_name = row.submission_name
+            return template
         except WhatsAppTemplate.DoesNotExist:
             return WhatsAppTemplate(
                 name=row.name,
