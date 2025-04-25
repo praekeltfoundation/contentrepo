@@ -401,6 +401,7 @@ def test_submit_revision(monkeypatch: pytest.MonkeyPatch) -> None:
     assert wat.category == rev1.category == "UTILITY"
 
     rev2 = wat.revisions.order_by("-created_at").first()
+    pk = rev2.id
     rev_object = rev2.as_object()
     assert rev_object.category == "MARKETING"
 
@@ -416,9 +417,11 @@ def test_submit_revision(monkeypatch: pytest.MonkeyPatch) -> None:
 
     submit_to_meta_action(rev2)
 
-    # assert rev_object.submission_name == f"valid-named-variables_{pk}"
-    # assert rev_object.submission_status == DummySubmissionStatus.SUBMITTED
-    # assert rev_object.submission_result.startswith("Success! Template ID = ")
+    rev3 = wat.revisions.order_by("-created_at").first()
+    rev3_obj = rev3.as_object()
+    assert rev3_obj.submission_name == f"valid-named-variables_{pk}"
+    assert rev3_obj.submission_status == DummySubmissionStatus.SUBMITTED
+    assert rev3_obj.submission_result.startswith("Success! Template ID = ")
 
     wat = WhatsAppTemplate.objects.filter(live=True).first()
     latest_rev = wat.revisions.order_by("-created_at").first().as_object()
