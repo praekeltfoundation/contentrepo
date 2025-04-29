@@ -93,20 +93,7 @@ class WhatsAppTemplateImporter:
                 f"Validation error: whatsapp_template_category - Select a valid choice. {row.category} is not one of the available choices."
             )
 
-        template = WhatsAppTemplate(
-            name=row.name,
-            category=row.category,
-            locale=locale,
-            message=row.message,
-            example_values=[("example_values", v) for v in row.example_values],
-            submission_status=(
-                row.submission_status
-                if row.submission_status
-                else WhatsAppTemplate.SubmissionStatus.NOT_SUBMITTED_YET
-            ),
-            submission_result=row.submission_result,
-            submission_name=row.submission_name,
-        )
+        template = self._update_or_create_whatsapp_template(row, locale)
         template.full_clean()
         template.save()
 
@@ -118,6 +105,40 @@ class WhatsAppTemplateImporter:
         template.full_clean()
         template.save()
         return
+
+    def _update_or_create_whatsapp_template(
+        self, row: "ContentRow", locale: Locale
+    ) -> WhatsAppTemplate:
+        try:
+            template = WhatsAppTemplate.objects.get(name=row.name, locale=locale)
+            template.category = row.category
+            template.message = row.message
+            template.example_values = [
+                ("example_values", v) for v in row.example_values
+            ]
+            template.submission_status = (
+                row.submission_status
+                if row.submission_status
+                else WhatsAppTemplate.SubmissionStatus.NOT_SUBMITTED_YET
+            )
+            template.submission_result = row.submission_result
+            template.submission_name = row.submission_name
+            return template
+        except WhatsAppTemplate.DoesNotExist:
+            return WhatsAppTemplate(
+                name=row.name,
+                category=row.category,
+                locale=locale,
+                message=row.message,
+                example_values=[("example_values", v) for v in row.example_values],
+                submission_status=(
+                    row.submission_status
+                    if row.submission_status
+                    else WhatsAppTemplate.SubmissionStatus.NOT_SUBMITTED_YET
+                ),
+                submission_result=row.submission_result,
+                submission_name=row.submission_name,
+            )
 
     def parse_file(self) -> list["ContentRow"]:
         if self.file_type == "XLSX":
