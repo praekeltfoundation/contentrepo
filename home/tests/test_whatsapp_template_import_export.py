@@ -19,6 +19,7 @@ from wagtail.snippets.models import register_snippet  # type: ignore
 from home.assessment_import_export import import_assessment
 from home.import_helpers import ImportException
 from home.models import (
+    Assessment,
     HomePage,
     WhatsAppTemplate,
 )
@@ -403,6 +404,10 @@ class TestImportExportRoundtrip:
         Exporting then reimporting leaves the database in the same state we started with
         """
         csv_impexp.import_assessment_file("assessment_simple.csv")
+        assessment_id = Assessment.objects.get(
+            title="Health Assessment Simple",
+            locale=Locale.objects.get(language_code="en"),
+        ).id
         example_values_field = WhatsAppTemplate._meta.get_field("example_values")
         example_values = StreamValue(
             example_values_field.stream_block,
@@ -416,7 +421,10 @@ class TestImportExportRoundtrip:
         buttons = StreamValue(
             buttons_field.stream_block,
             [
-                {"type": "go_to_form", "value": {"title": "Simple form", "form": 1}},
+                {
+                    "type": "go_to_form",
+                    "value": {"title": "Simple form", "form": assessment_id},
+                },
             ],
             is_lazy=True,
         )
