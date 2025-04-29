@@ -1,6 +1,7 @@
 import json
 import logging
 import mimetypes
+import re
 from collections.abc import Iterable
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -447,9 +448,14 @@ def validate_template_variables(body: str) -> list[str]:
         variables = template_body.parse_string(body, parse_all=True).as_list()
 
     except pp.ParseException as pe:
+        # Matches "{1}" and "{11}", not "{{1}", "{a}" or "{1 "
+        single_braces = re.findall(r"(^|[^{]){(\d*?)}", pe.line)
+        if single_braces:
+            raise TemplateVariableError(
+                f"Please provide variables with valid double braces. You provided single braces near this line '{pe.line}'."
+            )
         raise TemplateVariableError(
-            # TODO: Better error handling here, with the invalid var highlighted as part of the text
-            f"ParseException: Unable to parse the variable starting at character {pe.loc}"
+            f"Malformed placeholder variable detected near line '{pe.line}'"
         )
 
     if not variables:
