@@ -106,7 +106,7 @@ class WhatsAppTemplateImporter:
         template.save()
         return
 
-    def _get_or_init_whatsapp_template(
+    def _update_or_create_whatsapp_template(
         self, row: "ContentRow", locale: Locale
     ) -> WhatsAppTemplate:
         try:
