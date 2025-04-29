@@ -24,7 +24,7 @@
 | home/import\_content\_pages.py                                                               |      555 |       12 |     98% |140-141, 311, 359-360, 713, 923-930 |
 | home/import\_helpers.py                                                                      |      168 |        8 |     95% |154, 156, 176, 184-189 |
 | home/import\_ordered\_content\_sets.py                                                       |       91 |        1 |     99% |       230 |
-| home/import\_whatsapp\_templates.py                                                          |      166 |       13 |     92% |32, 52, 169-174, 183-184, 209, 221-234, 238 |
+| home/import\_whatsapp\_templates.py                                                          |      178 |       13 |     93% |32, 52, 190-195, 204-205, 230, 242-255, 259 |
 | home/management/commands/broken\_links\_clean\_up.py                                         |       31 |        0 |    100% |           |
 | home/management/commands/change\_related\_tag\_to\_related\_page.py                          |       26 |        0 |    100% |           |
 | home/management/commands/import\_json\_content\_turn.py                                      |       57 |        5 |     91% |     88-92 |
@@ -140,7 +140,7 @@
 | home/whatsapp.py                                                                             |      227 |        1 |     99% |        18 |
 | home/whatsapp\_template\_import\_export.py                                                   |       19 |        0 |    100% |           |
 | home/xlsx\_helpers.py                                                                        |        5 |        0 |    100% |           |
-|                                                                                    **TOTAL** | **4728** |  **420** | **91%** |           |
+|                                                                                    **TOTAL** | **4740** |  **420** | **91%** |           |
 
 
 ## Setup coverage badge
