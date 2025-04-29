@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+from typing import Any
+from unittest import mock
 
 import pytest
 import responses
@@ -9,7 +11,13 @@ from responses.matchers import multipart_matcher
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale  # type: ignore
 
-from home.whatsapp import create_whatsapp_template
+from home.models import WhatsAppTemplate
+from home.whatsapp import (
+    TemplateSubmissionClientException,
+    TemplateSubmissionServerException,
+    create_whatsapp_template,
+    submit_to_meta_action,
+)
 
 
 @pytest.mark.django_db
@@ -253,3 +261,169 @@ class TestWhatsApp:
             "language": "pt_BR",
             "components": [{"type": "BODY", "text": "Corpo de Teste"}],
         }
+
+
+class DummySubmissionStatus:
+    SUBMITTED = "SUBMITTED"
+    FAILED = "FAILED"
+
+
+class DummyRevisionObj:
+    def __init__(self) -> None:
+        self.message = "msg"
+        self.category = "UTILITY"
+        self.locale = mock.Mock()
+        self.buttons = mock.Mock(raw_data=[{"value": {"title": "Button1"}}])
+        self.image = None
+        self.example_values = mock.Mock(raw_data=[{"value": "val1"}])
+        self.submission_name = None
+        self.submission_status = None
+        self.submission_result: str = ""
+        self.SubmissionStatus = DummySubmissionStatus
+
+    def create_whatsapp_template_name(self) -> str:
+        return "template_123"
+
+    def save(self) -> None:
+        pass
+
+
+class DummyRevision:
+    def as_object(self) -> DummyRevisionObj:
+        return DummyRevisionObj()
+
+
+class DummyModel:
+    def __init__(self, revision: DummyRevision | None = None) -> None:
+        self._revision = revision
+        self.message = "msg"
+        self.category = "UTILITY"
+        self.locale = mock.Mock()
+        self.buttons = mock.Mock(raw_data=[{"value": {"title": "Button1"}}])
+        self.image = None
+        self.example_values = mock.Mock(raw_data=[{"value": "val1"}])
+        self.submission_name = None
+        self.submission_status = None
+        self.submission_result: str = ""
+        self.SubmissionStatus = DummySubmissionStatus
+
+    def get_latest_revision(self) -> DummyRevision | None:
+        return self._revision
+
+    def create_whatsapp_template_name(self) -> str:
+        return "template_123"
+
+    def save(self) -> None:
+        pass
+
+
+@pytest.mark.django_db
+def test_submit_to_meta_action_success(monkeypatch: pytest.MonkeyPatch) -> None:
+    model = DummyModel()
+
+    def fake_create_standalone_whatsapp_template(
+        **kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {"id": "fakeid123"}
+
+    monkeypatch.setattr(
+        "home.whatsapp.create_standalone_whatsapp_template",
+        fake_create_standalone_whatsapp_template,
+    )
+
+    submit_to_meta_action(model)
+    assert model.submission_status == DummySubmissionStatus.SUBMITTED
+    assert model.submission_result.startswith("Success! Template ID = ")
+
+
+@pytest.mark.django_db
+def test_submit_to_meta_action_server_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model = DummyModel()
+
+    def fake_create_standalone_whatsapp_template(
+        **kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
+        raise TemplateSubmissionServerException("server error")
+
+    monkeypatch.setattr(
+        "home.whatsapp.create_standalone_whatsapp_template",
+        fake_create_standalone_whatsapp_template,
+    )
+
+    submit_to_meta_action(model)
+    assert model.submission_status == DummySubmissionStatus.FAILED
+    assert "Internal Server Error" in model.submission_result
+
+
+@pytest.mark.django_db
+def test_submit_to_meta_action_client_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model = DummyModel()
+
+    def fake_create_standalone_whatsapp_template(
+        **kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
+        raise TemplateSubmissionClientException("client error")
+
+    monkeypatch.setattr(
+        "home.whatsapp.create_standalone_whatsapp_template",
+        fake_create_standalone_whatsapp_template,
+    )
+
+    submit_to_meta_action(model)
+    assert model.submission_status == DummySubmissionStatus.FAILED
+    assert model.submission_result == "Error! client error"
+
+
+@pytest.mark.django_db
+def test_submit_revision(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    Test that submitting a WhatsAppTemplate Revision doesn't overwrite the live template
+    """
+    wat = WhatsAppTemplate(
+        name="valid-named-variables",
+        message="This is a message with 2 valid named vars {{1}} and {{2}}",
+        category="UTILITY",
+        locale=Locale.objects.get(language_code="en"),
+        example_values=[("example_values", "Ev1"), ("example_values", "Ev2")],
+    )
+    wat.save()
+    wat.save_revision().publish()
+    rev1 = wat.get_latest_revision().as_object()
+    latest_revision = wat.get_latest_revision().as_object()
+    assert rev1.category == "UTILITY"
+    latest_revision.category = "MARKETING"
+    latest_revision.save_revision()
+
+    assert wat.category == rev1.category == "UTILITY"
+
+    rev2 = wat.revisions.order_by("-created_at").first()
+    pk = rev2.id
+    rev_object = rev2.as_object()
+    assert rev_object.category == "MARKETING"
+
+    def fake_create_standalone_whatsapp_template(
+        **kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {"id": "fakeid123"}
+
+    monkeypatch.setattr(
+        "home.whatsapp.create_standalone_whatsapp_template",
+        fake_create_standalone_whatsapp_template,
+    )
+
+    submit_to_meta_action(rev2)
+
+    rev3 = wat.revisions.order_by("-created_at").first()
+    rev3_obj = rev3.as_object()
+    assert rev3_obj.submission_name == f"valid-named-variables_{pk}"
+    assert rev3_obj.submission_status == DummySubmissionStatus.SUBMITTED
+    assert rev3_obj.submission_result.startswith("Success! Template ID = ")
+
+    wat = WhatsAppTemplate.objects.filter(live=True).first()
+    latest_rev = wat.revisions.order_by("-created_at").first().as_object()
+    assert wat.category == rev1.category
+    assert wat.category != latest_rev.category

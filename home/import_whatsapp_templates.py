@@ -93,7 +93,7 @@ class WhatsAppTemplateImporter:
                 f"Validation error: whatsapp_template_category - Select a valid choice. {row.category} is not one of the available choices."
             )
 
-        template = self._get_or_init_whatsapp_template(row, locale)
+        template = self._update_or_create_whatsapp_template(row, locale)
         template.full_clean()
         template.save()
 
@@ -106,7 +106,7 @@ class WhatsAppTemplateImporter:
         template.save()
         return
 
-    def _get_or_init_whatsapp_template(
+    def _update_or_create_whatsapp_template(
         self, row: "ContentRow", locale: Locale
     ) -> WhatsAppTemplate:
         try:
