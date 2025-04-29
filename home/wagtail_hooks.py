@@ -163,6 +163,9 @@ class SubmitToMetaMenuItem(ActionMenuItem):
         instance = context["instance"]
         return reverse("submit_to_meta", args=[instance.pk])
 
+    def is_shown(self, context: Any) -> bool:
+        return context["view"] == "edit"
+
 
 @hooks.register("register_snippet_action_menu_item")
 def register_submit_to_meta_menu_item(model: Any) -> Any:
