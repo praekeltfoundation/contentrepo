@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 ### Fixed
 - Resubmit templates when button titles change
+- Fix slug not populated in wa template export
 ### Security
 -->
 
