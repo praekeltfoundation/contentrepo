@@ -12,15 +12,26 @@ import pytest
 from django.core import serializers  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
+from wagtail.blocks.stream_block import StreamValue
 from wagtail.models import Locale  # type: ignore
 from wagtail.snippets.models import register_snippet  # type: ignore
 
+from home.assessment_import_export import import_assessment
 from home.import_helpers import ImportException
 from home.models import (
+    HomePage,
     WhatsAppTemplate,
 )
 from home.wagtail_hooks import WhatsAppTemplateAdmin
 from home.whatsapp_template_import_export import import_whatsapptemplate
+
+from .page_builder import (
+    MBlk,
+    MBody,
+    PageBuilder,
+    WABlk,
+    WABody,
+)
 
 TTemplate = TypeVar("TTemplate", bound=WhatsAppTemplate)
 
@@ -117,7 +128,22 @@ def remove_example_value_ids(template: DbDict) -> DbDict:
     return template
 
 
-WHATSAPP_TEMPLATE_FILTER_FUNCS = [remove_example_value_ids, normalise_pks]
+@per_template
+def remove_button_ids(template: DbDict) -> DbDict:
+    if "buttons" in template["fields"]:
+        buttons = json.loads(template["fields"]["buttons"])
+        for button in buttons:
+            button.pop("id", None)
+        template["fields"]["buttons"] = json.dumps(buttons)
+
+    return template
+
+
+WHATSAPP_TEMPLATE_FILTER_FUNCS = [
+    remove_example_value_ids,
+    normalise_pks,
+    remove_button_ids,
+]
 
 
 @dataclass
@@ -194,6 +220,22 @@ class ImportExport:
     def read_bytes(self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE) -> bytes:
         return (path_base / path_str).read_bytes()
 
+    def import_assessment(self, content_bytes: bytes, **kw: Any) -> None:
+        """
+        Import given content in the configured format with the configured importer.
+        """
+        import_assessment(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
+
+    def import_assessment_file(
+        self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE, **kw: Any
+    ) -> bytes:
+        """
+        Import given content file in the configured format with the configured importer.
+        """
+        content = self.read_bytes(path_str, path_base)
+        self.import_assessment(content, **kw)
+        return content
+
     def import_file(
         self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE, **kw: Any
     ) -> bytes:
@@ -244,6 +286,50 @@ def csv_impexp(request: Any, admin_client: Any) -> ImportExport:
 @pytest.fixture()
 def xlsx_impexp(request: Any, admin_client: Any) -> ImportExport:
     return ImportExport(admin_client, "xlsx")
+
+
+@pytest.fixture()
+def result_content_pages() -> None:
+    home_page = HomePage.objects.first()
+    main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="high-inflection",
+        title="High Inflection",
+        bodies=[
+            WABody("High Inflection", [WABlk("*High Inflection Page")]),
+            MBody("High inflection", [MBlk("High Inflection Page")]),
+        ],
+    )
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="medium-score",
+        title="Medium Score",
+        bodies=[
+            WABody("Medium Score", [WABlk("*Medium Inflection Page")]),
+            MBody("Medium Score", [MBlk("Medium Inflection Page")]),
+        ],
+    )
+
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="low-score",
+        title="Low Score",
+        bodies=[
+            WABody("Low Score", [WABlk("*Low Inflection Page")]),
+            MBody("Low Score", [MBlk("Low Inflection Page")]),
+        ],
+    )
+
+    PageBuilder.build_cp(
+        parent=main_menu,
+        slug="skip-score",
+        title="Skip Score",
+        bodies=[
+            WABody("Skip Score", [WABlk("*Skip Result Page")]),
+            MBody("Skip Score", [MBlk("Skip Result Page")]),
+        ],
+    )
 
 
 # Needs this here while standalone templates are hidden behind feature flag
@@ -309,20 +395,38 @@ class TestImportExportRoundtrip:
         csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
         assert export == csv
 
-    def test_single_whatsapp_template(self, impexp: ImportExport) -> None:
+    @pytest.mark.usefixtures("result_content_pages")
+    def test_single_whatsapp_template_unique(
+        self, impexp: ImportExport, csv_impexp: ImportExport
+    ) -> None:
         """
         Exporting then reimporting leaves the database in the same state we started with
         """
+        csv_impexp.import_assessment_file("assessment_simple.csv")
+        example_values_field = WhatsAppTemplate._meta.get_field("example_values")
+        example_values = StreamValue(
+            example_values_field.stream_block,
+            [
+                {"type": "example_values", "value": "Ev1"},
+                {"type": "example_values", "value": "Ev2"},
+            ],
+            is_lazy=True,
+        )
+        buttons_field = WhatsAppTemplate._meta.get_field("buttons")
+        buttons = StreamValue(
+            buttons_field.stream_block,
+            [
+                {"type": "go_to_form", "value": {"title": "Simple form", "form": 1}},
+            ],
+            is_lazy=True,
+        )
         WhatsAppTemplate.objects.create(
             name="wa_title",
             message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
             category="UTILITY",
-            buttons=[],
+            buttons=buttons,
             locale=Locale.objects.get(language_code="en"),
-            example_values=[
-                ("example_values", "Ev1"),
-                ("example_values", "Ev2"),
-            ],
+            example_values=example_values,
             submission_name="testname",
             submission_status="NOT_SUBMITTED_YET",
             submission_result="test result",
