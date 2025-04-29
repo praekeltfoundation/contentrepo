@@ -97,10 +97,13 @@ class WhatsAppTemplateImporter:
         template.full_clean()
         template.save()
 
+        print(f"Row Buttons: {row.buttons}")
+        print(f"Template Buttons before creating new ones: {template.buttons}")
         buttons = self._create_interactive_items(
             row.buttons, template.name, locale, "button"
         )
         template.buttons = buttons
+        print(f"Buttons after assigning to template: {buttons}")
 
         template.full_clean()
         template.save()
