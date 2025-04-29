@@ -1613,6 +1613,7 @@ class WhatsAppTemplate(
         ],
         use_json_field=True,
         null=True,
+        blank=True,
         max_num=3,
     )
 
