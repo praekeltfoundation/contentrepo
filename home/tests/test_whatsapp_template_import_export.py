@@ -12,7 +12,7 @@ import pytest
 from django.core import serializers  # type: ignore
 from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
-from wagtail.blocks.stream_block import StreamValue
+from wagtail.blocks.stream_block import StreamValue  # type: ignore
 from wagtail.models import Locale  # type: ignore
 from wagtail.snippets.models import register_snippet  # type: ignore
 
