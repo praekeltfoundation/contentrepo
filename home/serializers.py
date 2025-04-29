@@ -628,9 +628,77 @@ class AssessmentSerializer(BaseSerializer):
     questions = QuestionField(read_only=True)
 
 
+class TemplateLocaleField(serializers.Field):
+    """
+    Serializes the "locale" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, instance):
+        return instance.locale.language_code
+
+
+class MessageField(serializers.Field):
+    """
+    Serializes the "message" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, instance):
+        return instance.message
+
+
+class CategoryField(serializers.Field):
+    """
+    Serializes the "category" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, instance):
+        return instance.category
+
+
+def category_field_representation(template, request):
+    return template.category
+
+
+def name_field_representation(template, request):
+    return template.name
+
+
 class WhatsAppTemplateSerializer(BaseSerializer):
-    name = TitleField(read_only=True)
+    name = NameField(read_only=True)
     # subtitle = SubtitleField(read_only=True)
-    message = BodyField(read_only=True)
+    message = MessageField(read_only=True)
+    category = CategoryField(read_only=True)
+
     # has_children = HasChildrenField(read_only=True)
     # related_pages = RelatedPagesField(read_only=True)
+    def to_representation(self, template):
+        request = self.context["request"]
+        router = self.context["router"]
+        return {
+            "id": template.id,
+            # "meta": metadata_field_representation(page, request, router),
+            "locale": template.locale.language_code,
+            "name": name_field_representation(template, request),
+            "category": category_field_representation(template, request),
+            "image": template.image,
+            "message": template.message,
+            "buttons": [x for x in template.buttons.raw_data],
+            "example_values": [x for x in template.example_values.raw_data],
+            "submission_name": template.submission_name,
+            "submission_status": template.submission_status,
+            "submission_result": template.submission_result,
+            # "tags": [x.name for x in page.tags.all()],
+            # "triggers": [x.name for x in page.triggers.all()],
+            #
+            # "has_children": has_children_field_representation(page),
+            # "related_pages": related_pages_field_representation(page, request),
+        }

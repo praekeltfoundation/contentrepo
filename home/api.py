@@ -245,18 +245,27 @@ class OrderedContentSetViewSet(BaseAPIViewSet):
 
 
 class WhatsAppTemplateViewset(BaseAPIViewSet):
-    model = WhatsAppTemplate
     base_serializer_class = WhatsAppTemplateSerializer
     known_query_parameters = BaseAPIViewSet.known_query_parameters.union(
         [
             "qa",
         ]
     )
-    listing_default_fields = BaseAPIViewSet.listing_default_fields + [
+    model = WhatsAppTemplate
+    body_fields = BaseAPIViewSet.body_fields + [
         "name",
         "message",
     ]
-    search_fields = ["name", "message"]
+    listing_default_fields = BaseAPIViewSet.listing_default_fields + [
+        "name",
+        "category",
+        "message",
+    ]
+    pagination_class = PageNumberPagination
+    search_fields = [
+        "name",
+    ]
+    filter_backends = (SearchFilter,)
 
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
@@ -265,7 +274,7 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
             # return the latest revision for each WhatsApp Template
             queryset = WhatsAppTemplate.objects.all().order_by("latest_revision_id")
             for wat in queryset:
-                print("HERE")
+                print(f"found template {wat.name}")
                 latest_revision = wat.revisions.order_by("-created_at").first()
                 if latest_revision:
                     latest_revision = latest_revision.as_object()
@@ -278,8 +287,61 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
             )
         return queryset
 
-    def listing_view(self, request, *args, **kwargs):
-        return super().listing_view(request)
+    # def detail_view(self, request, pk):
+    #     try:
+    #         if "qa" in request.GET and request.GET["qa"] == "True":
+    #             instance = ContentPage.objects.get(
+    #                 id=pk
+    #             ).get_latest_revision_as_object()
+    #             serializer = self.get_serializer(instance)
+    #             return Response(serializer.data)
+    #         else:
+    #             WhatsAppTemplate.objects.get(id=pk).save_page_view(request.query_params)
+    #     except WhatsAppTemplate.DoesNotExist:
+    #         raise NotFound(
+    #             {
+    #                 "WhatsAppTemplate": [
+    #                     "WhatsAppTemplate matching query does not exist."
+    #                 ]
+    #             }
+    #         )
+
+    #     return super().detail_view(request, pk)
+
+    # def listing_view(self, request, *args, **kwargs):
+    #     # If this request is flagged as QA then we should display the pages that have the filtering tags
+    #     # or triggers in their draft versions
+    #     print("Starting listing view")
+    #     # if "qa" in request.GET and request.GET["qa"] == "True":
+    #     # tag = self.request.query_params.get("tag")
+    #     # trigger = self.request.query_params.get("trigger")
+    #     # have_new_triggers = []
+    #     # have_new_tags = []
+    #     # unpublished = WhatsAppTemplate.objects.filter(
+    #     #     has_unpublished_changes="True"
+    #     # )
+    #     # for template in unpublished:
+
+    #     # latest_rev = template.get_latest_revision_as_object()
+    #     # if trigger and latest_rev.triggers.filter(name=trigger).exists():
+    #     #     have_new_triggers.append(page.id)
+    #     # if tag and latest_rev.tags.filter(name=tag).exists():
+    #     #     have_new_tags.append(page.id)
+
+    #     queryset = self.get_queryset()
+    #     self.check_query_parameters(queryset)
+    #     queryset = self.filter_queryset(queryset)
+    #     # queryset = queryset | ContentPage.objects.filter(id__in=have_new_triggers)
+    #     # queryset = queryset | ContentPage.objects.filter(id__in=have_new_tags)
+    #     queryset_list = self.paginate_queryset(queryset)
+    #     serializer = self.get_serializer(queryset_list, many=True)
+    #     return self.get_paginated_response(serializer.data)
+
+    #     return super().listing_view(request)
+
+    # def listing_view(self, request, *args, **kwargs):
+    #     print("List here")
+    #     return super().listing_view(request)
 
 
 class AssessmentViewSet(BaseAPIViewSet):
