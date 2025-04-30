@@ -448,3 +448,7 @@ api_router.register_endpoint("media", MediaAPIViewSet)
 api_router.register_endpoint("whatsapptemplates", WhatsAppTemplateViewset)
 api_router.register_endpoint("orderedcontent", OrderedContentSetViewSet)
 api_router.register_endpoint("assessment", AssessmentViewSet)
+
+api_router_v3 = WagtailAPIRouter("wagtailapiv3")
+api_router_v3.register_endpoint("whatsapptemplates", WhatsAppTemplateViewset)
+api_router_v3.register_endpoint("pages", ContentPagesViewSet)
