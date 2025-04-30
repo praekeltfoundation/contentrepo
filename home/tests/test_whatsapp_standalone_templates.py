@@ -156,7 +156,7 @@ class TestStandaloneWhatsAppTemplates:
         }
 
     @responses.activate
-    def test_invalid_variables_single_open_brace(
+    def test_invalid_variables_opened_single_brace(
         self, settings: SettingsWrapper
     ) -> None:
         with pytest.raises(ValidationError) as err_info:
@@ -171,8 +171,7 @@ class TestStandaloneWhatsAppTemplates:
 
         assert err_info.value.message_dict == {
             "message": [
-                # TODO: Add more specific error handling here
-                "ParseException: Unable to parse the variable starting at character 42"
+                "Malformed placeholder variable detected near line 'Test WhatsApp Message with an invalid var {1 '"
             ],
         }
 
@@ -195,7 +194,7 @@ class TestStandaloneWhatsAppTemplates:
 
         assert err_info.value.message_dict == {
             "message": [
-                "ParseException: Unable to parse the variable starting at character 24"
+                "Please provide variables with valid double braces. You provided single braces near this line 'Test WhatsApp Message 1 {1} and a broken var here'."
             ],
         }
 

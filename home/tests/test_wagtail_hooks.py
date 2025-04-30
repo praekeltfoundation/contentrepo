@@ -1,7 +1,10 @@
+from unittest.mock import Mock
+
 import pytest
 from wagtail.models import Locale
 
-from home.models import HomePage, OrderedContentSet
+from home.models import HomePage, OrderedContentSet, WhatsAppTemplate
+from home.wagtail_hooks import SubmitToMetaBulkAction
 
 from .page_builder import PageBtn, PageBuilder, WABlk, WABody
 
@@ -103,3 +106,33 @@ class TestBeforeDeletePageHook:
 
         assert len(messages) == 1
         assert str(messages[0]) == "<br>".join(msg)
+
+
+class DummyWhatsAppTemplate:
+    pass
+
+
+@pytest.mark.django_db
+class TestSubmitToMetaBulkAction:
+    def test_submit_to_meta_action_executes_on_all_objects(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        objs = [DummyWhatsAppTemplate() for _ in range(3)]
+        called = []
+
+        def fake_submit(obj: DummyWhatsAppTemplate) -> None:
+            called.append(obj)
+
+        monkeypatch.setattr("home.wagtail_hooks.submit_to_meta_action", fake_submit)
+
+        num_parent, num_child = SubmitToMetaBulkAction.execute_action(objs)
+
+        assert called == objs
+        assert num_parent == 3
+        assert num_child == 0
+
+    def test_submit_to_meta_action_success_message(self) -> None:
+        fake_request = Mock()
+        action = SubmitToMetaBulkAction(request=fake_request, model=WhatsAppTemplate)
+        msg = action.get_success_message(5, 0)
+        assert msg == "5 objects have been submitted to Meta"

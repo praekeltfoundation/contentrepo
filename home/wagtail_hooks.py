@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from django.conf import settings
@@ -11,6 +12,8 @@ from wagtail.admin.panels import FieldPanel, MultiFieldPanel, TitleFieldPanel
 from wagtail.admin.widgets.slug import SlugInput
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 from wagtail.models import Page
+from wagtail.snippets.action_menu import ActionMenuItem
+from wagtail.snippets.bulk_actions.snippet_bulk_action import SnippetBulkAction
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
@@ -27,6 +30,10 @@ from .views import (  # isort:skip
     CustomIndexViewWhatsAppTemplate,
     WhatsAppTemplateUploadView,
 )
+
+from .whatsapp import submit_to_meta_action
+
+logger = logging.getLogger(__name__)
 
 
 @hooks.register("before_delete_page")
@@ -145,6 +152,50 @@ def get_page_views_report_url() -> list[Any]:
             name="page_view_report",
         ),
     ]
+
+
+class SubmitToMetaMenuItem(ActionMenuItem):
+    name = "action-submit-to-meta"
+    label = "Submit to Meta"
+    icon_name = "globe"
+
+    def get_url(self, context: Any) -> str:
+        instance = context["instance"]
+        return reverse("submit_to_meta", args=[instance.pk])
+
+    def is_shown(self, context: Any) -> bool:
+        return context["view"] == "edit"
+
+
+@hooks.register("register_snippet_action_menu_item")
+def register_submit_to_meta_menu_item(model: Any) -> Any:
+    if model == WhatsAppTemplate:
+        return SubmitToMetaMenuItem(order=10)
+    return None
+
+
+@hooks.register("register_bulk_action")
+class SubmitToMetaBulkAction(SnippetBulkAction):
+    display_name = "Submit to Meta"
+    aria_label = "Submit selected objects to Meta"
+    action_type = "submit_to_meta"
+    template_name = (
+        "wagtailsnippets/snippets/home/whatsapptemplate/confirm_bulk_submit.html"
+    )
+    models = [WhatsAppTemplate]
+
+    @classmethod
+    def execute_action(cls, objects: Any, **kwargs: Any) -> tuple[int, int]:
+        num_parent_objects, num_child_objects = 0, 0
+        for obj in objects:
+            num_parent_objects += 1
+            submit_to_meta_action(obj)
+        return num_parent_objects, num_child_objects
+
+    def get_success_message(
+        self, num_parent_objects: int, num_child_objects: int
+    ) -> str:
+        return f"{num_parent_objects} objects have been submitted to Meta"
 
 
 class ContentPageAdmin(ModelAdmin):

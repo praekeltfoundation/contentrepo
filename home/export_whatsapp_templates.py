@@ -11,6 +11,7 @@ from openpyxl.styles import Border, Color, Font, NamedStyle, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
+from wagtail import blocks  # type: ignore
 from wagtail.query import PageQuerySet  # type: ignore
 
 
@@ -48,18 +49,10 @@ class WhatsAppTemplateExporter:
             image_link = ""
             if item.image:
                 image_link = item.image.file.url
-            buttons = [
-                {
-                    "type": v["type"],
-                    "title": v["value"]["title"],
-                    "slug": v.get("slug") or "",
-                }
-                for v in item.buttons.raw_data
-            ]
             yield ExportRow(
                 name=item.name,
                 category=item.category,
-                buttons=json.dumps(buttons),
+                buttons=self.serialise_buttons(item.buttons),
                 locale=str(item.locale.language_code),
                 image=str(image_link),
                 message=str(item.message),
@@ -70,6 +63,30 @@ class WhatsAppTemplateExporter:
                 submission_status=str(item.submission_status),
                 submission_result=(item.submission_result),
             )
+
+    @staticmethod
+    def serialise_buttons(buttons: blocks.StreamValue.StreamChild) -> str:
+        button_dicts = []
+
+        for button in buttons:
+            button_dict = {
+                "type": button.block_type,
+                "title": button.value["title"],
+                "slug": "",
+            }
+            if button.block_type == "go_to_page":
+                # Exclude buttons that has deleted pages that they are linked to it
+                if button.value.get("page") is None:
+                    continue
+                button_dict["slug"] = button.value["page"].slug
+            if button.block_type == "go_to_form":
+                # Exclude buttons that has deleted forms that they are linked to it
+                if button.value.get("form") is None:
+                    continue
+                button_dict["slug"] = button.value["form"].slug
+
+            button_dicts.append(button_dict)
+        return json.dumps(button_dicts)
 
 
 def serialize_list(items: Iterable[str]) -> str:

@@ -281,7 +281,6 @@ class ShadowAssessment:
             e.row_num = self.row_num
             e.slug = assessment.slug
             e.locale = assessment.locale
-            print(f"{e.row_num}: {e.message}")
             raise e
 
     def add_field_values_to_assessment(self, assessment: Assessment) -> None:

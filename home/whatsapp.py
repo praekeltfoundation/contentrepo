@@ -1,18 +1,22 @@
 import json
 import logging
 import mimetypes
+import re
 from collections.abc import Iterable
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urljoin
 
 import pyparsing as pp
 import requests
 from django.conf import settings  # type: ignore
 from wagtail.images.models import Image  # type: ignore
-from wagtail.models import Locale  # type: ignore
+from wagtail.models import Locale, Revision  # type: ignore
 
 from .constants import WHATSAPP_LANGUAGE_MAPPING
+
+if TYPE_CHECKING:
+    from .models import WhatsAppTemplate
 
 logger = logging.getLogger(__name__)
 
@@ -346,6 +350,42 @@ def create_standalone_template_header_components(
     return components
 
 
+def submit_to_meta_action(template: "WhatsAppTemplate | Revision") -> None:
+    is_revision = isinstance(template, Revision)
+    if is_revision:
+        template = template.as_object()
+
+    template_name = template.create_whatsapp_template_name()
+    try:
+        response_json = create_standalone_whatsapp_template(
+            name=template_name,
+            message=template.message,
+            category=template.category,
+            locale=template.locale,
+            quick_replies=[b["value"]["title"] for b in template.buttons.raw_data],
+            image_obj=template.image,
+            example_values=[v["value"] for v in template.example_values.raw_data],
+        )
+        template.submission_name = template_name
+        template.submission_status = template.SubmissionStatus.SUBMITTED
+        template.submission_result = f"Success! Template ID = {response_json['id']}"
+    except TemplateSubmissionServerException as tsse:
+        logger.exception(f"TemplateSubmissionServerException: {str(tsse)} ")
+        template.submission_name = template_name
+        template.submission_status = template.SubmissionStatus.FAILED
+        template.submission_result = "An Internal Server Error has occurred.  Please try again later or contact developer support"
+    except TemplateSubmissionClientException as tsce:
+        template.submission_name = template_name
+        template.submission_status = template.SubmissionStatus.FAILED
+        template.submission_result = str(tsce)
+
+    # if we give a revision, save a new revision, otherwise overwrite the current live template
+    if is_revision:
+        template.save_revision()
+    else:
+        template.save()
+
+
 def create_standalone_whatsapp_template(
     name: str,
     message: str,
@@ -408,9 +448,14 @@ def validate_template_variables(body: str) -> list[str]:
         variables = template_body.parse_string(body, parse_all=True).as_list()
 
     except pp.ParseException as pe:
+        # Matches "{1}" and "{11}", not "{{1}", "{a}" or "{1 "
+        single_braces = re.findall(r"(^|[^{]){(\d*?)}", pe.line)
+        if single_braces:
+            raise TemplateVariableError(
+                f"Please provide variables with valid double braces. You provided single braces near this line '{pe.line}'."
+            )
         raise TemplateVariableError(
-            # TODO: Better error handling here, with the invalid var highlighted as part of the text
-            f"ParseException: Unable to parse the variable starting at character {pe.loc}"
+            f"Malformed placeholder variable detected near line '{pe.line}'"
         )
 
     if not variables:

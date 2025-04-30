@@ -1,0 +1,33 @@
+{% extends 'wagtailadmin/bulk_actions/confirmation/base.html' %}
+{% load i18n wagtailadmin_tags %}
+
+{% block titletag %}{% blocktranslate trimmed count counter=items|length %}Submit 1 item{% plural %}Submit {{ counter }} items{% endblocktranslate %}{% endblock %}
+
+{% block header %}
+    {% trans "Submit" as submit_str %}
+    {% include "wagtailadmin/shared/header.html" with title=submit_str icon="globe" %}
+{% endblock header %}
+
+{% block confirm %}
+        {% if items %}
+        
+        {% endif %}
+{% endblock confirm %}
+
+{% block form_section %}
+{% if items %}
+    <p>{% trans "Are you sure you want to submit these items?" %}</p>
+    <ul>
+        {% for item in items %}
+        <li>
+            <a href="" target="_blank" rel="noreferrer">{{ item.item.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% trans 'Yes, submit' as action_button_text %}
+    {% trans "No, don't submit" as no_action_button_text %}
+    {% include 'wagtailadmin/bulk_actions/confirmation/form.html' with action_button_class="serious" %}
+{% else %}
+    {% include 'wagtailadmin/bulk_actions/confirmation/go_back.html' %}
+{% endif %}
+{% endblock form_section %}
