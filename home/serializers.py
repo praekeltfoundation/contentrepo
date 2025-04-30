@@ -696,6 +696,10 @@ class WhatsAppTemplateSerializer(BaseSerializer):
             "submission_name": template.submission_name,
             "submission_status": template.submission_status,
             "submission_result": template.submission_result,
+            "quick_reply_buttons": template.quick_reply_buttons,
+            "prefix": template.prefix,
+            "status": template.status(),
+            # "__str__": template.__str__,
             # "tags": [x.name for x in page.tags.all()],
             # "triggers": [x.name for x in page.triggers.all()],
             #
