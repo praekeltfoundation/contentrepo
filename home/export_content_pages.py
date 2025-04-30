@@ -314,7 +314,7 @@ class ExportWriter:
         for row in self.rows:
             worksheet.append(row.to_tuple())
         _set_xlsx_styles(workbook, worksheet)
-        workbook.save(response)
+        workbook.save(response)  # type: ignore
 
 
 def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
