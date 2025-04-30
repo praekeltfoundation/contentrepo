@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Separate template submission from saving
 - Added setting WHATSAPP_ALLOW_NAMED_VARIABLES for future named variable support (Not supported by Turn yet)
 - Added PyParsing for parsing of template variables
+- Added migration to migrate ContentPage templates to standalone templates
 ### Removed
 ### Fixed
 - Resubmit templates when button titles change
