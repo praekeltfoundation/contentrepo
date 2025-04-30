@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Resubmit templates when button titles change
 - Fix slug not populated in wa template export
+- Fix export issue for contentpages because of Standalone Templates
 ### Security
 -->
 
