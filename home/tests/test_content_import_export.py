@@ -227,7 +227,11 @@ def _normalise_pks(page: DbDict, min_pk: int) -> DbDict:
         ]
         fields = fields | {"related_pages": related_pages}
     if "whatsapp_body" in fields:
-        body = [_normalise_button_pks(b, min_pk) for b in fields["whatsapp_body"]]
+        body = [
+            _normalise_button_pks(b, min_pk)
+            for b in fields["whatsapp_body"]
+            if b["type"] != "Whatsapp_Template"
+        ]
         body = [_normalise_list_pks(b, min_pk) for b in body]
         fields = fields | {"whatsapp_body": body}
     return page | {"fields": fields, "pk": page["pk"] - min_pk}
@@ -2874,4 +2878,14 @@ class TestExportImportRoundtrip:
 
         impexp.export_reimport()
         imported = impexp.get_page_json()
+        assert imported == orig
+
+    def test_export_page_with_whatsapp_template(self, csv_impexp: ImportExport) -> None:
+        csv_impexp.import_whatsapp_template_file("whatsapp-template-simple.csv")
+        csv_impexp.import_file("content_with_simple_wa_template.csv")
+        orig = csv_impexp.get_page_json()
+
+        csv_impexp.export_content()
+
+        imported = csv_impexp.get_page_json()
         assert imported == orig
