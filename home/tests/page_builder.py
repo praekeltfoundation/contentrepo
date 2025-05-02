@@ -17,6 +17,7 @@ from home.models import (
     USSDBlock,
     ViberBlock,
     WhatsappBlock,
+    WhatsAppTemplate,
 )
 
 TPage = TypeVar("TPage", bound=Page)
@@ -178,6 +179,17 @@ class WABlk(ContentBlock):
 
 
 @dataclass
+class WATpl(ContentBlock):
+    BLOCK_TYPE_STR = "Whatsapp_Template"
+    BLOCK_TYPE = WhatsAppTemplate
+
+    template: WhatsAppTemplate = field(default_factory=WhatsAppTemplate)
+
+    def to_block(self) -> Any:
+        return (self.BLOCK_TYPE_STR, self.template)
+
+
+@dataclass
 class SBlk(ContentBlock):
     BLOCK_TYPE_STR = "SMS_Message"
     BLOCK_TYPE = SMSBlock
@@ -209,7 +221,7 @@ class VBlk(ContentBlock):
     # TODO: More body things.
 
 
-class WABody(ContentBody[WABlk]):
+class WABody(ContentBody[WABlk | WATpl]):
     ATTR_STR = "whatsapp"
 
 
@@ -278,8 +290,6 @@ class PageBuilder(Generic[TPage]):
         tags: Iterable[str] | None = None,
         triggers: Iterable[str] | None = None,
         quick_replies: Iterable[str] | None = None,
-        whatsapp_template_name: str | None = None,
-        whatsapp_template_category: str | None = None,
         translated_from: ContentPage | None = None,
         publish: bool = True,
     ) -> ContentPage:
@@ -292,10 +302,6 @@ class PageBuilder(Generic[TPage]):
             builder = builder.add_triggers(*triggers)
         if quick_replies:
             builder = builder.add_quick_replies(*quick_replies)
-        if whatsapp_template_name:
-            builder = builder.set_whatsapp_template_name(whatsapp_template_name)
-        if whatsapp_template_category:
-            builder = builder.set_whatsapp_template_category(whatsapp_template_category)
         if translated_from:
             builder = builder.translated_from(translated_from)
         return builder.build(publish=publish)
@@ -339,16 +345,6 @@ class PageBuilder(Generic[TPage]):
         for qr_str in qr_strs:
             qr, _ = ContentQuickReply.objects.get_or_create(name=qr_str)
             self.page.quick_replies.add(qr)
-        return self
-
-    def set_whatsapp_template_name(self, name: str) -> "PageBuilder[TPage]":
-        self.page.is_whatsapp_template = True
-        self.page.whatsapp_template_name = name
-        return self
-
-    def set_whatsapp_template_category(self, category: str) -> "PageBuilder[TPage]":
-        self.page.is_whatsapp_template = True
-        self.page.whatsapp_template_category = category
         return self
 
     def translated_from(self, page: TPage) -> "PageBuilder[TPage]":

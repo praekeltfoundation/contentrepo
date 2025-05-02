@@ -201,9 +201,8 @@ def body_field_representation(page: Any, request: Any) -> Any:
             try:
                 # if it's a template, we need to get the template content
                 if page.is_whatsapp_template:
-                    template = WhatsAppTemplate.objects.get(
-                        name=page.whatsapp_template_name, locale=page.locale
-                    )
+                    template_id = page.whatsapp_body.raw_data[0]["value"]
+                    template = WhatsAppTemplate.objects.get(id=template_id)
 
                     return OrderedDict(
                         [
