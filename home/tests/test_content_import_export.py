@@ -1922,7 +1922,7 @@ def mk_img(img_path: Path, title: str) -> Image:
     return img
 
 
-def mk_media(media_path: Path, title: str) -> File[Any]:
+def mk_media(media_path: Path, title: str) -> File:
     media = Media(title=title, file=File(media_path.open("rb"), name=media_path.name))
     media.save()
     return media

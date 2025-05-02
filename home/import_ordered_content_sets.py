@@ -2,7 +2,6 @@ import itertools
 from dataclasses import dataclass
 from logging import getLogger
 from queue import Queue
-from typing import Any
 
 from django.core.files.base import File  # type: ignore
 from wagtail.admin.panels import get_edit_handler  # type: ignore
@@ -27,7 +26,7 @@ class OrderedContentSetPage:
 class OrderedContentSetImporter:
     def __init__(
         self,
-        file: File[Any],
+        file: File,
         file_type: str,
         progress_queue: Queue[int],
     ):
