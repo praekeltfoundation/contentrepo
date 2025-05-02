@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Any
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -9,7 +10,7 @@ from wagtail.api.v2.serializers import (
 )
 from wagtail.api.v2.utils import get_object_detail_url
 
-from home.models import ContentPage, ContentPageRating, PageView
+from home.models import ContentPage, ContentPageRating, PageView, WhatsAppTemplate
 
 
 class TitleField(serializers.Field):
@@ -181,7 +182,7 @@ class BodyField(serializers.Field):
         return body_field_representation(page, request)
 
 
-def body_field_representation(page, request):
+def body_field_representation(page: Any, request: Any) -> Any:
     if "message" in request.GET:
         try:
             message = int(request.GET["message"]) - 1
@@ -198,6 +199,23 @@ def body_field_representation(page, request):
     ):
         if page.whatsapp_body != []:
             try:
+                # if it's a template, we need to get the template content
+                if page.is_whatsapp_template:
+                    template = WhatsAppTemplate.objects.get(
+                        name=page.whatsapp_template_name, locale=page.locale
+                    )
+
+                    return OrderedDict(
+                        [
+                            ("message", template.message),
+                            ("is_whatsapp_template", "True"),
+                            ("whatsapp_template_name", template.name),
+                            (
+                                "whatsapp_template_category",
+                                template.category,
+                            ),
+                        ]
+                    )
                 return OrderedDict(
                     [
                         ("message", message + 1),
@@ -215,12 +233,6 @@ def body_field_representation(page, request):
                             format_whatsapp_message(message, page, "whatsapp"),
                         ),
                         ("revision", page.get_latest_revision().id),
-                        ("is_whatsapp_template", page.is_whatsapp_template),
-                        ("whatsapp_template_name", page.whatsapp_template_name),
-                        (
-                            "whatsapp_template_category",
-                            page.whatsapp_template_category,
-                        ),
                     ]
                 )
             except IndexError:

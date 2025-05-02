@@ -1,6 +1,7 @@
 import json
 import queue
 from pathlib import Path
+from typing import Any
 
 import pytest
 from bs4 import BeautifulSoup
@@ -125,14 +126,14 @@ class TestContentPageAPI:
 
     def create_content_page(
         self,
-        parent=None,
-        title="default page",
-        tags=None,
-        body_type="whatsapp",
-        body_count=1,
-        publish=True,
-        web_body=None,
-    ):
+        parent: Any | None = None,
+        title: str = "default page",
+        tags: list[str] | None = None,
+        body_type: str | None = "whatsapp",
+        body_count: int = 1,
+        publish: bool = True,
+        web_body: Any | None = None,
+    ) -> Any:
         """
         Helper function to create pages needed for each test.
 
@@ -284,7 +285,7 @@ class TestContentPageAPI:
         content = json.loads(response.content)
         assert content["count"] == 3
 
-    def test_platform_filtering(self, uclient):
+    def test_platform_filtering(self, uclient: Any) -> None:
         """
         If a platform filter is provided, only pages with content for that
         platform are returned.
