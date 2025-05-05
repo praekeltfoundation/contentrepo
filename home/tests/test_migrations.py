@@ -178,7 +178,6 @@ class MigrationTests(TestCase):
         content_page = ContentPage(
             title="Test WhatsApp Template Page",
             slug="test-whatsapp-template-page",
-            is_whatsapp_template=True,
             whatsapp_template_name="Test Template",
             locale=locale,
             whatsapp_body=[

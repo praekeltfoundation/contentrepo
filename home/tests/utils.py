@@ -26,7 +26,6 @@ def create_page(
     title: str = "Test Title",
     parent: Any | None = None,
     tags: tuple[str, ...] = (),
-    is_whatsapp_template: bool = False,
     is_new_whatsapp_template: bool = False,
     add_example_values: bool = False,
     add_variation: bool = False,
@@ -128,8 +127,6 @@ def create_page(
         enable_whatsapp=True,
         whatsapp_title="WA Title",
         whatsapp_body=whatsapp_body,
-        is_whatsapp_template=is_whatsapp_template,
-        whatsapp_template_name=whatsapp_template_name,
     )
 
     if has_quick_replies:

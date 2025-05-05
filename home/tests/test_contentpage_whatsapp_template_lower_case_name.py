@@ -1,5 +1,6 @@
 import importlib
 
+import pytest
 from django.contrib.contenttypes.models import ContentType  # type: ignore
 from django.test import TestCase  # type: ignore
 from wagtail.models import Revision  # type: ignore
@@ -13,12 +14,14 @@ update_template_names = importlib.import_module(
 
 
 class TemplateNameMigration(TestCase):
+    @pytest.mark.xfail(
+        reason="This fails because we have removed the whatsapp_template_name field. "
+        "While there are ways to test a previous version of a model, the DB won't be synced "
+        "up to it, which means you can't perform any operations on it."
+    )
     def test_template_name_lower_case_migration(self) -> None:
-        page = create_page(
-            is_whatsapp_template=True, whatsapp_template_name="WA_Title_1"
-        )
+        page = create_page(whatsapp_template_name="WA_Title_1")
 
-        page.is_whatsapp_template = True
         revision = page.save_revision()
         revision.publish()
 
@@ -30,11 +33,15 @@ class TemplateNameMigration(TestCase):
         revision_page = revision.as_object()
         self.assertEqual(revision_page.whatsapp_template_name, "wa_title_1")
 
+    @pytest.mark.xfail(
+        reason="This fails because we have removed the whatsapp_template_name field. "
+        "While there are ways to test a previous version of a model, the DB won't be synced "
+        "up to it, which means you can't perform any operations on it."
+    )
     def test_contentpage_is_not_a_template(self) -> None:
         page = create_page()
         revision_not_template = page.latest_revision
 
-        page.is_whatsapp_template = False
         revision = page.save_revision()
         revision.publish()
 

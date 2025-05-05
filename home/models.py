@@ -772,7 +772,11 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
     @property
     def is_whatsapp_template(self) -> bool:
-        return self.whatsapp_body.raw_data[0]["type"] == "Whatsapp_Template"
+        return (
+            self.whatsapp_body.raw_data[0]["type"] == "Whatsapp_Template"
+            if self.whatsapp_body
+            else False
+        )
 
     def get_descendants(self, inclusive: bool = False) -> Any:
         return ContentPage.objects.descendant_of(self, inclusive)

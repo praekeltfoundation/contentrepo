@@ -5,7 +5,7 @@ from uuid import UUID
 import pytest
 from wagtail.models import Locale, Page  # type: ignore
 
-from home.models import ContentPage, ContentPageIndex, HomePage
+from home.models import ContentPage, ContentPageIndex, HomePage, WhatsAppTemplate
 from home.tests.utils import unwagtail
 
 from .helpers import set_profile_field_options
@@ -20,6 +20,7 @@ from .page_builder import (
     VBody,
     WABlk,
     WABody,
+    WATpl,
 )
 
 
@@ -109,7 +110,6 @@ def test_build_simple_pages() -> None:
             "Whatsapp_Message",
             {
                 "document": None,
-                "example_values": [],
                 "image": None,
                 "list_title": "",
                 "list_items": [],
@@ -164,7 +164,6 @@ def test_build_web_content() -> None:
     assert ha_menu.enable_whatsapp is False
     assert ha_menu.has_unpublished_changes is False
     assert ha_menu.include_in_footer is False
-    assert ha_menu.is_whatsapp_template is False
     assert ha_menu.live is True
     assert ha_menu.live_revision == ha_menu.latest_revision
     assert ha_menu.locale == Locale.objects.get(language_code="en")
@@ -184,8 +183,6 @@ def test_build_web_content() -> None:
     assert unwagtail(ha_menu.viber_body) == []
     assert ha_menu.viber_title == ""
     assert unwagtail(ha_menu.whatsapp_body) == []
-    assert ha_menu.whatsapp_template_category == "UTILITY"
-    assert ha_menu.whatsapp_template_name == ""
     assert ha_menu.whatsapp_title == ""
 
 
@@ -295,7 +292,6 @@ def test_build_variations() -> None:
             "Whatsapp_Message",
             {
                 "document": None,
-                "example_values": [],
                 "image": None,
                 "list_title": "",
                 "list_items": [],
@@ -305,8 +301,6 @@ def test_build_variations() -> None:
         )
         for msg in wa_msgs
     ]
-    assert cp_imp_exp.whatsapp_template_category == "UTILITY"
-    assert cp_imp_exp.whatsapp_template_name == ""
     assert cp_imp_exp.whatsapp_title == "WA import export data"
 
 
@@ -440,13 +434,22 @@ def test_whatsapp_template() -> None:
         title="HealthAlert menu",
         bodies=[WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")])],
     )
+
+    template = WhatsAppTemplate.objects.create(
+        category="MARKETING",
+        name="template-health-info",
+        message="Test WhatsApp Template Message 1",
+        locale=Locale.objects.first(),
+    )
+    template = WATpl(
+        template=template,
+        message="Test WhatsApp Template Message 1",
+    )
     health_info = PageBuilder.build_cp(
         parent=ha_menu,
         slug="health-info",
         title="health info",
-        bodies=[WABody("health info", [WABlk("*Health information* WA")])],
-        whatsapp_template_category="MARKETING",
-        whatsapp_template_name="template-health-info",
+        bodies=[WABody("health info", [template])],
     )
 
     assert isinstance(ha_menu, ContentPage)
@@ -456,8 +459,10 @@ def test_whatsapp_template() -> None:
     assert isinstance(health_info, ContentPage)
     assert health_info.depth == 5
     assert health_info.is_whatsapp_template is True
-    assert health_info.whatsapp_template_category == "MARKETING"
-    assert health_info.whatsapp_template_name == "template-health-info"
+    template_id = health_info.whatsapp_body.raw_data[0]["value"]
+    template = WhatsAppTemplate.objects.get(id=template_id)
+    assert template.name == "template-health-info"
+    assert template.category == "MARKETING"
 
 
 @pytest.mark.django_db
