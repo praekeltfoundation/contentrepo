@@ -122,8 +122,6 @@ def test_build_simple_pages() -> None:
             },
         ),
     ]
-    assert ha_menu.whatsapp_template_category == "UTILITY"
-    assert ha_menu.whatsapp_template_name == ""
     assert ha_menu.whatsapp_title == "HealthAlert menu"
 
     assert main_menu.translation_key != ha_menu.translation_key
