@@ -180,7 +180,7 @@ class ContentUploadThread(UploadThread):
         self.locale = locale
         super().__init__(**kwargs)
 
-    def run(self):
+    def run(self) -> None:
         warnings = []
         try:
             importer = import_content(
