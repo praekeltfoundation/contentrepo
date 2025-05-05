@@ -14,7 +14,7 @@ from wagtail.models import Locale  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 
 from home.import_helpers import ImportException, JSON_loader
-from home.models import Assessment, ContentPage, WhatsAppTemplate  # type: ignore
+from home.models import Assessment, WhatsAppTemplate  # type: ignore
 
 PageId = tuple[str, Locale]
 
