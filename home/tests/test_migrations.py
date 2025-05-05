@@ -1,13 +1,30 @@
 import importlib
 
+import pytest
+from django.contrib.contenttypes.models import ContentType  # type: ignore
 from django.test import TestCase  # type: ignore
 from wagtail.models import Locale, Page, Site  # type: ignore
 
-from home.models import ContentPage, HomePage, OrderedContentSet, WhatsAppTemplate
+from home.models import (
+    ContentPage,
+    HomePage,
+    OrderedContentSet,
+    Revision,
+    WhatsAppTemplate,
+)
+from home.tests.utils import create_page
 
 rename_duplicate_slugs_0029 = importlib.import_module(
     "home.migrations.0029_deduplicate_slugs"
 ).rename_duplicate_slugs
+
+add_previous_template_names = importlib.import_module(
+    "home.migrations.0030_contentpage_whatsapp_template_name"
+).add_previous_template_names
+
+update_template_names = importlib.import_module(
+    "home.migrations.0041_contentpage_whatsapp_template_lower_case_name"
+).update_template_names
 
 rename_duplicate_slugs_0085 = importlib.import_module(
     "home.migrations.0086_orderedcontentset_set_locale_and_add_slug"
@@ -168,6 +185,79 @@ class MigrationTests(TestCase):
             WhatsAppTemplate.SubmissionStatus.NOT_SUBMITTED_YET,
         )
 
+    @pytest.mark.xfail(
+        reason="This fails because we have removed the whatsapp_template_name field. "
+        "While there are ways to test a previous version of a model, the DB won't be synced "
+        "up to it, which means you can't perform any operations on it."
+    )
+    def test_backfills_template_name(self) -> None:
+        """
+        Should fill in the template name in all pages and all their revisions, ignoring
+        any non-templates
+        """
+        page = create_page()
+        revision_not_template = page.latest_revision
+        page.is_whatsapp_template = True
+        revision = page.save_revision()
+        revision.publish()
+
+        add_previous_template_names(ContentType, ContentPage, Revision)
+
+        page.refresh_from_db()
+        self.assertEqual(page.whatsapp_template_name, f"WA_Title_{revision.pk}")
+        revision.refresh_from_db()
+        revision_page = revision.as_object()
+        self.assertEqual(
+            revision_page.whatsapp_template_name, f"WA_Title_{revision.pk}"
+        )
+        revision_not_template.refresh_from_db()
+        revision_not_template_page = revision_not_template.as_object()
+        self.assertEqual(revision_not_template_page.whatsapp_template_name, "")
+
+    @pytest.mark.xfail(
+        reason="This fails because we have removed the whatsapp_template_name field. "
+        "While there are ways to test a previous version of a model, the DB won't be synced "
+        "up to it, which means you can't perform any operations on it."
+    )
+    def test_template_name_lower_case_migration(self) -> None:
+        page = create_page(whatsapp_template_name="WA_Title_1")
+
+        revision = page.save_revision()
+        revision.publish()
+
+        update_template_names(ContentPage, ContentType, Revision)
+
+        page.refresh_from_db()
+        self.assertEqual(page.whatsapp_template_name, "wa_title_1")
+        revision.refresh_from_db()
+        revision_page = revision.as_object()
+        self.assertEqual(revision_page.whatsapp_template_name, "wa_title_1")
+
+    @pytest.mark.xfail(
+        reason="This fails because we have removed the whatsapp_template_name field. "
+        "While there are ways to test a previous version of a model, the DB won't be synced "
+        "up to it, which means you can't perform any operations on it."
+    )
+    def test_contentpage_is_not_a_template(self) -> None:
+        page = create_page()
+        revision_not_template = page.latest_revision
+
+        revision = page.save_revision()
+        revision.publish()
+
+        update_template_names(ContentPage, ContentType, Revision)
+
+        self.assertEqual(page.whatsapp_template_name, "")
+
+        revision_not_template.refresh_from_db()
+        revision_not_template_page = revision_not_template.as_object()
+        self.assertEqual(revision_not_template_page.whatsapp_template_name, "")
+
+    @pytest.mark.xfail(
+        reason="This fails because we have removed the whatsapp template fields. "
+        "While there are ways to test a previous version of a model, the DB won't be synced "
+        "up to it, which means you can't perform any operations on it."
+    )
     def test_migrate_content_page_templates_to_standalone_templates(self) -> None:
         """
         When a ContentPage has is_whatsapp_template=True, the migration should create a WhatsAppTemplate

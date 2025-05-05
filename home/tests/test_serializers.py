@@ -470,7 +470,6 @@ class TestFormatMessage:
             "value": {
                 "image": None,
                 "document": None,
-                "example_values": [],
                 "media": None,
                 "message": "WhatsApp 1",
                 "variation_messages": [
@@ -502,7 +501,6 @@ class TestFormatMessage:
             "value": {
                 "image": None,
                 "document": None,
-                "example_values": [],
                 "media": None,
                 "message": "WhatsApp 1",
                 "variation_messages": [],
