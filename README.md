@@ -18,13 +18,13 @@
 | home/content\_import\_export.py                                                              |       38 |        8 |     79% |41-45, 49-53 |
 | home/export\_assessments.py                                                                  |      108 |        1 |     99% |       227 |
 | home/export\_content\_pages.py                                                               |      226 |        2 |     99% |  165, 199 |
-| home/export\_whatsapp\_templates.py                                                          |      113 |        6 |     95% |51, 79-81, 85, 198 |
+| home/export\_whatsapp\_templates.py                                                          |      113 |        4 |     96% |51, 80, 85, 198 |
 | home/forms.py                                                                                |       13 |        0 |    100% |           |
 | home/import\_assessments.py                                                                  |      258 |        9 |     97% |39, 61, 133-134, 279, 281-284 |
-| home/import\_content\_pages.py                                                               |      555 |       12 |     98% |140-141, 311, 359-360, 713, 923-930 |
+| home/import\_content\_pages.py                                                               |      558 |       14 |     97% |140-141, 202-203, 316, 364-365, 718, 928-935 |
 | home/import\_helpers.py                                                                      |      168 |        8 |     95% |154, 156, 176, 184-189 |
 | home/import\_ordered\_content\_sets.py                                                       |       91 |        1 |     99% |       230 |
-| home/import\_whatsapp\_templates.py                                                          |      178 |       12 |     93% |32, 52, 190-195, 204-205, 230, 252-255, 259 |
+| home/import\_whatsapp\_templates.py                                                          |      181 |        8 |     96% |32, 54, 211-212, 256-259, 263 |
 | home/management/commands/broken\_links\_clean\_up.py                                         |       31 |        0 |    100% |           |
 | home/management/commands/change\_related\_tag\_to\_related\_page.py                          |       26 |        0 |    100% |           |
 | home/management/commands/import\_json\_content\_turn.py                                      |       57 |        5 |     91% |     88-92 |
@@ -141,7 +141,7 @@
 | home/whatsapp.py                                                                             |      231 |        1 |     99% |        19 |
 | home/whatsapp\_template\_import\_export.py                                                   |       19 |        0 |    100% |           |
 | home/xlsx\_helpers.py                                                                        |        5 |        0 |    100% |           |
-|                                                                                    **TOTAL** | **4770** |  **423** | **91%** |           |
+|                                                                                    **TOTAL** | **4776** |  **419** | **91%** |           |
 
 
 ## Setup coverage badge
