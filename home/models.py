@@ -1487,7 +1487,9 @@ class TemplateQuickReplyContent(ItemBase):
 
 
 class WhatsAppTemplate(
+    WorkflowMixin,
     DraftStateMixin,
+    LockableMixin,
     ClusterableModel,
     RevisionMixin,
     index.Indexed,
@@ -1512,10 +1514,21 @@ class WhatsAppTemplate(
         FAILED = "FAILED", _("Failed")
 
     def get_submission_status_display(self) -> str:
-        return self.SubmissionStatus(self.submission_status).label
+        return self.SubmissionStatus(self.submission_status).label  # type: ignore
 
-    get_submission_status_display.admin_order_field = "submission status"
-    get_submission_status_display.short_description = "Submission status"
+    get_submission_status_display.admin_order_field = "submission status"  # type: ignore
+    get_submission_status_display.short_description = "Submission status"  # type: ignore
+
+    _revisions = GenericRelation(
+        "wagtailcore.Revision", related_query_name="whatsapp_template"
+    )
+    workflow_states = GenericRelation(
+        "wagtailcore.WorkflowState",
+        content_type_field="base_content_type",
+        object_id_field="object_id",
+        related_query_name="whatsapp_template",
+        for_concrete_model=False,
+    )
 
     name = models.CharField(max_length=512, blank=True, default="")
     category = models.CharField(
@@ -1587,17 +1600,37 @@ class WhatsAppTemplate(
     ]
 
     @property
-    def quick_reply_buttons(self):
+    def quick_reply_buttons(self) -> list[str]:
         return self.template_quick_reply_items.all().values_list("tag__name", flat=True)
 
     @property
-    def prefix(self):
+    def prefix(self) -> str:
         return self.name.lower().replace(" ", "_")
 
-    def status(self):
-        return "Live" if self.live else "Draft"
+    @property
+    def revisions(self) -> GenericRelation:
+        return self._revisions
 
-    def __str__(self):
+    def status(self) -> str:
+        workflow_state = self.workflow_states.last()
+        workflow_state_status = workflow_state.status if workflow_state else None
+
+        if self.live:
+            if workflow_state_status == "in_progress":
+                status = "Live + In Moderation"
+            elif self.has_unpublished_changes:
+                status = "Live + Draft"
+            else:
+                status = "Live"
+        else:
+            if workflow_state_status == "in_progress":
+                status = "In Moderation"
+            else:
+                status = "Draft"
+
+        return status
+
+    def __str__(self) -> str:
         """String repr of this snippet."""
         return self.name
 
