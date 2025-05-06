@@ -527,7 +527,9 @@ class TestImportExport:
             submission_status="NOT_SUBMITTED_YET",
             submission_result="test result",
         )
-        csv_bytes = csv_impexp.import_file("whatsapp-template-simple.csv")
+        csv_bytes = csv_impexp.import_file(
+            "whatsapp-template-simple-no-linked-pages.csv"
+        )
         content = csv_impexp.export_whatsapp_template()
         csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
 
@@ -546,7 +548,9 @@ class TestImportExport:
         """
         Importing an invalid CSV file leaves the db as-is.
         """
-        csv_bytes = csv_impexp.import_file("whatsapp-template-simple.csv")
+        csv_bytes = csv_impexp.import_file(
+            "whatsapp-template-simple-no-linked-pages.csv"
+        )
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("whatsapp-template-broken.csv")
         assert e.value.message == ["Language code not found: "]
