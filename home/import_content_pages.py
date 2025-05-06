@@ -197,7 +197,12 @@ class ContentImporter:
         self, items_dict: dict[PageId, dict[int, list[dict[str, Any]]]], item_type: str
     ) -> None:
         for (slug, locale), messages in items_dict.items():
-            page = ContentPage.objects.get(slug=slug, locale=locale)
+            try:
+                page = ContentPage.objects.get(slug=slug, locale=locale)
+            except ContentPage.DoesNotExist:
+                raise ImportException(
+                    f"No content pages found with slug '{slug}' and locale '{locale}' for go_to_page {item_type[:-1]} on page '{slug}'"
+                )
             for message_index, items in messages.items():
                 for item in items:
                     title = item["title"]

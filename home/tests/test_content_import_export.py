@@ -1028,7 +1028,9 @@ class TestImportExport:
         Importing a page with a linked WhatsApp template should link the template
         to the page.
         """
-        csv_impexp.import_whatsapp_template_file("whatsapp-template-simple.csv")
+        csv_impexp.import_whatsapp_template_file(
+            "whatsapp-template-simple-no-linked-pages.csv"
+        )
         csv_impexp.import_file("content_with_simple_wa_template.csv")
 
         [content_page] = ContentPage.objects.all()
@@ -2881,7 +2883,9 @@ class TestExportImportRoundtrip:
         assert imported == orig
 
     def test_export_page_with_whatsapp_template(self, csv_impexp: ImportExport) -> None:
-        csv_impexp.import_whatsapp_template_file("whatsapp-template-simple.csv")
+        csv_impexp.import_whatsapp_template_file(
+            "whatsapp-template-simple-no-linked-pages.csv"
+        )
         csv_impexp.import_file("content_with_simple_wa_template.csv")
         orig = csv_impexp.get_page_json()
 
