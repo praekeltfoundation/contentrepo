@@ -17,6 +17,7 @@ from wagtail.models import Locale  # type: ignore
 from wagtail.snippets.models import register_snippet  # type: ignore
 
 from home.assessment_import_export import import_assessment
+from home.content_import_export import import_content
 from home.import_helpers import ImportException
 from home.models import (
     Assessment,
@@ -221,6 +222,22 @@ class ImportExport:
     def read_bytes(self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE) -> bytes:
         return (path_base / path_str).read_bytes()
 
+    def import_content(self, content_bytes: bytes, **kw: Any) -> None:
+        """
+        Import given content in the configured format with the configured importer.
+        """
+        import_content(BytesIO(content_bytes), self.format.upper(), Queue(), **kw)
+
+    def import_content_file(
+        self, path_str: str, path_base: Path = IMP_EXP_DATA_BASE, **kw: Any
+    ) -> bytes:
+        """
+        Import given content file in the configured format with the configured importer.
+        """
+        content = self.read_bytes(path_str, path_base)
+        self.import_content(content, **kw)
+        return content
+
     def import_assessment(self, content_bytes: bytes, **kw: Any) -> None:
         """
         Import given content in the configured format with the configured importer.
@@ -352,10 +369,11 @@ class TestImportExportRoundtrip:
         Importing a simple CSV file with one whatsapp template and
         one question and export it
 
-        (This uses whatsapp-template-simple.csv)
+        (This uses content2.csv and whatsapp-template-simple.csv)
 
         """
 
+        csv_impexp.import_content_file("content2.csv")
         csv_bytes = csv_impexp.import_file("whatsapp-template-simple.csv")
         content = csv_impexp.export_whatsapp_template()
         csv, export = csv_impexp.csvs2dicts(csv_bytes, content)

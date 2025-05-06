@@ -14,7 +14,7 @@ from wagtail.models import Locale  # type: ignore
 from wagtail.models.sites import Site  # type: ignore
 
 from home.import_helpers import ImportException, JSON_loader
-from home.models import Assessment, WhatsAppTemplate  # type: ignore
+from home.models import Assessment, ContentPage, WhatsAppTemplate  # type: ignore
 
 PageId = tuple[str, Locale]
 
@@ -36,7 +36,9 @@ class WhatsAppTemplateImporter:
         self.purge = purge in ["True", "yes", True]
         self.locale = locale
         self.locale_map: dict[str, Locale] = {}
-        self.go_to_page_buttons: dict[PageId, list[dict[str, Any]]] = defaultdict(list)
+        self.go_to_page_buttons: dict[PageId, dict[int, list[dict[str, Any]]]] = (
+            defaultdict(lambda: defaultdict(list))
+        )
 
     def locale_from_language_code(self, lang_code_entry: str) -> Locale:
         if lang_code_entry not in self.locale_map:
@@ -66,6 +68,7 @@ class WhatsAppTemplateImporter:
         self.set_progress("Deleted existing WhatsApp Template", 10)
 
         self.process_rows(rows)
+        self.add_go_to_page_items(self.go_to_page_buttons, "buttons")
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
         for i, row in reversed(list(enumerate(rows, start=2))):
@@ -97,7 +100,7 @@ class WhatsAppTemplateImporter:
         template.save()
 
         buttons = self._create_interactive_items(
-            row.buttons, template.name, locale, "button"
+            row.buttons, template, template.name, locale, "button"
         )
         template.buttons = buttons
 
@@ -169,6 +172,35 @@ class WhatsAppTemplateImporter:
         # page_id_rows = group_rows_by_page_id(rows)
         return rows
 
+    def add_go_to_page_items(
+        self, items_dict: dict[PageId, dict[int, list[dict[str, Any]]]], item_type: str
+    ) -> None:
+        for (template_name, locale), items in items_dict.items():
+            template = WhatsAppTemplate.objects.get(name=template_name, locale=locale)
+            template_buttons = template.buttons.get_prep_value()
+            for _, buttons in items.items():
+                for button in buttons:
+                    title = button["title"]
+                    try:
+                        related_page = ContentPage.objects.get(
+                            slug=button["slug"], locale=locale
+                        )
+                    except ContentPage.DoesNotExist:
+                        raise ImportException(
+                            f"No pages found with slug '{button['slug']}' and locale "
+                            f"'{locale}' for go_to_page {item_type[:-1]} '{title}' on "
+                            f"template '{template_name}'",
+                        )
+                    btn = {
+                        "id": uuid4(),
+                        "type": "go_to_page",
+                        "value": {"page": related_page.id, "title": title},
+                    }
+                    template_buttons.insert(button["index"], btn)
+                    template.buttons = template_buttons
+            template.full_clean()
+            template.save()
+
     def set_progress(self, message: str, progress: int) -> None:
         self.progress_queue.put_nowait(progress)
 
@@ -182,7 +214,8 @@ class WhatsAppTemplateImporter:
     def _create_interactive_items(
         self,
         row_field: list[dict[str, Any]],
-        template_name: str,
+        template: WhatsAppTemplate,
+        slug: str,
         locale: Locale,
         item_type: str,
     ) -> list[dict[str, Any]]:
@@ -201,12 +234,8 @@ class WhatsAppTemplateImporter:
                     item["index"] = index
                     if item_type == "button":
                         go_to_page = self.go_to_page_buttons
-                    else:
-                        raise ImportException(
-                            f"{item_type} with invalid type '{item['type']}'"
-                        )
-                    page_gtp = go_to_page[(template_name, locale)]
-                    page_gtp.append(item)
+                    page_gtp = go_to_page[(slug, locale)]
+                    page_gtp[len(template.message)].append(item)
                 elif item["type"] == "go_to_form":
                     form = self._get_form(
                         item["slug"],
