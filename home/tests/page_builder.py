@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import asdict, dataclass, field
 from typing import Any, ClassVar, Generic, TypeVar
 
@@ -141,7 +141,7 @@ TCBlk = TypeVar("TCBlk", bound=ContentBlock, covariant=True)
 class ContentBody(Generic[TCBlk]):
     ATTR_STR: ClassVar[str]
     title: str
-    blocks: list[TCBlk]
+    blocks: Sequence[TCBlk]
     enable: bool = True
 
     def set_on(self, page: ContentPage) -> None:
