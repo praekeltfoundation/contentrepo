@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, Optional, TypeVar
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
@@ -31,7 +31,6 @@ from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.images.models import Image
 from wagtail.models import (
     DraftStateMixin,
     Locale,
@@ -759,24 +758,37 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         )
 
     @property
-    def whatsapp_template_prefix(self) -> str:
-        return self.whatsapp_title.lower().replace(" ", "_")
-
-    @property
-    def whatsapp_template_body(self) -> str:
-        return self.whatsapp_body.raw_data[0]["value"]["message"]
-
-    @property
-    def whatsapp_template_image(self) -> Image:
-        return self.whatsapp_body.raw_data[0]["value"]["image"]
-
-    @property
     def is_whatsapp_template(self) -> bool:
         return (
             self.whatsapp_body.raw_data[0]["type"] == "Whatsapp_Template"
             if self.whatsapp_body
             else False
         )
+
+    @property
+    def has_whatsapp_template(self) -> bool:
+        """
+        Returns True if the page has a whatsapp template
+        """
+        return (
+            any(
+                block["type"] == "Whatsapp_Template"
+                for block in self.whatsapp_body.raw_data
+            )
+            if self.whatsapp_body
+            else False
+        )
+
+    @property
+    def whatsapp_template_or_none(self) -> Optional["WhatsAppTemplate"]:
+        """
+        Returns the whatsapp template if it exists
+        """
+        if self.has_whatsapp_template:
+            for block in self.whatsapp_body.raw_data:
+                if block["type"] == "Whatsapp_Template":
+                    return WhatsAppTemplate.objects.get(id=block["value"])
+        return None
 
     def get_descendants(self, inclusive: bool = False) -> Any:
         return ContentPage.objects.descendant_of(self, inclusive)

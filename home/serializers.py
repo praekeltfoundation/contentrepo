@@ -10,7 +10,7 @@ from wagtail.api.v2.serializers import (
 )
 from wagtail.api.v2.utils import get_object_detail_url
 
-from home.models import ContentPage, ContentPageRating, PageView, WhatsAppTemplate
+from home.models import ContentPage, ContentPageRating, PageView
 
 
 class TitleField(serializers.Field):
@@ -200,13 +200,10 @@ def body_field_representation(page: Any, request: Any) -> Any:
         if page.whatsapp_body != []:
             try:
                 # if it's a template, we need to get the template content
-                if page.is_whatsapp_template:
-                    template_id = page.whatsapp_body.raw_data[0]["value"]
-                    template = WhatsAppTemplate.objects.get(id=template_id)
-
+                if template := page.whatsapp_template_or_none:
                     return OrderedDict(
                         [
-                            ("message", template.message),
+                            ("text", template.message),
                             ("is_whatsapp_template", "True"),
                             ("whatsapp_template_name", template.name),
                             (

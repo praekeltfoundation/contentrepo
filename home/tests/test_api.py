@@ -967,7 +967,7 @@ class TestWhatsAppMessages:
 
         assert body["is_whatsapp_template"]
         assert body["whatsapp_template_name"] == "test_template"
-        assert body["message"] == "Test WhatsApp Template Message 1"
+        assert body["text"] == "Test WhatsApp Template Message 1"
         assert body["whatsapp_template_category"] == "MARKETING"
 
     def test_whatsapp_detail_view_with_variations(self, uclient: Any) -> None:
