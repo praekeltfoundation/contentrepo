@@ -26,7 +26,7 @@ class OrderedContentSetPage:
 class OrderedContentSetImporter:
     def __init__(
         self,
-        file: File,
+        file: File,  # type: ignore
         file_type: str,
         progress_queue: Queue[int],
     ):

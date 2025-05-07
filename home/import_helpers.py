@@ -183,8 +183,7 @@ def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
 
     elif isinstance(errors, ValidationError):
         field_name = list(errs.keys())[0]
-        error_messages = errors.messages[0]
-        error_message = [f"{field_name} - {error_messages}"]
+        error_message = [f"{field_name} - {errors.messages[0]}"]
     else:
         pass
 

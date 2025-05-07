@@ -3,7 +3,7 @@ import importlib
 from django.test import TestCase  # type: ignore
 from wagtail.models import Locale, Page, Site  # type: ignore
 
-from home.models import ContentPage, OrderedContentSet, WhatsAppTemplate
+from home.models import ContentPage, HomePage, OrderedContentSet, WhatsAppTemplate
 
 rename_duplicate_slugs_0029 = importlib.import_module(
     "home.migrations.0029_deduplicate_slugs"
@@ -167,3 +167,66 @@ class MigrationTests(TestCase):
             template.submission_status,
             WhatsAppTemplate.SubmissionStatus.NOT_SUBMITTED_YET,
         )
+
+    def test_migrate_content_page_templates_to_standalone_templates(self) -> None:
+        """
+        When a ContentPage has is_whatsapp_template=True, the migration should create a WhatsAppTemplate
+        with the correct fields, set the ContentPage's whatsapp_body to the new WhatsAppTemplate, and set is_whatsapp_template=False.
+        """
+        locale = Locale.objects.get(language_code="en")
+        root_page = HomePage.objects.first()
+        content_page = ContentPage(
+            title="Test WhatsApp Template Page",
+            slug="test-whatsapp-template-page",
+            is_whatsapp_template=True,
+            whatsapp_template_name="Test Template",
+            locale=locale,
+            whatsapp_body=[
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "Sample body",
+                    },
+                }
+            ],
+        )
+        root_page.add_child(instance=content_page)
+        content_page.whatsapp_template_category = (
+            ContentPage.WhatsAppTemplateCategory.UTILITY
+        )
+        content_page.save_revision().publish()
+
+        migration_module = importlib.import_module(
+            "home.migrations.0098_migrate_content_page_templates_to_standalone_templates"
+        )
+        migrate_func = (
+            migration_module.migrate_content_page_templates_to_standalone_templates
+        )
+
+        migrate_func(ContentPage, WhatsAppTemplate)
+
+        content_page.refresh_from_db()
+        whatsapp_templates = WhatsAppTemplate.objects.filter(
+            name="Test Template", locale=locale
+        )
+        self.assertEqual(whatsapp_templates.count(), 1)
+        whatsapp_template = whatsapp_templates.first()
+
+        self.assertEqual(whatsapp_template.name, content_page.whatsapp_template_name)
+        self.assertEqual(whatsapp_template.locale, content_page.locale)
+        self.assertEqual(whatsapp_template.message, "Sample body")
+        self.assertEqual(
+            whatsapp_template.category, content_page.whatsapp_template_category
+        )
+        self.assertEqual(
+            whatsapp_template.submission_status,
+            WhatsAppTemplate.SubmissionStatus.NOT_SUBMITTED_YET,
+        )
+        self.assertEqual(whatsapp_template.submission_result, "")
+
+        self.assertFalse(content_page.is_whatsapp_template)
+        self.assertEqual(len(content_page.whatsapp_body), 1)
+        self.assertEqual(content_page.whatsapp_body[0].value, whatsapp_template)
+
+        whatsapp_template.delete()
+        content_page.delete()
