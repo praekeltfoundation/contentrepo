@@ -117,6 +117,7 @@ def has_previous_message(message_index, content_page, platform):
 def format_whatsapp_message(message_index, content_page, platform):
     # Flattens the variation_messages field in the whatsapp message
     text = content_page.whatsapp_body._raw_data[message_index]
+
     variation_messages = text["value"].get("variation_messages", [])
     new_var_messages = []
     for var in variation_messages:
@@ -155,6 +156,140 @@ def format_whatsapp_message(message_index, content_page, platform):
             for item in current_list_items
         ]
         text["value"]["list_items"] = list_items
+
+    return text
+
+
+# def format_whatsapp_template(message_index, content_page, block):
+#     print("Running format_whatsapp_template")
+#     # text = content_page.whatsapp_body._raw_data[message_index]
+#     print(f"Is you block? {block.value.category}")
+#     template_details = OrderedDict(
+#         [
+#             ("template_name", block.value.name),
+#             ("template_category", block.value.category),
+#             ("template_message", block.value.message),
+#         ]
+#     )
+
+#     return template_details
+
+
+def format_whatsapp_body(message_index, content_page):
+    print("Running format_whatsapp_body")
+    # text = content_page.whatsapp_body._raw_data[message_index]
+    message_number = 0
+    messages = []
+    for block in content_page.whatsapp_body:
+        message_number += 1  # noqa: SIM113
+        print()
+        print(f"Message {message_number} = {block.block_type}")
+        print(f"Block type = {block.block_type}")
+
+        if str(block.block_type) == "Whatsapp_Template":
+            print(f"Message {message_number} is a template")
+            template = block.value
+            messages.append(
+                OrderedDict(
+                    [
+                        ("message_type", block.block_type),
+                        ("message_number", message_number),
+                        ("template_id", template.id),
+                        ("template_name", template.name),
+                        ("template_category", template.category),
+                        ("template_image", template.image),
+                        ("template_message", template.message),
+                        ("template_buttons", list(template.buttons.raw_data)),
+                        ("template_submission_name", template.submission_name),
+                        ("template_submission_status", template.submission_status),
+                        ("template_submission_result", template.submission_result),
+                        ("template_id", template.id),
+                    ]
+                )
+            )
+
+        else:
+            print(f"Message {message_number} is not a template")
+            message = block.value
+            messages.append(
+                OrderedDict(
+                    [
+                        ("message_type", block.block_type),
+                        ("message_number", message_number),
+                        ("message_id", block.id),
+                        ("message_image", message["image"]),
+                        ("message_media", message["media"]),
+                        ("message_document", message["document"]),
+                        ("message_message", message["message"]),
+                        ("message_buttons", message["buttons"]),
+                        ("message_list_items", message["list_items"]),
+                        ("message_list_title", message["list_title"]),
+                        ("message_next_prompt", message["next_prompt"]),
+                        ("message_example_values", message["example_values"]),
+                        ("message_variation_messages", message["variation_messages"]),
+                    ]
+                )
+            )
+
+    print(f"Messages is {messages}")
+
+    return messages
+
+
+def format_whatsapp_message_v3(message_index, content_page, platform):
+    print(f"Running format_whatsapp_message_v3 on msg index {message_index}")
+    text = content_page.whatsapp_body._raw_data[message_index]
+
+    # try:
+    #     # If we can parse the message content as an int, it is a template
+    #     template_id = int(text["value"])
+    #     print(f"Template object found, id is {template_id}")
+    # except Exception:
+
+    # Flattens the variation_messages field in the whatsapp message
+    variation_messages = text["value"].get("variation_messages", [])
+    if variation_messages != []:
+        new_var_messages = []
+        for var in variation_messages:
+            new_var_messages.append(
+                {
+                    "profile_field": var["value"]["variation_restrictions"][0]["type"],
+                    "value": var["value"]["variation_restrictions"][0]["value"],
+                    "message": var["value"]["message"],
+                }
+            )
+        text["value"]["variation_messages"] = new_var_messages
+
+        # For backwards compatibility we are exposing the new format under list_items_v2, and maintaining list_items the way it was.
+        # For example:
+        # New Format:
+        # {
+        #     "id": "179bf4be-2bea-49db-8558-51f7da8b888f",
+        #     "type": "next_message",
+        #     "value": {
+        #         "title": "English"
+        #     }
+        # }
+        #
+        # Old Format:
+        # {
+        #     "id": "8db577c1-67ab-49e1-825a-960b891374f4",
+        #     "type": "item",
+        #     "value": "English"
+        # }
+        if text["value"]["list_items"]:
+            text["value"]["list_items_v2"] = text["value"]["list_items"]
+
+            current_list_items = text["value"]["list_items"]
+            list_items = [
+                {
+                    "id": item["id"],
+                    "type": "item",
+                    "value": item["value"]["title"],
+                }
+                for item in current_list_items
+            ]
+            text["value"]["list_items"] = list_items
 
     return text
 
@@ -320,6 +455,147 @@ def body_field_representation(page, request):
     )
 
 
+def body_field_representation_v3(page, request):
+    print()
+    specific_message = False
+    print(f"Processing body field for page '{page.title}'")
+    if "message" in request.GET:
+        try:
+            message = int(request.GET["message"]) - 1
+            specific_message = True
+        except ValueError:
+            raise ValidationError(
+                "Please insert a positive integer for message in " "the query string"
+            )
+    else:
+        message = 0
+
+    if "whatsapp" in request.GET and (
+        page.enable_whatsapp is True
+        or ("qa" in request.GET and request.GET["qa"] == "True")
+    ):
+        if page.whatsapp_body != []:
+            whatsapp_message_details = OrderedDict()
+            whatsapp_messages = format_whatsapp_body(message, page)
+
+            print("Going to return some results")
+            if specific_message:
+                print("Looking for specific message")
+                try:
+                    return OrderedDict(
+                        [
+                            ("message", message + 1),
+                            (
+                                "next_message",
+                                has_next_message(message, page, "whatsapp"),
+                            ),
+                            (
+                                "previous_message",
+                                has_previous_message(message, page, "whatsapp"),
+                            ),
+                            ("total_messages", len(page.whatsapp_body._raw_data)),
+                            (
+                                "text",
+                                whatsapp_message_details,
+                            ),
+                            ("revision", page.get_latest_revision().id),
+                        ]
+                    )
+                except IndexError:
+                    raise ValidationError("The requested message does not exist")
+            else:
+                return whatsapp_messages
+
+    elif "sms" in request.GET and (
+        page.enable_sms is True or ("qa" in request.GET and request.GET["qa"] == "True")
+    ):
+        if page.sms_body != []:
+            try:
+                return OrderedDict(
+                    [
+                        ("message", message + 1),
+                        (
+                            "next_message",
+                            has_next_message(message, page, "sms"),
+                        ),
+                        (
+                            "previous_message",
+                            has_previous_message(message, page, "sms"),
+                        ),
+                        ("total_messages", len(page.sms_body._raw_data)),
+                        ("text", page.sms_body._raw_data[message]["value"]),
+                    ]
+                )
+            except IndexError:
+                raise ValidationError("The requested message does not exist")
+    elif "ussd" in request.GET and (
+        page.enable_ussd is True
+        or ("qa" in request.GET and request.GET["qa"] == "True")
+    ):
+        if page.ussd_body != []:
+            try:
+                return OrderedDict(
+                    [
+                        ("message", message + 1),
+                        (
+                            "next_message",
+                            has_next_message(message, page, "ussd"),
+                        ),
+                        (
+                            "previous_message",
+                            has_previous_message(message, page, "ussd"),
+                        ),
+                        ("total_messages", len(page.ussd_body._raw_data)),
+                        ("text", page.ussd_body._raw_data[message]["value"]),
+                    ]
+                )
+            except IndexError:
+                raise ValidationError("The requested message does not exist")
+    elif "messenger" in request.GET and (
+        page.enable_messenger is True
+        or ("qa" in request.GET and request.GET["qa"] == "True")
+    ):
+        if page.messenger_body != []:
+            try:
+                return OrderedDict(
+                    [
+                        ("message", message + 1),
+                        (
+                            "next_message",
+                            has_next_message(message, page, "messenger"),
+                        ),
+                        (
+                            "previous_message",
+                            has_previous_message(message, page, "messenger"),
+                        ),
+                        ("total_messages", len(page.messenger_body._raw_data)),
+                        ("text", page.messenger_body._raw_data[message]["value"]),
+                    ]
+                )
+            except IndexError:
+                raise ValidationError("The requested message does not exist")
+    elif "viber" in request.GET and (
+        page.enable_viber is True
+        or ("qa" in request.GET and request.GET["qa"] == "True")
+    ):
+        if page.viber_body != []:
+            try:
+                return OrderedDict(
+                    [
+                        ("message", message + 1),
+                        ("next_message", has_next_message(message, page, "viber")),
+                        (
+                            "previous_message",
+                            has_previous_message(message, page, "viber"),
+                        ),
+                        ("total_messages", len(page.viber_body._raw_data)),
+                        ("text", page.viber_body._raw_data[message]["value"]),
+                    ]
+                )
+            except IndexError:
+                raise ValidationError("The requested message does not exist")
+
+
 class RelatedPagesField(serializers.Field):
     def get_attribute(self, instance):
         return instance
@@ -381,6 +657,30 @@ class ContentPageSerializer(PageSerializer):
             "title": title_field_representation(page, request),
             "subtitle": subtitle_field_representation(page),
             "body": body_field_representation(page, request),
+            "tags": [x.name for x in page.tags.all()],
+            "triggers": [x.name for x in page.triggers.all()],
+            "quick_replies": [x.name for x in page.quick_replies.all()],
+            "has_children": has_children_field_representation(page),
+            "related_pages": related_pages_field_representation(page, request),
+        }
+
+
+class ContentPageSerializerV3(PageSerializer):
+    title = TitleField(read_only=True)
+    subtitle = SubtitleField(read_only=True)
+    # body = BodyField(read_only=True)
+    has_children = HasChildrenField(read_only=True)
+    related_pages = RelatedPagesField(read_only=True)
+
+    def to_representation(self, page):
+        request = self.context["request"]
+        # router = self.context["router"]
+        return {
+            "id": page.id,
+            # "meta": metadata_field_representation(page, request, router),
+            "title": title_field_representation(page, request),
+            "subtitle": subtitle_field_representation(page),
+            "messages": body_field_representation_v3(page, request),
             "tags": [x.name for x in page.tags.all()],
             "triggers": [x.name for x in page.triggers.all()],
             "quick_replies": [x.name for x in page.quick_replies.all()],
@@ -673,36 +973,26 @@ def name_field_representation(template, request):
 
 
 class WhatsAppTemplateSerializer(BaseSerializer):
-    name = NameField(read_only=True)
-    # subtitle = SubtitleField(read_only=True)
-    message = MessageField(read_only=True)
-    category = CategoryField(read_only=True)
+    # name = NameField(read_only=True)
+    # message = MessageField(read_only=True)
+    # category = CategoryField(read_only=True)
+    # TODO: Not sure which fields should or not be def'd up here, check with clever people
 
-    # has_children = HasChildrenField(read_only=True)
-    # related_pages = RelatedPagesField(read_only=True)
     def to_representation(self, template):
         request = self.context["request"]
-        router = self.context["router"]
         return {
             "id": template.id,
-            # "meta": metadata_field_representation(page, request, router),
             "locale": template.locale.language_code,
             "name": name_field_representation(template, request),
             "category": category_field_representation(template, request),
             "image": template.image,
             "message": template.message,
-            "buttons": [x for x in template.buttons.raw_data],
-            "example_values": [x for x in template.example_values.raw_data],
+            "example_values": list(template.example_values.raw_data),
+            "buttons": list(template.buttons.raw_data),
+            "revision": template.get_latest_revision().id,
+            "status": template.status(),
+            "prefix": template.prefix,
             "submission_name": template.submission_name,
             "submission_status": template.submission_status,
             "submission_result": template.submission_result,
-            "quick_reply_buttons": template.quick_reply_buttons,
-            "prefix": template.prefix,
-            "status": template.status(),
-            # "__str__": template.__str__,
-            # "tags": [x.name for x in page.tags.all()],
-            # "triggers": [x.name for x in page.triggers.all()],
-            #
-            # "has_children": has_children_field_representation(page),
-            # "related_pages": related_pages_field_representation(page, request),
         }
