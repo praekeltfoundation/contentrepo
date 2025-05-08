@@ -143,7 +143,7 @@ class AssessmentExportWriter:
         for row in self.rows:
             worksheet.append(row.to_tuple())
         _set_xlsx_styles(workbook, worksheet)
-        workbook.save(response)
+        workbook.save(response)  # type: ignore
 
     def write_csv(self, response: HttpResponse) -> None:
         writer = csv.DictWriter(f=response, fieldnames=ExportRow.headings())

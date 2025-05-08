@@ -19,20 +19,21 @@ from home.models import (  # isort:skip
     GoToFormButton,
     WhatsAppTemplate,
 )
+from typing import Any
 
 
 def create_page(
     title: str = "Test Title",
-    parent: ContentPage | None = None,
+    parent: Any | None = None,
     tags: tuple[str, ...] = (),
-    is_whatsapp_template: bool = False,
     is_new_whatsapp_template: bool = False,
     add_example_values: bool = False,
     add_variation: bool = False,
     has_quick_replies: bool = False,
     whatsapp_template_name: str = "",
     has_buttons: bool = False,
-) -> ContentPage:
+    ContentPage: Any = ContentPage,
+) -> Any:
     block = blocks.StructBlock(
         [
             ("message", blocks.TextBlock()),
@@ -126,8 +127,6 @@ def create_page(
         enable_whatsapp=True,
         whatsapp_title="WA Title",
         whatsapp_body=whatsapp_body,
-        is_whatsapp_template=is_whatsapp_template,
-        whatsapp_template_name=whatsapp_template_name,
     )
 
     if has_quick_replies:
@@ -148,7 +147,9 @@ def create_page(
     return contentpage
 
 
-def create_page_rating(page, helpful=True, comment=""):
+def create_page_rating(
+    page: ContentPage, helpful: bool = True, comment: str = ""
+) -> ContentPageRating:
     return ContentPageRating.objects.create(
         page=page,
         revision=page.get_latest_revision(),

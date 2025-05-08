@@ -32,6 +32,7 @@ from home.models import (
     GoToPageButton,
     HomePage,
     OrderedContentSet,
+    WhatsAppTemplate,
 )
 from home.whatsapp_template_import_export import import_whatsapptemplate
 from home.xlsx_helpers import get_active_sheet
@@ -56,6 +57,7 @@ from .page_builder import (
     VBody,
     WABlk,
     WABody,
+    WATpl,
 )
 from .utils import unwagtail
 
@@ -1867,7 +1869,7 @@ class TestExport:
             slug="ha-menu",
             title="HealthAlert menu",
             bodies=[
-                WABody("HA menu", [WABlk("Welcome WA", media=media_wa.id)]),
+                WABody("HA menu", [WABlk("Welcome WA", media=media_wa.id)]),  # type: ignore
             ],
         )
         content = impexp.export_content(locale="en")
@@ -1924,7 +1926,7 @@ def mk_img(img_path: Path, title: str) -> Image:
     return img
 
 
-def mk_media(media_path: Path, title: str) -> File:
+def mk_media(media_path: Path, title: str) -> File:  # type: ignore
     media = Media(title=title, file=File(media_path.open("rb"), name=media_path.name))
     media.save()
     return media
@@ -2893,3 +2895,31 @@ class TestExportImportRoundtrip:
 
         imported = csv_impexp.get_page_json()
         assert imported == orig
+
+    def test_export_page_with_whatsapp_template_in_the_middle(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        template = WhatsAppTemplate.objects.create(
+            category="MARKETING",
+            name="test_template",
+            message="Test WhatsApp Template Message 1",
+            locale=Locale.objects.first(),
+        )
+        tpl = WATpl(
+            template=template,
+            message="Test WhatsApp Template Message 1",
+        )
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert*"), tpl])
+            ],
+        )
+        export = csv2dicts(csv_impexp.export_content())
+
+        assert len(list(export)) == 3
