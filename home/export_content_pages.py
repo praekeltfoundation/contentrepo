@@ -212,8 +212,10 @@ class ContentExporter:
            locale (probably?)) instead of the parent title.
         """
 
-        if template := page.whatsapp_template_or_none:
-            whatsapp_template_name = template.name
+        if len(page.whatsapp_body) > 0 and isinstance(
+            page.whatsapp_body[0].value, WhatsAppTemplate
+        ):
+            whatsapp_template_name = page.whatsapp_body[0].value.name
         else:
             whatsapp_template_name = ""
 
@@ -254,16 +256,11 @@ class ContentExporter:
             row = row.new_message_row()
 
     def _export_row_message(self, row: ExportRow, msg_blocks: MsgBlocks) -> None:
-        if any(
-            msg_block is not None and isinstance(msg_block.value, WhatsAppTemplate)
-            for msg_block in msg_blocks
-        ):
-            return
         row.add_message_fields(msg_blocks)
         if self.rows[-1] is not row:
             self.rows.append(row)
         # Only WhatsappBlock has variations at present.
-        if msg_blocks[0] is None:
+        if msg_blocks[0] is None or isinstance(msg_blocks[0].value, WhatsAppTemplate):
             return
         for variation in msg_blocks[0].value["variation_messages"]:
             self.rows.append(row.new_variation_row(variation))

@@ -758,14 +758,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         )
 
     @property
-    def is_whatsapp_template(self) -> bool:
-        return (
-            self.whatsapp_body.raw_data[0]["type"] == "Whatsapp_Template"
-            if self.whatsapp_body
-            else False
-        )
-
-    @property
     def has_whatsapp_template(self) -> bool:
         """
         Returns True if the page has a whatsapp template

@@ -82,7 +82,7 @@ def test_build_simple_pages() -> None:
     assert ha_menu.enable_whatsapp is True
     assert ha_menu.has_unpublished_changes is False
     assert ha_menu.include_in_footer is False
-    assert ha_menu.is_whatsapp_template is False
+    assert ha_menu.has_whatsapp_template is False
     assert ha_menu.live is True
     assert ha_menu.live_revision == ha_menu.latest_revision
     assert ha_menu.locale == Locale.objects.get(language_code="en")
@@ -267,7 +267,7 @@ def test_build_variations() -> None:
     assert cp_imp_exp.enable_whatsapp is True
     assert cp_imp_exp.has_unpublished_changes is False
     assert cp_imp_exp.include_in_footer is False
-    assert cp_imp_exp.is_whatsapp_template is False
+    assert cp_imp_exp.has_whatsapp_template is False
     assert cp_imp_exp.live is True
     assert cp_imp_exp.live_revision == cp_imp_exp.latest_revision
     assert cp_imp_exp.locale == Locale.objects.get(language_code="en")
@@ -452,11 +452,11 @@ def test_whatsapp_template() -> None:
 
     assert isinstance(ha_menu, ContentPage)
     assert ha_menu.depth == 4
-    assert ha_menu.is_whatsapp_template is False
+    assert ha_menu.has_whatsapp_template is False
 
     assert isinstance(health_info, ContentPage)
     assert health_info.depth == 5
-    assert health_info.is_whatsapp_template is True
+    assert health_info.has_whatsapp_template is True
     template_id = health_info.whatsapp_body.raw_data[0]["value"]
     template = WhatsAppTemplate.objects.get(id=template_id)
     assert template.name == "template-health-info"

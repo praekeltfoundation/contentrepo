@@ -229,6 +229,12 @@ def body_field_representation(page: Any, request: Any) -> Any:
                             format_whatsapp_message(message, page, "whatsapp"),
                         ),
                         ("revision", page.get_latest_revision().id),
+                        ("is_whatsapp_template", "False"),
+                        ("whatsapp_template_name", ""),
+                        (
+                            "whatsapp_template_category",
+                            "",
+                        ),
                     ]
                 )
             except IndexError:

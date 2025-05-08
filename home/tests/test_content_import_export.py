@@ -2922,4 +2922,4 @@ class TestExportImportRoundtrip:
         )
         export = csv2dicts(csv_impexp.export_content())
 
-        assert len(list(export)) == 2
+        assert len(list(export)) == 3
