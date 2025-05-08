@@ -350,13 +350,36 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
     )
     model = WhatsAppTemplate
     body_fields = BaseAPIViewSet.body_fields + [
-        "name",
-        "message",
-    ]
-    listing_default_fields = BaseAPIViewSet.listing_default_fields + [
+        "id",
+        "locale",
         "name",
         "category",
+        "image",
         "message",
+        "example_values",
+        "buttons",
+        "revision",
+        "status",
+        "prefix",
+        "submission_name",
+        "submission_status",
+        "submission_result",
+    ]
+    listing_default_fields = BaseAPIViewSet.listing_default_fields + [
+        "id",
+        "locale",
+        "name",
+        "category",
+        "image",
+        "message",
+        "example_values",
+        "buttons",
+        "revision",
+        "status",
+        "prefix",
+        "submission_name",
+        "submission_status",
+        "submission_result",
     ]
     pagination_class = PageNumberPagination
     search_fields = [

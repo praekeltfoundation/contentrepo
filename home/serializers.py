@@ -9,7 +9,7 @@ from wagtail.api.v2.serializers import (
 )
 from wagtail.api.v2.utils import get_object_detail_url
 
-from home.models import ContentPage, ContentPageRating, PageView
+from home.models import ContentPage, ContentPageRating, PageView, WhatsAppTemplate
 
 
 class TitleField(serializers.Field):
@@ -161,7 +161,7 @@ def format_whatsapp_message(message_index, content_page, platform):
     return text
 
 
-def format_whatsapp_body(message_index, content_page):
+def format_whatsapp_body(content_page):
     # text = content_page.whatsapp_body._raw_data[message_index]
     message_number = 0
     messages = []
@@ -376,51 +376,14 @@ def body_field_representation(page, request):
 
 
 def body_field_representation_v3(page, request):
-    specific_message = False
-
-    if "message" in request.GET:
-        try:
-            message = int(request.GET["message"]) - 1
-            specific_message = True
-        except ValueError:
-            raise ValidationError(
-                "Please insert a positive integer for message in " "the query string"
-            )
-    else:
-        message = 0
-
+    message = 0
     if "whatsapp" in request.GET and (
         page.enable_whatsapp is True
         or ("qa" in request.GET and request.GET["qa"] == "True")
     ):
         if page.whatsapp_body != []:
-            whatsapp_messages = format_whatsapp_body(message, page)
-
-            if specific_message:
-                try:
-                    return OrderedDict(
-                        [
-                            ("message", message + 1),
-                            (
-                                "next_message",
-                                has_next_message(message, page, "whatsapp"),
-                            ),
-                            (
-                                "previous_message",
-                                has_previous_message(message, page, "whatsapp"),
-                            ),
-                            ("total_messages", len(page.whatsapp_body._raw_data)),
-                            (
-                                "message",
-                                whatsapp_messages[message],
-                            ),
-                            ("revision", page.get_latest_revision().id),
-                        ]
-                    )
-                except IndexError:
-                    raise ValidationError("The requested message does not exist")
-            else:
-                return whatsapp_messages
+            whatsapp_messages = format_whatsapp_body(page)
+            return whatsapp_messages
 
     elif "sms" in request.GET and (
         page.enable_sms is True or ("qa" in request.GET and request.GET["qa"] == "True")
@@ -888,27 +851,40 @@ def name_field_representation(template, request):
     return template.name
 
 
-class WhatsAppTemplateSerializer(BaseSerializer):
-    # name = NameField(read_only=True)
-    # message = MessageField(read_only=True)
-    # category = CategoryField(read_only=True)
-    # TODO: Not sure which fields should or not be def'd up here, check with clever people
+class RevisionField(serializers.Field):
+    def get_attribute(self, instance):
+        return instance
 
     def to_representation(self, template):
-        request = self.context["request"]
-        return {
-            "id": template.id,
-            "locale": template.locale.language_code,
-            "name": name_field_representation(template, request),
-            "category": category_field_representation(template, request),
-            "image": template.image,
-            "message": template.message,
-            "example_values": list(template.example_values.raw_data),
-            "buttons": list(template.buttons.raw_data),
-            "revision": template.get_latest_revision().id,
-            "status": template.status(),
-            "prefix": template.prefix,
-            "submission_name": template.submission_name,
-            "submission_status": template.submission_status,
-            "submission_result": template.submission_result,
-        }
+        revision = template.get_latest_revision().id
+
+        return revision
+
+
+class WhatsAppTemplateSerializer(BaseSerializer):
+    class Meta:
+        model = WhatsAppTemplate
+        fields = [
+            "id",
+            "locale",
+            "name",
+            "category",
+            "image",
+            "message",
+            "example_values",
+            "buttons",
+            "revision",
+            "status",
+            "prefix",
+            "submission_name",
+            "submission_status",
+            "submission_result",
+        ]
+
+    # id = serializers.IntegerField(read_only=True)
+    locale = TemplateLocaleField(read_only=True)
+    name = NameField(read_only=True)
+    message = MessageField(read_only=True)
+    category = CategoryField(read_only=True)
+    revision = RevisionField(read_only=True)
+    # TODO: Not sure which fields should or not be def'd up here, check with clever people
