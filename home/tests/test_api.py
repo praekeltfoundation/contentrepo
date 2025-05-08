@@ -400,6 +400,36 @@ class TestContentPageAPI:
         body = content["body"]["text"]["value"]["message"]
         assert body == "*Default whatsapp Content 11* 🏥"
 
+    def test_message_number_specified_whatsapp_with_template(
+        self, uclient: Any
+    ) -> None:
+        """
+        It should only return the 11th paragraph if 11th message is requested
+        Please see class doc string for why this is a separate test
+        """
+        page = self.create_content_page(body_count=10, publish=True)
+        template = WhatsAppTemplate.objects.create(
+            category="MARKETING",
+            name="test_template",
+            message="Test WhatsApp Template Message 1",
+            locale=Locale.objects.first(),
+        )
+        template.save_revision().publish()
+
+        blocks = [("Whatsapp_Message", block.value) for block in page.whatsapp_body]
+        blocks.append(("Whatsapp_Template", template))
+        page.whatsapp_body = blocks
+        page.save_revision().publish()
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=11")
+        content = json.loads(response.content)
+
+        assert content["body"]["message"] == 11
+        assert content["body"]["next_message"] is None
+        assert content["body"]["previous_message"] == 10
+        body = content["body"]["text"]["value"]["message"]
+        assert body == "Test WhatsApp Template Message 1"
+
     @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     def test_message_number_specified(self, uclient, platform):
         """
@@ -967,7 +997,7 @@ class TestWhatsAppMessages:
 
         assert body["is_whatsapp_template"]
         assert body["whatsapp_template_name"] == "test_template"
-        assert body["text"] == "Test WhatsApp Template Message 1"
+        assert body["text"]["value"]["message"] == "Test WhatsApp Template Message 1"
         assert body["whatsapp_template_category"] == "MARKETING"
 
     def test_whatsapp_detail_view_with_variations(self, uclient: Any) -> None:

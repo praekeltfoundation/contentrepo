@@ -774,7 +774,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     @property
     def whatsapp_template_or_none(self) -> Optional["WhatsAppTemplate"]:
         """
-        Returns the whatsapp template if it exists
+        Returns the first whatsapp template if it exists
         """
         if self.has_whatsapp_template:
             for block in self.whatsapp_body.raw_data:

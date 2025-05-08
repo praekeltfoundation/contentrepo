@@ -10,7 +10,7 @@ from wagtail.api.v2.serializers import (
 )
 from wagtail.api.v2.utils import get_object_detail_url
 
-from home.models import ContentPage, ContentPageRating, PageView
+from home.models import ContentPage, ContentPageRating, PageView, WhatsAppTemplate
 
 
 class TitleField(serializers.Field):
@@ -115,6 +115,18 @@ def has_previous_message(message_index, content_page, platform):
         return message_index
 
 
+def format_whatsapp_template_message(message: str) -> dict[str, Any]:
+    text = {
+        "value": {
+            "variation_messages": [],
+            "list_items": [],
+            "list_items_v2": [],
+            "message": message,
+        }
+    }
+    return text
+
+
 def format_whatsapp_message(message_index, content_page, platform):
     # Flattens the variation_messages field in the whatsapp message
     text = content_page.whatsapp_body._raw_data[message_index]
@@ -199,11 +211,18 @@ def body_field_representation(page: Any, request: Any) -> Any:
     ):
         if page.whatsapp_body != []:
             try:
+                api_body: OrderedDict[str, Any] = OrderedDict()
                 # if it's a template, we need to get the template content
-                if template := page.whatsapp_template_or_none:
-                    return OrderedDict(
+                block = page.whatsapp_body._raw_data[message]
+                if block["type"] == "Whatsapp_Template":
+                    template = WhatsAppTemplate.objects.get(id=block["value"])
+
+                    api_body.update(
                         [
-                            ("text", template.message),
+                            (
+                                "text",
+                                format_whatsapp_template_message(template.message),
+                            ),
                             ("is_whatsapp_template", "True"),
                             ("whatsapp_template_name", template.name),
                             (
@@ -212,7 +231,22 @@ def body_field_representation(page: Any, request: Any) -> Any:
                             ),
                         ]
                     )
-                return OrderedDict(
+                else:
+                    api_body.update(
+                        [
+                            (
+                                "text",
+                                format_whatsapp_message(message, page, "whatsapp"),
+                            ),
+                            ("is_whatsapp_template", "False"),
+                            ("whatsapp_template_name", ""),
+                            (
+                                "whatsapp_template_category",
+                                "",
+                            ),
+                        ]
+                    )
+                api_body.update(
                     [
                         ("message", message + 1),
                         (
@@ -224,19 +258,10 @@ def body_field_representation(page: Any, request: Any) -> Any:
                             has_previous_message(message, page, "whatsapp"),
                         ),
                         ("total_messages", len(page.whatsapp_body._raw_data)),
-                        (
-                            "text",
-                            format_whatsapp_message(message, page, "whatsapp"),
-                        ),
                         ("revision", page.get_latest_revision().id),
-                        ("is_whatsapp_template", "False"),
-                        ("whatsapp_template_name", ""),
-                        (
-                            "whatsapp_template_category",
-                            "",
-                        ),
                     ]
                 )
+                return api_body
             except IndexError:
                 raise ValidationError("The requested message does not exist")
     elif "sms" in request.GET and (
