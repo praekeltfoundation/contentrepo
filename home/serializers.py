@@ -115,140 +115,11 @@ def has_previous_message(message_index, content_page, platform):
 
 
 def format_whatsapp_message(message_index, content_page, platform):
-    # Flattens the variation_messages field in the whatsapp message
     text = content_page.whatsapp_body._raw_data[message_index]
+    if str(text["type"]) == "Whatsapp_Message":
+        # Flattens the variation_messages field in the whatsapp message
 
-    variation_messages = text["value"].get("variation_messages", [])
-    new_var_messages = []
-    for var in variation_messages:
-        new_var_messages.append(
-            {
-                "profile_field": var["value"]["variation_restrictions"][0]["type"],
-                "value": var["value"]["variation_restrictions"][0]["value"],
-                "message": var["value"]["message"],
-            }
-        )
-    text["value"]["variation_messages"] = new_var_messages
-
-    # For backwards compatibility we are exposing the new format under list_items_v2, and maintaining list_items the way it was.
-    # For example:
-    # New Format:
-    # {
-    #     "id": "179bf4be-2bea-49db-8558-51f7da8b888f",
-    #     "type": "next_message",
-    #     "value": {
-    #         "title": "English"
-    #     }
-    # }
-    #
-    # Old Format:
-    # {
-    #     "id": "8db577c1-67ab-49e1-825a-960b891374f4",
-    #     "type": "item",
-    #     "value": "English"
-    # }
-    if text["value"]["list_items"]:
-        text["value"]["list_items_v2"] = text["value"]["list_items"]
-
-        current_list_items = text["value"]["list_items"]
-        list_items = [
-            {"id": item["id"], "type": "item", "value": item["value"]["title"]}
-            for item in current_list_items
-        ]
-        text["value"]["list_items"] = list_items
-
-    return text
-
-
-# def format_whatsapp_template(message_index, content_page, block):
-#     print("Running format_whatsapp_template")
-#     # text = content_page.whatsapp_body._raw_data[message_index]
-#     print(f"Is you block? {block.value.category}")
-#     template_details = OrderedDict(
-#         [
-#             ("template_name", block.value.name),
-#             ("template_category", block.value.category),
-#             ("template_message", block.value.message),
-#         ]
-#     )
-
-#     return template_details
-
-
-def format_whatsapp_body(message_index, content_page):
-    print("Running format_whatsapp_body")
-    # text = content_page.whatsapp_body._raw_data[message_index]
-    message_number = 0
-    messages = []
-    for block in content_page.whatsapp_body:
-        message_number += 1  # noqa: SIM113
-        print()
-        print(f"Message {message_number} = {block.block_type}")
-        print(f"Block type = {block.block_type}")
-
-        if str(block.block_type) == "Whatsapp_Template":
-            print(f"Message {message_number} is a template")
-            template = block.value
-            messages.append(
-                OrderedDict(
-                    [
-                        ("message_type", block.block_type),
-                        ("message_number", message_number),
-                        ("template_id", template.id),
-                        ("template_name", template.name),
-                        ("template_category", template.category),
-                        ("template_image", template.image),
-                        ("template_message", template.message),
-                        ("template_buttons", list(template.buttons.raw_data)),
-                        ("template_submission_name", template.submission_name),
-                        ("template_submission_status", template.submission_status),
-                        ("template_submission_result", template.submission_result),
-                        ("template_id", template.id),
-                    ]
-                )
-            )
-
-        else:
-            print(f"Message {message_number} is not a template")
-            message = block.value
-            messages.append(
-                OrderedDict(
-                    [
-                        ("message_type", block.block_type),
-                        ("message_number", message_number),
-                        ("message_id", block.id),
-                        ("message_image", message["image"]),
-                        ("message_media", message["media"]),
-                        ("message_document", message["document"]),
-                        ("message_message", message["message"]),
-                        ("message_buttons", message["buttons"]),
-                        ("message_list_items", message["list_items"]),
-                        ("message_list_title", message["list_title"]),
-                        ("message_next_prompt", message["next_prompt"]),
-                        ("message_example_values", message["example_values"]),
-                        ("message_variation_messages", message["variation_messages"]),
-                    ]
-                )
-            )
-
-    print(f"Messages is {messages}")
-
-    return messages
-
-
-def format_whatsapp_message_v3(message_index, content_page, platform):
-    print(f"Running format_whatsapp_message_v3 on msg index {message_index}")
-    text = content_page.whatsapp_body._raw_data[message_index]
-
-    # try:
-    #     # If we can parse the message content as an int, it is a template
-    #     template_id = int(text["value"])
-    #     print(f"Template object found, id is {template_id}")
-    # except Exception:
-
-    # Flattens the variation_messages field in the whatsapp message
-    variation_messages = text["value"].get("variation_messages", [])
-    if variation_messages != []:
+        variation_messages = text["value"].get("variation_messages", [])
         new_var_messages = []
         for var in variation_messages:
             new_var_messages.append(
@@ -282,16 +153,65 @@ def format_whatsapp_message_v3(message_index, content_page, platform):
 
             current_list_items = text["value"]["list_items"]
             list_items = [
-                {
-                    "id": item["id"],
-                    "type": "item",
-                    "value": item["value"]["title"],
-                }
+                {"id": item["id"], "type": "item", "value": item["value"]["title"]}
                 for item in current_list_items
             ]
             text["value"]["list_items"] = list_items
 
     return text
+
+
+def format_whatsapp_body(message_index, content_page):
+    # text = content_page.whatsapp_body._raw_data[message_index]
+    message_number = 0
+    messages = []
+    for block in content_page.whatsapp_body:
+        message_number += 1  # noqa: SIM113
+
+        if str(block.block_type) == "Whatsapp_Template":
+            template = block.value
+            messages.append(
+                OrderedDict(
+                    [
+                        ("message_type", block.block_type),
+                        ("message_number", message_number),
+                        ("template_id", template.id),
+                        ("template_name", template.name),
+                        ("template_category", template.category),
+                        ("template_image", template.image),
+                        ("template_message", template.message),
+                        ("template_buttons", list(template.buttons.raw_data)),
+                        ("template_submission_name", template.submission_name),
+                        ("template_submission_status", template.submission_status),
+                        ("template_submission_result", template.submission_result),
+                        ("template_id", template.id),
+                    ]
+                )
+            )
+
+        else:
+            message = block.value
+            messages.append(
+                OrderedDict(
+                    [
+                        ("message_type", block.block_type),
+                        ("message_number", message_number),
+                        ("message_id", block.id),
+                        ("message_image", message["image"]),
+                        ("message_media", message["media"]),
+                        ("message_document", message["document"]),
+                        ("message_message", message["message"]),
+                        ("message_buttons", message["buttons"]),
+                        ("message_list_items", message["list_items"]),
+                        ("message_list_title", message["list_title"]),
+                        ("message_next_prompt", message["next_prompt"]),
+                        ("message_example_values", message["example_values"]),
+                        ("message_variation_messages", message["variation_messages"]),
+                    ]
+                )
+            )
+
+    return messages
 
 
 class BodyField(serializers.Field):
@@ -456,9 +376,8 @@ def body_field_representation(page, request):
 
 
 def body_field_representation_v3(page, request):
-    print()
     specific_message = False
-    print(f"Processing body field for page '{page.title}'")
+
     if "message" in request.GET:
         try:
             message = int(request.GET["message"]) - 1
@@ -475,12 +394,9 @@ def body_field_representation_v3(page, request):
         or ("qa" in request.GET and request.GET["qa"] == "True")
     ):
         if page.whatsapp_body != []:
-            whatsapp_message_details = OrderedDict()
             whatsapp_messages = format_whatsapp_body(message, page)
 
-            print("Going to return some results")
             if specific_message:
-                print("Looking for specific message")
                 try:
                     return OrderedDict(
                         [
@@ -495,8 +411,8 @@ def body_field_representation_v3(page, request):
                             ),
                             ("total_messages", len(page.whatsapp_body._raw_data)),
                             (
-                                "text",
-                                whatsapp_message_details,
+                                "message",
+                                whatsapp_messages[message],
                             ),
                             ("revision", page.get_latest_revision().id),
                         ]
