@@ -322,7 +322,7 @@ def test_submit_to_meta_action_success(monkeypatch: pytest.MonkeyPatch) -> None:
     model = DummyModel()
 
     def fake_create_standalone_whatsapp_template(
-        **kwargs: dict[str, Any]
+        **kwargs: dict[str, Any],
     ) -> dict[str, Any]:
         return {"id": "fakeid123"}
 
@@ -343,7 +343,7 @@ def test_submit_to_meta_action_server_error(
     model = DummyModel()
 
     def fake_create_standalone_whatsapp_template(
-        **kwargs: dict[str, Any]
+        **kwargs: dict[str, Any],
     ) -> dict[str, Any]:
         raise TemplateSubmissionServerException("server error")
 
@@ -364,7 +364,7 @@ def test_submit_to_meta_action_client_error(
     model = DummyModel()
 
     def fake_create_standalone_whatsapp_template(
-        **kwargs: dict[str, Any]
+        **kwargs: dict[str, Any],
     ) -> dict[str, Any]:
         raise TemplateSubmissionClientException("client error")
 
@@ -406,7 +406,7 @@ def test_submit_revision(monkeypatch: pytest.MonkeyPatch) -> None:
     assert rev_object.category == "MARKETING"
 
     def fake_create_standalone_whatsapp_template(
-        **kwargs: dict[str, Any]
+        **kwargs: dict[str, Any],
     ) -> dict[str, Any]:
         return {"id": "fakeid123"}
 
