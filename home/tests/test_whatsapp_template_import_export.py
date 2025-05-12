@@ -141,10 +141,39 @@ def remove_button_ids(template: DbDict) -> DbDict:
     return template
 
 
+PAGE_TIMESTAMP_FIELDS = {
+    "first_published_at",
+    "last_published_at",
+    "latest_revision_created_at",
+}
+
+
+def _remove_fields(pages: DbDicts, field_names: set[str]) -> DbDicts:
+    for p in pages:
+        fields = {k: v for k, v in p["fields"].items() if k not in field_names}
+        yield p | {"fields": fields}
+
+
+def remove_timestamps(pages: DbDicts) -> DbDicts:
+    return _remove_fields(pages, PAGE_TIMESTAMP_FIELDS)
+
+
+def normalise_revisions(templates: DbDicts) -> DbDicts:
+    if "latest_revision" not in list(templates)[0]["fields"]:
+        return templates
+    min_latest = min(p["fields"]["latest_revision"] for p in templates)
+    min_live = min(p["fields"]["live_revision"] for p in templates)
+    templates = _update_field(templates, "latest_revision", lambda v: v - min_latest)
+    templates = _update_field(templates, "live_revision", lambda v: v - min_live)
+    return templates
+
+
 WHATSAPP_TEMPLATE_FILTER_FUNCS = [
     remove_example_value_ids,
     normalise_pks,
     remove_button_ids,
+    remove_timestamps,
+    # normalise_revisions,
 ]
 
 
@@ -389,6 +418,12 @@ class TestImportExportRoundtrip:
         del first["submission_status"]
         assert export == csv
 
+        templates = WhatsAppTemplate.objects.all()
+        assert len(templates) == 1
+        template = templates[0]
+        revision = template.get_latest_revision()
+        assert revision is not None
+
     def test_less_simple_with_quick_replies(self, csv_impexp: ImportExport) -> None:
         """
         Importing a simple CSV file with one whatsapp templates including quick replies
@@ -464,9 +499,11 @@ class TestImportExportRoundtrip:
         # remove the revision and unpublished changes keys
         for item in orig:
             del item["fields"]["latest_revision"]
+            del item["fields"]["live_revision"]
             del item["fields"]["has_unpublished_changes"]
         for item in imported:
             del item["fields"]["latest_revision"]
+            del item["fields"]["live_revision"]
             del item["fields"]["has_unpublished_changes"]
         assert imported == orig
 
@@ -495,9 +532,11 @@ class TestImportExportRoundtrip:
         # remove the revision and unpublished changes keys
         for item in orig:
             del item["fields"]["latest_revision"]
+            del item["fields"]["live_revision"]
             del item["fields"]["has_unpublished_changes"]
         for item in imported:
             del item["fields"]["latest_revision"]
+            del item["fields"]["live_revision"]
             del item["fields"]["has_unpublished_changes"]
         assert imported == orig
 
