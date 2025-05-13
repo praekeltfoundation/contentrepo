@@ -12,6 +12,8 @@ def migrate_content_page_templates_to_standalone_templates(
         whatsapp_value = whatsapp_block.value
         print(f"Content Page slug: {content_page.slug}")
         print(f"Content page title: {content_page.whatsapp_title}")
+        if isinstance(whatsapp_value, WhatsAppTemplate):
+            continue
         image = whatsapp_value.get("image", None)
         if image:
             print(f"Image type: {type(image)}")
