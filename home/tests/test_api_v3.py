@@ -71,17 +71,20 @@ class TestWhatsAppTemplateAPI:
         message="Default message",
         category="UTILITY",
         locale="en",
+        publish=False,
     ) -> WhatsAppTemplate:
-        print("Running create_whatsapp_template")
         locale = Locale.objects.get(language_code="en")
-        print(f"Locale = {locale}")
         template = WhatsAppTemplate(
             name=name, message=message, category=category, locale=locale
         )
-        print("After new WhatsAppTemplate()")
+
         template.save()
+
         rev = template.save_revision()
-        rev.publish()
+
+        if publish:
+            print("Gonna publish")
+            rev.publish()
         template.refresh_from_db()
         return template
 
@@ -100,9 +103,34 @@ class TestWhatsAppTemplateAPI:
         # it should return 1 page for correct tag, excluding unpublished pages with the
         # same tag
         response = uclient.get("/api/v3/whatsapptemplates/?qa=True")
-        print(f"Response content is {response.content}")
         content = json.loads(response.content)
         assert content["count"] == 1
+
+    def test_login_required(self, client):
+        """
+        Users that aren't logged in shouldn't be allowed to access the API
+        """
+        response = client.get("/api/v3/whatsapptemplates/")
+        assert response.status_code == 401
+
+    def test_whatsapp_draft(self, uclient):
+        """
+        Unpublished templates are returned if the qa param is set.
+        """
+        template = self.create_whatsapp_template(
+            name="Test Template 2",
+            message="*Default unpublished template 1* 🏥",
+            category="UTILITY",
+            locale="en",
+            publish=False,
+        )
+
+        url = f"/api/v3/whatsapptemplates/{template.id}/?qa=True"
+        response = uclient.get(url)
+        # the page is not live but whatsapp content is returned
+        content = response.json()
+
+        assert content["message"] == "*Default unpublished template 1* 🏥"
 
 
 # @pytest.mark.django_db
