@@ -197,7 +197,7 @@ class MigrationTests(TestCase):
         content_page.save_revision().publish()
 
         migration_module = importlib.import_module(
-            "home.migrations.0098_migrate_content_page_templates_to_standalone_templates"
+            "home.migrations.0099_migrate_content_page_templates_to_standalone_templates"
         )
         migrate_func = (
             migration_module.migrate_content_page_templates_to_standalone_templates
