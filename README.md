@@ -22,7 +22,7 @@
 | home/forms.py                                                                                |       13 |        0 |    100% |           |
 | home/import\_assessments.py                                                                  |      258 |        9 |     97% |39, 61, 133-134, 279, 281-284 |
 | home/import\_content\_pages.py                                                               |      558 |       14 |     97% |140-141, 202-203, 316, 364-365, 718, 928-935 |
-| home/import\_helpers.py                                                                      |      168 |        8 |     95% |154, 156, 176, 184-189 |
+| home/import\_helpers.py                                                                      |      167 |        7 |     96% |154, 156, 176, 184-188 |
 | home/import\_ordered\_content\_sets.py                                                       |       91 |        1 |     99% |       230 |
 | home/import\_whatsapp\_templates.py                                                          |      181 |        8 |     96% |32, 54, 211-212, 256-259, 263 |
 | home/management/commands/broken\_links\_clean\_up.py                                         |       31 |        0 |    100% |           |
@@ -132,6 +132,7 @@
 | home/migrations/0096\_migrate\_empty\_submission\_status\_to\_not\_submitted\_yet.py         |       14 |        0 |    100% |           |
 | home/migrations/0097\_alter\_whatsapptemplate\_buttons.py                                    |        8 |        0 |    100% |           |
 | home/migrations/0098\_whatsapptemplate\_locked\_whatsapptemplate\_locked\_at\_and\_more.py   |        6 |        0 |    100% |           |
+| home/migrations/0099\_migrate\_content\_page\_templates\_to\_standalone\_templates.py        |       19 |        0 |    100% |           |
 | home/migrations/\_\_init\_\_.py                                                              |        0 |        0 |    100% |           |
 | home/mixins.py                                                                               |      101 |       15 |     85% |47-49, 53, 57, 98-100, 104, 108, 149-151, 155, 159 |
 | home/models.py                                                                               |      633 |       51 |     92% |182, 369, 403, 448, 765, 775, 779, 783, 786, 836, 841-845, 852, 888-896, 909, 913, 917, 937-942, 946-951, 969, 989, 1066, 1073, 1080, 1087, 1092, 1101-1103, 1106, 1188, 1517, 1541, 1604, 1620, 1624-1629, 1643, 1657, 1681 |
@@ -142,7 +143,7 @@
 | home/whatsapp.py                                                                             |      231 |        1 |     99% |        19 |
 | home/whatsapp\_template\_import\_export.py                                                   |       19 |        0 |    100% |           |
 | home/xlsx\_helpers.py                                                                        |        5 |        0 |    100% |           |
-|                                                                                    **TOTAL** | **4798** |  **423** | **91%** |           |
+|                                                                                    **TOTAL** | **4816** |  **422** | **91%** |           |
 
 
 ## Setup coverage badge
