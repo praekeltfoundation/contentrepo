@@ -25,11 +25,14 @@ def migrate_content_page_templates_to_standalone_templates(
                 image = None
         else:
             print("No image")
+        example_values = list(whatsapp_value.get("example_values", []))
         whatsapp_template = WhatsAppTemplate.objects.create(
             name=content_page.whatsapp_title.lower().replace(" ", "_"),
             locale=content_page.locale,
             message=whatsapp_value.get("message", ""),
-            example_values=list(whatsapp_value.get("example_values", [])),
+            example_values=[
+                ("example_values", example_value) for example_value in example_values
+            ],
             category=content_page.whatsapp_template_category,
             buttons=whatsapp_value.get("buttons", []),
             image=image,
