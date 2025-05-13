@@ -11,7 +11,7 @@ def migrate_content_page_templates_to_standalone_templates(
         whatsapp_block = content_page.whatsapp_body[0]
         whatsapp_value = whatsapp_block.value
         whatsapp_template = WhatsAppTemplate.objects.create(
-            name=content_page.whatsapp_template_name,
+            name=content_page.whatsapp_title.lower().replace(" ", "_"),
             locale=content_page.locale,
             message=whatsapp_value.get("message", ""),
             example_values=whatsapp_value.get("example_values", []),
