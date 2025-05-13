@@ -13,7 +13,7 @@ import wagtail.snippets.blocks
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("home", "0098_migrate_content_page_templates_to_standalone_templates"),
+        ("home", "0099_migrate_content_page_templates_to_standalone_templates"),
     ]
 
     operations = [
