@@ -211,6 +211,14 @@ class ContentExporter:
          * We should use the parent slug (which is expected to be unique per
            locale (probably?)) instead of the parent title.
         """
+
+        if len(page.whatsapp_body) > 0 and isinstance(
+            page.whatsapp_body[0].value, WhatsAppTemplate
+        ):
+            whatsapp_template_name = page.whatsapp_body[0].value.name
+        else:
+            whatsapp_template_name = ""
+
         row = ExportRow(
             structure=structure,
             message=1,
@@ -221,7 +229,7 @@ class ContentExporter:
             web_subtitle=page.subtitle,
             web_body=str(page.body),
             whatsapp_title=page.whatsapp_title,
-            whatsapp_template_name=page.whatsapp_template_name,
+            whatsapp_template_name=whatsapp_template_name,
             sms_title=page.sms_title,
             ussd_title=page.ussd_title,
             messenger_title=page.messenger_title,

@@ -1,6 +1,7 @@
 import json
 import queue
 from pathlib import Path
+from typing import Any
 
 import pytest
 from bs4 import BeautifulSoup
@@ -31,10 +32,12 @@ from home.models import (
     MultiselectQuestionBlock,
     OrderedContentSet,
     PageView,
+    WhatsAppTemplate,
     YearofBirthQuestionBlock,
 )
 
 from .page_builder import (
+    Btn,
     FormBtn,
     FormListItem,
     MBlk,
@@ -53,6 +56,7 @@ from .page_builder import (
     VBody,
     WABlk,
     WABody,
+    WATpl,
 )
 from .utils import create_page
 
@@ -125,14 +129,14 @@ class TestContentPageAPI:
 
     def create_content_page(
         self,
-        parent=None,
-        title="default page",
-        tags=None,
-        body_type="whatsapp",
-        body_count=1,
-        publish=True,
-        web_body=None,
-    ):
+        parent: Any | None = None,
+        title: str = "default page",
+        tags: list[str] | None = None,
+        body_type: str | None = "whatsapp",
+        body_count: int = 1,
+        publish: bool = True,
+        web_body: Any | None = None,
+    ) -> Any:
         """
         Helper function to create pages needed for each test.
 
@@ -239,7 +243,7 @@ class TestContentPageAPI:
         response = client.get("/api/v2/pages/?tag=menu")
         assert response.status_code == 401
 
-    def test_tag_filtering(self, uclient):
+    def test_tag_filtering(self, uclient: Any) -> None:
         """
         If a tag filter is provided, only pages with matching tags are returned.
 
@@ -284,7 +288,7 @@ class TestContentPageAPI:
         content = json.loads(response.content)
         assert content["count"] == 3
 
-    def test_platform_filtering(self, uclient):
+    def test_platform_filtering(self, uclient: Any) -> None:
         """
         If a platform filter is provided, only pages with content for that
         platform are returned.
@@ -331,7 +335,7 @@ class TestContentPageAPI:
         # exclude home pages and index pages
         assert content["count"] == 5
 
-    def test_whatsapp_draft(self, uclient):
+    def test_whatsapp_draft(self, uclient: Any) -> None:
         """
         Unpublished whatsapp pages are returned if the qa param is set.
         """
@@ -380,7 +384,7 @@ class TestContentPageAPI:
         response = uclient.get(f"/api/v2/pages/{page.id}/?{platform}=True")
         assert response.status_code == 404
 
-    def test_message_number_specified_whatsapp(self, uclient):
+    def test_message_number_specified_whatsapp(self, uclient: Any) -> None:
         """
         It should only return the 11th paragraph if 11th message is requested
         Please see class doc string for why this is a separate test
@@ -395,6 +399,36 @@ class TestContentPageAPI:
         assert content["body"]["previous_message"] == 10
         body = content["body"]["text"]["value"]["message"]
         assert body == "*Default whatsapp Content 11* 🏥"
+
+    def test_message_number_specified_whatsapp_with_template(
+        self, uclient: Any
+    ) -> None:
+        """
+        It should only return the 11th paragraph if 11th message is requested
+        Please see class doc string for why this is a separate test
+        """
+        page = self.create_content_page(body_count=10, publish=True)
+        template = WhatsAppTemplate.objects.create(
+            category="MARKETING",
+            name="test_template",
+            message="Test WhatsApp Template Message 1",
+            locale=Locale.objects.first(),
+        )
+        template.save_revision().publish()
+
+        blocks = [("Whatsapp_Message", block.value) for block in page.whatsapp_body]
+        blocks.append(("Whatsapp_Template", template))
+        page.whatsapp_body = blocks
+        page.save_revision().publish()
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True&message=11")
+        content = json.loads(response.content)
+
+        assert content["body"]["message"] == 11
+        assert content["body"]["next_message"] is None
+        assert content["body"]["previous_message"] == 10
+        body = content["body"]["text"]["value"]["message"]
+        assert body == "Test WhatsApp Template Message 1"
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     def test_message_number_specified(self, uclient, platform):
@@ -412,7 +446,7 @@ class TestContentPageAPI:
         body = content["body"]["text"]["message"]
         assert body == f"*Default {platform} Content 11* 🏥"
 
-    def test_no_message_number_specified_whatsapp(self, uclient):
+    def test_no_message_number_specified_whatsapp(self, uclient: Any) -> None:
         """
         It should only return the first paragraph if no specific message is requested
         Please see class doc string for why this is a separate test
@@ -551,7 +585,7 @@ class TestContentPageAPI:
             "locale": "en",
         }
 
-    def test_detail_view_increments_count(self, uclient):
+    def test_detail_view_increments_count(self, uclient: Any) -> None:
         """
         Fetching the detail view of a page increments the view count.
         """
@@ -569,7 +603,7 @@ class TestContentPageAPI:
         view = PageView.objects.last()
         assert view.message is None
 
-    def test_detail_view_with_children(self, uclient):
+    def test_detail_view_with_children(self, uclient: Any) -> None:
         """
         Fetching the detail view of a page with children indicates that the
         page has children.
@@ -591,7 +625,7 @@ class TestContentPageAPI:
 
         assert content["has_children"] is True
 
-    def test_detail_view_whatsapp_message(self, uclient):
+    def test_detail_view_whatsapp_message(self, uclient: Any) -> None:
         """
         Fetching a detail page and selecting the WhatsApp content returns the
         first WhatsApp message in the body.
@@ -669,7 +703,7 @@ class TestContentPageAPI:
         with pytest.raises(KeyError):
             body["text"]["type"]
 
-    def test_detail_view_no_content_page(self, uclient):
+    def test_detail_view_no_content_page(self, uclient: Any) -> None:
         """
         We get a validation error if we request a page that doesn't exist.
         """
@@ -681,7 +715,7 @@ class TestContentPageAPI:
         assert content == {"page": ["Page matching query does not exist."]}
         assert content.get("page") == ["Page matching query does not exist."]
 
-    def test_wa_image(self, uclient):
+    def test_wa_image(self, uclient: Any) -> None:
         """
         Test that API returns image ID for whatsapp
         """
@@ -709,7 +743,7 @@ class TestContentPageAPI:
 
         assert image_id == image_id_expected
 
-    def test_messenger_image(self, uclient):
+    def test_messenger_image(self, uclient: Any) -> None:
         """
         Test that API returns image ID for messenger
         """
@@ -734,7 +768,7 @@ class TestContentPageAPI:
         image_id = content["body"]["text"]["image"]
         assert image_id == image_id_expected
 
-    def test_viber_image(self, uclient):
+    def test_viber_image(self, uclient: Any) -> None:
         """
         Test that API returns image ID for viber
         """
@@ -759,7 +793,7 @@ class TestContentPageAPI:
         image_id = content["body"]["text"]["image"]
         assert image_id == page.viber_body._raw_data[0]["value"]["image"]
 
-    def test_wa_media(self, uclient):
+    def test_wa_media(self, uclient: Any) -> None:
         """
         Test that API returns media ID for whatsapp
         """
@@ -784,7 +818,7 @@ class TestContentPageAPI:
         media_id = content["body"]["text"]["value"]["media"]
         assert media_id == page.whatsapp_body._raw_data[0]["value"]["media"]
 
-    def test_wa_doc(self, uclient):
+    def test_wa_doc(self, uclient: Any) -> None:
         """
         Test that API returns doc ID for whatsapp
         """
@@ -819,15 +853,15 @@ class TestWhatsAppMessages:
 
     def create_content_page(
         self,
-        buttons=None,
-        list_title=None,
-        list_items=None,
-        next_prompt=None,
-        footer=None,
-        whatsapp_template_category=None,
-        whatsapp_template_name=None,
-        variation_messages=None,
-    ):
+        buttons: list[Btn] | None = None,
+        list_title: str | None = None,
+        list_items: list[str] | None = None,
+        next_prompt: str | None = None,
+        footer: str | None = None,
+        whatsapp_template_category: str | None = None,
+        whatsapp_template_name: str | None = None,
+        variation_messages: list[VarMsg] | None = None,
+    ) -> ContentPage:
         """
         Helper function to create pages needed for each test.
 
@@ -854,6 +888,32 @@ class TestWhatsAppMessages:
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
 
+        blocks = []
+        if whatsapp_template_name:
+            template = WhatsAppTemplate.objects.create(
+                category=whatsapp_template_category,
+                name=whatsapp_template_name,
+                message="Test WhatsApp Template Message 1",
+                locale=Locale.objects.first(),
+            )
+            template = WATpl(
+                template=template,
+                message="Test WhatsApp Template Message 1",
+            )
+            blocks.append(template)
+        else:
+            blocks.append(
+                WABlk(
+                    "Test WhatsApp Message 1",
+                    buttons=buttons or [],
+                    list_title=list_title or "",
+                    list_items=list_items or [],
+                    next_prompt=next_prompt or "",
+                    footer=footer or "",
+                    variation_messages=variation_messages or [],
+                )
+            )
+
         content_page = PageBuilder.build_cp(
             parent=main_menu,
             slug=title.replace(" ", "-"),
@@ -861,25 +921,13 @@ class TestWhatsAppMessages:
             bodies=[
                 WABody(
                     title,
-                    [
-                        WABlk(
-                            "Test WhatsApp Message 1",
-                            buttons=buttons or [],
-                            list_title=list_title or "",
-                            list_items=list_items or [],
-                            next_prompt=next_prompt or "",
-                            footer=footer or "",
-                            variation_messages=variation_messages or [],
-                        )
-                    ],
+                    blocks,
                 )
             ],
-            whatsapp_template_category=whatsapp_template_category,
-            whatsapp_template_name=whatsapp_template_name,
         )
         return content_page
 
-    def test_whatsapp_detail_view_with_button(self, uclient):
+    def test_whatsapp_detail_view_with_button(self, uclient: Any) -> None:
         """
         Buttons in WhatsApp messages are present in the message body.
         """
@@ -934,7 +982,7 @@ class TestWhatsAppMessages:
             "value": {"title": "Start form", "form": form.id},
         }
 
-    def test_whatsapp_template_fields(self, uclient):
+    def test_whatsapp_template_fields(self, uclient: Any) -> None:
         """
         Should have the WhatsApp specific fields included in the body; if it's a
         template, what's the template name, the text body of the message.
@@ -949,10 +997,10 @@ class TestWhatsAppMessages:
 
         assert body["is_whatsapp_template"]
         assert body["whatsapp_template_name"] == "test_template"
-        assert body["text"]["value"]["message"] == "Test WhatsApp Message 1"
+        assert body["text"]["value"]["message"] == "Test WhatsApp Template Message 1"
         assert body["whatsapp_template_category"] == "MARKETING"
 
-    def test_whatsapp_detail_view_with_variations(self, uclient):
+    def test_whatsapp_detail_view_with_variations(self, uclient: Any) -> None:
         """
         Variation blocks in WhatsApp messages are present in the message body.
         """
@@ -975,7 +1023,7 @@ class TestWhatsAppMessages:
         view = PageView.objects.last()
         assert view.message == 1
 
-    def test_list_items_no_title(self, uclient):
+    def test_list_items_no_title(self, uclient: Any) -> None:
         """
         test that list items are present in the whatsapp message with no title given
         """
@@ -994,7 +1042,7 @@ class TestWhatsAppMessages:
         assert item_1 == {"type": "item", "value": "list item 1"}
         assert item_2 == {"type": "item", "value": "list item 2"}
 
-    def test_list_items(self, uclient):
+    def test_list_items(self, uclient: Any) -> None:
         """
         test that list items are present in the whatsapp message
         """
@@ -1055,7 +1103,7 @@ class TestWhatsAppMessages:
             "value": {"title": "list item 3", "form": form.id},
         }
 
-    def test_next_prompt(self, uclient):
+    def test_next_prompt(self, uclient: Any) -> None:
         """
         test that next prompt is present in the whatsapp message
         """
@@ -1068,7 +1116,7 @@ class TestWhatsAppMessages:
 
         assert next_prompt == "next prompt 1"
 
-    def test_footer(self, uclient):
+    def test_footer(self, uclient: Any) -> None:
         """
         test that footer is present in the whatsapp message
         """
@@ -1081,7 +1129,7 @@ class TestWhatsAppMessages:
 
         assert footer == "footer 1"
 
-    def test_empty_whatsapp(self, uclient):
+    def test_empty_whatsapp(self, uclient: Any) -> None:
         """
         All values except the message should be blank when nothing else is set on a whatsapp message
         """
@@ -1099,7 +1147,6 @@ class TestWhatsAppMessages:
             "buttons": [],
             "message": "Test WhatsApp Message 1",
             "document": None,
-            "example_values": [],
             "list_title": "",
             "list_items": [],
             "next_prompt": "",
@@ -1110,7 +1157,7 @@ class TestWhatsAppMessages:
 @pytest.mark.django_db
 class TestOrderedContentSetAPI:
     @pytest.fixture(autouse=True)
-    def create_test_data(self):
+    def create_test_data(self) -> None:
         """
         Create the content that all the tests in this class will use.
         """
@@ -1150,7 +1197,7 @@ class TestOrderedContentSetAPI:
         self.ordered_content_set_timed.save()
         self.ordered_content_set_timed.save_revision().publish()
 
-    def test_orderedcontent_endpoint(self, uclient):
+    def test_orderedcontent_endpoint(self, uclient: Any) -> None:
         """
         The orderedcontent endpoint returns a list of ordered sets, including
         name and profile fields.
@@ -1170,7 +1217,7 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
 
-    def test_orderedcontent_detail_endpoint(self, uclient):
+    def test_orderedcontent_detail_endpoint(self, uclient: Any) -> None:
         """
         The orderedcontent detail page lists the pages that are part of the
         ordered set.
@@ -1194,7 +1241,7 @@ class TestOrderedContentSetAPI:
             "contact_field": None,
         }
 
-    def test_orderedcontent_detail_endpoint_timed(self, uclient):
+    def test_orderedcontent_detail_endpoint_timed(self, uclient: Any) -> None:
         """
         The orderedcontent detail page lists the pages that are part of the
         ordered set, including information about timing.
@@ -1218,7 +1265,7 @@ class TestOrderedContentSetAPI:
             "contact_field": "EDD",
         }
 
-    def test_orderedcontent_detail_endpoint_rel_pages_flag(self, uclient):
+    def test_orderedcontent_detail_endpoint_rel_pages_flag(self, uclient: Any) -> None:
         """
         The orderedcontent detail page lists the pages that are part of the
         ordered set, including related pages.
@@ -1247,7 +1294,7 @@ class TestOrderedContentSetAPI:
             "related_pages": [rel_page.id],
         }
 
-    def test_orderedcontent_detail_endpoint_tags_flag(self, uclient):
+    def test_orderedcontent_detail_endpoint_tags_flag(self, uclient: Any) -> None:
         """
         The orderedcontent detail page lists the pages that are part of the
         ordered set, including tags.
@@ -1264,7 +1311,7 @@ class TestOrderedContentSetAPI:
         }
         assert content["pages"][0]["tags"] == [t.name for t in self.page1.tags.all()]
 
-    def test_orderedcontent_endpoint_with_drafts(self, uclient):
+    def test_orderedcontent_endpoint_with_drafts(self, uclient: Any) -> None:
         """
         Unpublished ordered content sets are returned if the qa param is set.
         """
@@ -1283,7 +1330,7 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
 
-    def test_orderedcontent_endpoint_filter_on_slug(self, uclient):
+    def test_orderedcontent_endpoint_filter_on_slug(self, uclient: Any) -> None:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
@@ -1300,7 +1347,7 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
 
-    def test_orderedcntent_endpoint_filter_on_locale(self, uclient):
+    def test_orderedcntent_endpoint_filter_on_locale(self, uclient: Any) -> None:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
@@ -1320,7 +1367,9 @@ class TestOrderedContentSetAPI:
         assert response.status_code == 200
         assert content["count"] == 1
 
-    def test_orderedcontent_endpoint_filter_male_on_gender_profile_field(self, uclient):
+    def test_orderedcontent_endpoint_filter_male_on_gender_profile_field(
+        self, uclient: Any
+    ) -> None:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
@@ -1376,7 +1425,9 @@ class TestOrderedContentSetAPI:
         assert response.status_code == 200
         assert content["count"] == 2
 
-    def test_orderedcontent_endpoint_filter_on_age_profile_field(self, uclient):
+    def test_orderedcontent_endpoint_filter_on_age_profile_field(
+        self, uclient: Any
+    ) -> None:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
@@ -1396,7 +1447,9 @@ class TestOrderedContentSetAPI:
         assert response.status_code == 200
         assert content["count"] == 1
 
-    def test_orderedcontent_endpoint_filter_incorrect_age_profile_field(self, uclient):
+    def test_orderedcontent_endpoint_filter_incorrect_age_profile_field(
+        self, uclient: Any
+    ) -> None:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
@@ -1460,7 +1513,9 @@ class TestOrderedContentSetAPI:
         assert response.status_code == 200
         assert content["count"] == 0
 
-    def test_orderedcontent_endpoint_filter_gender_age_profile_field(self, uclient):
+    def test_orderedcontent_endpoint_filter_gender_age_profile_field(
+        self, uclient: Any
+    ) -> None:
         """
         The correct ordered content sets are returned if the filter is applied.
         """
@@ -1644,7 +1699,7 @@ class TestOrderedContentSetAPI:
         assert response.status_code == 200
         assert content["count"] == 0
 
-    def test_orderedcontent_endpoint_without_drafts(self, uclient):
+    def test_orderedcontent_endpoint_without_drafts(self, uclient: Any) -> None:
         """
         Unpublished ordered content sets are not returned if the qa param is not set.
         """
@@ -1663,7 +1718,7 @@ class TestOrderedContentSetAPI:
             "value": "female",
         }
 
-    def test_orderedcontent_detail_endpoint_with_drafts(self, uclient):
+    def test_orderedcontent_detail_endpoint_with_drafts(self, uclient: Any) -> None:
         """
         Unpublished ordered content sets are returned if the qa param is set.
         """
@@ -1693,7 +1748,7 @@ class TestOrderedContentSetAPI:
 
         assert response.status_code == 404
 
-    def test_orderedcontent_new_draft(self, uclient):
+    def test_orderedcontent_new_draft(self, uclient: Any) -> None:
         """
         New revisions are returned if the qa param is set
         """
@@ -2012,12 +2067,12 @@ class TestAssessmentAPI:
         )
         self.assessment.save()
 
-    def test_assessment_endpoint_with_page_keyword(self, uclient):
+    def test_assessment_endpoint_with_page_keyword(self, uclient: Any) -> None:
         response = uclient.get("/api/v2/assessment/?page=1")
         content = json.loads(response.content)
         assert content["count"] == 1
 
-    def test_assessment_endpoint(self, uclient):
+    def test_assessment_endpoint(self, uclient: Any) -> None:
         response = uclient.get("/api/v2/assessment/")
         content = json.loads(response.content)
         assert content["count"] == 1
@@ -2210,7 +2265,7 @@ class TestAssessmentAPI:
             "semantic_id": "year_of_birth",
         }
 
-    def test_assessment_detail_endpoint(self, uclient):
+    def test_assessment_detail_endpoint(self, uclient: Any) -> None:
         response = uclient.get(f"/api/v2/assessment/{self.assessment.id}/")
         content = json.loads(response.content)
         assert content["title"] == self.assessment.title
@@ -2287,7 +2342,7 @@ class TestAssessmentAPI:
             "triggers": [],
         }
 
-    def test_assessment_endpoint_with_drafts(self, uclient):
+    def test_assessment_endpoint_with_drafts(self, uclient: Any) -> None:
         """
         Unpublished assessments are returned if the qa param is set.
         """
@@ -2367,7 +2422,7 @@ class TestAssessmentAPI:
             "triggers": [],
         }
 
-    def test_assessment_endpoint_without_drafts(self, uclient):
+    def test_assessment_endpoint_without_drafts(self, uclient: Any) -> None:
         """
         Unpublished assessments are not returned if the qa param is not set.
         """
@@ -2381,7 +2436,7 @@ class TestAssessmentAPI:
         assert not self.assessment.live
         assert content["count"] == 0
 
-    def test_assessment_detail_endpoint_with_drafts(self, uclient):
+    def test_assessment_detail_endpoint_with_drafts(self, uclient: Any) -> None:
         """
         Unpublished assessments are returned if the qa param is set.
         """
@@ -2472,7 +2527,7 @@ class TestAssessmentAPI:
 
         assert response.status_code == 404
 
-    def test_assessment_new_draft(self, uclient):
+    def test_assessment_new_draft(self, uclient: Any) -> None:
         """
         New revisions are returned if the qa param is set
         """
@@ -2642,7 +2697,7 @@ class TestAssessmentAPI:
             "triggers": [],
         }
 
-    def test_assessment_endpoint_filter_by_tag(self, uclient):
+    def test_assessment_endpoint_filter_by_tag(self, uclient: Any) -> None:
         response = uclient.get("/api/v2/assessment/?tag=tag1")
         content = json.loads(response.content)
         assert content["count"] == 1
@@ -2717,7 +2772,7 @@ class TestAssessmentAPI:
         content = json.loads(response.content)
         assert content["count"] == 0
 
-    def test_assessment_detail_endpoint_filter_by_tag(self, uclient):
+    def test_assessment_detail_endpoint_filter_by_tag(self, uclient: Any) -> None:
         response = uclient.get(f"/api/v2/assessment/{self.assessment.id}/?tag=tag1")
         content = json.loads(response.content)
         assert content["title"] == self.assessment.title

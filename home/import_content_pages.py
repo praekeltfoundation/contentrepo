@@ -301,8 +301,6 @@ class ContentImporter:
                 wa_template = WhatsAppTemplate.objects.get(
                     name=row.whatsapp_template_name, locale=locale
                 )
-                page.is_whatsapp_template = True
-                page.whatsapp_template_name = row.whatsapp_template_name
             except WhatsAppTemplate.DoesNotExist:
                 raise ImportException(
                     f"The template '{row.whatsapp_template_name}' does not exist for locale '{locale}'"
@@ -493,12 +491,10 @@ class ShadowContentPage:
     subtitle: str = ""
     body: str = ""
     enable_whatsapp: bool = False
-    is_whatsapp_template: bool = False
     whatsapp_title: str = ""
     whatsapp_body: list[Union["ShadowWhatsappBlock", "ShadowWhatsAppTemplate"]] = field(
         default_factory=list
     )
-    whatsapp_template_name: str = ""
     enable_sms: bool = False
     sms_title: str = ""
     sms_body: list["ShadowSMSBlock"] = field(default_factory=list)
@@ -564,9 +560,7 @@ class ShadowContentPage:
 
     def add_whatsapp_to_page(self, page: ContentPage) -> None:
         page.enable_whatsapp = self.enable_whatsapp
-        page.is_whatsapp_template = self.is_whatsapp_template
         page.whatsapp_title = self.whatsapp_title
-        page.whatsapp_template_name = self.whatsapp_template_name
         page.whatsapp_body.clear()
         for message in self.formatted_whatsapp_body:
             body_type = (
