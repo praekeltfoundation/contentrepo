@@ -105,6 +105,7 @@ exclude = [  # Regexes.
     '^home/(views|wagtail_hooks)\.py',
     '^home/tests/utils\.py',
     '^home/tests/test_(api|deduplicate_slugs_migration|json_import)\.py',
+    '^home/tests/test_api_v3\.py',
     '^home/tests/test_(management|management_related_tag|models)\.py',
     '^home/tests/test_(unique_slug_hook|views|wagtail_hooks)\.py',
     '^home/tests/test_(whatsapp_template_name_migration)\.py',
