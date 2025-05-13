@@ -1867,7 +1867,7 @@ class TestExport:
             slug="ha-menu",
             title="HealthAlert menu",
             bodies=[
-                WABody("HA menu", [WABlk("Welcome WA", media=media_wa.id)]),
+                WABody("HA menu", [WABlk("Welcome WA", media=media_wa.id)]),  # type: ignore
             ],
         )
         content = impexp.export_content(locale="en")
@@ -1924,7 +1924,7 @@ def mk_img(img_path: Path, title: str) -> Image:
     return img
 
 
-def mk_media(media_path: Path, title: str) -> File:
+def mk_media(media_path: Path, title: str) -> File:  # type: ignore
     media = Media(title=title, file=File(media_path.open("rb"), name=media_path.name))
     media.save()
     return media
