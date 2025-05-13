@@ -10,6 +10,12 @@ def migrate_content_page_templates_to_standalone_templates(
     for content_page in content_pages:
         whatsapp_block = content_page.whatsapp_body[0]
         whatsapp_value = whatsapp_block.value
+        print(f"Content page title: {content_page.whatsapp_title}")
+        image = whatsapp_value.get("image", None)
+        if image:
+            print(f"Image type: {type(image)}")
+        else:
+            print("No image")
         whatsapp_template = WhatsAppTemplate.objects.create(
             name=content_page.whatsapp_title.lower().replace(" ", "_"),
             locale=content_page.locale,
@@ -25,6 +31,7 @@ def migrate_content_page_templates_to_standalone_templates(
         content_page.whatsapp_body.append(("Whatsapp_Template", whatsapp_template))
         content_page.is_whatsapp_template = False
         content_page.save()
+        print("Content Page Saved")
 
 
 def run_migration(apps: Any, schema_editor: Any) -> None:
