@@ -1,5 +1,6 @@
 from django.db import migrations
 from typing import Any
+from wagtail.images.models import Image
 
 
 def migrate_content_page_templates_to_standalone_templates(
@@ -10,10 +11,12 @@ def migrate_content_page_templates_to_standalone_templates(
     for content_page in content_pages:
         whatsapp_block = content_page.whatsapp_body[0]
         whatsapp_value = whatsapp_block.value
+        print(f"Content Page slug: {content_page.slug}")
         print(f"Content page title: {content_page.whatsapp_title}")
         image = whatsapp_value.get("image", None)
         if image:
             print(f"Image type: {type(image)}")
+            image = Image.objects.get(id=image.id)
         else:
             print("No image")
         whatsapp_template = WhatsAppTemplate.objects.create(
@@ -23,7 +26,7 @@ def migrate_content_page_templates_to_standalone_templates(
             example_values=whatsapp_value.get("example_values", []),
             category=content_page.whatsapp_template_category,
             buttons=whatsapp_value.get("buttons", []),
-            image=whatsapp_value.get("image", None),
+            image=image,
             submission_status="NOT_SUBMITTED_YET",
             submission_result="",
         )
