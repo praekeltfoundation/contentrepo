@@ -1,10 +1,9 @@
 from django.db import migrations
 from typing import Any
-from wagtail.images.models import Image
 
 
 def migrate_content_page_templates_to_standalone_templates(
-    ContentPage: Any, WhatsAppTemplate: Any
+    ContentPage: Any, WhatsAppTemplate: Any, Image: Any
 ) -> None:
     content_pages = ContentPage.objects.filter(is_whatsapp_template=True)
 
@@ -16,7 +15,14 @@ def migrate_content_page_templates_to_standalone_templates(
         image = whatsapp_value.get("image", None)
         if image:
             print(f"Image type: {type(image)}")
-            image = Image.objects.get(id=image.id)
+            if isinstance(image, int):
+                image = Image.objects.get(id=image)
+            elif hasattr(image, "id"):
+                image = Image.objects.get(id=image.id)
+            elif isinstance(image, dict) and "id" in image:
+                image = Image.objects.get(id=image["id"])
+            else:
+                image = None
         else:
             print("No image")
         whatsapp_template = WhatsAppTemplate.objects.create(
@@ -40,8 +46,9 @@ def migrate_content_page_templates_to_standalone_templates(
 def run_migration(apps: Any, schema_editor: Any) -> None:
     ContentPage = apps.get_model("home", "ContentPage")
     WhatsAppTemplate = apps.get_model("home", "WhatsAppTemplate")
+    Image = apps.get_model("wagtailimages", "Image")
     migrate_content_page_templates_to_standalone_templates(
-        ContentPage, WhatsAppTemplate
+        ContentPage, WhatsAppTemplate, Image
     )
 
 
