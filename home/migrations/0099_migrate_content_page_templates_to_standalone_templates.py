@@ -12,40 +12,40 @@ def migrate_content_page_templates_to_standalone_templates(
         whatsapp_value = whatsapp_block.value
         print(f"Content Page slug: {content_page.slug}")
         print(f"Content page title: {content_page.whatsapp_title}")
-        if isinstance(whatsapp_value, WhatsAppTemplate):
-            continue
-        image = whatsapp_value.get("image", None)
-        if image:
-            print(f"Image type: {type(image)}")
-            if isinstance(image, int):
-                image = Image.objects.get(id=image)
-            elif hasattr(image, "id"):
-                image = Image.objects.get(id=image.id)
-            elif isinstance(image, dict) and "id" in image:
-                image = Image.objects.get(id=image["id"])
+        if not isinstance(whatsapp_value, WhatsAppTemplate):
+            image = whatsapp_value.get("image", None)
+            if image:
+                print(f"Image type: {type(image)}")
+                if isinstance(image, int):
+                    image = Image.objects.get(id=image)
+                elif hasattr(image, "id"):
+                    image = Image.objects.get(id=image.id)
+                elif isinstance(image, dict) and "id" in image:
+                    image = Image.objects.get(id=image["id"])
+                else:
+                    image = None
             else:
-                image = None
-        else:
-            print("No image")
-        example_values = list(whatsapp_value.get("example_values", []))
-        whatsapp_template = WhatsAppTemplate.objects.create(
-            name=content_page.whatsapp_title.lower().replace(" ", "_"),
-            locale=content_page.locale,
-            message=whatsapp_value.get("message", ""),
-            example_values=[
-                ("example_values", example_value) for example_value in example_values
-            ],
-            category=content_page.whatsapp_template_category,
-            buttons=whatsapp_value.get("buttons", []),
-            image=image,
-            submission_status="NOT_SUBMITTED_YET",
-            submission_result="",
-        )
-        content_page.whatsapp_body = []
-        content_page.whatsapp_body.append(("Whatsapp_Template", whatsapp_template))
-        content_page.is_whatsapp_template = False
-        content_page.save()
-        print("Content Page Saved")
+                print("No image")
+            example_values = list(whatsapp_value.get("example_values", []))
+            whatsapp_template = WhatsAppTemplate.objects.create(
+                name=content_page.whatsapp_title.lower().replace(" ", "_"),
+                locale=content_page.locale,
+                message=whatsapp_value.get("message", ""),
+                example_values=[
+                    ("example_values", example_value)
+                    for example_value in example_values
+                ],
+                category=content_page.whatsapp_template_category,
+                buttons=whatsapp_value.get("buttons", []),
+                image=image,
+                submission_status="NOT_SUBMITTED_YET",
+                submission_result="",
+            )
+            content_page.whatsapp_body = []
+            content_page.whatsapp_body.append(("Whatsapp_Template", whatsapp_template))
+            content_page.is_whatsapp_template = False
+            content_page.save()
+            print("Content Page Saved")
 
 
 def run_migration(apps: Any, schema_editor: Any) -> None:
