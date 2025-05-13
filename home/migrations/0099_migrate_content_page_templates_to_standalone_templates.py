@@ -38,7 +38,7 @@ def run_migration(apps: Any, schema_editor: Any) -> None:
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("home", "0097_alter_whatsapptemplate_buttons"),
+        ("home", "0098_whatsapptemplate_locked_whatsapptemplate_locked_at_and_more"),
     ]
 
     operations = [
