@@ -319,6 +319,7 @@ class PageBuilder(Generic[TPage]):
         return self
 
     def add_bodies(self, *bodies: ContentBody[TCBlk]) -> "PageBuilder[TPage]":
+        self.page.enable_sms = True
         for body in bodies:
             body.set_on(self.page)
         return self

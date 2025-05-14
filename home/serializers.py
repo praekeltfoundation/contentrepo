@@ -191,22 +191,26 @@ def format_whatsapp_body(content_page):
 
         else:
             message = block.value
+
+            image = message["image"]
+            image = image.id if image is not None else None
+
             messages.append(
                 OrderedDict(
                     [
-                        ("message_type", block.block_type),
-                        ("message_number", message_number),
-                        ("message_id", block.id),
-                        ("message_image", message["image"]),
-                        ("message_media", message["media"]),
-                        ("message_document", message["document"]),
-                        ("message_message", message["message"]),
-                        ("message_buttons", message["buttons"]),
-                        ("message_list_items", message["list_items"]),
-                        ("message_list_title", message["list_title"]),
-                        ("message_next_prompt", message["next_prompt"]),
-                        ("message_example_values", message["example_values"]),
-                        ("message_variation_messages", message["variation_messages"]),
+                        ("type", block.block_type),
+                        ("number", message_number),
+                        ("id", block.id),
+                        ("image", image),
+                        ("media", message["media"]),
+                        ("document", message["document"]),
+                        ("message", message["message"]),
+                        ("buttons", message["buttons"]),
+                        ("list_items", message["list_items"]),
+                        ("list_title", message["list_title"]),
+                        ("next_prompt", message["next_prompt"]),
+                        ("example_values", message["example_values"]),
+                        ("variation_messages", message["variation_messages"]),
                     ]
                 )
             )
@@ -553,10 +557,10 @@ class ContentPageSerializerV3(PageSerializer):
 
     def to_representation(self, page):
         request = self.context["request"]
-        # router = self.context["router"]
+        router = self.context["router"]
         return {
             "id": page.id,
-            # "meta": metadata_field_representation(page, request, router),
+            "meta": metadata_field_representation(page, request, router),
             "title": title_field_representation(page, request),
             "subtitle": subtitle_field_representation(page),
             "messages": body_field_representation_v3(page, request),

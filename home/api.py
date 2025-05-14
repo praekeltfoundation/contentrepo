@@ -149,6 +149,7 @@ class ContentPagesViewSetV3(PagesAPIViewSet):
                     id=pk
                 ).get_latest_revision_as_object()
                 serializer = self.get_serializer(instance)
+
                 return Response(serializer.data)
             else:
                 ContentPage.objects.get(id=pk).save_page_view(request.query_params)
@@ -160,12 +161,14 @@ class ContentPagesViewSetV3(PagesAPIViewSet):
     def listing_view(self, request, *args, **kwargs):
         # If this request is flagged as QA then we should display the pages that have the filtering tags
         # or triggers in their draft versions
+
         if "qa" in request.GET and request.GET["qa"] == "True":
             tag = self.request.query_params.get("tag")
             trigger = self.request.query_params.get("trigger")
             have_new_triggers = []
             have_new_tags = []
             unpublished = ContentPage.objects.filter(has_unpublished_changes="True")
+
             for page in unpublished:
                 latest_rev = page.get_latest_revision_as_object()
                 if trigger and latest_rev.triggers.filter(name=trigger).exists():
@@ -187,7 +190,6 @@ class ContentPagesViewSetV3(PagesAPIViewSet):
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
         queryset = ContentPage.objects.live().prefetch_related("locale")
-
         if qa:
             queryset = queryset | ContentPage.objects.not_live()
 
