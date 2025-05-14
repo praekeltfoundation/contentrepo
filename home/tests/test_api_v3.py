@@ -588,45 +588,45 @@ class TestContentPageAPIV3:
         assert content["count"] == 3
 
     # TODO: This is currently breaking. Decide whether to fix or leave out of this file
-    # def test_platform_filtering(self, uclient):
-    #     """
-    #     If a platform filter is provided, only pages with content for that
-    #     platform are returned.
-    #     """
-    #     self.create_content_page(web_body=["Colour"], body_type=None)
-    #     self.create_content_page(title="Health Info")
-    #     self.create_content_page(title="Self Help", body_type="messenger")
-    #     self.create_content_page(title="Self Help SMS", body_type="sms")
-    #     self.create_content_page(title="Self Help USSD", body_type="ussd")
-    #     # it should return only web pages if filtered
-    #     response = uclient.get("/api/v3/pages/?web=true")
-    #     content = json.loads(response.content)
-    #     assert content["count"] == 1
-    #     # it should return only whatsapp pages if filtered
-    #     response = uclient.get("/api/v3/pages/?whatsapp=true")
-    #     content = json.loads(response.content)
-    #     assert content["count"] == 1
-    #     # it should return only sms pages if filtered
-    #     response = uclient.get("/api/v3/pages/?sms=true")
-    #     content = json.loads(response.content)
-    #     assert content["count"] == 1
-    #     # it should return only ussd pages if filtered
-    #     response = uclient.get("/api/v3/pages/?ussd=true")
-    #     content = json.loads(response.content)
-    #     assert content["count"] == 1
-    #     # it should return only messenger pages if filtered
-    #     response = uclient.get("/api/v3/pages/?messenger=true")
-    #     content = json.loads(response.content)
-    #     assert content["count"] == 1
-    #     # it should return only viber pages if filtered
-    #     response = uclient.get("/api/v3/pages/?viber=true")
-    #     content = json.loads(response.content)
-    #     assert content["count"] == 0
-    #     # it should return all pages for no filter
-    #     response = uclient.get("/api/v3/pages/")
-    #     content = json.loads(response.content)
-    #     # exclude home pages and index pages
-    #     assert content["count"] == 5
+    def test_platform_filtering(self, uclient):
+        """
+        If a platform filter is provided, only pages with content for that
+        platform are returned.
+        """
+        self.create_content_page(web_body=["Colour"], body_type=None)
+        self.create_content_page(title="Health Info")
+        self.create_content_page(title="Self Help", body_type="messenger")
+        self.create_content_page(title="Self Help SMS", body_type="sms")
+        self.create_content_page(title="Self Help USSD", body_type="ussd")
+        # it should return only web pages if filtered
+        response = uclient.get("/api/v3/pages/?web=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return only whatsapp pages if filtered
+        response = uclient.get("/api/v3/pages/?whatsapp=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return only sms pages if filtered
+        response = uclient.get("/api/v3/pages/?sms=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return only ussd pages if filtered
+        response = uclient.get("/api/v3/pages/?ussd=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return only messenger pages if filtered
+        response = uclient.get("/api/v3/pages/?messenger=true")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        # it should return only viber pages if filtered
+        response = uclient.get("/api/v3/pages/?viber=true")
+        content = json.loads(response.content)
+        assert content["count"] == 0
+        # it should return all pages for no filter
+        response = uclient.get("/api/v3/pages/")
+        content = json.loads(response.content)
+        # exclude home pages and index pages
+        assert content["count"] == 5
 
     def test_whatsapp_draft(self, uclient):
         """
@@ -644,7 +644,7 @@ class TestContentPageAPIV3:
         body = content["messages"][0]["message"]
         assert body == "*Default whatsapp Content 1* 🏥"
 
-    # TODO: This is currently breaking. Decide whether to fix or leave out of this file
+    # TODO: This is currently breaking. Fix as part of API refining
     # @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     # def test_message_draft(self, uclient, platform):
     #     """
@@ -656,6 +656,7 @@ class TestContentPageAPIV3:
     #     # it should return specific page that is in draft
     #     response = uclient.get(url)
     #     content = response.json()
+    #     print(content["messages"])
     #     # the page is not live but messenger content is returned
     #     assert not page.live
     #     body = content["messages"][0]["message"]
