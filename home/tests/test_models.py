@@ -570,7 +570,7 @@ class SMSBlockTests(TestCase):
 
 
 @pytest.mark.django_db
-class TestWhatsAppTemplate:
+class WhatsAppTemplateTests(TestCase):
     @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=False)
     def test_whitespace_in_positional_variables_are_invalid(self) -> None:
         """
@@ -961,6 +961,22 @@ class TestWhatsAppTemplate:
         wat_from_db = WhatsAppTemplate.objects.last()
         assert wat_from_db.submission_status == "FAILED"
         assert "Error" in wat_from_db.submission_result
+
+    def test_status_live_plus_draft(self) -> None:
+        """
+        A WhatsAppTemplate that is published and being drafted should return a live and draft status
+        """
+        wat = WhatsAppTemplate(
+            name="wa_title",
+            message="Test WhatsApp Message 1",
+            category="UTILITY",
+            locale=Locale.objects.get(language_code="en"),
+        )
+        wat.save()
+        wat.name = "wa_title_2"
+        wat.save_revision()
+        self.assertTrue(wat.has_unpublished_changes)
+        self.assertEqual(wat.status(), "Live + Draft")
 
 
 class IntegerQuestionBlockTests(TestCase):

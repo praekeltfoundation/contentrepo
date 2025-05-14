@@ -1,5 +1,6 @@
 import logging
-from typing import Any
+from collections.abc import Callable
+from typing import Any, Optional, TypeVar
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
@@ -293,14 +294,6 @@ class WhatsappBlock(blocks.StructBlock):
         "media cannot exceed 1024 characters.",
         validators=(MaxLengthValidator(4096),),
     )
-    example_values = blocks.ListBlock(
-        blocks.CharBlock(
-            label="Example Value",
-        ),
-        default=[],
-        label="Variable Example Values",
-        help_text="Please add example values for all variables used in a WhatsApp template",
-    )
     variation_messages = blocks.ListBlock(VariationBlock(), default=[])
     # TODO: next_prompt is deprecated, and should be removed in the next major version
     next_prompt = blocks.CharBlock(
@@ -492,6 +485,9 @@ class QuickReplyContent(ItemBase):
     )
 
 
+F = TypeVar("F", bound=Callable[..., object])
+
+
 class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     body_truncate_size = 200
 
@@ -563,13 +559,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     ]
 
     # whatsapp page setup
-    is_whatsapp_template = models.BooleanField("Is Template", default=False)
-    whatsapp_template_name = models.CharField(max_length=512, blank=True, default="")
-    whatsapp_template_category = models.CharField(
-        max_length=14,
-        choices=WhatsAppTemplateCategory.choices,
-        default=WhatsAppTemplateCategory.UTILITY,
-    )
     whatsapp_title = models.CharField(max_length=200, blank=True, default="")
     whatsapp_body = StreamField(
         [
@@ -596,8 +585,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         MultiFieldPanel(
             [
                 FieldPanel("whatsapp_title"),
-                FieldPanel("is_whatsapp_template"),
-                FieldPanel("whatsapp_template_category"),
                 FieldPanel("whatsapp_body"),
             ],
             heading="Whatsapp",
@@ -753,42 +740,52 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
     ]
 
     @property
-    def has_children(self):
+    def has_children(self) -> bool:
         return self.get_children_count() > 0
 
     @property
-    def page_rating(self):
+    def page_rating(self) -> str:
         return self._calc_avg_rating(self.ratings.all())
 
     @property
-    def view_count(self):
+    def view_count(self) -> int:
         return self.views.count()
 
     @property
-    def latest_revision_rating(self):
+    def latest_revision_rating(self) -> str:
         return self._calc_avg_rating(
             self.ratings.filter(revision=self.get_latest_revision())
         )
 
     @property
-    def whatsapp_template_prefix(self):
-        return self.whatsapp_title.lower().replace(" ", "_")
+    def has_whatsapp_template(self) -> bool:
+        """
+        Returns True if the page has a whatsapp template
+        """
+        return (
+            any(
+                block["type"] == "Whatsapp_Template"
+                for block in self.whatsapp_body.raw_data
+            )
+            if self.whatsapp_body
+            else False
+        )
 
     @property
-    def whatsapp_template_body(self):
-        return self.whatsapp_body.raw_data[0]["value"]["message"]
+    def whatsapp_template_or_none(self) -> Optional["WhatsAppTemplate"]:
+        """
+        Returns the first whatsapp template if it exists
+        """
+        if self.has_whatsapp_template:
+            for block in self.whatsapp_body.raw_data:
+                if block["type"] == "Whatsapp_Template":
+                    return WhatsAppTemplate.objects.get(id=block["value"])
+        return None
 
-    @property
-    def whatsapp_template_image(self):
-        return self.whatsapp_body.raw_data[0]["value"]["image"]
-
-    def create_whatsapp_template_name(self) -> str:
-        return f"{self.whatsapp_template_prefix}_{self.get_latest_revision().pk}"
-
-    def get_descendants(self, inclusive=False):
+    def get_descendants(self, inclusive: bool = False) -> Any:
         return ContentPage.objects.descendant_of(self, inclusive)
 
-    def _calc_avg_rating(self, ratings):
+    def _calc_avg_rating(self, ratings: Any) -> str:
         if ratings:
             helpful = 0
             for rating in ratings:
@@ -799,7 +796,9 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             return f"{helpful}/{ratings.count()} ({percentage}%)"
         return "(no ratings yet)"
 
-    def save_page_view(self, query_params, platform=None):
+    def save_page_view(
+        self, query_params: dict[str, Any], platform: str | None = None
+    ) -> None:
         if not platform and query_params:
             if "whatsapp" in query_params:
                 platform = "whatsapp"
@@ -844,19 +843,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             return buttons
         return []
 
-    @property
-    def whatsapp_template_fields(self):
-        """
-        Returns a tuple of fields that can be used to determine template equality
-        """
-        return (
-            self.whatsapp_template_body,
-            self.whatsapp_template_buttons,
-            self.is_whatsapp_template,
-            self.whatsapp_template_image,
-            self.whatsapp_template_category,
-        )
-
     def get_all_links(
         self,
     ) -> tuple[list[tuple[str, str]], list[tuple[str, str]], list[tuple[str, str]]]:
@@ -897,23 +883,23 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
 
         return page_links, orderedcontentset_links, whatsapp_template_links
 
-    def short_description(description):
-        def set_short_description(func):
-            func.short_description = description
+    def short_description(description: str) -> Callable[[F], F]:
+        def set_short_description(func: F) -> F:
+            func.short_description = description  # type: ignore[attr-defined]
             return func
 
         return set_short_description
 
     @short_description("Quick Replies")
-    def replies(self):
+    def replies(self) -> list[ContentQuickReply]:
         return list(self.quick_replies.all())
 
     @short_description("Triggers")
-    def trigger(self):
+    def trigger(self) -> list[TriggeredContent]:
         return list(self.triggers.all())
 
     @short_description("Tags")
-    def tag(self):
+    def tag(self) -> list[ContentPageTag]:
         return list(self.tags.all())
 
     @short_description("Whatsapp Body")
@@ -933,7 +919,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         return truncatechars(str(body), self.body_truncate_size)
 
     @short_description("SMS Body")
-    def sms_body_message(self):
+    def sms_body_message(self) -> str:
         body = (
             "\n".join(m.value["message"] for m in self.sms_body)
             if self.sms_body
@@ -942,7 +928,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         return truncatechars(str(body), self.body_truncate_size)
 
     @short_description("USSD Body")
-    def ussd_body_message(self):
+    def ussd_body_message(self) -> str:
         body = (
             "\n".join(m.value["message"] for m in self.ussd_body)
             if self.ussd_body
@@ -951,26 +937,26 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         return truncatechars(str(body), self.body_truncate_size)
 
     @short_description("Messenger Body")
-    def mess_body(self):
+    def mess_body(self) -> str:
         body = "\n".join(m.value["message"] for m in self.messenger_body)
         return truncatechars(str(body), self.body_truncate_size)
 
     @short_description("Viber Body")
-    def vib_body(self):
+    def vib_body(self) -> str:
         body = "\n".join(m.value["message"] for m in self.viber_body)
         return truncatechars(str(body), self.body_truncate_size)
 
     @short_description("Web Body")
-    def web_body(self):
+    def web_body(self) -> str:
         return truncatechars(str(self.body), self.body_truncate_size)
 
     @short_description("Parent")
-    def parental(self):
+    def parental(self) -> Page:
         return self.get_parent()
 
-    def clean(self):
-        result = super().clean(Page)
-        errors = {}
+    def clean(self) -> None:  # type: ignore[override]
+        super().clean(Page)
+        errors: dict[str, str] = {}
 
         # Clean the whatsapp body to remove hidden characters
         if self.whatsapp_body and isinstance(self.whatsapp_body, StreamValue):
@@ -988,10 +974,8 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
         if errors:
             raise ValidationError(errors)
 
-        return result
 
-
-def _get_default_locale():
+def _get_default_locale() -> int:
     site = Site.objects.get(is_default_site=True)
     return site.root_page.locale.id
 
@@ -1487,7 +1471,9 @@ class TemplateQuickReplyContent(ItemBase):
 
 
 class WhatsAppTemplate(
+    WorkflowMixin,
     DraftStateMixin,
+    LockableMixin,
     ClusterableModel,
     RevisionMixin,
     index.Indexed,
@@ -1512,10 +1498,21 @@ class WhatsAppTemplate(
         FAILED = "FAILED", _("Failed")
 
     def get_submission_status_display(self) -> str:
-        return self.SubmissionStatus(self.submission_status).label
+        return self.SubmissionStatus(self.submission_status).label  # type: ignore
 
-    get_submission_status_display.admin_order_field = "submission status"
-    get_submission_status_display.short_description = "Submission status"
+    get_submission_status_display.admin_order_field = "submission status"  # type: ignore
+    get_submission_status_display.short_description = "Submission status"  # type: ignore
+
+    _revisions = GenericRelation(
+        "wagtailcore.Revision", related_query_name="whatsapp_template"
+    )
+    workflow_states = GenericRelation(
+        "wagtailcore.WorkflowState",
+        content_type_field="base_content_type",
+        object_id_field="object_id",
+        related_query_name="whatsapp_template",
+        for_concrete_model=False,
+    )
 
     name = models.CharField(max_length=512, blank=True, default="")
     category = models.CharField(
@@ -1587,17 +1584,37 @@ class WhatsAppTemplate(
     ]
 
     @property
-    def quick_reply_buttons(self):
+    def quick_reply_buttons(self) -> list[str]:
         return self.template_quick_reply_items.all().values_list("tag__name", flat=True)
 
     @property
-    def prefix(self):
+    def prefix(self) -> str:
         return self.name.lower().replace(" ", "_")
 
-    def status(self):
-        return "Live" if self.live else "Draft"
+    @property
+    def revisions(self) -> GenericRelation:
+        return self._revisions
 
-    def __str__(self):
+    def status(self) -> str:
+        workflow_state = self.workflow_states.last()
+        workflow_state_status = workflow_state.status if workflow_state else None
+
+        if self.live:
+            if workflow_state_status == "in_progress":
+                status = "Live + In Moderation"
+            elif self.has_unpublished_changes:
+                status = "Live + Draft"
+            else:
+                status = "Live"
+        else:
+            if workflow_state_status == "in_progress":
+                status = "In Moderation"
+            else:
+                status = "Draft"
+
+        return status
+
+    def __str__(self) -> str:
         """String repr of this snippet."""
         return self.name
 

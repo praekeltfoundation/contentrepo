@@ -24,6 +24,7 @@ from .models import (
     VariationBlock,
     ViberBlock,
     WhatsappBlock,
+    WhatsAppTemplate,
 )
 from .xlsx_helpers import get_active_sheet
 
@@ -121,23 +122,31 @@ class ExportRow:
         if ussd:
             self.ussd_body = ussd.value["message"].strip()
         if whatsapp:
-            self.whatsapp_body = whatsapp.value["message"].strip()
-            if "image" in whatsapp.value and whatsapp.value["image"] is not None:
-                self.image_link = whatsapp.value["image"].file.url
-            if "document" in whatsapp.value and whatsapp.value["document"] is not None:
-                self.doc_link = whatsapp.value["document"].file.url
-            if "media" in whatsapp.value and whatsapp.value["media"] is not None:
-                self.media_link = whatsapp.value["media"].file.url
-            if "next_prompt" in whatsapp.value:
-                self.next_prompt = whatsapp.value["next_prompt"]
-            if "buttons" in whatsapp.value:
-                self.buttons = self.serialise_buttons(whatsapp.value["buttons"])
-            if "footer" in whatsapp.value:
-                self.footer = whatsapp.value["footer"]
-            if "list_title" in whatsapp.value:
-                self.list_title = whatsapp.value["list_title"]
-            if "list_items" in whatsapp.value:
-                self.list_items = self.serialise_buttons(whatsapp.value["list_items"])
+            if isinstance(whatsapp.value, WhatsAppTemplate):
+                self.whatsapp_template_name = whatsapp.value.name
+            else:
+                self.whatsapp_body = whatsapp.value["message"].strip()
+                if "image" in whatsapp.value and whatsapp.value["image"] is not None:
+                    self.image_link = whatsapp.value["image"].file.url
+                if (
+                    "document" in whatsapp.value
+                    and whatsapp.value["document"] is not None
+                ):
+                    self.doc_link = whatsapp.value["document"].file.url
+                if "media" in whatsapp.value and whatsapp.value["media"] is not None:
+                    self.media_link = whatsapp.value["media"].file.url
+                if "next_prompt" in whatsapp.value:
+                    self.next_prompt = whatsapp.value["next_prompt"]
+                if "buttons" in whatsapp.value:
+                    self.buttons = self.serialise_buttons(whatsapp.value["buttons"])
+                if "footer" in whatsapp.value:
+                    self.footer = whatsapp.value["footer"]
+                if "list_title" in whatsapp.value:
+                    self.list_title = whatsapp.value["list_title"]
+                if "list_items" in whatsapp.value:
+                    self.list_items = self.serialise_buttons(
+                        whatsapp.value["list_items"]
+                    )
 
     @staticmethod
     def serialise_buttons(buttons: blocks.StreamValue.StreamChild) -> str:
@@ -202,6 +211,14 @@ class ContentExporter:
          * We should use the parent slug (which is expected to be unique per
            locale (probably?)) instead of the parent title.
         """
+
+        if len(page.whatsapp_body) > 0 and isinstance(
+            page.whatsapp_body[0].value, WhatsAppTemplate
+        ):
+            whatsapp_template_name = page.whatsapp_body[0].value.name
+        else:
+            whatsapp_template_name = ""
+
         row = ExportRow(
             structure=structure,
             message=1,
@@ -212,7 +229,7 @@ class ContentExporter:
             web_subtitle=page.subtitle,
             web_body=str(page.body),
             whatsapp_title=page.whatsapp_title,
-            whatsapp_template_name=page.whatsapp_template_name,
+            whatsapp_template_name=whatsapp_template_name,
             sms_title=page.sms_title,
             ussd_title=page.ussd_title,
             messenger_title=page.messenger_title,
@@ -243,7 +260,7 @@ class ContentExporter:
         if self.rows[-1] is not row:
             self.rows.append(row)
         # Only WhatsappBlock has variations at present.
-        if msg_blocks[0] is None:
+        if msg_blocks[0] is None or isinstance(msg_blocks[0].value, WhatsAppTemplate):
             return
         for variation in msg_blocks[0].value["variation_messages"]:
             self.rows.append(row.new_variation_row(variation))
@@ -305,7 +322,7 @@ class ExportWriter:
         for row in self.rows:
             worksheet.append(row.to_tuple())
         _set_xlsx_styles(workbook, worksheet)
-        workbook.save(response)
+        workbook.save(response)  # type: ignore
 
 
 def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
