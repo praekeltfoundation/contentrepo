@@ -204,7 +204,6 @@ def format_whatsapp_body(content_page):
 
         else:
             message = block.value
-
             image = message["image"]
             image = image.id if image is not None else None
 
@@ -221,8 +220,6 @@ def format_whatsapp_body(content_page):
                         ("buttons", message["buttons"]),
                         ("list_items", message["list_items"]),
                         ("list_title", message["list_title"]),
-                        ("next_prompt", message["next_prompt"]),
-                        ("example_values", message["example_values"]),
                         ("variation_messages", message["variation_messages"]),
                     ]
                 )
