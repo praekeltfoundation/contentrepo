@@ -32,7 +32,7 @@ def migrate_content_page_templates_to_standalone_templates(
                 print("No image")
             example_values = list(whatsapp_value.get("example_values", []))
             whatsapp_template = WhatsAppTemplate.objects.create(
-                name=content_page.whatsapp_title.lower().replace(" ", "_"),
+                name=f'{content_page.whatsapp_title.lower().replace(" ", "_")}_{content_page.get_latest_revision().pk}',
                 locale=content_page.locale,
                 message=whatsapp_value.get("message", ""),
                 example_values=[
