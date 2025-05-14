@@ -161,10 +161,20 @@ def remove_timestamps(pages: DbDicts) -> DbDicts:
 def normalise_revisions(templates: DbDicts) -> DbDicts:
     if "latest_revision" not in list(templates)[0]["fields"]:
         return templates
-    min_latest = min(p["fields"]["latest_revision"] for p in templates)
-    min_live = min(p["fields"]["live_revision"] for p in templates)
-    templates = _update_field(templates, "latest_revision", lambda v: v - min_latest)
-    templates = _update_field(templates, "live_revision", lambda v: v - min_live)
+    latest_revisions = [p["fields"]["latest_revision"] for p in templates]
+    live_revisions = [p["fields"]["live_revision"] for p in templates]
+    try:
+        min_latest = min(latest_revisions)
+        templates = _update_field(
+            templates, "latest_revision", lambda v: v - min_latest
+        )
+    except ValueError:
+        pass
+    try:
+        min_live = min(live_revisions)
+        templates = _update_field(templates, "live_revision", lambda v: v - min_live)
+    except ValueError:
+        pass
     return templates
 
 
@@ -173,7 +183,7 @@ WHATSAPP_TEMPLATE_FILTER_FUNCS = [
     normalise_pks,
     remove_button_ids,
     remove_timestamps,
-    # normalise_revisions,
+    normalise_revisions,
 ]
 
 
@@ -498,12 +508,8 @@ class TestImportExportRoundtrip:
         imported = impexp.get_whatsapp_template_json()
         # remove the revision and unpublished changes keys
         for item in orig:
-            del item["fields"]["latest_revision"]
-            del item["fields"]["live_revision"]
             del item["fields"]["has_unpublished_changes"]
         for item in imported:
-            del item["fields"]["latest_revision"]
-            del item["fields"]["live_revision"]
             del item["fields"]["has_unpublished_changes"]
         assert imported == orig
 
@@ -531,12 +537,8 @@ class TestImportExportRoundtrip:
         imported = impexp.get_whatsapp_template_json()
         # remove the revision and unpublished changes keys
         for item in orig:
-            del item["fields"]["latest_revision"]
-            del item["fields"]["live_revision"]
             del item["fields"]["has_unpublished_changes"]
         for item in imported:
-            del item["fields"]["latest_revision"]
-            del item["fields"]["live_revision"]
             del item["fields"]["has_unpublished_changes"]
         assert imported == orig
 
