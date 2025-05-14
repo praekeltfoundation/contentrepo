@@ -17,6 +17,7 @@ from home.models import (
     USSDBlock,
     ViberBlock,
     WhatsappBlock,
+    WhatsAppTemplate,
 )
 
 TPage = TypeVar("TPage", bound=Page)
@@ -178,6 +179,17 @@ class WABlk(ContentBlock):
 
 
 @dataclass
+class WATpl(ContentBlock):
+    BLOCK_TYPE_STR = "Whatsapp_Template"
+    BLOCK_TYPE = WhatsAppTemplate
+
+    template: WhatsAppTemplate = field(default_factory=WhatsAppTemplate)
+
+    def to_block(self) -> Any:
+        return (self.BLOCK_TYPE_STR, self.template)
+
+
+@dataclass
 class SBlk(ContentBlock):
     BLOCK_TYPE_STR = "SMS_Message"
     BLOCK_TYPE = SMSBlock
@@ -319,7 +331,6 @@ class PageBuilder(Generic[TPage]):
         return self
 
     def add_bodies(self, *bodies: ContentBody[TCBlk]) -> "PageBuilder[TPage]":
-        self.page.enable_sms = True
         for body in bodies:
             body.set_on(self.page)
         return self

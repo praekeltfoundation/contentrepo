@@ -154,7 +154,6 @@ def mk_test_doc() -> Document:
 #         """
 #         Buttons in WhatsApp messages are present in the message body.
 #         """
-#         print("||||")
 #         home_page = HomePage.objects.first()
 #         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
 #         target_page = PageBuilder.build_cp(
@@ -184,13 +183,9 @@ def mk_test_doc() -> Document:
 #                 )
 #             ],
 #         )
-#         print("|1")
 #         response = uclient.get(f"/api/v3/pages/{page.id}/?whatsapp=true")
-#         print(f"response|{response}")
 #         content = response.json()
-#         print("")
-#         print(content)
-#         print("")
+
 #         [next_button, page_button, form_button] = content["body"]["text"]["value"][
 #             "buttons"
 #         ]
@@ -594,7 +589,6 @@ class TestContentPageAPIV3:
 
     # TODO: This is currently breaking. Decide whether to fix or leave out of this file
     # def test_platform_filtering(self, uclient):
-    #     print("Testing platform filtering")
     #     """
     #     If a platform filter is provided, only pages with content for that
     #     platform are returned.
@@ -604,39 +598,30 @@ class TestContentPageAPIV3:
     #     self.create_content_page(title="Self Help", body_type="messenger")
     #     self.create_content_page(title="Self Help SMS", body_type="sms")
     #     self.create_content_page(title="Self Help USSD", body_type="ussd")
-    #     print("1")
     #     # it should return only web pages if filtered
     #     response = uclient.get("/api/v3/pages/?web=true")
     #     content = json.loads(response.content)
     #     assert content["count"] == 1
-    #     print("2")
     #     # it should return only whatsapp pages if filtered
     #     response = uclient.get("/api/v3/pages/?whatsapp=true")
     #     content = json.loads(response.content)
     #     assert content["count"] == 1
-    #     print("3")
     #     # it should return only sms pages if filtered
     #     response = uclient.get("/api/v3/pages/?sms=true")
-    #     print(f"Response is {response}")
     #     content = json.loads(response.content)
-    #     print(f'Count here {content["count"]}')
     #     assert content["count"] == 1
-    #     print("4")
     #     # it should return only ussd pages if filtered
     #     response = uclient.get("/api/v3/pages/?ussd=true")
     #     content = json.loads(response.content)
     #     assert content["count"] == 1
-    #     print("5")
     #     # it should return only messenger pages if filtered
     #     response = uclient.get("/api/v3/pages/?messenger=true")
     #     content = json.loads(response.content)
     #     assert content["count"] == 1
-    #     print("6")
     #     # it should return only viber pages if filtered
     #     response = uclient.get("/api/v3/pages/?viber=true")
     #     content = json.loads(response.content)
     #     assert content["count"] == 0
-    #     print("7")
     #     # it should return all pages for no filter
     #     response = uclient.get("/api/v3/pages/")
     #     content = json.loads(response.content)
@@ -779,7 +764,6 @@ class TestContentPageAPIV3:
 
     #     assert content["id"] == page.id
     #     assert content["title"] == "default page"
-    #     print(f"Content is {content}")
     #     # There's a lot of body, so only check selected fields.
     #     body = content.pop("messages")
     #     assert body["message"] == 1
