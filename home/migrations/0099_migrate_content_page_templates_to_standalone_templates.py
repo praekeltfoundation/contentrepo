@@ -82,8 +82,9 @@ def migrate_content_page_templates_to_standalone_templates(
             submission_status="NOT_SUBMITTED_YET",
             submission_result="",
         )
-        content_page.whatsapp_body = []
-        content_page.whatsapp_body.append(("Whatsapp_Template", whatsapp_template))
+        wb = content_page.whatsapp_body
+        wb[0] = ("Whatsapp_Template", whatsapp_template)
+        content_page.whatsapp_body = wb
         content_page.is_whatsapp_template = False
         content_page.save()
 
