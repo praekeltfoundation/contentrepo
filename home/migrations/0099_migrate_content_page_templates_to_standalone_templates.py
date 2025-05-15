@@ -5,7 +5,8 @@ from django.db.models import Count
 
 def rename_duplicate_whatsapp_titles(ContentPage: Any) -> None:
     duplicate_whatsapp_titles = (
-        ContentPage.objects.values("whatsapp_title")
+        ContentPage.objects.filter(is_whatsapp_template=True)
+        .values("whatsapp_title")
         .annotate(count=Count("whatsapp_title"))
         .filter(count__gt=1)
         .values_list("whatsapp_title", flat=True)
@@ -28,7 +29,9 @@ def rename_duplicate_whatsapp_titles(ContentPage: Any) -> None:
 def rename_matching_whatsapp_names(ContentPage: Any, WhatsAppTemplate: Any) -> None:
     templates = WhatsAppTemplate.objects.all()
     for template in templates:
-        pages = ContentPage.objects.filter(whatsapp_title=template.name)
+        pages = ContentPage.objects.filter(is_whatsapp_template=True).filter(
+            whatsapp_title=template.name
+        )
         while pages.count() > 1:
             page = pages.first()
             suffix = 1
@@ -50,46 +53,39 @@ def migrate_content_page_templates_to_standalone_templates(
     for content_page in content_pages:
         whatsapp_block = content_page.whatsapp_body[0]
         whatsapp_value = whatsapp_block.value
-        print(f"Content Page slug: {content_page.slug}")
-        print(f"Content page title: {content_page.whatsapp_title}")
-        print(f"Whatsapp Value type: {type(whatsapp_value)}, value: {whatsapp_value}")
         if (
-            not hasattr(whatsapp_value, "_meta")
-            or whatsapp_value._meta.verbose_name != "WhatsApp Template"
+            hasattr(whatsapp_value, "_meta")
+            and whatsapp_value._meta.verbose_name == "WhatsApp Template"
         ):
-            image = whatsapp_value.get("image", None)
-            if image:
-                print(f"Image type: {type(image)}")
-                if isinstance(image, int):
-                    image = Image.objects.get(id=image)
-                elif hasattr(image, "id"):
-                    image = Image.objects.get(id=image.id)
-                elif isinstance(image, dict) and "id" in image:
-                    image = Image.objects.get(id=image["id"])
-                else:
-                    image = None
+            continue
+        image = whatsapp_value.get("image", None)
+        if image:
+            if isinstance(image, int):
+                image = Image.objects.get(id=image)
+            elif hasattr(image, "id"):
+                image = Image.objects.get(id=image.id)
+            elif isinstance(image, dict) and "id" in image:
+                image = Image.objects.get(id=image["id"])
             else:
-                print("No image")
-            example_values = list(whatsapp_value.get("example_values", []))
-            whatsapp_template = WhatsAppTemplate.objects.create(
-                name=content_page.whatsapp_title.lower().replace(" ", "_"),
-                locale=content_page.locale,
-                message=whatsapp_value.get("message", ""),
-                example_values=[
-                    ("example_values", example_value)
-                    for example_value in example_values
-                ],
-                category=content_page.whatsapp_template_category,
-                buttons=whatsapp_value.get("buttons", []),
-                image=image,
-                submission_status="NOT_SUBMITTED_YET",
-                submission_result="",
-            )
-            content_page.whatsapp_body = []
-            content_page.whatsapp_body.append(("Whatsapp_Template", whatsapp_template))
-            content_page.is_whatsapp_template = False
-            content_page.save()
-            print("Content Page Saved")
+                image = None
+        example_values = list(whatsapp_value.get("example_values", []))
+        whatsapp_template = WhatsAppTemplate.objects.create(
+            name=content_page.whatsapp_title.lower().replace(" ", "_"),
+            locale=content_page.locale,
+            message=whatsapp_value.get("message", ""),
+            example_values=[
+                ("example_values", example_value) for example_value in example_values
+            ],
+            category=content_page.whatsapp_template_category,
+            buttons=whatsapp_value.get("buttons", []),
+            image=image,
+            submission_status="NOT_SUBMITTED_YET",
+            submission_result="",
+        )
+        content_page.whatsapp_body = []
+        content_page.whatsapp_body.append(("Whatsapp_Template", whatsapp_template))
+        content_page.is_whatsapp_template = False
+        content_page.save()
 
 
 def run_migration(apps: Any, schema_editor: Any) -> None:
