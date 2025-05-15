@@ -1,28 +1,90 @@
 from django.db import migrations
 from typing import Any
+from django.db.models import Count
+
+
+def rename_duplicate_whatsapp_titles(ContentPage: Any) -> None:
+    duplicate_whatsapp_titles = (
+        ContentPage.objects.filter(is_whatsapp_template=True)
+        .values("whatsapp_title")
+        .annotate(count=Count("whatsapp_title"))
+        .filter(count__gt=1)
+        .values_list("whatsapp_title", flat=True)
+    )
+    for whatsapp_title in duplicate_whatsapp_titles:
+        pages = ContentPage.objects.filter(whatsapp_title=whatsapp_title)
+        while pages.count() > 1:
+            page = pages.first()
+            suffix = 1
+            candidate_whatsapp_title = whatsapp_title
+            while ContentPage.objects.filter(
+                whatsapp_title=candidate_whatsapp_title
+            ).exists():
+                suffix += 1
+                candidate_whatsapp_title = f"{whatsapp_title}-{suffix}"
+            page.whatsapp_title = candidate_whatsapp_title
+            page.save(update_fields=["whatsapp_title"])
+
+
+def rename_matching_whatsapp_names(ContentPage: Any, WhatsAppTemplate: Any) -> None:
+    templates = WhatsAppTemplate.objects.all()
+    for template in templates:
+        pages = ContentPage.objects.filter(is_whatsapp_template=True).filter(
+            whatsapp_title=template.name
+        )
+        while pages.count() > 1:
+            page = pages.first()
+            suffix = 1
+            candidate_whatsapp_title = template.name
+            while ContentPage.objects.filter(
+                whatsapp_title=candidate_whatsapp_title
+            ).exists():
+                suffix += 1
+                candidate_whatsapp_title = f"{template.name}-{suffix}"
+            page.whatsapp_title = candidate_whatsapp_title
+            page.save(update_fields=["whatsapp_title"])
 
 
 def migrate_content_page_templates_to_standalone_templates(
-    ContentPage: Any, WhatsAppTemplate: Any
+    ContentPage: Any, WhatsAppTemplate: Any, Image: Any
 ) -> None:
     content_pages = ContentPage.objects.filter(is_whatsapp_template=True)
 
     for content_page in content_pages:
         whatsapp_block = content_page.whatsapp_body[0]
         whatsapp_value = whatsapp_block.value
+        if (
+            hasattr(whatsapp_value, "_meta")
+            and whatsapp_value._meta.verbose_name == "WhatsApp Template"
+        ):
+            continue
+        image = whatsapp_value.get("image", None)
+        if image:
+            if isinstance(image, int):
+                image = Image.objects.get(id=image)
+            elif hasattr(image, "id"):
+                image = Image.objects.get(id=image.id)
+            elif isinstance(image, dict) and "id" in image:
+                image = Image.objects.get(id=image["id"])
+            else:
+                image = None
+        example_values = list(whatsapp_value.get("example_values", []))
         whatsapp_template = WhatsAppTemplate.objects.create(
-            name=content_page.whatsapp_template_name,
+            name=content_page.whatsapp_title.lower().replace(" ", "_"),
             locale=content_page.locale,
             message=whatsapp_value.get("message", ""),
-            example_values=whatsapp_value.get("example_values", []),
+            example_values=[
+                ("example_values", example_value) for example_value in example_values
+            ],
             category=content_page.whatsapp_template_category,
             buttons=whatsapp_value.get("buttons", []),
-            image=whatsapp_value.get("image", None),
+            image=image,
             submission_status="NOT_SUBMITTED_YET",
             submission_result="",
         )
-        content_page.whatsapp_body = []
-        content_page.whatsapp_body.append(("Whatsapp_Template", whatsapp_template))
+        wb = content_page.whatsapp_body
+        wb[0] = ("Whatsapp_Template", whatsapp_template)
+        content_page.whatsapp_body = wb
         content_page.is_whatsapp_template = False
         content_page.save()
 
@@ -30,8 +92,11 @@ def migrate_content_page_templates_to_standalone_templates(
 def run_migration(apps: Any, schema_editor: Any) -> None:
     ContentPage = apps.get_model("home", "ContentPage")
     WhatsAppTemplate = apps.get_model("home", "WhatsAppTemplate")
+    Image = apps.get_model("wagtailimages", "Image")
+    rename_duplicate_whatsapp_titles(ContentPage)
+    rename_matching_whatsapp_names(ContentPage, WhatsAppTemplate)
     migrate_content_page_templates_to_standalone_templates(
-        ContentPage, WhatsAppTemplate
+        ContentPage, WhatsAppTemplate, Image
     )
 
 
