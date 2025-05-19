@@ -132,7 +132,7 @@
 | home/migrations/0096\_migrate\_empty\_submission\_status\_to\_not\_submitted\_yet.py         |       14 |        0 |    100% |           |
 | home/migrations/0097\_alter\_whatsapptemplate\_buttons.py                                    |        8 |        0 |    100% |           |
 | home/migrations/0098\_whatsapptemplate\_locked\_whatsapptemplate\_locked\_at\_and\_more.py   |        6 |        0 |    100% |           |
-| home/migrations/0099\_migrate\_content\_page\_templates\_to\_standalone\_templates.py        |       19 |        7 |     63% |     11-27 |
+| home/migrations/0099\_migrate\_content\_page\_templates\_to\_standalone\_templates.py        |       40 |       26 |     35% |8-13, 22-59 |
 | home/migrations/0100\_remove\_contentpage\_is\_whatsapp\_template\_and\_more.py              |       11 |        0 |    100% |           |
 | home/migrations/\_\_init\_\_.py                                                              |        0 |        0 |    100% |           |
 | home/mixins.py                                                                               |      101 |       15 |     85% |47-49, 53, 57, 98-100, 104, 108, 149-151, 155, 159 |
@@ -144,7 +144,7 @@
 | home/whatsapp.py                                                                             |      231 |        1 |     99% |        19 |
 | home/whatsapp\_template\_import\_export.py                                                   |       19 |        0 |    100% |           |
 | home/xlsx\_helpers.py                                                                        |        5 |        0 |    100% |           |
-|                                                                                    **TOTAL** | **4828** |  **447** | **91%** |           |
+|                                                                                    **TOTAL** | **4849** |  **466** | **90%** |           |
 
 
 ## Setup coverage badge
