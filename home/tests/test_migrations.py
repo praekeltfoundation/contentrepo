@@ -276,7 +276,13 @@ class MigrationTests(TestCase):
                     "value": {
                         "message": "Sample body",
                     },
-                }
+                },
+                {
+                    "type": "Whatsapp_Message",
+                    "value": {
+                        "message": "Sample body 2",
+                    },
+                },
             ],
         )
         root_page.add_child(instance=content_page)
@@ -314,8 +320,12 @@ class MigrationTests(TestCase):
         self.assertEqual(whatsapp_template.submission_result, "")
 
         self.assertFalse(content_page.is_whatsapp_template)
-        self.assertEqual(len(content_page.whatsapp_body), 1)
+
+        self.assertEqual(len(content_page.whatsapp_body), 2)
         self.assertEqual(content_page.whatsapp_body[0].value, whatsapp_template)
+        self.assertEqual(
+            content_page.whatsapp_body[1].value["message"], "Sample body 2"
+        )
 
         whatsapp_template.delete()
         content_page.delete()
