@@ -618,18 +618,31 @@ def metadata_field_representation(page, request, router):
 
 
 class ContentPageSerializerV3(PageSerializer):
-    title = TitleField(read_only=True)
-    subtitle = SubtitleField(read_only=True)
-    # body = BodyField(read_only=True)
-    has_children = HasChildrenField(read_only=True)
-    related_pages = RelatedPagesField(read_only=True)
+    # title = TitleField(read_only=True)
+    # subtitle = SubtitleField(read_only=True)
+    # # body = BodyField(read_only=True)
+    # has_children = HasChildrenField(read_only=True)
+    # related_pages = RelatedPagesField(read_only=True)
+
+    # TODO: @Rudi - I tried cleaning this up to use the above type of
+    # definitions,instead of the 'to-representation' override below, but I
+    # couldn't get all the fields working (the meta one in particular) and the
+    # moment I add a 'to-rep' function, it seems to ignore the above field
+    # definitions.
+    #
+    # I based this off of the existing ContentPageSerializer, which also uses
+    # 'to_representation' approach. I must admit I don't quite understand what
+    # the correct way of doing this is. We probably need to look at all our
+    # serializers as they don't all follow the same approach
+    #
+    # This is taking me too long now, Can we update it when you are back on the
+    # squad, or you can provide some direction here, I am going in circles
 
     def to_representation(self, page):
         request = self.context["request"]
         router = self.context["router"]
         return {
-            # "id": page.id,
-            "slug": "will-go-here",
+            "slug": page.slug,
             "meta": metadata_field_representation(page, request, router),
             "title": title_field_representation(page, request),
             "subtitle": subtitle_field_representation(page),
@@ -872,6 +885,9 @@ class RevisionField(serializers.Field):
 
 
 class WhatsAppTemplateSerializer(BaseSerializer):
+    locale = TemplateLocaleField(read_only=True)
+    revision = RevisionField(read_only=True)
+
     class Meta:
         model = WhatsAppTemplate
         fields = [
@@ -891,6 +907,4 @@ class WhatsAppTemplateSerializer(BaseSerializer):
             "submission_result",
         ]
 
-    locale = TemplateLocaleField(read_only=True)
-    revision = RevisionField(read_only=True)
     # TODO: Not sure which fields should or not be def'd up here, check with clever people
