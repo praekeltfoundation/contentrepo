@@ -186,18 +186,20 @@ def format_whatsapp_body(content_page):
             messages.append(
                 OrderedDict(
                     [
-                        ("message_type", block.block_type),
-                        ("message_number", message_number),
-                        ("template_id", template.id),
+                        ("number", message_number),
+                        ("type", block.block_type),
+                        ("image", template.image),
+                        ("video", None),
+                        ("document", None),
+                        ("message", template.message),
+                        ("buttons", list(template.buttons.raw_data)),
+                        # ("id", template.id),
                         ("template_name", template.name),
                         ("template_category", template.category),
-                        ("template_image", template.image),
-                        ("template_message", template.message),
-                        ("template_buttons", list(template.buttons.raw_data)),
                         ("template_submission_name", template.submission_name),
                         ("template_submission_status", template.submission_status),
                         ("template_submission_result", template.submission_result),
-                        ("template_id", template.id),
+                        # ("template_id", template.id),
                     ]
                 )
             )
@@ -210,11 +212,10 @@ def format_whatsapp_body(content_page):
             messages.append(
                 OrderedDict(
                     [
-                        ("type", block.block_type),
                         ("number", message_number),
-                        ("id", block.id),
+                        ("type", block.block_type),
                         ("image", image),
-                        ("media", message["media"]),
+                        ("video", message["media"]),
                         ("document", message["document"]),
                         ("message", message["message"]),
                         ("buttons", message["buttons"]),
@@ -584,30 +585,6 @@ class ContentPageSerializer(PageSerializer):
         }
 
 
-class ContentPageSerializerV3(PageSerializer):
-    title = TitleField(read_only=True)
-    subtitle = SubtitleField(read_only=True)
-    # body = BodyField(read_only=True)
-    has_children = HasChildrenField(read_only=True)
-    related_pages = RelatedPagesField(read_only=True)
-
-    def to_representation(self, page):
-        request = self.context["request"]
-        router = self.context["router"]
-        return {
-            "id": page.id,
-            "meta": metadata_field_representation(page, request, router),
-            "title": title_field_representation(page, request),
-            "subtitle": subtitle_field_representation(page),
-            "messages": body_field_representation_v3(page, request),
-            "tags": [x.name for x in page.tags.all()],
-            "triggers": [x.name for x in page.triggers.all()],
-            "quick_replies": [x.name for x in page.quick_replies.all()],
-            "has_children": has_children_field_representation(page),
-            "related_pages": related_pages_field_representation(page, request),
-        }
-
-
 def metadata_field_representation(page, request, router):
     parent = {}
     page_parent = page.get_parent()
@@ -638,6 +615,31 @@ def metadata_field_representation(page, request, router):
         "parent": parent,
         "locale": page.locale.language_code,
     }
+
+
+class ContentPageSerializerV3(PageSerializer):
+    title = TitleField(read_only=True)
+    subtitle = SubtitleField(read_only=True)
+    # body = BodyField(read_only=True)
+    has_children = HasChildrenField(read_only=True)
+    related_pages = RelatedPagesField(read_only=True)
+
+    def to_representation(self, page):
+        request = self.context["request"]
+        router = self.context["router"]
+        return {
+            # "id": page.id,
+            "slug": "will-go-here",
+            "meta": metadata_field_representation(page, request, router),
+            "title": title_field_representation(page, request),
+            "subtitle": subtitle_field_representation(page),
+            "messages": body_field_representation_v3(page, request),
+            "tags": [x.name for x in page.tags.all()],
+            "triggers": [x.name for x in page.triggers.all()],
+            "quick_replies": [x.name for x in page.quick_replies.all()],
+            "has_children": has_children_field_representation(page),
+            "related_pages": related_pages_field_representation(page, request),
+        }
 
 
 class ContentPageRatingSerializer(serializers.ModelSerializer):
@@ -859,38 +861,6 @@ class TemplateLocaleField(serializers.Field):
         return instance.locale.language_code
 
 
-class MessageField(serializers.Field):
-    """
-    Serializes the "message" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, instance):
-        return instance.message
-
-
-class CategoryField(serializers.Field):
-    """
-    Serializes the "category" field.
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, instance):
-        return instance.category
-
-
-def category_field_representation(template, request):
-    return template.category
-
-
-def name_field_representation(template, request):
-    return template.name
-
-
 class RevisionField(serializers.Field):
     def get_attribute(self, instance):
         return instance
@@ -921,10 +891,6 @@ class WhatsAppTemplateSerializer(BaseSerializer):
             "submission_result",
         ]
 
-    # id = serializers.IntegerField(read_only=True)
     locale = TemplateLocaleField(read_only=True)
-    name = NameField(read_only=True)
-    message = MessageField(read_only=True)
-    category = CategoryField(read_only=True)
     revision = RevisionField(read_only=True)
     # TODO: Not sure which fields should or not be def'd up here, check with clever people

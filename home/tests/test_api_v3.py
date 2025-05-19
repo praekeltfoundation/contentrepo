@@ -711,7 +711,7 @@ class TestContentPageAPIV3:
         assert meta["detail_url"] == f"http://localhost/api/v3/pages/{page.id}/"
 
         assert content == {
-            "id": page.id,
+            "slug": "will-go-here",
             "title": "default page",
             "subtitle": "",
             "messages": None,

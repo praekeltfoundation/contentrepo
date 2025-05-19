@@ -1,3 +1,4 @@
+from django.urls import path
 from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -407,6 +408,18 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
                 "last_published_at"
             )
         return queryset
+
+    @classmethod
+    def get_urlpatterns(cls):
+        """
+        This returns a list of URL patterns for the endpoint
+        """
+        return [
+            path("", cls.as_view({"get": "listing_view"}), name="listing"),
+            path("<int:pk>/", cls.as_view({"get": "detail_view"}), name="detail"),
+            # path("<slug:slug>/", cls.as_view({"get": "detail_view"}), name="detail"),
+            path("find/", cls.as_view({"get": "find_view"}), name="find"),
+        ]
 
 
 class AssessmentViewSet(BaseAPIViewSet):
