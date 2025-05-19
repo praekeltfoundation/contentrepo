@@ -1,48 +1,16 @@
 from django.db import migrations
 from typing import Any
-from django.db.models import Count
 
 
-def rename_duplicate_whatsapp_titles(ContentPage: Any) -> None:
-    duplicate_whatsapp_titles = (
-        ContentPage.objects.filter(is_whatsapp_template=True)
-        .values("whatsapp_title")
-        .annotate(count=Count("whatsapp_title"))
-        .filter(count__gt=1)
-        .values_list("whatsapp_title", flat=True)
-    )
-    for whatsapp_title in duplicate_whatsapp_titles:
-        pages = ContentPage.objects.filter(whatsapp_title=whatsapp_title)
-        while pages.count() > 1:
-            page = pages.first()
-            suffix = 1
-            candidate_whatsapp_title = whatsapp_title
-            while ContentPage.objects.filter(
-                whatsapp_title=candidate_whatsapp_title
-            ).exists():
-                suffix += 1
-                candidate_whatsapp_title = f"{whatsapp_title}-{suffix}"
-            page.whatsapp_title = candidate_whatsapp_title
-            page.save(update_fields=["whatsapp_title"])
-
-
-def rename_matching_whatsapp_names(ContentPage: Any, WhatsAppTemplate: Any) -> None:
-    templates = WhatsAppTemplate.objects.all()
-    for template in templates:
-        pages = ContentPage.objects.filter(is_whatsapp_template=True).filter(
-            whatsapp_title=template.name
-        )
-        while pages.count() > 1:
-            page = pages.first()
-            suffix = 1
-            candidate_whatsapp_title = template.name
-            while ContentPage.objects.filter(
-                whatsapp_title=candidate_whatsapp_title
-            ).exists():
-                suffix += 1
-                candidate_whatsapp_title = f"{template.name}-{suffix}"
-            page.whatsapp_title = candidate_whatsapp_title
-            page.save(update_fields=["whatsapp_title"])
+def create_unique_whatsapp_template_name(
+    content_page_name: str, WhatsAppTemplate: Any
+) -> str:
+    suffix = 1
+    candidate_whatsapp_title = content_page_name
+    while WhatsAppTemplate.objects.filter(name=candidate_whatsapp_title).exists():
+        suffix += 1
+        candidate_whatsapp_title = f"{content_page_name}-{suffix}"
+    return candidate_whatsapp_title
 
 
 def migrate_content_page_templates_to_standalone_templates(
@@ -70,7 +38,9 @@ def migrate_content_page_templates_to_standalone_templates(
                 image = None
         example_values = list(whatsapp_value.get("example_values", []))
         whatsapp_template = WhatsAppTemplate.objects.create(
-            name=content_page.whatsapp_title.lower().replace(" ", "_"),
+            name=create_unique_whatsapp_template_name(
+                content_page.whatsapp_title.lower().replace(" ", "_"), WhatsAppTemplate
+            ),
             locale=content_page.locale,
             message=whatsapp_value.get("message", ""),
             example_values=[
@@ -93,8 +63,6 @@ def run_migration(apps: Any, schema_editor: Any) -> None:
     ContentPage = apps.get_model("home", "ContentPage")
     WhatsAppTemplate = apps.get_model("home", "WhatsAppTemplate")
     Image = apps.get_model("wagtailimages", "Image")
-    rename_duplicate_whatsapp_titles(ContentPage)
-    rename_matching_whatsapp_names(ContentPage, WhatsAppTemplate)
     migrate_content_page_templates_to_standalone_templates(
         ContentPage, WhatsAppTemplate, Image
     )
