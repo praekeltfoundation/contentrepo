@@ -9,7 +9,7 @@ from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
 from home import views as home_views
-from home.api import api_router
+from home.api import api_router, api_router_v3
 from home.views import submit_to_meta_view
 
 from drf_spectacular.views import (  # isort:skip
@@ -62,6 +62,7 @@ urlpatterns = urlpatterns + [
     path("api/v2/", api_router.urls),
     path("api/v2/token/", obtain_auth_token),
     path("api/v2/custom/", include(custom_v2router.urls)),
+    path("api/v3/", api_router_v3.urls),
     path("", include(wagtail_urls)),
     # Alternatively, if you want Wagtail pages to be served from a subpath
     # of your site, rather than the site root:
