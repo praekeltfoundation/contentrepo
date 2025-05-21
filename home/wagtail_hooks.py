@@ -222,6 +222,7 @@ class ContentPageAdmin(ModelAdmin):
         "tag",
         "related_pages",
         "parental",
+        "has_whatsapp_template",
     )
     list_filter = ("locale",)
 
