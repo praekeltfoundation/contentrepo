@@ -419,7 +419,7 @@ def test_submit_revision(monkeypatch: pytest.MonkeyPatch) -> None:
 
     rev3 = wat.revisions.order_by("-created_at").first()
     rev3_obj = rev3.as_object()
-    assert rev3_obj.submission_name == f"valid-named-variables_{pk}"
+    assert rev3_obj.submission_name == f"valid-named-variables_en_{pk}"
     assert rev3_obj.submission_status == DummySubmissionStatus.SUBMITTED
     assert rev3_obj.submission_result.startswith("Success! Template ID = ")
 

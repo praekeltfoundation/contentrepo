@@ -646,7 +646,7 @@ class WhatsAppTemplateTests(TestCase):
                 },
             ],
             "language": "en_US",
-            "name": f"valid-named-variables_{wat.get_latest_revision().id}",
+            "name": f"valid-named-variables_en_{wat.get_latest_revision().id}",
         }
 
     @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=True)
@@ -782,7 +782,7 @@ class WhatsAppTemplateTests(TestCase):
             "category": "UTILITY",
             "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
             "language": "en_US",
-            "name": f"wa_title_{wat.get_latest_revision().id}",
+            "name": f"wa_title_en_{wat.get_latest_revision().id}",
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -822,7 +822,7 @@ class WhatsAppTemplateTests(TestCase):
                 },
             ],
             "language": "en_US",
-            "name": f"wa_title_{wat.get_latest_revision().id}",
+            "name": f"wa_title_en_{wat.get_latest_revision().id}",
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -872,7 +872,7 @@ class WhatsAppTemplateTests(TestCase):
                 },
             ],
             "language": "en_US",
-            "name": f"wa_title_{wat.get_latest_revision().id}",
+            "name": f"wa_title_en_{wat.get_latest_revision().id}",
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -908,7 +908,7 @@ class WhatsAppTemplateTests(TestCase):
                 },
             ],
             "language": "en_US",
-            "name": f"wa_title_{wat.get_latest_revision().id}",
+            "name": f"wa_title_en_{wat.get_latest_revision().id}",
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
