@@ -9,7 +9,8 @@ from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
 from home import views as home_views
-from home.api import api_router, api_router_v3
+from home.api import api_router
+from home.api_v3 import api_router_v3
 from home.views import submit_to_meta_view
 
 from drf_spectacular.views import (  # isort:skip
