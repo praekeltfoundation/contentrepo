@@ -16,46 +16,47 @@ from .models import (  # isort:skip
 
 
 class WhatsAppTemplateViewset(BaseAPIViewSet):
+    model = WhatsAppTemplate
     base_serializer_class = WhatsAppTemplateSerializer
+    meta_fields = []
     known_query_parameters = BaseAPIViewSet.known_query_parameters.union(
         [
             "qa",
         ]
     )
-    model = WhatsAppTemplate
-    meta_fields = []
-    body_fields = [
-        # "id",
-        "slug",
-        "locale",
-        "name",
-        "category",
-        "image",
-        "message",
-        "example_values",
-        "buttons",
-        "revision",
-        "status",
-        "submission_name",
-        "submission_status",
-        "submission_result",
-    ]
-    listing_default_fields = [
-        # "id",
-        "slug",
-        "locale",
-        "name",
-        "category",
-        "image",
-        "message",
-        "example_values",
-        "buttons",
-        "revision",
-        "status",
-        "submission_name",
-        "submission_status",
-        "submission_result",
-    ]
+
+    # body_fields = [
+    #     # "id",
+    #     "slug",
+    #     "locale",
+    #     "name",
+    #     "category",
+    #     "image",
+    #     "message",
+    #     "example_values",
+    #     "buttons",
+    #     "revision",
+    #     "status",
+    #     "submission_name",
+    #     "submission_status",
+    #     "submission_result",
+    # ]
+    # listing_default_fields = [
+    #     # "id",
+    #     "slug",
+    #     "locale",
+    #     "name",
+    #     "category",
+    #     "image",
+    #     "message",
+    #     "example_values",
+    #     "buttons",
+    #     "revision",
+    #     "status",
+    #     "submission_name",
+    #     "submission_status",
+    #     "submission_result",
+    # ]
     pagination_class = PageNumberPagination
     search_fields = [
         "name",
@@ -77,15 +78,21 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
             # TODO: Handle this better
             print(f"Exception = {e}")
 
-        # except WhatsAppTemplate.DoesNotExist:
-        #     raise NotFound(
-        #         {"whatsapp_template": ["Template matching query does not exist."]}
-        #     )
-
         return super().detail_view(request, pk)
 
     def listing_view(self, request, *args, **kwargs):
-        return super().listing_view(request)
+        print("Listing view here")
+        queryset = self.get_queryset()
+        queryset_list = self.paginate_queryset(queryset)
+        serializer = WhatsAppTemplateSerializer(
+            queryset_list, context={"request": request}, many=True
+        )
+        print(f"Serializer in listing view is {serializer}")
+        print("")
+        print("")
+        print(f"Serializer DATA in listing view is {serializer.data}")
+        return self.get_paginated_response(serializer.data)
+        # return super().listing_view(request)
 
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
@@ -98,12 +105,12 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
                 if latest_revision:
                     latest_revision = latest_revision.as_object()
                     wat.name = latest_revision.name
-                    wat.message = latest_revision.message
 
         else:
             queryset = WhatsAppTemplate.objects.filter(live=True).order_by(
                 "last_published_at"
             )
+
         return queryset
 
     @classmethod
@@ -113,7 +120,7 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         """
         return [
             path("", cls.as_view({"get": "listing_view"}), name="listing"),
-            # path("<int:pk>/", cls.as_view({"get": "detail_view"}), name="detail"),
+            path("<int:pk>/", cls.as_view({"get": "detail_view"}), name="detail"),
             path("<slug:slug>/", cls.as_view({"get": "detail_view"}), name="detail"),
             path("find/", cls.as_view({"get": "find_view"}), name="find"),
         ]
@@ -250,7 +257,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
     """
 
     model = ContentPage
-    serializer_class = ContentPageSerializerV3
     base_serializer_class = ContentPageSerializerV3
     meta_fields = []
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
@@ -268,46 +274,46 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             "ussd",
         ]
     )
-    body_fields = [
-        "slug",
-        "locale",
-        "title",
-        "subtitle",
-        "messages",
-        # "buttons",
-        # "list_items",
-        "tags",
-        "triggers",
-        "has_children",
-        "related_pages",
-    ]
-    listing_default_fields = [
-        "slug",
-        "locale",
-        "title",
-        "subtitle",
-        "messages",
-        "buttons",
-        "list_items",
-        "example_values",
-        "tags",
-        "triggers",
-        "has_children",
-        "related_pages",
-    ]
-    fields = [
-        "slug",
-        "locale",
-        "title",
-        "subtitle",
-        "messages",
-        "buttons",
-        "list_items",
-        "tags",
-        "triggers",
-        "has_children",
-        "related_pages",
-    ]
+    # body_fields = [
+    #     "slug",
+    #     "locale",
+    #     "title",
+    #     "subtitle",
+    #     "messages",
+    #     "buttons",
+    #     "list_items",
+    #     "tags",
+    #     "triggers",
+    #     "has_children",
+    #     "related_pages",
+    # ]
+    # listing_default_fields = [
+    #     "slug",
+    #     "locale",
+    #     "title",
+    #     "subtitle",
+    #     "messages",
+    #     "buttons",
+    #     "list_items",
+    #     "example_values",
+    #     "tags",
+    #     "triggers",
+    #     "has_children",
+    #     "related_pages",
+    # ]
+    # fields = [
+    #     "slug",
+    #     "locale",
+    #     "title",
+    #     "subtitle",
+    #     "messages",
+    #     "buttons",
+    #     "list_items",
+    #     "tags",
+    #     "triggers",
+    #     "has_children",
+    #     "related_pages",
+    # ]
     pagination_class = PageNumberPagination
 
     def detail_view(self, request, pk=None, slug=None):
@@ -355,10 +361,9 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             queryset_list = self.paginate_queryset(queryset)
 
             serializer = ContentPageSerializerV3(
-                queryset, context={"request": request}, many=True
+                queryset_list, context={"request": request}, many=True
             )
             print(f"Serialiser = {type(serializer)}")
-            # serializer = self.get_serializer(queryset_list, many=True)
 
             return self.get_paginated_response(serializer.data)
 

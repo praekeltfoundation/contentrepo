@@ -3,7 +3,7 @@ from collections import OrderedDict
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from wagtail import blocks
-from wagtail.api.v2.serializers import PageLocaleField, PageSerializer
+from wagtail.api.v2.serializers import PageSerializer
 
 from home.models import Assessment, ContentPage, WhatsAppTemplate
 
@@ -153,19 +153,6 @@ def related_pages_field_representation(page, request):
             }
         )
     return related_pages
-
-
-# def format_whatsapp_template_message(message: str) -> dict[str, Any]:
-#     text = {
-#         "value": {
-#             "variation_messagesss": [],
-#             "list_items": [],
-#             "list_items_v2": [],
-#             "buttons": [],
-#             "message": message,
-#         }
-#     }
-#     return text
 
 
 class BodyField(serializers.Field):
@@ -353,15 +340,16 @@ def format_whatsapp_body_V3(content_page):
 
         if str(block.block_type) == "Whatsapp_Template":
             template = block.value
+            print(f"Image is {template.image.id}")
 
             messages.append(
                 OrderedDict(
                     [
                         ("type", block.block_type),
-                        # ("image", template.image),
-                        ("video", None),
+                        ("image", template.image.id),
+                        ("media", None),
                         ("document", None),
-                        ("message", template.message),
+                        ("text", template.message),
                         (
                             "buttons",
                             format_buttons_and_list_items(template.buttons.raw_data),
@@ -375,7 +363,6 @@ def format_whatsapp_body_V3(content_page):
                         ("submission_name", template.submission_name),
                         ("submission_status", template.submission_status),
                         ("submission_result", template.submission_result),
-                        # ("template_id", template.id),
                     ]
                 )
             )
@@ -419,28 +406,26 @@ def format_whatsapp_body_V3(content_page):
 
 
 class ContentPageSerializerV3(PageSerializer):
-    # subtitle = SubtitleField(read_only=True)
-    # has_children = HasChildrenField(read_only=True)
-    # related_pages = RelatedPagesField(read_only=True)
-    # footer = serializers.CharField()
     title = serializers.CharField(read_only=True)
     slug = serializers.SlugField(read_only=True)
-    body = BodyField(read_only=True)
+
     messages = serializers.SerializerMethodField()
 
     meta_fields = []
 
     class Meta:
         model = ContentPage
-        # fields = [
-        #     "title",
-        #     "slug",
-        # ]
+
         fields = [
             "slug",
+            "locale",
             "title",
-            "body",
+            "subtitle",
             "messages",
+            "tags",
+            "triggers",
+            "has_children",
+            "related_pages",
         ]
 
         # exclude = ["meta_fields"]
@@ -453,21 +438,48 @@ class ContentPageSerializerV3(PageSerializer):
 
         return messages
 
+    def get_buttons(self, obj):
+        buttons = list(obj.buttons.raw_data)
+        for button in buttons:
+            if "id" in button:
+                del button["id"]
+        return buttons
+
+    def get_example_values(self, obj):
+        example_values = list(obj.example_values.raw_data)
+        string_list = [d["value"] for d in example_values]
+        return string_list
+
 
 class WhatsAppTemplateSerializer(serializers.ModelSerializer):
-    # TODO: @Rudi This  Meta fields bit below was added to limit new fields automatically being added to the api automatically but it doesn't seem to do anything
-    class Meta:
-        model = WhatsAppTemplate
-        # fields = ["locale"]
-        # fields = ["category", "image", "buttons"]
-        exclude = ["id"]
-
-    # TODO: @Rudi - is it a problem using PageLocaleField here, even though this model is not related to Page at all?
-    locale = PageLocaleField(read_only=True)
+    locale = serializers.CharField(source="locale.language_code")
     revision = serializers.IntegerField(source="get_latest_revision.id")
     buttons = serializers.SerializerMethodField()
     example_values = serializers.SerializerMethodField()
     slug = serializers.SerializerMethodField()
+    # locale = serializers.SerializerMethodField()
+
+    meta_fields = []
+
+    class Meta:
+        model = WhatsAppTemplate
+        fields = [
+            # "id",
+            "slug",
+            "locale",
+            "name",
+            "category",
+            "image",
+            "message",
+            "example_values",
+            "buttons",
+            "revision",
+            "status",
+            "submission_name",
+            "submission_status",
+            "submission_result",
+        ]
+        # exclude = ["id"]
 
     def get_buttons(self, obj):
         buttons = list(obj.buttons.raw_data)
@@ -483,5 +495,4 @@ class WhatsAppTemplateSerializer(serializers.ModelSerializer):
 
     def get_slug(self, obj):
         slug = "TODO:"
-
         return slug

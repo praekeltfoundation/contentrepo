@@ -1539,7 +1539,7 @@ class WhatsAppTemplate(
         max_num=3,
     )
 
-    locale = models.ForeignKey(Locale, on_delete=models.CASCADE, default="")
+    locale = models.ForeignKey(Locale, on_delete=models.CASCADE)
 
     image = models.ForeignKey(
         "wagtailimages.Image",
