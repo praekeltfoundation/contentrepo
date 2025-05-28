@@ -25,52 +25,24 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         ]
     )
 
-    # body_fields = [
-    #     # "id",
-    #     "slug",
-    #     "locale",
-    #     "name",
-    #     "category",
-    #     "image",
-    #     "message",
-    #     "example_values",
-    #     "buttons",
-    #     "revision",
-    #     "status",
-    #     "submission_name",
-    #     "submission_status",
-    #     "submission_result",
-    # ]
-    # listing_default_fields = [
-    #     # "id",
-    #     "slug",
-    #     "locale",
-    #     "name",
-    #     "category",
-    #     "image",
-    #     "message",
-    #     "example_values",
-    #     "buttons",
-    #     "revision",
-    #     "status",
-    #     "submission_name",
-    #     "submission_status",
-    #     "submission_result",
-    # ]
     pagination_class = PageNumberPagination
     search_fields = [
         "name",
     ]
     filter_backends = (SearchFilter,)
 
-    def detail_view(self, request, pk):
-        print("Detail View")
+    def detail_view(self, request, pk=None, slug=None):
+        if slug is not None:
+            pk = 1
+
         try:
             if "qa" in request.GET and request.GET["qa"] == "True":
                 instance = WhatsAppTemplate.objects.get(
                     id=pk
                 ).get_latest_revision_as_object()
-                serializer = self.get_serializer(instance)
+                serializer = WhatsAppTemplateSerializer(
+                    instance, context={"request": request}
+                )
                 return Response(serializer.data)
             else:
                 WhatsAppTemplate.objects.get(id=pk)
@@ -81,16 +53,11 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         return super().detail_view(request, pk)
 
     def listing_view(self, request, *args, **kwargs):
-        print("Listing view here")
         queryset = self.get_queryset()
         queryset_list = self.paginate_queryset(queryset)
         serializer = WhatsAppTemplateSerializer(
             queryset_list, context={"request": request}, many=True
         )
-        print(f"Serializer in listing view is {serializer}")
-        print("")
-        print("")
-        print(f"Serializer DATA in listing view is {serializer.data}")
         return self.get_paginated_response(serializer.data)
         # return super().listing_view(request)
 
@@ -126,131 +93,6 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         ]
 
 
-# class ContentPagesViewSetV3(PagesAPIViewSet):
-#     model = ContentPage
-#     serializer_class = ContentPageSerializerV3
-#     base_serializer_class = ContentPageSerializerV3
-#     meta_fields = []
-#     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
-#         [
-#             "tag",
-#             "trigger",
-#             "page",
-#             "qa",
-#             "whatsapp",
-#             "viber",
-#             "messenger",
-#             "web",
-#             "s",
-#             "sms",
-#             "ussd",
-#         ]
-#     )
-#     body_fields = [
-#         "slug",
-#         "locale",
-#         "title",
-#         "subtitle",
-#         "messages",
-#         # "buttons",
-#         # "list_items",
-#         "tags",
-#         "triggers",
-#         "has_children",
-#         "related_pages",
-#     ]
-#     listing_default_fields = [
-#         "slug",
-#         "locale",
-#         "title",
-#         "subtitle",
-#         "messages",
-#         "buttons",
-#         "list_items",
-#         "example_values",
-#         "tags",
-#         "triggers",
-#         "has_children",
-#         "related_pages",
-#     ]
-#     fields = [
-#         "slug",
-#         "locale",
-#         "title",
-#         "subtitle",
-#         "messages",
-#         "buttons",
-#         "list_items",
-#         "tags",
-#         "triggers",
-#         "has_children",
-#         "related_pages",
-#     ]
-#     pagination_class = PageNumberPagination
-
-#     def detail_view(self, request, pk):
-#         try:
-#             if "qa" in request.GET and request.GET["qa"] == "True":
-#                 instance = ContentPage.objects.get(
-#                     id=pk
-#                 ).get_latest_revision_as_object()
-#                 serializer = self.get_serializer(instance)
-#                 print(f"Serializer -{type(serializer)}")
-#                 return Response(serializer.data)
-
-#                 # print(f"V3 Instance thingy{self.get_serializer(instance)}")
-
-#                 # return Response(serializer.data)
-#             else:
-#                 ContentPage.objects.get(id=pk).save_page_view(request.query_params)
-#         except ContentPage.DoesNotExist:
-#             raise NotFound({"page": ["Page matching query does not exist."]})
-
-#         return super().detail_view(request, pk)
-
-
-#     # def get_queryset(self):
-#     #     qa = self.request.query_params.get("qa")
-#     #     queryset = ContentPage.objects.live().prefetch_related("locale")
-#     #     if qa:
-#     #         queryset = queryset | ContentPage.objects.not_live()
-
-#     def get_queryset(self):
-#         qa = self.request.query_params.get("qa")
-#         queryset = ContentPage.objects.live().prefetch_related("locale")
-
-#         if qa:
-#             queryset = queryset | ContentPage.objects.not_live()
-
-#         if "web" in self.request.query_params:
-#             queryset = queryset.filter(enable_web=True)
-#         elif "whatsapp" in self.request.query_params:
-#             queryset = queryset.filter(enable_whatsapp=True)
-#         elif "sms" in self.request.query_params:
-#             queryset = queryset.filter(enable_sms=True)
-#         elif "ussd" in self.request.query_params:
-#             queryset = queryset.filter(enable_ussd=True)
-#         elif "messenger" in self.request.query_params:
-#             queryset = queryset.filter(enable_messenger=True)
-#         elif "viber" in self.request.query_params:
-#             queryset = queryset.filter(enable_viber=True)
-
-#         tag = self.request.query_params.get("tag")
-#         if tag:
-#             ids = []
-#             for t in ContentPageTag.objects.filter(tag__name__iexact=tag):
-#                 ids.append(t.content_object_id)
-#             queryset = queryset.filter(id__in=ids)
-#         trigger = self.request.query_params.get("trigger")
-#         if trigger is not None:
-#             ids = []
-#             for t in TriggeredContent.objects.filter(tag__name__iexact=trigger.strip()):
-#                 ids.append(t.content_object_id)
-#             queryset = queryset.filter(id__in=ids)
-
-#         return queryset
-
-
 class ContentPagesV3APIViewset(PagesAPIViewSet):
     """
     Our custom V3 Pages API endpoint that allows finding pages by pk or slug
@@ -274,67 +116,21 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             "ussd",
         ]
     )
-    # body_fields = [
-    #     "slug",
-    #     "locale",
-    #     "title",
-    #     "subtitle",
-    #     "messages",
-    #     "buttons",
-    #     "list_items",
-    #     "tags",
-    #     "triggers",
-    #     "has_children",
-    #     "related_pages",
-    # ]
-    # listing_default_fields = [
-    #     "slug",
-    #     "locale",
-    #     "title",
-    #     "subtitle",
-    #     "messages",
-    #     "buttons",
-    #     "list_items",
-    #     "example_values",
-    #     "tags",
-    #     "triggers",
-    #     "has_children",
-    #     "related_pages",
-    # ]
-    # fields = [
-    #     "slug",
-    #     "locale",
-    #     "title",
-    #     "subtitle",
-    #     "messages",
-    #     "buttons",
-    #     "list_items",
-    #     "tags",
-    #     "triggers",
-    #     "has_children",
-    #     "related_pages",
-    # ]
+
     pagination_class = PageNumberPagination
 
     def detail_view(self, request, pk=None, slug=None):
-        print("Slug and ID Api Viewset")
-        # param = pk
         if slug is not None:
             self.lookup_field = "slug"
 
         instance = self.get_object().get_latest_revision_as_object()
-        # print(f"Instance = {type(instance)}")
-        # print(f"Blah {type(ContentPageSerializerV3)}")
         serializer = ContentPageSerializerV3(instance, context={"request": request})
-        # print("Whoop")
-        # print(f"Serializer is {serializer.data}")
         return Response(serializer.data)
         # return super().detail_view(request, param)
 
     def listing_view(self, request, *args, **kwargs):
         # If this request is flagged as QA then we should display the pages that have the filtering tags
         # or triggers in their draft versions
-        print("LIsting view")
         if "qa" in request.GET and request.GET["qa"] == "True":
             tag = self.request.query_params.get("tag")
             trigger = self.request.query_params.get("trigger")
@@ -363,13 +159,9 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             serializer = ContentPageSerializerV3(
                 queryset_list, context={"request": request}, many=True
             )
-            print(f"Serialiser = {type(serializer)}")
 
             return self.get_paginated_response(serializer.data)
 
-            # print(
-            #     f"about to return normal listing view - {super().listing_view(request)}"
-            # )
         return super().listing_view(request)
 
     def get_queryset(self):

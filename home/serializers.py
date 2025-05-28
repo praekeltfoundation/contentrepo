@@ -118,10 +118,9 @@ def has_previous_message(message_index, content_page, platform):
 def format_whatsapp_template_message(message: str) -> dict[str, Any]:
     text = {
         "value": {
-            "variation_messagesss": [],
+            "variation_messages": [],
             "list_items": [],
             "list_items_v2": [],
-            "buttons": [],
             "message": message,
         }
     }
@@ -130,7 +129,6 @@ def format_whatsapp_template_message(message: str) -> dict[str, Any]:
 
 def format_whatsapp_message(message_index, content_page, platform):
     text = content_page.whatsapp_body._raw_data[message_index]
-    print(f"format_whatsapp_message(V2) on page {content_page.title}")
 
     if str(text["type"]) == "Whatsapp_Message":
         # Flattens the variation_messages field in the whatsapp message
@@ -185,7 +183,6 @@ class BodyField(serializers.Field):
 
 
 def body_field_representation(page: Any, request: Any) -> Any:
-    print(f"Running body_field_representation(V2) on page {page.title} ")
     if "message" in request.GET:
         try:
             message = int(request.GET["message"]) - 1
@@ -403,9 +400,10 @@ class ContentPageSerializer(PageSerializer):
     body = BodyField(read_only=True)
     has_children = HasChildrenField(read_only=True)
     related_pages = RelatedPagesField(read_only=True)
-    footer = serializers.CharField()
+    # footer = serializers.CharField()
 
     def to_representation(self, page):
+        print("torep")
         request = self.context["request"]
         router = self.context["router"]
         return {

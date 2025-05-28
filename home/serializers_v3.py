@@ -173,13 +173,11 @@ class BodyField(serializers.Field):
         return instance
 
     def to_representation(self, page):
-        print(f"SC = {self.context}")
         request = self.context["request"]
         return body_field_representation_V3(page, request)
 
 
 def body_field_representation_V3(page, request):
-    print(f"BV3 - {page}")
     message = 0
     if "whatsapp" in request.GET and (
         page.enable_whatsapp is True
@@ -332,7 +330,6 @@ def format_variation_messages(given_list: blocks.list_block.ListValue):
 
 
 def format_whatsapp_body_V3(content_page):
-    print("Running format_whatsapp_body_V3")
     message_number = 0
     messages = []
     for block in content_page.whatsapp_body:
@@ -340,7 +337,6 @@ def format_whatsapp_body_V3(content_page):
 
         if str(block.block_type) == "Whatsapp_Template":
             template = block.value
-            print(f"Image is {template.image.id}")
 
             messages.append(
                 OrderedDict(
@@ -431,11 +427,8 @@ class ContentPageSerializerV3(PageSerializer):
         # exclude = ["meta_fields"]
 
     def get_messages(self, obj):
-        print("Getting msg")
         request = self.context["request"]
-        print(f"request = {request}")
         messages = body_field_representation_V3(obj, request)
-
         return messages
 
     def get_buttons(self, obj):
@@ -457,7 +450,6 @@ class WhatsAppTemplateSerializer(serializers.ModelSerializer):
     buttons = serializers.SerializerMethodField()
     example_values = serializers.SerializerMethodField()
     slug = serializers.SerializerMethodField()
-    # locale = serializers.SerializerMethodField()
 
     meta_fields = []
 
@@ -479,20 +471,12 @@ class WhatsAppTemplateSerializer(serializers.ModelSerializer):
             "submission_status",
             "submission_result",
         ]
-        # exclude = ["id"]
 
     def get_buttons(self, obj):
-        buttons = list(obj.buttons.raw_data)
-        for button in buttons:
-            if "id" in button:
-                del button["id"]
-        return buttons
+        return format_buttons_and_list_items(obj.buttons.raw_data)
 
     def get_example_values(self, obj):
-        example_values = list(obj.example_values.raw_data)
-        string_list = [d["value"] for d in example_values]
-        return string_list
+        return format_example_values(obj.example_values.raw_data)
 
     def get_slug(self, obj):
-        slug = "TODO:"
-        return slug
+        return obj.name.lower().replace(" ", "-")
