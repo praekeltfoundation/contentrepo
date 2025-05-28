@@ -1,5 +1,4 @@
 from django.urls import path
-from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -120,8 +119,137 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         ]
 
 
-class ContentPagesViewSetV3(PagesAPIViewSet):
-    # model = ContentPage
+# class ContentPagesViewSetV3(PagesAPIViewSet):
+#     model = ContentPage
+#     serializer_class = ContentPageSerializerV3
+#     base_serializer_class = ContentPageSerializerV3
+#     meta_fields = []
+#     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
+#         [
+#             "tag",
+#             "trigger",
+#             "page",
+#             "qa",
+#             "whatsapp",
+#             "viber",
+#             "messenger",
+#             "web",
+#             "s",
+#             "sms",
+#             "ussd",
+#         ]
+#     )
+#     body_fields = [
+#         "slug",
+#         "locale",
+#         "title",
+#         "subtitle",
+#         "messages",
+#         # "buttons",
+#         # "list_items",
+#         "tags",
+#         "triggers",
+#         "has_children",
+#         "related_pages",
+#     ]
+#     listing_default_fields = [
+#         "slug",
+#         "locale",
+#         "title",
+#         "subtitle",
+#         "messages",
+#         "buttons",
+#         "list_items",
+#         "example_values",
+#         "tags",
+#         "triggers",
+#         "has_children",
+#         "related_pages",
+#     ]
+#     fields = [
+#         "slug",
+#         "locale",
+#         "title",
+#         "subtitle",
+#         "messages",
+#         "buttons",
+#         "list_items",
+#         "tags",
+#         "triggers",
+#         "has_children",
+#         "related_pages",
+#     ]
+#     pagination_class = PageNumberPagination
+
+#     def detail_view(self, request, pk):
+#         try:
+#             if "qa" in request.GET and request.GET["qa"] == "True":
+#                 instance = ContentPage.objects.get(
+#                     id=pk
+#                 ).get_latest_revision_as_object()
+#                 serializer = self.get_serializer(instance)
+#                 print(f"Serializer -{type(serializer)}")
+#                 return Response(serializer.data)
+
+#                 # print(f"V3 Instance thingy{self.get_serializer(instance)}")
+
+#                 # return Response(serializer.data)
+#             else:
+#                 ContentPage.objects.get(id=pk).save_page_view(request.query_params)
+#         except ContentPage.DoesNotExist:
+#             raise NotFound({"page": ["Page matching query does not exist."]})
+
+#         return super().detail_view(request, pk)
+
+
+#     # def get_queryset(self):
+#     #     qa = self.request.query_params.get("qa")
+#     #     queryset = ContentPage.objects.live().prefetch_related("locale")
+#     #     if qa:
+#     #         queryset = queryset | ContentPage.objects.not_live()
+
+#     def get_queryset(self):
+#         qa = self.request.query_params.get("qa")
+#         queryset = ContentPage.objects.live().prefetch_related("locale")
+
+#         if qa:
+#             queryset = queryset | ContentPage.objects.not_live()
+
+#         if "web" in self.request.query_params:
+#             queryset = queryset.filter(enable_web=True)
+#         elif "whatsapp" in self.request.query_params:
+#             queryset = queryset.filter(enable_whatsapp=True)
+#         elif "sms" in self.request.query_params:
+#             queryset = queryset.filter(enable_sms=True)
+#         elif "ussd" in self.request.query_params:
+#             queryset = queryset.filter(enable_ussd=True)
+#         elif "messenger" in self.request.query_params:
+#             queryset = queryset.filter(enable_messenger=True)
+#         elif "viber" in self.request.query_params:
+#             queryset = queryset.filter(enable_viber=True)
+
+#         tag = self.request.query_params.get("tag")
+#         if tag:
+#             ids = []
+#             for t in ContentPageTag.objects.filter(tag__name__iexact=tag):
+#                 ids.append(t.content_object_id)
+#             queryset = queryset.filter(id__in=ids)
+#         trigger = self.request.query_params.get("trigger")
+#         if trigger is not None:
+#             ids = []
+#             for t in TriggeredContent.objects.filter(tag__name__iexact=trigger.strip()):
+#                 ids.append(t.content_object_id)
+#             queryset = queryset.filter(id__in=ids)
+
+#         return queryset
+
+
+class ContentPagesV3APIViewset(PagesAPIViewSet):
+    """
+    Our custom V3 Pages API endpoint that allows finding pages by pk or slug
+    """
+
+    model = ContentPage
     serializer_class = ContentPageSerializerV3
     base_serializer_class = ContentPageSerializerV3
     meta_fields = []
@@ -182,25 +310,25 @@ class ContentPagesViewSetV3(PagesAPIViewSet):
     ]
     pagination_class = PageNumberPagination
 
-    def detail_view(self, request, pk):
-        try:
-            if "qa" in request.GET and request.GET["qa"] == "True":
-                instance = ContentPage.objects.get(
-                    id=pk
-                ).get_latest_revision_as_object()
-                serializer = ContentPageSerializerV3
-                return Response(serializer.data)
-            else:
-                ContentPage.objects.get(id=pk).save_page_view(request.query_params)
-        except ContentPage.DoesNotExist:
-            raise NotFound({"page": ["Page matching query does not exist."]})
+    def detail_view(self, request, pk=None, slug=None):
+        print("Slug and ID Api Viewset")
+        # param = pk
+        if slug is not None:
+            self.lookup_field = "slug"
 
-        return super().detail_view(request, pk)
+        instance = self.get_object().get_latest_revision_as_object()
+        # print(f"Instance = {type(instance)}")
+        # print(f"Blah {type(ContentPageSerializerV3)}")
+        serializer = ContentPageSerializerV3(instance, context={"request": request})
+        # print("Whoop")
+        # print(f"Serializer is {serializer.data}")
+        return Response(serializer.data)
+        # return super().detail_view(request, param)
 
     def listing_view(self, request, *args, **kwargs):
         # If this request is flagged as QA then we should display the pages that have the filtering tags
         # or triggers in their draft versions
-
+        print("LIsting view")
         if "qa" in request.GET and request.GET["qa"] == "True":
             tag = self.request.query_params.get("tag")
             trigger = self.request.query_params.get("trigger")
@@ -226,7 +354,11 @@ class ContentPagesViewSetV3(PagesAPIViewSet):
 
             queryset_list = self.paginate_queryset(queryset)
 
-            serializer = self.get_serializer(queryset_list, many=True)
+            serializer = ContentPageSerializerV3(
+                queryset, context={"request": request}, many=True
+            )
+            print(f"Serialiser = {type(serializer)}")
+            # serializer = self.get_serializer(queryset_list, many=True)
 
             return self.get_paginated_response(serializer.data)
 
@@ -270,7 +402,19 @@ class ContentPagesViewSetV3(PagesAPIViewSet):
 
         return queryset
 
+    @classmethod
+    def get_urlpatterns(cls):
+        """
+        This returns a list of URL patterns for the endpoint
+        """
+        return [
+            path("", cls.as_view({"get": "listing_view"}), name="listing"),
+            path("<int:pk>/", cls.as_view({"get": "detail_view"}), name="detail"),
+            path("<slug:slug>/", cls.as_view({"get": "detail_view"}), name="detail"),
+            path("find/", cls.as_view({"get": "find_view"}), name="find"),
+        ]
+
 
 api_router_v3 = WagtailAPIRouter("wagtailapiv3")
 api_router_v3.register_endpoint("whatsapptemplates", WhatsAppTemplateViewset)
-api_router_v3.register_endpoint("pages", ContentPagesViewSetV3)
+api_router_v3.register_endpoint("pages", ContentPagesV3APIViewset)

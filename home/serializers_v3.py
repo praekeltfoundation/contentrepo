@@ -3,24 +3,38 @@ from collections import OrderedDict
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from wagtail import blocks
-from wagtail.api.v2.serializers import (
-    PageLocaleField,
-    PageSerializer,
-)
+from wagtail.api.v2.serializers import PageLocaleField, PageSerializer
 
 from home.models import Assessment, ContentPage, WhatsAppTemplate
 
-# class TitleField(serializers.Field):
-#     """
-#     Serializes the "Title" field.
-#     """
 
-#     def get_attribute(self, instance):
-#         return instance
+class TitleField(serializers.Field):
+    """
+    Serializes the "Title" field.
+    """
 
-#     def to_representation(self, page):
-#         request = self.context["request"]
-#         return title_field_representation(page, request)
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        request = self.context["request"]
+        return title_field_representation(page, request)
+
+
+class SubtitleField(serializers.Field):
+    """
+    Serializes the "Subtitle" field.
+    """
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        return subtitle_field_representation(page)
+
+
+def subtitle_field_representation(page):
+    return page.subtitle
 
 
 def title_field_representation(page, request):
@@ -96,6 +110,51 @@ def has_previous_message(message_index, content_page, platform):
         return message_index
 
 
+class RelatedPagesField(serializers.Field):
+    def get_attribute(self, instance):
+        return instance
+
+    def to_representation(self, page):
+        request = self.context["request"]
+        return related_pages_field_representation(page, request)
+
+
+def get_related_page_as_content_page(page):
+    if page.id:
+        return ContentPage.objects.filter(id=page.id).first()
+
+
+def related_pages_field_representation(page, request):
+    related_pages = []
+    for related in page.related_pages:
+        related_page = get_related_page_as_content_page(related.value)
+        title = related_page.title
+        if "whatsapp" in request.GET and related_page.enable_whatsapp is True:
+            if related_page.whatsapp_title:
+                title = related_page.whatsapp_title
+        elif "sms" in request.GET and related_page.enable_sms is True:
+            if related_page.sms_title:
+                title = related_page.sms_title
+        elif "ussd" in request.GET and related_page.enable_ussd is True:
+            if related_page.ussd_title:
+                title = related_page.ussd_title
+        elif "messenger" in request.GET and related_page.enable_messenger is True:
+            if related_page.messenger_title:
+                title = related_page.messenger_title
+        elif "viber" in request.GET and related_page.enable_viber is True:
+            if related_page.viber_title:
+                title = related_page.viber_title
+
+        related_pages.append(
+            {
+                "id": related.id,
+                "value": related_page.id,
+                "title": title,
+            }
+        )
+    return related_pages
+
+
 # def format_whatsapp_template_message(message: str) -> dict[str, Any]:
 #     text = {
 #         "value": {
@@ -109,7 +168,6 @@ def has_previous_message(message_index, content_page, platform):
 #     return text
 
 
-############# V3 API Only Serializers & Methods Below
 class BodyField(serializers.Field):
     """
     Serializes the "body" field.
@@ -128,12 +186,13 @@ class BodyField(serializers.Field):
         return instance
 
     def to_representation(self, page):
+        print(f"SC = {self.context}")
         request = self.context["request"]
         return body_field_representation_V3(page, request)
 
 
 def body_field_representation_V3(page, request):
-    print(f"BV3 - {page.title}")
+    print(f"BV3 - {page}")
     message = 0
     if "whatsapp" in request.GET and (
         page.enable_whatsapp is True
@@ -360,10 +419,16 @@ def format_whatsapp_body_V3(content_page):
 
 
 class ContentPageSerializerV3(PageSerializer):
-    # meta_fields = [
-    #     "slug",
-    #     "title",
-    # ]
+    # subtitle = SubtitleField(read_only=True)
+    # has_children = HasChildrenField(read_only=True)
+    # related_pages = RelatedPagesField(read_only=True)
+    # footer = serializers.CharField()
+    title = serializers.CharField(read_only=True)
+    slug = serializers.SlugField(read_only=True)
+    body = BodyField(read_only=True)
+    messages = serializers.SerializerMethodField()
+
+    meta_fields = []
 
     class Meta:
         model = ContentPage
@@ -371,15 +436,19 @@ class ContentPageSerializerV3(PageSerializer):
         #     "title",
         #     "slug",
         # ]
-        fields = "__all__"
+        fields = [
+            "slug",
+            "title",
+            "body",
+            "messages",
+        ]
 
-    title = serializers.CharField(read_only=True)
-    slug = serializers.SlugField(read_only=True)
-    body = BodyField(read_only=True)
-    messages = serializers.SerializerMethodField()
+        # exclude = ["meta_fields"]
 
     def get_messages(self, obj):
+        print("Getting msg")
         request = self.context["request"]
+        print(f"request = {request}")
         messages = body_field_representation_V3(obj, request)
 
         return messages
@@ -391,7 +460,7 @@ class WhatsAppTemplateSerializer(serializers.ModelSerializer):
         model = WhatsAppTemplate
         # fields = ["locale"]
         # fields = ["category", "image", "buttons"]
-        # exclude = ["buttons"]
+        exclude = ["id"]
 
     # TODO: @Rudi - is it a problem using PageLocaleField here, even though this model is not related to Page at all?
     locale = PageLocaleField(read_only=True)
