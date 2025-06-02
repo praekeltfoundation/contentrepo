@@ -184,16 +184,11 @@ class ContentExporter:
 
     def _export_locale(self, home: HomePage) -> None:
         main_menu_pages = home.get_children()
-        print(f"Main Menu Pages = {len(main_menu_pages)}")
         for index, page in enumerate(main_menu_pages, 1):
-            print("")
-            print("")
-            print(f"MMP = {page} with index {index}")
             structure_string = f"Menu {index}"
             self._export_page(page, structure_string)
 
     def _export_page(self, page: Page, structure: str) -> None:
-        print(f"Export page {page} with id = {page.id}")
         if page.content_type.name == CPI_CTYPE:
             self._export_cpi(ContentPageIndex.objects.get(id=page.id), structure)
         elif page.content_type.name == CP_CTYPE:
@@ -204,12 +199,9 @@ class ContentExporter:
             raise ValueError(f"Unexpected page type: {page.content_type.name}")
         # Now handle any child pages.
         if page.get_children_count() > 0:
-            print("Found Kidses")
             for index, child in enumerate(page.get_children(), 1):
                 child_structure = f"{structure.replace('Menu', 'Sub')}.{index}"
                 self._export_page(child, child_structure)
-
-        print("Done with export")
 
     def _export_content_page(self, page: ContentPage, structure: str) -> None:
         """
@@ -219,9 +211,6 @@ class ContentExporter:
          * We should use the parent slug (which is expected to be unique per
            locale (probably?)) instead of the parent title.
         """
-        print("")
-        print("")
-        # print(f"Export - {page.whatsapp_body[0].value}")
         if len(page.whatsapp_body) > 0 and isinstance(
             page.whatsapp_body[0].value, WhatsAppTemplate
         ):

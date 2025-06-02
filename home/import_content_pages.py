@@ -717,7 +717,7 @@ class ShadowWhatsAppTemplate:
     @property
     def wagtail_format(self) -> dict[str, str | None]:
         return {
-            "name": self.name,
+            "slug": self.slug,
             "locale": self.locale,
         }
 
