@@ -41,7 +41,6 @@ class WhatsAppTemplateImporter:
         )
 
     def locale_from_language_code(self, lang_code_entry: str) -> Locale:
-        print(f"Lang code entry = {lang_code_entry} and the map is {self.locale_map}")
         if lang_code_entry not in self.locale_map:
             codes = []
             lang_name = ""
@@ -62,37 +61,23 @@ class WhatsAppTemplateImporter:
 
     def perform_import(self) -> None:
         rows = self.parse_file()
-        print(f"ROWS = {rows}")
         self.set_progress("Loaded file", 5)
-        print("File loaded")
         if self.purge:
             self.delete_existing_content()
         self.set_progress("Deleted existing WhatsApp Template", 10)
-        print("Delete done")
         self.process_rows(rows)
-        print("ProcessRows done")
         self.add_go_to_page_items(self.go_to_page_buttons, "buttons")
-        print("AddGoToPage done")
 
     def process_rows(self, rows: list["ContentRow"]) -> None:
-        print(f"Rows again, still = {len(rows)}")
-        print(f"ROWS IS STILL {rows}")
         for i, row in reversed(list(enumerate(rows, start=2))):
-            print(f"Row i = {i}")
-            print(f"ROW type? = {type(row)}")
-            print(f"ROW  = {row}")
             try:
-                print(f"ROW = {row}")
                 self.create_whatsapp_template_from_row(row)
-                print("Try and try again")
             except ImportException as e:
                 e.row_num = i
                 raise e
             except ValidationError as errors:
-                print("We got errs")
                 err = []
                 for error in errors:
-                    print(f"Err = {error}")
                     field_name = error[0]
                     for msg in error[1]:
                         err.append(f"{field_name} - {msg}")
@@ -101,7 +86,6 @@ class WhatsAppTemplateImporter:
                 )
 
     def create_whatsapp_template_from_row(self, row: "ContentRow") -> None:
-        print(f"Locale entry to check is {row.locale}")
         locale = self.locale_from_language_code(row.locale)
 
         if row.category not in WhatsAppTemplate.Category.values:
@@ -110,7 +94,6 @@ class WhatsAppTemplateImporter:
             )
 
         template = self._update_or_create_whatsapp_template(row, locale)
-        print(f"Template created = {template.slug}")
         template.full_clean()
         template.save()
 
@@ -121,16 +104,13 @@ class WhatsAppTemplateImporter:
 
         template.full_clean()
         template.save()
-        print("Before the point of empty return")
         return
 
     def _update_or_create_whatsapp_template(
         self, row: "ContentRow", locale: Locale
     ) -> WhatsAppTemplate:
         try:
-            print("alo")
             template = WhatsAppTemplate.objects.get(slug=row.slug, locale=locale)
-            print("read template row")
             template.category = row.category
             template.message = row.message
             template.example_values = [
@@ -145,7 +125,6 @@ class WhatsAppTemplateImporter:
             template.submission_name = row.submission_name
             return template
         except WhatsAppTemplate.DoesNotExist:
-            print(f"Template exists, going to update {row.slug}")
             return WhatsAppTemplate(
                 slug=row.slug,
                 category=row.category,

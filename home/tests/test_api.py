@@ -407,7 +407,6 @@ class TestContentPageAPI:
         It should only return the 11th paragraph if 11th message is requested
         Please see class doc string for why this is a separate test
         """
-        print("Here")
         page = self.create_content_page(body_count=10, publish=True)
         template = WhatsAppTemplate.objects.create(
             category="MARKETING",
@@ -996,7 +995,6 @@ class TestWhatsAppMessages:
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp")
         body = response.json()["body"]
-        print(f"Body = {body}")
         assert body["is_whatsapp_template"]
         assert body["whatsapp_template_slug"] == "test_template"
         assert body["text"]["value"]["message"] == "Test WhatsApp Template Message 1"

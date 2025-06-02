@@ -438,8 +438,6 @@ class TestWhatsAppTemplateAPIV3:
         response = uclient.get(url)
         # the page is not live but whatsapp content is returned
         content = response.json()
-        print(content)
-
         assert content["message"] == "*Default unpublished template 1* 🏥"
 
 
@@ -642,7 +640,6 @@ class TestContentPageAPIV3:
         # it should return specific page that is in draft
         response = uclient.get(url)
         content = response.json()
-        print(f"Content is {content}")
         # the page is not live but whatsapp content is returned
         assert not page.live
         body = content["messages"][0]["text"]
@@ -704,7 +701,6 @@ class TestContentPageAPIV3:
         page = self.create_content_page(tags=["self_help"], body_type=platform)
         response = uclient.get(f"/api/v3/pages/{page.id}/")
         content = response.json()
-        print(f"Content view is = {content}")
         assert content["slug"] == page.slug
         assert content["locale"] == "en"
         assert content["detail_url"] == f"http://localhost/api/v3/pages/{page.slug}/"
@@ -822,12 +818,10 @@ class TestContentPageAPIV3:
         We get a validation error if we request a page that doesn't exist.
         """
         # it should return the validation error for content page that doesn't exist
-        print("Got here")
         response = uclient.get("/api/v3/pages/some-slug-with-no-page/")
         assert response.status_code == 404
 
         content = response.json()
-        print(f"CONTENT =  {content}")
         assert content == {"page": ["Page matching query does not exist."]}
         assert content.get("page") == ["Page matching query does not exist."]
 
