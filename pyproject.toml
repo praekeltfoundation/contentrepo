@@ -101,7 +101,7 @@ exclude = [  # Regexes.
     '^manage\.py',
     '^contentrepo/',
     '^home/(management|migrations)/',
-    '^home/(admin|apps|api|constants|content_import_export|forms)\.py',
+    '^home/(admin|apps|api|api_v3|constants|content_import_export|forms)\.py',
     '^home/(mappers|mixins|models|panels|serializers|serializers_v3)\.py',
     '^home/(views|wagtail_hooks)\.py',
     '^home/tests/utils\.py',
