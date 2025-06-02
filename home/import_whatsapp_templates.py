@@ -103,8 +103,7 @@ class WhatsAppTemplateImporter:
         template.buttons = buttons
 
         template.full_clean()
-        template.save()
-        return
+        template.save_revision().publish()
 
     def _update_or_create_whatsapp_template(
         self, row: "ContentRow", locale: Locale
