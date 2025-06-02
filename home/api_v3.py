@@ -27,30 +27,34 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
 
     pagination_class = PageNumberPagination
     search_fields = [
-        "name",
+        "slug",
     ]
     filter_backends = (SearchFilter,)
 
     def detail_view(self, request, pk=None, slug=None):
         if slug is not None:
-            pk = 1
+            self.lookup_field = "slug"
 
         try:
             if "qa" in request.GET and request.GET["qa"] == "True":
-                instance = WhatsAppTemplate.objects.get(
-                    id=pk
-                ).get_latest_revision_as_object()
-                serializer = WhatsAppTemplateSerializer(
-                    instance, context={"request": request}
-                )
-                return Response(serializer.data)
+                instance = self.get_object().get_latest_revision_as_object()
+                # instance = WhatsAppTemplate.objects.get(
+                #     id=pk
+                # ).get_latest_revision_as_object()
+                # serializer = WhatsAppTemplateSerializer(
+                #     instance, context={"request": request}
+                # )
+                # return Response(serializer.data)
             else:
-                WhatsAppTemplate.objects.get(id=pk)
+                # WhatsAppTemplate.objects.get(id=pk)
+                instance = self.get_object()
         except Exception as e:
             # TODO: Handle this better
             print(f"Exception = {e}")
 
-        return super().detail_view(request, pk)
+        serializer = WhatsAppTemplateSerializer(instance, context={"request": request})
+        return Response(serializer.data)
+        # return super().detail_view(request, pk)
 
     def listing_view(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -71,7 +75,7 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
                 latest_revision = wat.revisions.order_by("-created_at").first()
                 if latest_revision:
                     latest_revision = latest_revision.as_object()
-                    wat.name = latest_revision.name
+                    wat.slug = latest_revision.slug
 
         else:
             queryset = WhatsAppTemplate.objects.filter(live=True).order_by(
@@ -79,6 +83,16 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
             )
 
         return queryset
+
+    def get_serializer_context(self):
+        """
+        The serialization context differs between listing and detail views.
+        """
+        return {
+            "request": self.request,
+            "view": self,
+            "router": self.request.wagtailapiv3_router,
+        }
 
     @classmethod
     def get_urlpatterns(cls):
@@ -159,10 +173,16 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             serializer = ContentPageSerializerV3(
                 queryset_list, context={"request": request}, many=True
             )
-
             return self.get_paginated_response(serializer.data)
 
-        return super().listing_view(request)
+        queryset = self.get_queryset()
+        queryset_list = self.paginate_queryset(queryset)
+
+        serializer = ContentPageSerializerV3(
+            queryset_list, context={"request": request}, many=True
+        )
+
+        return self.get_paginated_response(serializer.data)
 
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
@@ -204,6 +224,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         """
         This returns a list of URL patterns for the endpoint
         """
+
         return [
             path("", cls.as_view({"get": "listing_view"}), name="listing"),
             path("<int:pk>/", cls.as_view({"get": "detail_view"}), name="detail"),
@@ -212,6 +233,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         ]
 
 
-api_router_v3 = WagtailAPIRouter("wagtailapiv3")
+api_router_v3 = WagtailAPIRouter("wagtailapiv3_router")
 api_router_v3.register_endpoint("whatsapptemplates", WhatsAppTemplateViewset)
 api_router_v3.register_endpoint("pages", ContentPagesV3APIViewset)

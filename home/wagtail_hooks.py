@@ -291,9 +291,9 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
     add_to_admin_menu = True
     add_to_settings_menu = False
     exclude_from_explorer = False
-    list_export = "name"
+    list_export = "slug"
     list_display = (
-        "name",
+        "slug",
         "get_category_display",
         "locale",
         "status",
@@ -308,7 +308,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
     list_filter = ("locale",)
 
     search_fields = (
-        "name",
+        "slug",
         "category",
         "message",
         "locale",
@@ -319,7 +319,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
     panels = [
         MultiFieldPanel(
             [
-                FieldPanel("name"),
+                FieldPanel("slug"),
                 FieldPanel("category"),
                 FieldPanel("image"),
                 FieldPanel("message"),

@@ -1484,7 +1484,7 @@ class WhatsAppTemplate(
         verbose_name_plural = "WhatsApp Templates"
         constraints = [
             models.UniqueConstraint(
-                fields=["name", "locale"], name="unique_name_locale"
+                fields=["slug", "locale"], name="unique_slug_locale"
             )
         ]
 
@@ -1514,7 +1514,12 @@ class WhatsAppTemplate(
         for_concrete_model=False,
     )
 
-    name = models.CharField(max_length=512, blank=True, default="")
+    # name = models.CharField(max_length=512, blank=True, default="")
+    slug = models.SlugField(
+        max_length=255,
+        help_text="A unique identifier for this WhatsApp Template",
+        default="",
+    )
     category = models.CharField(
         max_length=14,
         choices=Category.choices,
@@ -1616,16 +1621,16 @@ class WhatsAppTemplate(
 
     def __str__(self) -> str:
         """String repr of this snippet."""
-        return self.name
+        return self.slug
 
     def clean(self) -> None:
         result = super().clean()
         errors: dict[str, list[ValidationError]] = {}
 
-        # The name is needed for all templates to generate a name for the template
-        if not self.name:
-            errors.setdefault("name", []).append(
-                ValidationError("All WhatsApp templates need a name.")
+        # The slug is needed for all templates to generate a name for the template
+        if not self.slug:
+            errors.setdefault("slug", []).append(
+                ValidationError("All WhatsApp templates need a slug.")
             )
 
         message = self.message

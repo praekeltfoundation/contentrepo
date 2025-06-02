@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from wagtail import blocks
 from wagtail.api.v2.serializers import PageSerializer
+from wagtail.api.v2.utils import get_object_detail_url
 
 from home.models import Assessment, ContentPage, WhatsAppTemplate
 
@@ -342,6 +343,7 @@ def format_whatsapp_body_V3(content_page):
                 OrderedDict(
                     [
                         ("type", block.block_type),
+                        ("slug", template.slug),
                         ("image", template.image.id),
                         ("media", None),
                         ("document", None),
@@ -354,7 +356,6 @@ def format_whatsapp_body_V3(content_page):
                             "example_values",
                             format_example_values(template.example_values.raw_data),
                         ),
-                        ("name", template.name),
                         ("category", template.category),
                         ("submission_name", template.submission_name),
                         ("submission_status", template.submission_status),
@@ -404,9 +405,8 @@ def format_whatsapp_body_V3(content_page):
 class ContentPageSerializerV3(PageSerializer):
     title = serializers.CharField(read_only=True)
     slug = serializers.SlugField(read_only=True)
-
     messages = serializers.SerializerMethodField()
-
+    detail_url = serializers.SerializerMethodField()
     meta_fields = []
 
     class Meta:
@@ -414,6 +414,7 @@ class ContentPageSerializerV3(PageSerializer):
 
         fields = [
             "slug",
+            "detail_url",
             "locale",
             "title",
             "subtitle",
@@ -443,23 +444,31 @@ class ContentPageSerializerV3(PageSerializer):
         string_list = [d["value"] for d in example_values]
         return string_list
 
+    def get_detail_url(self, obj):
+        request = self.context["request"]
+        router = request.wagtailapi_router
+        detail_url = get_object_detail_url(router, request, type(obj), obj.slug)
+        query_params = request.query_params
+        if query_params:
+            detail_url = f"{detail_url}?{'&'.join([f'{k}={v}' for k, v in query_params.items()])}"
+        return detail_url
+
 
 class WhatsAppTemplateSerializer(serializers.ModelSerializer):
     locale = serializers.CharField(source="locale.language_code")
     revision = serializers.IntegerField(source="get_latest_revision.id")
     buttons = serializers.SerializerMethodField()
     example_values = serializers.SerializerMethodField()
-    slug = serializers.SerializerMethodField()
+    detail_url = serializers.SerializerMethodField()
 
     meta_fields = []
 
     class Meta:
         model = WhatsAppTemplate
         fields = [
-            # "id",
             "slug",
+            "detail_url",
             "locale",
-            "name",
             "category",
             "image",
             "message",
@@ -478,5 +487,11 @@ class WhatsAppTemplateSerializer(serializers.ModelSerializer):
     def get_example_values(self, obj):
         return format_example_values(obj.example_values.raw_data)
 
-    def get_slug(self, obj):
-        return obj.name.lower().replace(" ", "-")
+    def get_detail_url(self, obj):
+        request = self.context["request"]
+        router = request.wagtailapi_router
+        detail_url = get_object_detail_url(router, request, type(obj), obj.slug)
+        query_params = request.query_params
+        if query_params:
+            detail_url = f"{detail_url}?{'&'.join([f'{k}={v}' for k, v in query_params.items()])}"
+        return detail_url

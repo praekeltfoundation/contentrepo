@@ -81,10 +81,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
             queryset = queryset | ContentPage.objects.filter(id__in=have_new_triggers)
             queryset = queryset | ContentPage.objects.filter(id__in=have_new_tags)
             queryset_list = self.paginate_queryset(queryset)
-            # print(f"Serializer is {type(self)}")
-            print(f"gonna call get_serializer = {queryset_list}")
             serializer = self.get_serializer(queryset_list, many=True)
-            print("whoop")
             return self.get_paginated_response(serializer.data)
 
         return super().listing_view(request)

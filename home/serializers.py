@@ -403,7 +403,6 @@ class ContentPageSerializer(PageSerializer):
     # footer = serializers.CharField()
 
     def to_representation(self, page):
-        print("torep")
         request = self.context["request"]
         router = self.context["router"]
         return {
