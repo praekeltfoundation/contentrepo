@@ -381,7 +381,7 @@ class TestWhatsAppTemplateAPIV3:
     @classmethod
     def create_whatsapp_template(
         self,
-        name="Default name",
+        slug="default-slug",
         message="Default message",
         category="UTILITY",
         locale="en",
@@ -389,7 +389,7 @@ class TestWhatsAppTemplateAPIV3:
     ) -> WhatsAppTemplate:
         locale = Locale.objects.get(language_code="en")
         template = WhatsAppTemplate(
-            name=name, message=message, category=category, locale=locale
+            slug=slug, message=message, category=category, locale=locale
         )
         template.save()
         rev = template.save_revision()
@@ -403,7 +403,7 @@ class TestWhatsAppTemplateAPIV3:
         If we create a template we can find it in the listing view
         """
         self.create_whatsapp_template(
-            name="Test Template 1",
+            slug="test-template-1",
             message="This is a test message",
             category="UTILITY",
             locale="en",
@@ -427,7 +427,7 @@ class TestWhatsAppTemplateAPIV3:
         Unpublished templates are returned if the qa param is set.
         """
         template = self.create_whatsapp_template(
-            name="Test Template 2",
+            slug="test-template-2",
             message="*Default unpublished template 1* 🏥",
             category="UTILITY",
             locale="en",
@@ -438,6 +438,7 @@ class TestWhatsAppTemplateAPIV3:
         response = uclient.get(url)
         # the page is not live but whatsapp content is returned
         content = response.json()
+        print(content)
 
         assert content["message"] == "*Default unpublished template 1* 🏥"
 
@@ -457,6 +458,7 @@ class TestContentPageAPIV3:
         self,
         parent=None,
         title="default page",
+        slug="default-slug",
         tags=None,
         body_type="whatsapp",
         body_count=1,
@@ -636,14 +638,14 @@ class TestContentPageAPIV3:
         """
         page = self.create_content_page(publish=False)
 
-        url = f"/api/v3/pages/{page.id}/?whatsapp=True&qa=True"
+        url = f"/api/v3/pages/{page.id}/?whatsapp=true&qa=True"
         # it should return specific page that is in draft
         response = uclient.get(url)
         content = response.json()
-
+        print(f"Content is {content}")
         # the page is not live but whatsapp content is returned
         assert not page.live
-        body = content["messages"][0]["message"]
+        body = content["messages"][0]["text"]
         assert body == "*Default whatsapp Content 1* 🏥"
 
     # TODO: This is currently breaking. Fix as part of API refining
@@ -702,22 +704,20 @@ class TestContentPageAPIV3:
         page = self.create_content_page(tags=["self_help"], body_type=platform)
         response = uclient.get(f"/api/v3/pages/{page.id}/")
         content = response.json()
-
-        # There's a lot of metadata, so only check selected fields.
-        meta = content.pop("meta")
-        assert meta["type"] == "home.ContentPage"
-        assert meta["slug"] == page.slug
-        assert meta["parent"]["id"] == page.get_parent().id
-        assert meta["locale"] == "en"
-        assert meta["detail_url"] == f"http://localhost/api/v3/pages/{page.id}/"
+        print(f"Content view is = {content}")
+        assert content["slug"] == page.slug
+        assert content["locale"] == "en"
+        assert content["detail_url"] == f"http://localhost/api/v3/pages/{page.slug}/"
 
         assert content == {
             "title": "default page",
+            "slug": "default-page",
+            "detail_url": "http://localhost/api/v3/pages/default-page/",
             "subtitle": "",
+            "locale": "en",
             "messages": {"text": []},
             "tags": ["self_help"],
             "triggers": [],
-            "quick_replies": [],
             "related_pages": [],
             "has_children": False,
         }
@@ -734,14 +734,9 @@ class TestContentPageAPIV3:
         response = uclient.get(f"/api/v3/pages/{page.id}/")
         content = response.json()
 
-        # There's a lot of metadata, so only check selected fields.
-        meta = content.pop("meta")
-        assert meta["type"] == "home.ContentPage"
-        assert meta["slug"] == page.slug
-        assert meta["parent"]["id"] == page.get_parent().id
-        assert meta["locale"] == "en"
-        assert meta["detail_url"] == f"http://localhost/api/v3/pages/{page.id}/"
-
+        assert content["slug"] == page.slug
+        assert content["locale"] == "en"
+        assert content["detail_url"] == f"http://localhost/api/v3/pages/{page.slug}/"
         assert content["has_children"] is True
 
     # TODO: FIX THIS
@@ -827,10 +822,12 @@ class TestContentPageAPIV3:
         We get a validation error if we request a page that doesn't exist.
         """
         # it should return the validation error for content page that doesn't exist
-        response = uclient.get("/api/v3/pages/1/")
+        print("Got here")
+        response = uclient.get("/api/v3/pages/some-slug-with-no-page/")
         assert response.status_code == 404
 
         content = response.json()
+        print(f"CONTENT =  {content}")
         assert content == {"page": ["Page matching query does not exist."]}
         assert content.get("page") == ["Page matching query does not exist."]
 
