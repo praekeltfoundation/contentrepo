@@ -435,7 +435,7 @@ def test_whatsapp_template() -> None:
 
     template = WhatsAppTemplate.objects.create(
         category="MARKETING",
-        name="template-health-info",
+        slug="template-health-info",
         message="Test WhatsApp Template Message 1",
         locale=Locale.objects.first(),
     )
@@ -459,7 +459,7 @@ def test_whatsapp_template() -> None:
     assert health_info.has_whatsapp_template is True
     template_id = health_info.whatsapp_body.raw_data[0]["value"]
     template = WhatsAppTemplate.objects.get(id=template_id)
-    assert template.name == "template-health-info"
+    assert template.slug == "template-health-info"
     assert template.category == "MARKETING"
 
 

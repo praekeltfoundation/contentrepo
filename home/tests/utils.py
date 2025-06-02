@@ -30,7 +30,7 @@ def create_page(
     add_example_values: bool = False,
     add_variation: bool = False,
     has_quick_replies: bool = False,
-    whatsapp_template_name: str = "",
+    whatsapp_template_slug: str = "",
     has_buttons: bool = False,
     ContentPage: Any = ContentPage,
 ) -> Any:
@@ -102,7 +102,7 @@ def create_page(
             message = "Test Whatsapp Template message"
             template_example_values = []
         whatsapp_template = WhatsAppTemplate.objects.create(
-            name=whatsapp_template_name,
+            slug=whatsapp_template_slug,
             category="UTILITY",
             message=message,
             buttons=(

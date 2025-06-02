@@ -117,7 +117,7 @@ class TestStandaloneWhatsAppTemplates:
     ) -> None:
         with pytest.raises(ValidationError) as err_info:
             wat = WhatsAppTemplate(
-                name="wa_title",
+                slug="wa-title",
                 message="Test WhatsApp Message with 1 valid {{1}} and one malformed var here {{2}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -138,7 +138,7 @@ class TestStandaloneWhatsAppTemplates:
     def test_invalid_placeholders(self, settings: SettingsWrapper) -> None:
         with pytest.raises(ValidationError) as err_info:
             wat = WhatsAppTemplate(
-                name="wa_title",
+                slug="wa-title",
                 message="Test WhatsApp Message with 1 invalid {{name}} ",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -161,7 +161,7 @@ class TestStandaloneWhatsAppTemplates:
     ) -> None:
         with pytest.raises(ValidationError) as err_info:
             wat = WhatsAppTemplate(
-                name="wa_title",
+                slug="wa-title",
                 message="Test WhatsApp Message with an invalid var {1 ",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -184,7 +184,7 @@ class TestStandaloneWhatsAppTemplates:
         """
         with pytest.raises(ValidationError) as err_info:
             wat = WhatsAppTemplate(
-                name="wa_title",
+                slug="wa-title",
                 message="Test WhatsApp Message 1 {1} and a broken var here",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -376,7 +376,7 @@ class TestStandaloneWhatsAppTemplates:
         """
         with pytest.raises(IntegrityError) as err_info:
             wat1 = WhatsAppTemplate(
-                name="Test Template Name",
+                slug="test-template-name",
                 message="Test WhatsApp Message 1",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -385,7 +385,7 @@ class TestStandaloneWhatsAppTemplates:
             wat1.save_revision()
 
             wat2 = WhatsAppTemplate(
-                name="Test Template Name",
+                slug="test-template-name",
                 message="Test WhatsApp Message 2",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),

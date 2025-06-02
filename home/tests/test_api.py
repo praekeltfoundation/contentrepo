@@ -407,10 +407,11 @@ class TestContentPageAPI:
         It should only return the 11th paragraph if 11th message is requested
         Please see class doc string for why this is a separate test
         """
+        print("Here")
         page = self.create_content_page(body_count=10, publish=True)
         template = WhatsAppTemplate.objects.create(
             category="MARKETING",
-            name="test_template",
+            slug="test-template",
             message="Test WhatsApp Template Message 1",
             locale=Locale.objects.first(),
         )
@@ -859,7 +860,8 @@ class TestWhatsAppMessages:
         next_prompt: str | None = None,
         footer: str | None = None,
         whatsapp_template_category: str | None = None,
-        whatsapp_template_name: str | None = None,
+        # whatsapp_template_submission_name: str | None = None,
+        whatsapp_template_slug: str | None = None,
         variation_messages: list[VarMsg] | None = None,
     ) -> ContentPage:
         """
@@ -879,8 +881,8 @@ class TestWhatsAppMessages:
             Footer string to add to the content page.
         whatsapp_template_category : str
             Category of the WhatsApp template.
-        whatsapp_template_name : str
-            Name of the WhatsApp template
+        whatsapp_template_slug : str
+            Slug of the WhatsApp template
         variation_messages : [VarMsg]
             Variation messages added to the WhatsApp content block
         """
@@ -889,10 +891,10 @@ class TestWhatsAppMessages:
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
 
         blocks = []
-        if whatsapp_template_name:
+        if whatsapp_template_slug:
             template = WhatsAppTemplate.objects.create(
                 category=whatsapp_template_category,
-                name=whatsapp_template_name,
+                slug=whatsapp_template_slug,
                 message="Test WhatsApp Template Message 1",
                 locale=Locale.objects.first(),
             )
@@ -989,14 +991,14 @@ class TestWhatsAppMessages:
         """
         page = self.create_content_page(
             whatsapp_template_category=ContentPage.WhatsAppTemplateCategory.MARKETING,
-            whatsapp_template_name="test_template",
+            whatsapp_template_slug="test_template",
         )
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp")
         body = response.json()["body"]
-
+        print(f"Body = {body}")
         assert body["is_whatsapp_template"]
-        assert body["whatsapp_template_name"] == "test_template"
+        assert body["whatsapp_template_slug"] == "test_template"
         assert body["text"]["value"]["message"] == "Test WhatsApp Template Message 1"
         assert body["whatsapp_template_category"] == "MARKETING"
 

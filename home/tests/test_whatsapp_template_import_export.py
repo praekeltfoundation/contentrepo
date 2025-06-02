@@ -204,7 +204,6 @@ class ImportExport:
         url = f"/admin/snippets/home/whatsapptemplate/?export={self.format}"
         content = self.admin_client.get(url).content
         # Hopefully we can get rid of this at some point.
-        print(f"Content = {content}")
         if self.format == "csv":
             print("-v-CONTENT-v-")
             print(content.decode())
@@ -447,7 +446,7 @@ class TestImportExportRoundtrip:
             is_lazy=True,
         )
         WhatsAppTemplate.objects.create(
-            name="wa_title",
+            slug="wa-slug",
             message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
             category="UTILITY",
             buttons=buttons,
@@ -475,7 +474,7 @@ class TestImportExportRoundtrip:
         Exporting then reimporting leaves the database in the same state we started with
         """
         WhatsAppTemplate.objects.create(
-            name="wa_title",
+            slug="wa-slug",
             message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
             category="UTILITY",
             buttons=[],
@@ -514,7 +513,7 @@ class TestImportExport:
         Importing a CSV file with existing templates should overwrite them.
         """
         WhatsAppTemplate.objects.create(
-            name="Test Template Simple",
+            slug="test-template-timple",
             message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
             category="UTILITY",
             buttons=[],
@@ -589,7 +588,7 @@ class TestImportExport:
             csv_impexp.import_file("whatsapp-template-missing-gotopage.csv")
         assert e.value.message == [
             "No pages found with slug 'missing' and locale 'English' for go_to_page "
-            "button 'Missing' on template 'Test Template Missing'"
+            "button 'Missing' on template 'test-template-missing'"
         ]
 
     def test_go_to_form_button_missing_form(self, csv_impexp: ImportExport) -> None:
@@ -661,7 +660,7 @@ class TestImportExport:
         """
 
         WhatsAppTemplate.objects.create(
-            name="wa_title",
+            slug="wa-title",
             message="Vars {1} {2} {3}",
             category="UTILITY",
             buttons=[],

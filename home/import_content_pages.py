@@ -93,8 +93,11 @@ class ContentImporter:
         self.process_rows(rows)
         self.save_pages()
         self.link_related_pages()
+
         self.add_go_to_page_items(self.go_to_page_buttons, "buttons")
+
         self.add_go_to_page_items(self.go_to_page_list_items, "list_items")
+
         self.add_media_link(rows)
 
     def add_media_link(self, rows: list["ContentRow"]) -> None:
@@ -111,6 +114,7 @@ class ContentImporter:
     def process_rows(self, rows: list["ContentRow"]) -> None:
         # Non-page rows don't have a locale, so we need to remember the last
         # row that does have a locale.
+
         prev_locale: Locale | None = None
         for i, row in enumerate(rows, start=2):
             try:
@@ -120,6 +124,7 @@ class ContentImporter:
                         # This page index isn't for the locale we're importing, so skip it.
                         continue
                     self.create_content_page_index_from_row(row)
+
                 elif row.is_content_page:
                     self.create_shadow_content_page_from_row(row, i)
                     prev_locale = self._get_locale_from_row(row)
@@ -127,6 +132,7 @@ class ContentImporter:
                     self.add_variation_to_shadow_content_page_from_row(row, prev_locale)
                 else:
                     self.add_message_to_shadow_content_page_from_row(row, prev_locale)
+
             except ImportException as e:
                 e.row_num = i
                 e.slug = row.slug
@@ -151,6 +157,7 @@ class ContentImporter:
                 # TODO: We should need to use something unique for `parent`
                 try:
                     parent = Page.objects.get(title=page.parent, locale=page.locale)
+
                 except Page.DoesNotExist:
                     raise ImportException(
                         f"Cannot find parent page with title '{page.parent}' and "
@@ -169,6 +176,7 @@ class ContentImporter:
 
                 try:
                     child = Page.objects.get(slug=page.slug, locale=page.locale)
+
                 except Page.DoesNotExist:
                     # Nothing to check if the child doesn't exist yet.
                     pass
@@ -182,6 +190,7 @@ class ContentImporter:
 
             else:
                 parent = self.home_page(page.locale)
+
             page.save(parent)
             self.set_progress("Importing pages", 10 + 70 * i // len(self.shadow_pages))
 
@@ -290,7 +299,6 @@ class ContentImporter:
             parent=row.parent,
             related_pages=row.related_pages,
         )
-
         self.shadow_pages[(row.slug, locale)] = page
 
         if row.is_whatsapp_message:
@@ -299,14 +307,14 @@ class ContentImporter:
         if row.is_whatsapp_template_message:
             try:
                 wa_template = WhatsAppTemplate.objects.get(
-                    name=row.whatsapp_template_name, locale=locale
+                    slug=row.whatsapp_template_slug, locale=locale
                 )
             except WhatsAppTemplate.DoesNotExist:
                 raise ImportException(
-                    f"The template '{row.whatsapp_template_name}' does not exist for locale '{locale}'"
+                    f"The template '{row.whatsapp_template_slug}' does not exist for locale '{locale}'"
                 )
             page.whatsapp_body.append(
-                ShadowWhatsAppTemplate(name=wa_template.name, locale=wa_template.locale)
+                ShadowWhatsAppTemplate(slug=wa_template.slug, locale=wa_template.locale)
             )
 
             if row.is_whatsapp_message:
@@ -440,7 +448,6 @@ class ContentImporter:
             )
         if row.is_whatsapp_message:
             page.enable_whatsapp = True
-
             page = self._get_shadow_page(row.slug, locale)
             buttons = self._create_interactive_items(
                 row.buttons, page, row.slug, locale, "button"
@@ -649,7 +656,7 @@ class ShadowContentPage:
         formatted = []
         for m in self.whatsapp_body:
             if isinstance(m, ShadowWhatsAppTemplate):
-                template = WhatsAppTemplate.objects.get(name=m.name, locale=m.locale)
+                template = WhatsAppTemplate.objects.get(slug=m.slug, locale=m.locale)
                 formatted.append(template)
             else:
                 formatted.append(WhatsappBlock().to_python(m.wagtail_format))
@@ -704,7 +711,7 @@ class ShadowWhatsappBlock:
 
 @dataclass
 class ShadowWhatsAppTemplate:
-    name: str = ""
+    slug: str = ""
     locale: Locale | str | None = None
 
     @property
@@ -775,7 +782,7 @@ class ContentRow:
     web_body: str = ""
     whatsapp_title: str = ""
     whatsapp_body: str = ""
-    whatsapp_template_name: str = ""
+    whatsapp_template_slug: str = ""
     example_values: list[str] = field(default_factory=list)
     variation_title: dict[str, str] = field(default_factory=dict)
     variation_body: str = ""
@@ -877,7 +884,7 @@ class ContentRow:
 
     @property
     def is_whatsapp_template_message(self) -> bool:
-        return bool(self.whatsapp_template_name)
+        return bool(self.whatsapp_template_slug)
 
     @property
     def is_sms_message(self) -> bool:

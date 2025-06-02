@@ -1594,7 +1594,7 @@ class WhatsAppTemplate(
 
     @property
     def prefix(self) -> str:
-        return self.name.lower().replace(" ", "_")
+        return self.slug
 
     @property
     def revisions(self) -> GenericRelation:

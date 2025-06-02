@@ -83,7 +83,7 @@ def filter_both(
 def add_new_fields(entry: ExpDict) -> ExpDict:
     # FIXME: This should probably be in a separate test for importing old exports.
     return {
-        "whatsapp_template_name": "",
+        "whatsapp_template_slug": "",
         **entry,
         "whatsapp_template_category": entry.get("whatsapp_template_category")
         or "UTILITY",
@@ -556,6 +556,7 @@ class ImportExport:
     def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
         src = csv2dicts(src_bytes)
         dst = csv2dicts(dst_bytes)
+
         return filter_exports(src, dst)
 
     def xlsxs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
@@ -1036,7 +1037,6 @@ class TestImportExport:
         csv_impexp.import_file("content_with_simple_wa_template.csv")
 
         [content_page] = ContentPage.objects.all()
-
         assert len(content_page.whatsapp_body) == 1
         assert content_page.whatsapp_body[0].value.message == "Message"
 
@@ -1050,7 +1050,7 @@ class TestImportExport:
 
         assert e.value.row_num == 3
         assert e.value.message == [
-            "The template 'Missing Template' does not exist for locale 'English'"
+            "The template 'missing-template' does not exist for locale 'English'"
         ]
 
     def test_cpi_validation_failure(self, csv_impexp: ImportExport) -> None:
@@ -2901,7 +2901,7 @@ class TestExportImportRoundtrip:
     ) -> None:
         template = WhatsAppTemplate.objects.create(
             category="MARKETING",
-            name="test_template",
+            slug="test-template",
             message="Test WhatsApp Template Message 1",
             locale=Locale.objects.first(),
         )

@@ -17,7 +17,7 @@ from wagtail.query import PageQuerySet  # type: ignore
 
 @dataclass
 class ExportRow:
-    name: str = ""
+    slug: str = ""
     category: str = ""
     buttons: str = ""
     locale: str = ""
@@ -50,7 +50,7 @@ class WhatsAppTemplateExporter:
             if item.image:
                 image_link = item.image.file.url
             yield ExportRow(
-                name=item.name,
+                slug=item.slug,
                 category=item.category,
                 buttons=self.serialise_buttons(item.buttons),
                 locale=str(item.locale.language_code),

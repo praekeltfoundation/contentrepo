@@ -290,8 +290,8 @@ class PageBuilder(Generic[TPage]):
         tags: Iterable[str] | None = None,
         triggers: Iterable[str] | None = None,
         quick_replies: Iterable[str] | None = None,
-        # TODO: DO we need this? buttons: Iterable[str] | None = None,
-        whatsapp_template_name: str | None = None,
+        buttons: Iterable[str] | None = None,
+        whatsapp_template_slug: str | None = None,
         whatsapp_template_category: str | None = None,
         translated_from: ContentPage | None = None,
         publish: bool = True,
@@ -305,10 +305,10 @@ class PageBuilder(Generic[TPage]):
             builder = builder.add_triggers(*triggers)
         if quick_replies:
             builder = builder.add_quick_replies(*quick_replies)
-        # TODO: DO we need this? if buttons:
-        #     builder = builder.add_buttons(*buttons)
-        if whatsapp_template_name:
-            builder = builder.set_whatsapp_template_name(whatsapp_template_name)
+        if buttons:
+            builder = builder.add_buttons(*buttons)
+        if whatsapp_template_slug:
+            builder = builder.set_whatsapp_template_slug(whatsapp_template_slug)
         if whatsapp_template_category:
             builder = builder.set_whatsapp_template_category(whatsapp_template_category)
         if translated_from:
@@ -362,9 +362,9 @@ class PageBuilder(Generic[TPage]):
             self.page.buttons.add(bt)
         return self
 
-    def set_whatsapp_template_name(self, name: str) -> "PageBuilder[TPage]":
+    def set_whatsapp_template_slug(self, slug: str) -> "PageBuilder[TPage]":
         self.page.is_whatsapp_template = True
-        self.page.whatsapp_template_name = name
+        self.page.whatsapp_template_slug = slug
         return self
 
     def set_whatsapp_template_category(self, category: str) -> "PageBuilder[TPage]":

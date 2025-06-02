@@ -384,7 +384,7 @@ def test_submit_revision(monkeypatch: pytest.MonkeyPatch) -> None:
     Test that submitting a WhatsAppTemplate Revision doesn't overwrite the live template
     """
     wat = WhatsAppTemplate(
-        name="valid-named-variables",
+        slug="valid-named-variables",
         message="This is a message with 2 valid named vars {{1}} and {{2}}",
         category="UTILITY",
         locale=Locale.objects.get(language_code="en"),

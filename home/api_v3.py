@@ -135,7 +135,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
     pagination_class = PageNumberPagination
 
     def detail_view(self, request, pk=None, slug=None):
-        print("Detail View")
         if slug is not None:
             self.lookup_field = "slug"
         else:
@@ -144,18 +143,14 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         try:
             if "qa" in request.GET and request.GET["qa"].lower() == "true":
                 instance = self.get_object().get_latest_revision_as_object()
-                print("QA detected")
             else:
-                print("else")
                 instance = self.get_object()
 
-            print(f"Instance = {instance}")
             instance.save_page_view(request.query_params)
             serializer = ContentPageSerializerV3(instance, context={"request": request})
             return Response(serializer.data)
 
-        except Exception as e:
-            print(e)
+        except Exception:
             raise NotFound({"page": ["Page matching query does not exist."]})
 
         return super().detail_view(request, pk)
