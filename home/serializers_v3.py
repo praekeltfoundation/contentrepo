@@ -47,21 +47,12 @@ def has_previous_message(message_index, content_page, platform):
         return message_index
 
 
-class RelatedPagesField(serializers.Field):
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        request = self.context["request"]
-        return related_pages_field_representation(page, request)
-
-
 def get_related_page_as_content_page(page):
     if page.id:
         return ContentPage.objects.filter(id=page.id).first()
 
 
-def related_pages_field_representation(page, request):
+def format_related_pages(page, request):
     related_pages = []
     for related in page.related_pages:
         related_page = get_related_page_as_content_page(related.value)
@@ -84,37 +75,14 @@ def related_pages_field_representation(page, request):
 
         related_pages.append(
             {
-                "id": related.id,
-                "value": related_page.id,
+                "slug": related_page.slug,
                 "title": title,
             }
         )
     return related_pages
 
 
-class BodyField(serializers.Field):
-    """
-    Serializes the "body" field.
-
-    Example:
-    "body": {
-        "message": 1,
-        "next_message": 2,
-        "previous_message": None,
-        "total_messages": 3,
-        "text": "body based on platform requested"
-    }
-    """
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, page):
-        request = self.context["request"]
-        return body_field_representation_V3(page, request)
-
-
-def body_field_representation_V3(page, request):
+def format_messages(page, request):
     message = 0
     if "whatsapp" in request.GET and (
         page.enable_whatsapp is True
@@ -226,8 +194,6 @@ def format_buttons_and_list_items(given_list: blocks.StreamValue.StreamChild):
     for button in given_list:
         button_dict = {"type": button["type"], "title": button["value"]["title"]}
         if button["type"] == "go_to_page":
-            # TODO: I copied this bit from the import/export file.  Do we want it here as well?
-            # Exclude buttons that has deleted pages that they are linked to it
             if button["value"].get("page") is None:
                 continue
             content_page = ContentPage.objects.get(id=button["value"].get("page"))
@@ -338,16 +304,27 @@ def format_whatsapp_body_V3(content_page):
     return messages
 
 
+def format_detail_url(obj, request):
+    router = request.wagtailapi_router
+    detail_url = get_object_detail_url(router, request, type(obj), obj.slug)
+    query_params = request.query_params
+    if query_params:
+        detail_url = (
+            f"{detail_url}?{'&'.join([f'{k}={v}' for k, v in query_params.items()])}"
+        )
+    return detail_url
+
+
 class ContentPageSerializerV3(PageSerializer):
     title = serializers.CharField(read_only=True)
     slug = serializers.SlugField(read_only=True)
     messages = serializers.SerializerMethodField()
     detail_url = serializers.SerializerMethodField()
+    related_pages = serializers.SerializerMethodField()
     meta_fields = []
 
     class Meta:
         model = ContentPage
-
         fields = [
             "slug",
             "detail_url",
@@ -361,33 +338,14 @@ class ContentPageSerializerV3(PageSerializer):
             "related_pages",
         ]
 
-        # exclude = ["meta_fields"]
-
     def get_messages(self, obj):
-        request = self.context["request"]
-        messages = body_field_representation_V3(obj, request)
-        return messages
-
-    def get_buttons(self, obj):
-        buttons = list(obj.buttons.raw_data)
-        for button in buttons:
-            if "id" in button:
-                del button["id"]
-        return buttons
-
-    def get_example_values(self, obj):
-        example_values = list(obj.example_values.raw_data)
-        string_list = [d["value"] for d in example_values]
-        return string_list
+        return format_messages(page=obj, request=self.context["request"])
 
     def get_detail_url(self, obj):
-        request = self.context["request"]
-        router = request.wagtailapi_router
-        detail_url = get_object_detail_url(router, request, type(obj), obj.slug)
-        query_params = request.query_params
-        if query_params:
-            detail_url = f"{detail_url}?{'&'.join([f'{k}={v}' for k, v in query_params.items()])}"
-        return detail_url
+        return format_detail_url(obj=obj, request=self.context["request"])
+
+    def get_related_pages(self, obj):
+        return format_related_pages(page=obj, request=self.context["request"])
 
 
 class WhatsAppTemplateSerializer(serializers.ModelSerializer):
@@ -424,10 +382,4 @@ class WhatsAppTemplateSerializer(serializers.ModelSerializer):
         return format_example_values(obj.example_values.raw_data)
 
     def get_detail_url(self, obj):
-        request = self.context["request"]
-        router = request.wagtailapi_router
-        detail_url = get_object_detail_url(router, request, type(obj), obj.slug)
-        query_params = request.query_params
-        if query_params:
-            detail_url = f"{detail_url}?{'&'.join([f'{k}={v}' for k, v in query_params.items()])}"
-        return detail_url
+        return format_detail_url(obj=obj, request=self.context["request"])
