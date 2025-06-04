@@ -264,25 +264,6 @@ class OrderedContentSetViewSet(SnippetViewSet):
     search_fields = ("name", "profile_fields")
 
 
-# class WhatsAppTemplateViewset(SnippetViewSet):
-#     model = WhatsAppTemplate
-#     icon = "order"
-
-#     list_display = (
-#         "name",
-#         "message",
-#         "category",
-#     )
-#     # list_export = (
-#     #     "name",
-#     #     "message",
-#     # )
-
-#     # export_headings = {"language_code": "Locale"}
-
-#     # list_filter = ("locale",)
-
-
 class WhatsAppTemplateAdmin(SnippetViewSet):
     model = WhatsAppTemplate
     body_truncate_size = 200
@@ -299,14 +280,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
         "status",
         "get_submission_status_display",
     )
-    # list_display = (
-    #     "name",
-    #     "message",
-    #     "category",
-    # )
-
     list_filter = ("locale",)
-
     search_fields = (
         "slug",
         "category",
@@ -384,7 +358,6 @@ class AssessmentAdmin(SnippetViewSet):
 modeladmin_register(ContentPageAdmin)
 register_snippet(AssessmentAdmin)
 register_snippet(OrderedContentSetViewSet)
-# register_snippet(WhatsAppTemplateViewset)
 # Flag for turning on Standalone Whatsapp Templates, still in development
 if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
     register_snippet(WhatsAppTemplateAdmin)

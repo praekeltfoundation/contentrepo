@@ -39,23 +39,16 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         try:
             if "qa" in request.GET and request.GET["qa"] == "True":
                 instance = self.get_object().get_latest_revision_as_object()
-                # instance = WhatsAppTemplate.objects.get(
-                #     id=pk
-                # ).get_latest_revision_as_object()
-                # serializer = WhatsAppTemplateSerializer(
-                #     instance, context={"request": request}
-                # )
-                # return Response(serializer.data)
             else:
-                # WhatsAppTemplate.objects.get(id=pk)
                 instance = self.get_object()
         except Exception as e:
             # TODO: Handle this better
             print(f"Exception = {e}")
-
+        # TODO: I couldn't get the call to get_serializer to work correctly,  Rudi can we try fix this together please
+        # serializer = self.get_serializer(instance)
         serializer = WhatsAppTemplateSerializer(instance, context={"request": request})
+
         return Response(serializer.data)
-        # return super().detail_view(request, pk)
 
     def listing_view(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -64,7 +57,6 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
             queryset_list, context={"request": request}, many=True
         )
         return self.get_paginated_response(serializer.data)
-        # return super().listing_view(request)
 
     def get_queryset(self):
         qa = self.request.query_params.get("qa")
@@ -84,16 +76,6 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
             )
 
         return queryset
-
-    def get_serializer_context(self):
-        """
-        The serialization context differs between listing and detail views.
-        """
-        return {
-            "request": self.request,
-            "view": self,
-            "router": self.request.wagtailapiv3_router,
-        }
 
     @classmethod
     def get_urlpatterns(cls):

@@ -227,7 +227,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
                                 format_whatsapp_template_message(template.message),
                             ),
                             ("is_whatsapp_template", "True"),
-                            ("whatsapp_template_slug", template.slug),
+                            ("whatsapp_template_name", template.slug),
                             (
                                 "whatsapp_template_category",
                                 template.category,
