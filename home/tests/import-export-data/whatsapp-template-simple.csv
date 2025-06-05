@@ -1,2 +1,2 @@
-name,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
-Test Template Simple,MARKETING,"[{""type"": ""next_message"", ""title"": ""Sure, remind me"", ""slug"": """"}, {""type"": ""go_to_page"", ""title"": ""No, go to main menu"", ""slug"": ""health-info""}]",en,,Message,,,,
+slug,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
+test-template-simple,MARKETING,"[{""type"": ""next_message"", ""title"": ""Sure, remind me"", ""slug"": """"}, {""type"": ""go_to_page"", ""title"": ""No, go to main menu"", ""slug"": ""health-info""}]",en,,Message,,,,

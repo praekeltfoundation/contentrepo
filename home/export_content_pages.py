@@ -54,7 +54,7 @@ class ExportRow:
     web_body: str = ""
     whatsapp_title: str = ""
     whatsapp_body: str = ""
-    whatsapp_template_name: str = ""
+    whatsapp_template_slug: str = ""
     variation_title: str = ""
     variation_body: str = ""
     list_title: str = ""
@@ -123,7 +123,7 @@ class ExportRow:
             self.ussd_body = ussd.value["message"].strip()
         if whatsapp:
             if isinstance(whatsapp.value, WhatsAppTemplate):
-                self.whatsapp_template_name = whatsapp.value.name
+                self.whatsapp_template_slug = whatsapp.value.slug
             else:
                 self.whatsapp_body = whatsapp.value["message"].strip()
                 if "image" in whatsapp.value and whatsapp.value["image"] is not None:
@@ -211,13 +211,12 @@ class ContentExporter:
          * We should use the parent slug (which is expected to be unique per
            locale (probably?)) instead of the parent title.
         """
-
         if len(page.whatsapp_body) > 0 and isinstance(
             page.whatsapp_body[0].value, WhatsAppTemplate
         ):
-            whatsapp_template_name = page.whatsapp_body[0].value.name
+            whatsapp_template_slug = page.whatsapp_body[0].value.slug
         else:
-            whatsapp_template_name = ""
+            whatsapp_template_slug = ""
 
         row = ExportRow(
             structure=structure,
@@ -229,7 +228,7 @@ class ContentExporter:
             web_subtitle=page.subtitle,
             web_body=str(page.body),
             whatsapp_title=page.whatsapp_title,
-            whatsapp_template_name=whatsapp_template_name,
+            whatsapp_template_slug=whatsapp_template_slug,
             sms_title=page.sms_title,
             ussd_title=page.ussd_title,
             messenger_title=page.messenger_title,
@@ -345,7 +344,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "web_body": 370,
         "whatsapp_title": 118,
         "whatsapp_body": 370,
-        "whatsapp_template_name": 118,
+        "whatsapp_template_slug": 118,
         "variation_title": 118,
         "variation_body": 370,
         "sms_title": 118,

@@ -128,46 +128,34 @@ def format_whatsapp_template_message(message: str) -> dict[str, Any]:
 
 
 def format_whatsapp_message(message_index, content_page, platform):
-    # Flattens the variation_messages field in the whatsapp message
     text = content_page.whatsapp_body._raw_data[message_index]
-    variation_messages = text["value"].get("variation_messages", [])
-    new_var_messages = []
-    for var in variation_messages:
-        new_var_messages.append(
-            {
-                "profile_field": var["value"]["variation_restrictions"][0]["type"],
-                "value": var["value"]["variation_restrictions"][0]["value"],
-                "message": var["value"]["message"],
-            }
-        )
-    text["value"]["variation_messages"] = new_var_messages
 
-    # For backwards compatibility we are exposing the new format under list_items_v2, and maintaining list_items the way it was.
-    # For example:
-    # New Format:
-    # {
-    #     "id": "179bf4be-2bea-49db-8558-51f7da8b888f",
-    #     "type": "next_message",
-    #     "value": {
-    #         "title": "English"
-    #     }
-    # }
-    #
-    # Old Format:
-    # {
-    #     "id": "8db577c1-67ab-49e1-825a-960b891374f4",
-    #     "type": "item",
-    #     "value": "English"
-    # }
-    if text["value"]["list_items"]:
-        text["value"]["list_items_v2"] = text["value"]["list_items"]
+    if str(text["type"]) == "Whatsapp_Message":
+        # Flattens the variation_messages field in the whatsapp message
+        variation_messages = text["value"].get("variation_messages", [])
+        new_var_messages = []
+        for var in variation_messages:
+            new_var_messages.append(
+                {
+                    "profile_field": var["value"]["variation_restrictions"][0]["type"],
+                    "value": var["value"]["variation_restrictions"][0]["value"],
+                    "message": var["value"]["message"],
+                }
+            )
+        text["value"]["variation_messages"] = new_var_messages
 
-        current_list_items = text["value"]["list_items"]
-        list_items = [
-            {"id": item["id"], "type": "item", "value": item["value"]["title"]}
-            for item in current_list_items
-        ]
-        text["value"]["list_items"] = list_items
+        # For backwards compatibility we are exposing the new format under list_items_v2, and maintaining list_items the way it was.
+        # For example:
+
+        if text["value"]["list_items"]:
+            text["value"]["list_items_v2"] = text["value"]["list_items"]
+
+            current_list_items = text["value"]["list_items"]
+            list_items = [
+                {"id": item["id"], "type": "item", "value": item["value"]["title"]}
+                for item in current_list_items
+            ]
+            text["value"]["list_items"] = list_items
 
     return text
 
@@ -212,40 +200,6 @@ def body_field_representation(page: Any, request: Any) -> Any:
         if page.whatsapp_body != []:
             try:
                 api_body: OrderedDict[str, Any] = OrderedDict()
-                # if it's a template, we need to get the template content
-                block = page.whatsapp_body._raw_data[message]
-                if block["type"] == "Whatsapp_Template":
-                    template = WhatsAppTemplate.objects.get(id=block["value"])
-
-                    api_body.update(
-                        [
-                            (
-                                "text",
-                                format_whatsapp_template_message(template.message),
-                            ),
-                            ("is_whatsapp_template", "True"),
-                            ("whatsapp_template_name", template.name),
-                            (
-                                "whatsapp_template_category",
-                                template.category,
-                            ),
-                        ]
-                    )
-                else:
-                    api_body.update(
-                        [
-                            (
-                                "text",
-                                format_whatsapp_message(message, page, "whatsapp"),
-                            ),
-                            ("is_whatsapp_template", "False"),
-                            ("whatsapp_template_name", ""),
-                            (
-                                "whatsapp_template_category",
-                                "",
-                            ),
-                        ]
-                    )
                 api_body.update(
                     [
                         ("message", message + 1),
@@ -258,9 +212,45 @@ def body_field_representation(page: Any, request: Any) -> Any:
                             has_previous_message(message, page, "whatsapp"),
                         ),
                         ("total_messages", len(page.whatsapp_body._raw_data)),
+                    ]
+                )
+                # if it's a template, we need to get the template content
+                block = page.whatsapp_body._raw_data[message]
+
+                if block["type"] == "Whatsapp_Template":
+                    template = WhatsAppTemplate.objects.get(id=block["value"])
+
+                    api_body.update(
+                        [
+                            (
+                                "text",
+                                format_whatsapp_template_message(template.message),
+                            ),
+                            ("is_whatsapp_template", "True"),
+                            ("whatsapp_template_name", template.slug),
+                            (
+                                "whatsapp_template_category",
+                                template.category,
+                            ),
+                        ]
+                    )
+
+                elif block["type"] == "Whatsapp_Message":
+                    api_body.update(
+                        [
+                            (
+                                "text",
+                                format_whatsapp_message(message, page, "whatsapp"),
+                            ),
+                            ("is_whatsapp_template", "False"),
+                        ]
+                    )
+                api_body.update(
+                    [
                         ("revision", page.get_latest_revision().id),
                     ]
                 )
+
                 return api_body
             except IndexError:
                 raise ValidationError("The requested message does not exist")
@@ -410,6 +400,7 @@ class ContentPageSerializer(PageSerializer):
     body = BodyField(read_only=True)
     has_children = HasChildrenField(read_only=True)
     related_pages = RelatedPagesField(read_only=True)
+    # footer = serializers.CharField()
 
     def to_representation(self, page):
         request = self.context["request"]

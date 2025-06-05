@@ -169,7 +169,7 @@ class MigrationTests(TestCase):
         """
         # Create a WhatsAppTemplate with an empty submission status
         template = WhatsAppTemplate.objects.create(
-            name="Test Template",
+            slug="test-template",
             submission_status="",
             locale=Locale.objects.get(language_code="en"),
         )

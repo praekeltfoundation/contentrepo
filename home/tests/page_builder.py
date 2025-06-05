@@ -290,6 +290,9 @@ class PageBuilder(Generic[TPage]):
         tags: Iterable[str] | None = None,
         triggers: Iterable[str] | None = None,
         quick_replies: Iterable[str] | None = None,
+        buttons: Iterable[str] | None = None,
+        whatsapp_template_slug: str | None = None,
+        whatsapp_template_category: str | None = None,
         translated_from: ContentPage | None = None,
         publish: bool = True,
     ) -> ContentPage:
@@ -302,6 +305,12 @@ class PageBuilder(Generic[TPage]):
             builder = builder.add_triggers(*triggers)
         if quick_replies:
             builder = builder.add_quick_replies(*quick_replies)
+        if buttons:
+            builder = builder.add_buttons(*buttons)
+        if whatsapp_template_slug:
+            builder = builder.set_whatsapp_template_slug(whatsapp_template_slug)
+        if whatsapp_template_category:
+            builder = builder.set_whatsapp_template_category(whatsapp_template_category)
         if translated_from:
             builder = builder.translated_from(translated_from)
         return builder.build(publish=publish)
@@ -345,6 +354,22 @@ class PageBuilder(Generic[TPage]):
         for qr_str in qr_strs:
             qr, _ = ContentQuickReply.objects.get_or_create(name=qr_str)
             self.page.quick_replies.add(qr)
+        return self
+
+    def add_buttons(self, *bt_strs: str) -> "PageBuilder[TPage]":
+        for bt_str in bt_strs:
+            bt, _ = ContentQuickReply.objects.get_or_create(name=bt_str)
+            self.page.buttons.add(bt)
+        return self
+
+    def set_whatsapp_template_slug(self, slug: str) -> "PageBuilder[TPage]":
+        self.page.is_whatsapp_template = True
+        self.page.whatsapp_template_slug = slug
+        return self
+
+    def set_whatsapp_template_category(self, category: str) -> "PageBuilder[TPage]":
+        self.page.is_whatsapp_template = True
+        self.page.whatsapp_template_category = category
         return self
 
     def translated_from(self, page: TPage) -> "PageBuilder[TPage]":

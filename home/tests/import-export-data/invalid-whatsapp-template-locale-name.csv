@@ -1,2 +1,2 @@
-name,category,quick_replies,locale,image,message,example_values,submission_name,submission_status,submission_result
-Test Template,MARKETING,,fakecode,,Message,,very_new_indeed_3_272,SUBMITTED,Success! Template ID = 418074557823888
+slug,category,quick_replies,locale,image,message,example_values,submission_name,submission_status,submission_result
+test-template,MARKETING,,fakecode,,Message,,very_new_indeed_3_272,SUBMITTED,Success! Template ID = 418074557823888

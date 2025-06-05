@@ -1,3 +1,3 @@
-name,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
-Good Test Template Simple,MARKETING,"[{""type"": ""next_message"", ""title"": ""Sure, remind me"", ""slug"": """"}, {""type"": ""next_message"", ""title"": ""No, go to main menu"", ""slug"": """"}]",en,,"Hi {{1}}
+slug,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
+good-test-template-simple,MARKETING,"[{""type"": ""next_message"", ""title"": ""Sure, remind me"", ""slug"": """"}, {""type"": ""next_message"", ""title"": ""No, go to main menu"", ""slug"": """"}]",en,,"Hi {{1}}
 {{2}} {{3}}","Helen, Good, Great",,,

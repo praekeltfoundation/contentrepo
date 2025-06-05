@@ -1,2 +1,2 @@
-name,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
-Test Template Missing,MARKETING,"[{""type"": ""go_to_page"", ""title"": ""Missing"", ""slug"": ""missing""}]",en,,Message,,test_template_missing_1,,
+slug,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
+test-template-missing,MARKETING,"[{""type"": ""go_to_page"", ""title"": ""Missing"", ""slug"": ""missing""}]",en,,Message,,test_template_missing_1,,

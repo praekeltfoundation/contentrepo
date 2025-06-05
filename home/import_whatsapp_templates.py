@@ -62,11 +62,9 @@ class WhatsAppTemplateImporter:
     def perform_import(self) -> None:
         rows = self.parse_file()
         self.set_progress("Loaded file", 5)
-
         if self.purge:
             self.delete_existing_content()
         self.set_progress("Deleted existing WhatsApp Template", 10)
-
         self.process_rows(rows)
         self.add_go_to_page_items(self.go_to_page_buttons, "buttons")
 
@@ -100,7 +98,7 @@ class WhatsAppTemplateImporter:
         template.save()
 
         buttons = self._create_interactive_items(
-            row.buttons, template, template.name, locale, "button"
+            row.buttons, template, template.slug, locale, "button"
         )
         template.buttons = buttons
 
@@ -111,7 +109,7 @@ class WhatsAppTemplateImporter:
         self, row: "ContentRow", locale: Locale
     ) -> WhatsAppTemplate:
         try:
-            template = WhatsAppTemplate.objects.get(name=row.name, locale=locale)
+            template = WhatsAppTemplate.objects.get(slug=row.slug, locale=locale)
             template.category = row.category
             template.message = row.message
             template.example_values = [
@@ -127,7 +125,7 @@ class WhatsAppTemplateImporter:
             return template
         except WhatsAppTemplate.DoesNotExist:
             return WhatsAppTemplate(
-                name=row.name,
+                slug=row.slug,
                 category=row.category,
                 locale=locale,
                 message=row.message,
@@ -174,8 +172,8 @@ class WhatsAppTemplateImporter:
     def add_go_to_page_items(
         self, items_dict: dict[PageId, dict[int, list[dict[str, Any]]]], item_type: str
     ) -> None:
-        for (template_name, locale), items in items_dict.items():
-            template = WhatsAppTemplate.objects.get(name=template_name, locale=locale)
+        for (template_slug, locale), items in items_dict.items():
+            template = WhatsAppTemplate.objects.get(slug=template_slug, locale=locale)
             template_buttons = template.buttons.get_prep_value()
             for _, buttons in items.items():
                 for button in buttons:
@@ -188,7 +186,7 @@ class WhatsAppTemplateImporter:
                         raise ImportException(
                             f"No pages found with slug '{button['slug']}' and locale "
                             f"'{locale}' for go_to_page {item_type[:-1]} '{title}' on "
-                            f"template '{template_name}'",
+                            f"template '{template_slug}'",
                         )
                     btn = {
                         "id": uuid4(),
@@ -275,7 +273,7 @@ class WhatsAppTemplateImporter:
 
 @dataclass(slots=True, frozen=True)
 class ContentRow:
-    name: str = ""
+    slug: str = ""
     category: str = ""
     locale: str = ""
     buttons: list[dict[str, Any]] = field(default_factory=list)
@@ -295,7 +293,7 @@ class ContentRow:
             if value and key in class_fields
         }
         return cls(
-            name=str(row.pop("name", "")),
+            slug=str(row.pop("slug", "")),
             category=str(row.pop("category", "")),
             buttons=(
                 JSON_loader(row_num, row.pop("buttons", ""))

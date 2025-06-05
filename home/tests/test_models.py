@@ -180,7 +180,7 @@ class ContentPageTests(TestCase):
         page = create_page(is_whatsapp_template=True)
         pt, _created = Locale.objects.get_or_create(language_code="pt")
         mock_create_whatsapp_template.assert_called_with(
-            f"wa_title_{page.get_latest_revision().id}",
+            f"wa-title_{page.get_latest_revision().id}",
             "Test WhatsApp Message 1",
             "UTILITY",
             pt,
@@ -215,7 +215,7 @@ class ContentPageTests(TestCase):
 
     def test_new_template_displays_correctly(self) -> None:
         page = create_page(
-            is_new_whatsapp_template=True, whatsapp_template_name="Test Template"
+            is_new_whatsapp_template=True, whatsapp_template_slug="test-template"
         )
 
         self.assertEqual(
@@ -578,7 +578,7 @@ class WhatsAppTemplateTests(TestCase):
         """
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
-                name="non-numeric-variable",
+                slug="non-numeric-variable",
                 message="This is a message with 1 variables, containing whitespace {{ 1 }}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -596,7 +596,7 @@ class WhatsAppTemplateTests(TestCase):
         """
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
-                name="non-numeric-variable",
+                slug="non-numeric-variable",
                 message="This is a message with 2 variables, {{1}} and {{foo}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -620,7 +620,7 @@ class WhatsAppTemplateTests(TestCase):
         responses.add(responses.POST, url, json={"id": "123456789"})
 
         wat = WhatsAppTemplate(
-            name="valid-named-variables",
+            slug="valid-named-variables",
             message="This is a message with 2 valid named vars {{xxx}} and {{yyy}}",
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
@@ -656,7 +656,7 @@ class WhatsAppTemplateTests(TestCase):
         """
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
-                name="non-valid-named-variable",
+                slug="non-valid-named-variable",
                 message="This is a message with a non valid named var {{1_ok_not.ok}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -674,7 +674,7 @@ class WhatsAppTemplateTests(TestCase):
         """
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
-                name="non-valid-named-variable",
+                slug="non-valid-named-variable",
                 message="This is a message with a valid positional var here {{1}} and a named var here{{1_ok_not.ok}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -692,7 +692,7 @@ class WhatsAppTemplateTests(TestCase):
     ) -> None:
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
-                name="all-int-pos-vars",
+                slug="all-int-pos-vars",
                 message="Test WhatsApp Message all int placeholders {{2}} and {{1}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -714,7 +714,7 @@ class WhatsAppTemplateTests(TestCase):
         """
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
-                name="misordered-variables",
+                slug="misordered-variables",
                 message="These 2 vars are the wrong way around. {{2}} and {{1}}",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -747,7 +747,7 @@ class WhatsAppTemplateTests(TestCase):
         responses.add(responses.POST, url, json={})
 
         wat = WhatsAppTemplate(
-            name="wa_title",
+            slug="wa-title",
             message="Test WhatsApp Message 1",
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
@@ -767,7 +767,7 @@ class WhatsAppTemplateTests(TestCase):
         responses.add(responses.POST, url, json={"id": "123456789"})
 
         wat = WhatsAppTemplate(
-            name="wa_title",
+            slug="wa-title",
             message="Test WhatsApp Message 1",
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
@@ -782,7 +782,7 @@ class WhatsAppTemplateTests(TestCase):
             "category": "UTILITY",
             "components": [{"text": "Test WhatsApp Message 1", "type": "BODY"}],
             "language": "en_US",
-            "name": f"wa_title_{wat.get_latest_revision().id}",
+            "name": f"wa-title_{wat.get_latest_revision().id}",
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -792,7 +792,7 @@ class WhatsAppTemplateTests(TestCase):
         responses.add(responses.POST, url, json={"id": "123456789"})
 
         wat = WhatsAppTemplate(
-            name="wa_title",
+            slug="wa-title",
             buttons=[
                 ("next_message", {"title": "Test Button"}),
             ],
@@ -822,7 +822,7 @@ class WhatsAppTemplateTests(TestCase):
                 },
             ],
             "language": "en_US",
-            "name": f"wa_title_{wat.get_latest_revision().id}",
+            "name": f"wa-title_{wat.get_latest_revision().id}",
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -832,7 +832,7 @@ class WhatsAppTemplateTests(TestCase):
         responses.add(responses.POST, url, json={"id": "123456789"})
 
         wat = WhatsAppTemplate(
-            name="wa_title",
+            slug="wa-title",
             buttons=[
                 ("next_message", {"title": "Test Button"}),
             ],
@@ -872,7 +872,7 @@ class WhatsAppTemplateTests(TestCase):
                 },
             ],
             "language": "en_US",
-            "name": f"wa_title_{wat.get_latest_revision().id}",
+            "name": f"wa-title_{wat.get_latest_revision().id}",
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -882,7 +882,7 @@ class WhatsAppTemplateTests(TestCase):
         responses.add(responses.POST, url, json={"id": "123456789"})
 
         wat = WhatsAppTemplate(
-            name="wa_title",
+            slug="wa-title",
             message="Test WhatsApp Message with two placeholders {{1}} and {{2}}",
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
@@ -908,7 +908,7 @@ class WhatsAppTemplateTests(TestCase):
                 },
             ],
             "language": "en_US",
-            "name": f"wa_title_{wat.get_latest_revision().id}",
+            "name": f"wa-title_{wat.get_latest_revision().id}",
         }
 
     @override_settings(WHATSAPP_CREATE_TEMPLATES=True)
@@ -916,7 +916,7 @@ class WhatsAppTemplateTests(TestCase):
     def test_template_create_with_more_example_values_than_vars_fails(self) -> None:
         with pytest.raises(ValidationError) as err_info:
             WhatsAppTemplate(
-                name="more-ev-than-variables",
+                slug="more-ev-than-variables",
                 message="Test WhatsApp Message with less placeholders {{1}} than example values",
                 category="UTILITY",
                 locale=Locale.objects.get(language_code="en"),
@@ -948,7 +948,7 @@ class WhatsAppTemplateTests(TestCase):
         responses.add(responses.POST, url, json=error_response, status=400)
 
         wat = WhatsAppTemplate(
-            name="wa_title",
+            slug="wa-title",
             message="Test WhatsApp Message 1",
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
@@ -967,13 +967,13 @@ class WhatsAppTemplateTests(TestCase):
         A WhatsAppTemplate that is published and being drafted should return a live and draft status
         """
         wat = WhatsAppTemplate(
-            name="wa_title",
+            slug="wa-title",
             message="Test WhatsApp Message 1",
             category="UTILITY",
             locale=Locale.objects.get(language_code="en"),
         )
         wat.save()
-        wat.name = "wa_title_2"
+        wat.name = "wa-title_2"
         wat.save_revision()
         self.assertTrue(wat.has_unpublished_changes)
         self.assertEqual(wat.status(), "Live + Draft")
