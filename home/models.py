@@ -1,4 +1,5 @@
 import logging
+import re
 from collections.abc import Callable
 from typing import Any, Optional, TypeVar
 
@@ -1594,7 +1595,8 @@ class WhatsAppTemplate(
 
     @property
     def prefix(self) -> str:
-        return self.slug
+        # lowercase the slug and replace all special characters with underscores because Meta only allows lowercase letters and underscores
+        return re.sub(r"[^a-z0-9]+", "_", self.slug.lower())
 
     @property
     def revisions(self) -> GenericRelation:
