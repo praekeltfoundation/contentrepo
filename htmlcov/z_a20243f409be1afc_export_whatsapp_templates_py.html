@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_a20243f409be1afc_forms_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-19 11:51 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.8.2">coverage.py v7.8.2</a>,
+            created at 2025-06-05 05:30 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -99,7 +99,7 @@
     <p class="pln"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="op">@</span><span class="nam">dataclass</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">class</span> <span class="nam">ExportRow</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="nam">name</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="nam">slug</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">    <span class="nam">category</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">    <span class="nam">buttons</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">    <span class="nam">locale</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
@@ -132,7 +132,7 @@
     <p class="run"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">            <span class="key">if</span> <span class="nam">item</span><span class="op">.</span><span class="nam">image</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">                <span class="nam">image_link</span> <span class="op">=</span> <span class="nam">item</span><span class="op">.</span><span class="nam">image</span><span class="op">.</span><span class="nam">file</span><span class="op">.</span><span class="nam">url</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">            <span class="key">yield</span> <span class="nam">ExportRow</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">                <span class="nam">name</span><span class="op">=</span><span class="nam">item</span><span class="op">.</span><span class="nam">name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">                <span class="nam">slug</span><span class="op">=</span><span class="nam">item</span><span class="op">.</span><span class="nam">slug</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">                <span class="nam">category</span><span class="op">=</span><span class="nam">item</span><span class="op">.</span><span class="nam">category</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">                <span class="nam">buttons</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">serialise_buttons</span><span class="op">(</span><span class="nam">item</span><span class="op">.</span><span class="nam">buttons</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">                <span class="nam">locale</span><span class="op">=</span><span class="nam">str</span><span class="op">(</span><span class="nam">item</span><span class="op">.</span><span class="nam">locale</span><span class="op">.</span><span class="nam">language_code</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -291,8 +291,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_a20243f409be1afc_forms_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-19 11:51 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.8.2">coverage.py v7.8.2</a>,
+            created at 2025-06-05 05:30 +0000
         </p>
     </div>
 </footer>
