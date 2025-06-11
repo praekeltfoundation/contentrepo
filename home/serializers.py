@@ -115,14 +115,28 @@ def has_previous_message(message_index, content_page, platform):
         return message_index
 
 
-def format_whatsapp_template_message(message: str) -> dict[str, Any]:
+def format_whatsapp_template_message(message_index, content_page) -> dict[str, Any]:
+    block = content_page.whatsapp_body._raw_data[message_index]
+    wa_template = WhatsAppTemplate.objects.get(id=block["value"])
+
     text = {
+        "id": str(wa_template.id),
+        # Even though this is technically of type a Whatsapp_Template, we "pretend" this is a Whatsapp_Message object
+        # to retain the v2 api behaviour. We also return some fields as null or empty values, for the same reason
+        "type": "Whatsapp_Message",
         "value": {
-            "variation_messages": [],
+            "image": wa_template.image.id if wa_template.image else "",
+            "media": None,
+            "footer": None,
+            "buttons": wa_template.buttons._raw_data,
+            "message": wa_template.message,
+            "document": None,
             "list_items": [],
-            "list_items_v2": [],
-            "message": message,
-        }
+            "list_title": "",
+            "next_prompt": "",
+            "example_values": wa_template.example_values._raw_data,
+            "variation_messages": [],
+        },
     }
     return text
 
@@ -216,7 +230,6 @@ def body_field_representation(page: Any, request: Any) -> Any:
                 )
                 # if it's a template, we need to get the template content
                 block = page.whatsapp_body._raw_data[message]
-
                 if block["type"] == "Whatsapp_Template":
                     template = WhatsAppTemplate.objects.get(id=block["value"])
 
@@ -224,10 +237,11 @@ def body_field_representation(page: Any, request: Any) -> Any:
                         [
                             (
                                 "text",
-                                format_whatsapp_template_message(template.message),
+                                format_whatsapp_template_message(message, page),
                             ),
-                            ("is_whatsapp_template", "True"),
-                            ("whatsapp_template_name", template.slug),
+                            ("revision", page.get_latest_revision().id),
+                            ("is_whatsapp_template", True),
+                            ("whatsapp_template_name", template.submission_name),
                             (
                                 "whatsapp_template_category",
                                 template.category,
@@ -242,14 +256,12 @@ def body_field_representation(page: Any, request: Any) -> Any:
                                 "text",
                                 format_whatsapp_message(message, page, "whatsapp"),
                             ),
-                            ("is_whatsapp_template", "False"),
+                            ("revision", page.get_latest_revision().id),
+                            ("is_whatsapp_template", False),
+                            ("whatsapp_template_name", ""),
+                            ("whatsapp_template_category", "UTILITY"),
                         ]
                     )
-                api_body.update(
-                    [
-                        ("revision", page.get_latest_revision().id),
-                    ]
-                )
 
                 return api_body
             except IndexError:

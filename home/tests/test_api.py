@@ -38,6 +38,7 @@ from home.models import (
 
 from .page_builder import (
     Btn,
+    ExVal,
     FormBtn,
     FormListItem,
     MBlk,
@@ -858,8 +859,10 @@ class TestWhatsAppMessages:
         list_items: list[str] | None = None,
         next_prompt: str | None = None,
         footer: str | None = None,
+        whatsapp_template_example_values: list[ExVal] | None = None,
+        whatsapp_template_image: int | None = None,
         whatsapp_template_category: str | None = None,
-        # whatsapp_template_submission_name: str | None = None,
+        whatsapp_template_submission_name: str | None = None,
         whatsapp_template_slug: str | None = None,
         variation_messages: list[VarMsg] | None = None,
     ) -> ContentPage:
@@ -878,6 +881,10 @@ class TestWhatsAppMessages:
             Next prompt string to add to the content page.
         footer : str
             Footer string to add to the content page.
+        whatsapp_template_image: int
+            Image to use on the whatsapp template
+        whatsapp_template_example_values: [ExVal]
+            Example values to use on the whatsapp template
         whatsapp_template_category : str
             Category of the WhatsApp template.
         whatsapp_template_slug : str
@@ -888,14 +895,27 @@ class TestWhatsAppMessages:
         title = "default page"
         home_page = HomePage.objects.first()
         main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
-
         blocks = []
-        if whatsapp_template_slug:
+        image_object = None
+        message = "Test WhatsApp Template Message 1"
+        if whatsapp_template_example_values:
+            message = (
+                "Test WhatsApp Template Message 1 with placeholders {{1}} and {{2}}"
+            )
+        if whatsapp_template_image:
+            mk_test_img()
+            image_object = Image.objects.first()
+        if whatsapp_template_submission_name:
+            title = whatsapp_template_slug
             template = WhatsAppTemplate.objects.create(
                 category=whatsapp_template_category,
                 slug=whatsapp_template_slug,
-                message="Test WhatsApp Template Message 1",
+                image=image_object,
+                message=message,
                 locale=Locale.objects.first(),
+                buttons=buttons,
+                example_values=whatsapp_template_example_values,
+                submission_name=whatsapp_template_submission_name,
             )
             template = WATpl(
                 template=template,
@@ -914,7 +934,6 @@ class TestWhatsAppMessages:
                     variation_messages=variation_messages or [],
                 )
             )
-
         content_page = PageBuilder.build_cp(
             parent=main_menu,
             slug=title.replace(" ", "-"),
@@ -991,14 +1010,75 @@ class TestWhatsAppMessages:
         page = self.create_content_page(
             whatsapp_template_category=ContentPage.WhatsAppTemplateCategory.MARKETING,
             whatsapp_template_slug="test_template",
+            whatsapp_template_submission_name="test_template_1",
         )
 
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp")
         body = response.json()["body"]
         assert body["is_whatsapp_template"]
-        assert body["whatsapp_template_name"] == "test_template"
+        assert body["whatsapp_template_name"] == "test_template_1"
         assert body["text"]["value"]["message"] == "Test WhatsApp Template Message 1"
         assert body["whatsapp_template_category"] == "MARKETING"
+
+    def test_whatsapp_template_via_v2_api(self, uclient: Any) -> None:
+        """
+        Check that we can see the appropriate data in the V2 API detail view when using a Whatsapp Template
+        """
+        page = self.create_content_page(
+            whatsapp_template_category=ContentPage.WhatsAppTemplateCategory.MARKETING,
+            whatsapp_template_slug="test_template",
+            whatsapp_template_image=1,
+            whatsapp_template_example_values=[
+                ("example_values", "Ev1"),
+                ("example_values", "Ev1"),
+            ],
+            whatsapp_template_submission_name="test_template_1",
+            buttons=[{"type": "next_message", "value": {"title": "Tell me more"}}],
+        )
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp")
+        body = response.json()["body"]
+        buttons = body["text"]["value"]["buttons"]
+        buttons[0].pop("id")
+
+        assert body["text"]["id"] is not None
+        # Pretending this is a Whatsapp_Message, even though its a stansdalone template
+        # This is to preserve V2 functionality
+        assert body["text"]["type"] == "Whatsapp_Message"
+        assert (
+            body["text"]["value"]["message"]
+            == "Test WhatsApp Template Message 1 with placeholders {{1}} and {{2}}"
+        )
+        assert body["text"]["value"]["image"] is not None
+        assert buttons[0] == {
+            "type": "next_message",
+            "value": {"title": "Tell me more"},
+        }
+
+    def test_whatsapp_message_via_v2_api(self, uclient: Any) -> None:
+        """
+        Check that we can see the appropriate data in the V2 API detail view when using a Whatsapp Message
+        """
+        page = self.create_content_page(
+            variation_messages=[
+                VarMsg("Test Title - female variation", gender="female")
+            ],
+        )
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp")
+        body = response.json()["body"]
+
+        assert body["text"]["type"] == "Whatsapp_Message"
+        assert body["text"]["value"]["message"] == "Test WhatsApp Message 1"
+        assert body["text"]["value"]["image"] is None
+        assert body["text"]["value"]["variation_messages"] == [
+            {
+                "message": "Test Title - female variation",
+                "profile_field": "gender",
+                "value": "female",
+            }
+        ]
+        assert body["revision"] is not None
 
     def test_whatsapp_detail_view_with_variations(self, uclient: Any) -> None:
         """
