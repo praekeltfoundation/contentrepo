@@ -46,7 +46,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
     def detail_view(self, request, pk):
         try:
-            if "qa" in request.GET and request.GET["qa"] == "True":
+            if "qa" in request.GET and request.GET["qa"].lower() == "true":
                 instance = ContentPage.objects.get(
                     id=pk
                 ).get_latest_revision_as_object()

@@ -82,6 +82,17 @@ class FormBtn(Btn):
 
 
 @dataclass
+class ExVal:
+    BLOCK_TYPE_STR: ClassVar[str]
+
+    def value_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": self.BLOCK_TYPE_STR, "value": self.value_dict()}
+
+
+@dataclass
 class ListItem:
     BLOCK_TYPE_STR: ClassVar[str]
 
@@ -291,6 +302,7 @@ class PageBuilder(Generic[TPage]):
         triggers: Iterable[str] | None = None,
         quick_replies: Iterable[str] | None = None,
         buttons: Iterable[str] | None = None,
+        whatsapp_template_name: str | None = None,
         whatsapp_template_slug: str | None = None,
         whatsapp_template_category: str | None = None,
         translated_from: ContentPage | None = None,
@@ -309,6 +321,10 @@ class PageBuilder(Generic[TPage]):
             builder = builder.add_buttons(*buttons)
         if whatsapp_template_slug:
             builder = builder.set_whatsapp_template_slug(whatsapp_template_slug)
+        if whatsapp_template_name:
+            builder = builder.set_whatsapp_template_submission_name(
+                whatsapp_template_name
+            )
         if whatsapp_template_category:
             builder = builder.set_whatsapp_template_category(whatsapp_template_category)
         if translated_from:
@@ -365,6 +381,11 @@ class PageBuilder(Generic[TPage]):
     def set_whatsapp_template_slug(self, slug: str) -> "PageBuilder[TPage]":
         self.page.is_whatsapp_template = True
         self.page.whatsapp_template_slug = slug
+        return self
+
+    def set_whatsapp_template_submission_name(self, slug: str) -> "PageBuilder[TPage]":
+        self.page.is_whatsapp_template = True
+        self.page.whatsapp_template_name = slug
         return self
 
     def set_whatsapp_template_category(self, category: str) -> "PageBuilder[TPage]":
