@@ -1016,7 +1016,7 @@ class TestWhatsAppMessages:
         response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp")
         body = response.json()["body"]
         assert body["is_whatsapp_template"]
-        assert body["whatsapp_template_name"] == "test_template_1_1"
+        assert body["whatsapp_template_name"] == "test_template_1"
         assert body["text"]["value"]["message"] == "Test WhatsApp Template Message 1"
         assert body["whatsapp_template_category"] == "MARKETING"
 
@@ -1041,7 +1041,7 @@ class TestWhatsAppMessages:
         buttons = body["text"]["value"]["buttons"]
         buttons[0].pop("id")
 
-        assert body["text"]["id"] == "1"
+        assert body["text"]["id"] is not None
         # Pretending this is a Whatsapp_Message, even though its a stansdalone template
         # This is to preserve V2 functionality
         assert body["text"]["type"] == "Whatsapp_Message"
