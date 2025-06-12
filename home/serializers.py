@@ -127,7 +127,7 @@ def format_whatsapp_template_message(message_index, content_page) -> dict[str, A
         "value": {
             "image": wa_template.image.id if wa_template.image else "",
             "media": None,
-            "footer": None,
+            "footer": "",
             "buttons": wa_template.buttons._raw_data,
             "message": wa_template.message,
             "document": None,
