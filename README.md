@@ -133,7 +133,7 @@
 | home/migrations/0096\_migrate\_empty\_submission\_status\_to\_not\_submitted\_yet.py         |       14 |        0 |    100% |           |
 | home/migrations/0097\_alter\_whatsapptemplate\_buttons.py                                    |        8 |        0 |    100% |           |
 | home/migrations/0098\_whatsapptemplate\_locked\_whatsapptemplate\_locked\_at\_and\_more.py   |        6 |        0 |    100% |           |
-| home/migrations/0099\_migrate\_content\_page\_templates\_to\_standalone\_templates.py        |       40 |       26 |     35% |8-13, 22-59 |
+| home/migrations/0099\_migrate\_content\_page\_templates\_to\_standalone\_templates.py        |       40 |       26 |     35% |8-13, 22-64 |
 | home/migrations/0100\_remove\_contentpage\_is\_whatsapp\_template\_and\_more.py              |       11 |        0 |    100% |           |
 | home/migrations/0101\_alter\_whatsapptemplate\_locale.py                                     |        5 |        0 |    100% |           |
 | home/migrations/0102\_whatsapptemplate\_slug.py                                              |        4 |        0 |    100% |           |
