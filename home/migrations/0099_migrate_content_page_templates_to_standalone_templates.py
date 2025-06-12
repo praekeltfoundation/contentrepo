@@ -49,8 +49,13 @@ def migrate_content_page_templates_to_standalone_templates(
             category=content_page.whatsapp_template_category,
             buttons=whatsapp_value.get("buttons", []),
             image=image,
-            submission_status="NOT_SUBMITTED_YET",
+            submission_status=(
+                "SUBMITTED"
+                if content_page.whatsapp_template_name
+                else "NOT_SUBMITTED_YET"
+            ),
             submission_result="",
+            submission_name=content_page.whatsapp_template_name,
         )
         wb = content_page.whatsapp_body
         wb[0] = ("Whatsapp_Template", whatsapp_template)
