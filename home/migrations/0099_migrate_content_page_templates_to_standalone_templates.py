@@ -51,7 +51,7 @@ def migrate_content_page_templates_to_standalone_templates(
             image=image,
             submission_status=(
                 "SUBMITTED"
-                if content_page.is_whatsapp_template
+                if content_page.whatsapp_template_name
                 else "NOT_SUBMITTED_YET"
             ),
             submission_result="",
