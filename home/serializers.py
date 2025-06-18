@@ -209,7 +209,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
 
     if "whatsapp" in request.GET and (
         page.enable_whatsapp is True
-        or ("qa" in request.GET and request.GET["qa"] == "True")
+        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.whatsapp_body != []:
             try:
@@ -267,7 +267,8 @@ def body_field_representation(page: Any, request: Any) -> Any:
             except IndexError:
                 raise ValidationError("The requested message does not exist")
     elif "sms" in request.GET and (
-        page.enable_sms is True or ("qa" in request.GET and request.GET["qa"] == "True")
+        page.enable_sms is True
+        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.sms_body != []:
             try:
@@ -289,8 +290,8 @@ def body_field_representation(page: Any, request: Any) -> Any:
             except IndexError:
                 raise ValidationError("The requested message does not exist")
     elif "ussd" in request.GET and (
-        page.enable_ussd is True
-        or ("qa" in request.GET and request.GET["qa"] == "True")
+        page.enable_ussd is Truerequest.GET["qa"].lower() == "true"
+        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.ussd_body != []:
             try:
@@ -313,7 +314,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
                 raise ValidationError("The requested message does not exist")
     elif "messenger" in request.GET and (
         page.enable_messenger is True
-        or ("qa" in request.GET and request.GET["qa"] == "True")
+        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.messenger_body != []:
             try:
@@ -336,7 +337,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
                 raise ValidationError("The requested message does not exist")
     elif "viber" in request.GET and (
         page.enable_viber is True
-        or ("qa" in request.GET and request.GET["qa"] == "True")
+        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.viber_body != []:
             try:

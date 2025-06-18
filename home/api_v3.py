@@ -37,7 +37,7 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
             self.lookup_field = "slug"
 
         try:
-            if "qa" in request.GET and request.GET["qa"] == "True":
+            if "qa" in request.GET and request.GET["qa"].lower() == "true":
                 instance = self.get_object().get_latest_revision_as_object()
             else:
                 instance = self.get_object()
@@ -140,7 +140,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
     def listing_view(self, request, *args, **kwargs):
         # If this request is flagged as QA then we should display the pages that have the filtering tags
         # or triggers in their draft versions
-        if "qa" in request.GET and request.GET["qa"] == "True":
+        if "qa" in request.GET and request.GET["qa"].lower() == "true":
             tag = self.request.query_params.get("tag")
             trigger = self.request.query_params.get("trigger")
             have_new_triggers = []

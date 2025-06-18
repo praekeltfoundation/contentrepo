@@ -1,4 +1,5 @@
 import json
+import pprint as pp
 import queue
 from pathlib import Path
 from typing import Any
@@ -368,6 +369,30 @@ class TestContentPageAPI:
         assert not page.live
         body = content["body"]["text"]["message"]
         assert body == f"*Default {platform} Content 1* 🏥"
+
+    # @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
+    # def test_message_draft_by_slug_qa_lowercase(self, uclient, platform):
+    def test_message_draft_by_slug_qa_lowercase(self, uclient):
+        """
+        Unpublished <platform> pages are returned if the qa param is set.
+        """
+        page = self.create_content_page(
+            title="I am draft lowercase", publish=False, body_type="whatsapp"
+        )
+        print(f"Page = {page.slug}")
+        # url = f"/api/v2/pages/?slug={page.slug}&{platform}=True&qa=True"
+        url = f"/api/v2/pages/?slug={page.slug}&whatsapp=True&qa=True"
+        # it should return specific page that is in draft
+        response = uclient.get(url)
+        print(f"Response is {response}")
+        content = response.json()
+        pp.pprint(content["body"])
+
+        # the page is not live but messenger content is returned
+        assert not page.live
+        body = content["body"]["text"]["message"]
+        # assert body == f"*Default {platform} Content 1* 🏥"
+        assert body == "*Default whatsapp Content 1* 🏥"
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)
     def test_platform_disabled(self, uclient, platform):
