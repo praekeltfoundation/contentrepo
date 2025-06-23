@@ -263,6 +263,7 @@ class TestContentPageAPI:
         # same tag
         response = uclient.get("/api/v2/pages/?tag=menu")
         content = json.loads(response.content)
+        print(content)
         assert content["count"] == 1
 
         # it should return 1 page for Uppercase tag
@@ -390,7 +391,7 @@ class TestContentPageAPI:
 
         # the page is not live but messenger content is returned
         assert not page.live
-        body = content["body"]["text"]["message"]
+        body = content["body"]["text"]["value"]["message"]
         # assert body == f"*Default {platform} Content 1* 🏥"
         assert body == "*Default whatsapp Content 1* 🏥"
 

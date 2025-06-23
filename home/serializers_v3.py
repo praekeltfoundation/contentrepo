@@ -116,7 +116,7 @@ def format_messages(page, request):
             except IndexError:
                 raise ValidationError("The requested message does not exist")
     elif "ussd" in request.GET and (
-        page.enable_ussd is Truerequest.GET["qa"].lower() == "true"
+        page.enable_ussd is True
         or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.ussd_body != []:
@@ -139,7 +139,7 @@ def format_messages(page, request):
             except IndexError:
                 raise ValidationError("The requested message does not exist")
     elif "messenger" in request.GET and (
-        page.enable_messenger is Trurequest.GET["qa"].lower() == "true"
+        page.enable_messenger is True
         or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.messenger_body != []:
@@ -162,7 +162,7 @@ def format_messages(page, request):
             except IndexError:
                 raise ValidationError("The requested message does not exist")
     elif "viber" in request.GET and (
-        page.enable_viber is Truerequest.GET["qa"].lower() == "true"
+        page.enable_viber is True
         or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.viber_body != []:

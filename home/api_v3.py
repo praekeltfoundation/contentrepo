@@ -184,20 +184,31 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         queryset = ContentPage.objects.live().prefetch_related("locale")
 
         if qa:
-            queryset = queryset | ContentPage.objects.not_live()
+            queryset = queryset | ContentPage.objects.not_live().prefetch_related(
+                "locale"
+            )
 
-        if "web" in self.request.query_params:
-            queryset = queryset.filter(enable_web=True)
-        elif "whatsapp" in self.request.query_params:
-            queryset = queryset.filter(enable_whatsapp=True)
-        elif "sms" in self.request.query_params:
-            queryset = queryset.filter(enable_sms=True)
-        elif "ussd" in self.request.query_params:
-            queryset = queryset.filter(enable_ussd=True)
-        elif "messenger" in self.request.query_params:
-            queryset = queryset.filter(enable_messenger=True)
-        elif "viber" in self.request.query_params:
-            queryset = queryset.filter(enable_viber=True)
+        # Filter channels
+        if "channel" in self.request.GET:
+            channel = self.request.GET["channel"].lower()
+            if channel == "web":
+                queryset = queryset.filter(enable_web=True)
+                print("Found Channel set to web")
+            if channel == "whatsapp":
+                queryset = queryset.filter(enable_whatsapp=True)
+                print("Found Channel set to whatsapp")
+            if channel == "sms":
+                queryset = queryset.filter(enable_sms=True)
+                print("Found Channel set to sms")
+            if channel == "ussd":
+                queryset = queryset.filter(enable_ussd=True)
+                print("Found Channel set to ussd")
+            if channel == "messenger":
+                queryset = queryset.filter(enable_messenger=True)
+                print("Found Channel set to messenger")
+            if channel == "viber":
+                queryset = queryset.filter(enable_viber=True)
+                print("Found Channel set to viber")
 
         tag = self.request.query_params.get("tag")
         if tag:

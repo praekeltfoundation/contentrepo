@@ -1,3 +1,4 @@
+import pprint as pp
 from collections import OrderedDict
 from typing import Any
 
@@ -11,6 +12,8 @@ from wagtail.api.v2.serializers import (
 from wagtail.api.v2.utils import get_object_detail_url
 
 from home.models import ContentPage, ContentPageRating, PageView, WhatsAppTemplate
+
+pp.pprint("JUST HERE FOR THE CLASS")
 
 
 class TitleField(serializers.Field):
@@ -211,7 +214,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
         page.enable_whatsapp is True
         or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
-        if page.whatsapp_body != []:
+        if page.whatsapp_body != [] and len(page.whatsapp_body) > 0:
             try:
                 api_body: OrderedDict[str, Any] = OrderedDict()
                 api_body.update(
@@ -228,11 +231,11 @@ def body_field_representation(page: Any, request: Any) -> Any:
                         ("total_messages", len(page.whatsapp_body._raw_data)),
                     ]
                 )
+
                 # if it's a template, we need to get the template content
                 block = page.whatsapp_body._raw_data[message]
                 if block["type"] == "Whatsapp_Template":
                     template = WhatsAppTemplate.objects.get(id=block["value"])
-
                     api_body.update(
                         [
                             (
@@ -262,13 +265,14 @@ def body_field_representation(page: Any, request: Any) -> Any:
                             ("whatsapp_template_category", "UTILITY"),
                         ]
                     )
-
+                    # print(f"S - api_body for page {page.title }")
+                    # pp.pprint(api_body)
                 return api_body
             except IndexError:
                 raise ValidationError("The requested message does not exist")
     elif "sms" in request.GET and (
         page.enable_sms is True
-        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
+        or ("qa" in request.GET and request.GET["qa"].lower == "true")
     ):
         if page.sms_body != []:
             try:
@@ -290,7 +294,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
             except IndexError:
                 raise ValidationError("The requested message does not exist")
     elif "ussd" in request.GET and (
-        page.enable_ussd is Truerequest.GET["qa"].lower() == "true"
+        page.enable_ussd is True
         or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.ussd_body != []:
