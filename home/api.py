@@ -91,8 +91,10 @@ class ContentPagesViewSet(PagesAPIViewSet):
         queryset = ContentPage.objects.live().prefetch_related("locale")
 
         if qa:
-            print("If QA")
+            print("Is QA")
             queryset = queryset | ContentPage.objects.not_live()
+        else:
+            print("Is not QA")
 
         if "web" in self.request.query_params:
             queryset = queryset.filter(enable_web=True)
