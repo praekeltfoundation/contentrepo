@@ -290,7 +290,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
             except IndexError:
                 raise ValidationError("The requested message does not exist")
     elif "ussd" in request.GET and (
-        page.enable_ussd is Truerequest.GET["qa"].lower() == "true"
+        page.enable_ussd is True
         or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.ussd_body != []:
