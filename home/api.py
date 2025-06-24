@@ -25,6 +25,7 @@ from .models import (  # isort:skip
     ContentPageTag,
     TriggeredContent,
 )
+from typing import Any
 
 pp.pprint("Here")
 json.dumps({})
@@ -92,7 +93,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
     #     return super().listing_view(request)
 
-    def get_queryset(self):
+    def get_queryset(self) -> Any:
         qa = self.request.query_params.get("qa", "").lower() == "true"
 
         if qa:
@@ -102,7 +103,7 @@ class ContentPagesViewSet(PagesAPIViewSet):
             for cp in queryset:
                 print("")
                 print(
-                    f"Found content page with title = {cp.title}, latest_revision_id = {cp.latest_revision_id}, live_rev_id = {cp.live_revision_id}, message={cp.whatsapp_body[0].value["message"]} "
+                    f"Found content page with title = {cp.title}, latest_revision_id = {cp.latest_revision_id}, live_rev_id = {cp.live_revision_id}, message={cp.whatsapp_body[0].value['message']} "
                 )
                 print(cp.whatsapp_body[0].value["message"])
                 # pp.pprint(vars(cp))
@@ -121,7 +122,10 @@ class ContentPagesViewSet(PagesAPIViewSet):
                     latest_revision = latest_revision.as_object()
                     # set the assessment's details to that of the latest revision
                     # cp = latest_revision
+                    print(f"WA BODY LENGTH: {len(cp.whatsapp_body)}")
+                    print(f"MESSAGE BEFORE: {cp.whatsapp_body[0].value['message']}")
                     cp.whatsapp_body[0].value["message"] = "wtf"
+                    print(f"MESSAGE AFTER: {cp.whatsapp_body[0].value['message']}")
                     # content_page.slug = latest_revision.slug
                     # content_page.version = latest_revision.version
                     # content_page.locale = latest_revision.locale
@@ -141,7 +145,13 @@ class ContentPagesViewSet(PagesAPIViewSet):
                 # print(json.dumps(item, indent=2))
                 pp.pprint(vars(item), indent=2)
 
-        queryset = queryset.prefetch_related("locale")
+        for cp in queryset:
+            print(f" CP BEFORE PREFETCH: {cp.whatsapp_body[0].value['message']}")
+
+        # queryset = queryset.prefetch_related("locale")
+
+        for cp in queryset:
+            print(f" CP AFTER PREFETCH: {cp.whatsapp_body[0].value['message']}")
 
         if "web" in self.request.query_params:
             queryset = queryset.filter(enable_web=True)

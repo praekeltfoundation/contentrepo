@@ -376,7 +376,7 @@ class TestContentPageAPI:
 
     # @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     # def test_message_draft_by_slug_qa_lowercase(self, uclient, platform):
-    def test_message_draft_by_slug_qa_lowercase(self, uclient):
+    def test_message_draft_by_slug_qa_lowercase(self, uclient: Any) -> None:
         """
         Unpublished <platform> pages are returned if the qa param is set.
         """
@@ -424,10 +424,7 @@ class TestContentPageAPI:
         assert l2["body"]["text"]["value"]["message"] == "p2 live 1"
         # The following _should_ return the live content for page3, but
         # apparently returns the draft content instead.
-        print("1")
         assert l3["body"]["text"]["value"]["message"] == "p3 live 1"
-        print("2")
-        assert False
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)
     def test_platform_disabled(self, uclient, platform):

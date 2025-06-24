@@ -250,11 +250,33 @@ def body_field_representation(page: Any, request: Any) -> Any:
                     )
 
                 elif block["type"] == "Whatsapp_Message":
+                    # Get the formatted message
+                    formatted_message = format_whatsapp_message(
+                        message, page, "whatsapp"
+                    )
+
+                    # If in QA mode, modify the message
+                    if "qa" in request.GET and request.GET["qa"].lower() == "true":
+                        latest_revision = (
+                            page.revisions.order_by("-created_at").first().as_object()
+                        )
+                        if (
+                            isinstance(formatted_message, dict)
+                            and "value" in formatted_message
+                            and "message" in formatted_message["value"]
+                        ):
+                            formatted_message["value"][
+                                "message"
+                            ] = latest_revision.whatsapp_body.raw_data[message][
+                                "value"
+                            ][
+                                "message"
+                            ]  # Your modified message
                     api_body.update(
                         [
                             (
                                 "text",
-                                format_whatsapp_message(message, page, "whatsapp"),
+                                formatted_message,
                             ),
                             ("revision", page.get_latest_revision().id),
                             ("is_whatsapp_template", False),
