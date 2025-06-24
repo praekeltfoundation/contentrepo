@@ -1,3 +1,6 @@
+import json
+import pprint as pp
+
 from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -22,6 +25,9 @@ from .models import (  # isort:skip
     ContentPageTag,
     TriggeredContent,
 )
+
+pp.pprint("Here")
+json.dumps({})
 
 
 class ContentPagesViewSet(PagesAPIViewSet):
@@ -91,11 +97,49 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
         if qa:
             print("Is QA")
+            # return the latest revision for each ContentPage
+            queryset = ContentPage.objects.all().order_by("latest_revision_id")
+            for cp in queryset:
+                print("")
+                print(
+                    f"Found content page with title = {cp.title}, latest_revision_id = {cp.latest_revision_id}, live_rev_id = {cp.live_revision_id}, message={cp.whatsapp_body[0].value["message"]} "
+                )
+                print(cp.whatsapp_body[0].value["message"])
+                # pp.pprint(vars(cp))
+                all_revisions = cp.revisions.order_by("-created_at")
+                print(f"Found {len(all_revisions)} revisions for this cp")
+                # for rev in all_revisions:
+                #     print("**********************Found revision")
+                #     print(f"Rev ID = {rev.id}")
+                #     print(
+                #         f"Whatsapp body message for this rev {rev.content["whatsapp_body"]}"
+                #     )
+                # pp.pprint(vars(rev))
+                latest_revision = cp.revisions.order_by("-created_at").first()
+                if latest_revision:
+                    print(f"Found latest revision Id {latest_revision.id}")
+                    latest_revision = latest_revision.as_object()
+                    # set the assessment's details to that of the latest revision
+                    # cp = latest_revision
+                    cp.whatsapp_body[0].value["message"] = "wtf"
+                    # content_page.slug = latest_revision.slug
+                    # content_page.version = latest_revision.version
+                    # content_page.locale = latest_revision.locale
+                else:
+                    print("NO REVISION FOUND")
             # queryset = ContentPage.objects.not_live().prefetch_related("locale")
-            queryset = ContentPage.objects
+            # queryset = ContentPage.objects
         else:
             print("Is not QA")
             queryset = ContentPage.objects.live()
+            for item in queryset:
+                print(f"ITEM ID IS {item.id}")
+                print(f"ITEM title = {item.title}")
+                print(f"ITEM message = {item.whatsapp_body[0].value['message']}")
+                print("ITEM VARS BELOW")
+                # print(f"ITEM vars = {vars(item)}")
+                # print(json.dumps(item, indent=2))
+                pp.pprint(vars(item), indent=2)
 
         queryset = queryset.prefetch_related("locale")
 

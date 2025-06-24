@@ -393,21 +393,40 @@ class TestContentPageAPI:
         # live page.
         page3.whatsapp_body[0].value["message"] = "p3 draft 1"
         page3.save_revision()
-        page3.save()
-        pp.pprint(f"page3.live={page3.live} page3.has_unpublished_changes={page3.has_unpublished_changes}")
-        response = uclient.get("/api/v2/pages/?whatsapp=true&qa=true")
-        [p1, p2, p3] = response.json()["results"]
+        # page3.save()
+        # pp.pprint(
+        #     f"page3.live={page3.live} page3.has_unpublished_changes={page3.has_unpublished_changes} & message = {page3.whatsapp_body[0].value["message"]}"
+        # )
+        qa_response = uclient.get("/api/v2/pages/?whatsapp=true&qa=true")
+        [q1, q2, q3] = qa_response.json()["results"]
+        # pp.pprint(qa_response.json()["results"])
+        print("********")
+        # pp.pprint(q3)
+        # for item in qa_response:
+        #     print("")
+        #     print("Item found")
+        #     # print(item)
+        #     pp.pprint(item)
+        # print(p3["body"]["text"]["value"]["message"])
+        assert q1["body"]["text"]["value"]["message"] == "p1 draft 1"
+        assert q2["body"]["text"]["value"]["message"] == "p2 live 1"
+        assert q3["body"]["text"]["value"]["message"] == "p3 draft 1"
 
-        assert p1["body"]["text"]["value"]["message"] == "p1 draft 1"
-        assert p2["body"]["text"]["value"]["message"] == "p2 live 1"
-        assert p3["body"]["text"]["value"]["message"] == "p3 draft 1"
+        print("")
+        print("Done with QA")
+        print("")
 
-        response = uclient.get("/api/v2/pages/?whatsapp=true")
-        [p2, p3] = response.json()["results"]
-        assert p2["body"]["text"]["value"]["message"] == "p2 live 1"
+        live_response = uclient.get("/api/v2/pages/?whatsapp=true")
+        print("Live Reponse")
+        pp.pprint(live_response.json()["results"])
+
+        [l2, l3] = live_response.json()["results"]
+        assert l2["body"]["text"]["value"]["message"] == "p2 live 1"
         # The following _should_ return the live content for page3, but
         # apparently returns the draft content instead.
-        assert p3["body"]["text"]["value"]["message"] == "p3 live 1"
+        print("1")
+        assert l3["body"]["text"]["value"]["message"] == "p3 live 1"
+        print("2")
         assert False
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)
