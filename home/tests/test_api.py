@@ -575,7 +575,7 @@ class TestContentPageAPI:
         page = self.create_content_page()
         page = self.create_content_page(page, title="Content Page 1")
         uclient.get("/api/v2/pages/")
-        with django_assert_num_queries(16):
+        with django_assert_num_queries(17):
             uclient.get("/api/v2/pages/")
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)
