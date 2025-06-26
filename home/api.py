@@ -62,25 +62,27 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
     def get_queryset(self) -> Any:
         qa = self.request.query_params.get("qa", "").lower() == "true"
+        queryset = ContentPage.objects.live().prefetch_related("locale")
 
         if qa:
+            # print("QA = true")
             # return the latest revision for each ContentPage
-            queryset = ContentPage.objects.all().order_by("latest_revision_id")
-        else:
-            queryset = ContentPage.objects.live()
+            queryset = queryset | ContentPage.objects.not_live().order_by(
+                "latest_revision_id"
+            )
 
-        if "web" in self.request.query_params:
-            queryset = queryset.filter(enable_web=True)
-        elif "whatsapp" in self.request.query_params:
-            queryset = queryset.filter(enable_whatsapp=True)
-        elif "sms" in self.request.query_params:
-            queryset = queryset.filter(enable_sms=True)
-        elif "ussd" in self.request.query_params:
-            queryset = queryset.filter(enable_ussd=True)
-        elif "messenger" in self.request.query_params:
-            queryset = queryset.filter(enable_messenger=True)
-        elif "viber" in self.request.query_params:
-            queryset = queryset.filter(enable_viber=True)
+            if "web" in self.request.query_params:
+                queryset = queryset.filter(enable_web=True)
+            elif "whatsapp" in self.request.query_params:
+                queryset = queryset.filter(enable_whatsapp=True)
+            elif "sms" in self.request.query_params:
+                queryset = queryset.filter(enable_sms=True)
+            elif "ussd" in self.request.query_params:
+                queryset = queryset.filter(enable_ussd=True)
+            elif "messenger" in self.request.query_params:
+                queryset = queryset.filter(enable_messenger=True)
+            elif "viber" in self.request.query_params:
+                queryset = queryset.filter(enable_viber=True)
 
         tag = self.request.query_params.get("tag")
         if tag:
@@ -320,6 +322,5 @@ api_router.register_endpoint("indexes", ContentPageIndexViewSet)
 api_router.register_endpoint("images", ImagesAPIViewSet)
 api_router.register_endpoint("documents", DocumentsAPIViewSet)
 api_router.register_endpoint("media", MediaAPIViewSet)
-# api_router.register_endpoint("whatsapptemplates", WhatsAppTemplateViewset)
 api_router.register_endpoint("orderedcontent", OrderedContentSetViewSet)
 api_router.register_endpoint("assessment", AssessmentViewSet)

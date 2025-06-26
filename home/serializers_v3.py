@@ -82,111 +82,57 @@ def format_related_pages(page, request):
     return related_pages
 
 
+def format_generic_channel_body(page, channel, message):
+    print(channel)
+    channel_body = getattr(page, f"{channel}_body")
+    if channel_body != []:
+        print("Past geattr")
+        try:
+            print(channel_body._raw_data[message]["value"]["message"])
+            return OrderedDict(
+                [
+                    # TODO: Not sure if we want this or not
+                    # ("message", message + 1),
+                    # (
+                    #     "next_message",
+                    #     has_next_message(message, page, channel),
+                    # ),
+                    # (
+                    #     "previous_message",
+                    #     has_previous_message(message, page, channel),
+                    # ),
+                    # ("total_messages", len(channel_body._raw_data)),
+                    ("text", channel_body._raw_data[message]["value"]["message"]),
+                ]
+            )
+        except IndexError:
+            raise ValidationError("The requested message does not exist")
+
+
 def format_messages(page, request):
-    message = 0
-    if "whatsapp" in request.GET and (
-        page.enable_whatsapp is True
-        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
-    ):
-        if page.whatsapp_body != []:
-            whatsapp_messages = format_whatsapp_body_V3(page)
-            return whatsapp_messages
+    if "message" in request.GET:
+        try:
+            message = int(request.GET["message"]) - 1
+        except ValueError:
+            raise ValidationError(
+                "Please insert a positive integer for message in " "the query string"
+            )
+    else:
+        message = 0
 
-    elif "sms" in request.GET and (
-        page.enable_sms is True
-        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
-    ):
-        if page.sms_body != []:
-            try:
-                return OrderedDict(
-                    [
-                        ("message", message + 1),
-                        (
-                            "next_message",
-                            has_next_message(message, page, "sms"),
-                        ),
-                        (
-                            "previous_message",
-                            has_previous_message(message, page, "sms"),
-                        ),
-                        ("total_messages", len(page.sms_body._raw_data)),
-                        ("text", page.sms_body._raw_data[message]["value"]),
-                    ]
-                )
-            except IndexError:
-                raise ValidationError("The requested message does not exist")
-    elif "ussd" in request.GET and (
-        page.enable_ussd is True
-        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
-    ):
-        if page.ussd_body != []:
-            try:
-                return OrderedDict(
-                    [
-                        ("message", message + 1),
-                        (
-                            "next_message",
-                            has_next_message(message, page, "ussd"),
-                        ),
-                        (
-                            "previous_message",
-                            has_previous_message(message, page, "ussd"),
-                        ),
-                        ("total_messages", len(page.ussd_body._raw_data)),
-                        ("text", page.ussd_body._raw_data[message]["value"]),
-                    ]
-                )
-            except IndexError:
-                raise ValidationError("The requested message does not exist")
-    elif "messenger" in request.GET and (
-        page.enable_messenger is True
-        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
-    ):
-        if page.messenger_body != []:
-            try:
-                return OrderedDict(
-                    [
-                        ("message", message + 1),
-                        (
-                            "next_message",
-                            has_next_message(message, page, "messenger"),
-                        ),
-                        (
-                            "previous_message",
-                            has_previous_message(message, page, "messenger"),
-                        ),
-                        ("total_messages", len(page.messenger_body._raw_data)),
-                        ("text", page.messenger_body._raw_data[message]["value"]),
-                    ]
-                )
-            except IndexError:
-                raise ValidationError("The requested message does not exist")
-    elif "viber" in request.GET and (
-        page.enable_viber is True
-        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
-    ):
-        if page.viber_body != []:
-            try:
-                return OrderedDict(
-                    [
-                        ("message", message + 1),
-                        ("next_message", has_next_message(message, page, "viber")),
-                        (
-                            "previous_message",
-                            has_previous_message(message, page, "viber"),
-                        ),
-                        ("total_messages", len(page.viber_body._raw_data)),
-                        ("text", page.viber_body._raw_data[message]["value"]),
-                    ]
-                )
-            except IndexError:
-                raise ValidationError("The requested message does not exist")
+    channel = ""
+    if "channel" in request.query_params:
+        channel = request.query_params.get("channel", "").lower()
+        return_drafts = request.query_params.get("return_drafts", "").lower() == "true"
+        if channel == "whatsapp":
+            return format_whatsapp_body_V3(page)
 
-    return OrderedDict(
-        [
-            ("text", page.body._raw_data),
-        ]
-    )
+        elif not hasattr(page, f"enable_{channel}"):
+            # TODO: Add test for this
+            raise ValidationError(f"Unknown channel '{channel}'")
+        elif getattr(page, f"enable_{channel}") or return_drafts:
+            return format_generic_channel_body(page, channel, message)
+    return OrderedDict([("text", page.body._raw_data)])
 
 
 def format_buttons_and_list_items(given_list: blocks.StreamValue.StreamChild):

@@ -230,6 +230,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
                 )
                 # if it's a template, we need to get the template content
                 block = page.whatsapp_body._raw_data[message]
+
                 if block["type"] == "Whatsapp_Template":
                     template = WhatsAppTemplate.objects.get(id=block["value"])
 
