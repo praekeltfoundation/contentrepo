@@ -65,30 +65,27 @@ class ContentPagesViewSet(PagesAPIViewSet):
         queryset = ContentPage.objects.live().prefetch_related("locale")
 
         if qa:
-            # print("QA = true")
-            # return the latest revision for each ContentPage
-            queryset = queryset | ContentPage.objects.not_live().order_by(
-                "latest_revision_id"
-            )
+            queryset = queryset | ContentPage.objects.not_live()
 
-            if "web" in self.request.query_params:
-                queryset = queryset.filter(enable_web=True)
-            elif "whatsapp" in self.request.query_params:
-                queryset = queryset.filter(enable_whatsapp=True)
-            elif "sms" in self.request.query_params:
-                queryset = queryset.filter(enable_sms=True)
-            elif "ussd" in self.request.query_params:
-                queryset = queryset.filter(enable_ussd=True)
-            elif "messenger" in self.request.query_params:
-                queryset = queryset.filter(enable_messenger=True)
-            elif "viber" in self.request.query_params:
-                queryset = queryset.filter(enable_viber=True)
+        if "web" in self.request.query_params:
+            queryset = queryset.filter(enable_web=True)
+        elif "whatsapp" in self.request.query_params:
+            queryset = queryset.filter(enable_whatsapp=True)
+        elif "sms" in self.request.query_params:
+            queryset = queryset.filter(enable_sms=True)
+        elif "ussd" in self.request.query_params:
+            queryset = queryset.filter(enable_ussd=True)
+        elif "messenger" in self.request.query_params:
+            queryset = queryset.filter(enable_messenger=True)
+        elif "viber" in self.request.query_params:
+            queryset = queryset.filter(enable_viber=True)
 
         tag = self.request.query_params.get("tag")
         if tag:
             ids = []
             for t in ContentPageTag.objects.filter(tag__name__iexact=tag):
                 ids.append(t.content_object_id)
+            print(f"IDs = {ids}")
             queryset = queryset.filter(id__in=ids)
         trigger = self.request.query_params.get("trigger")
         if trigger is not None:

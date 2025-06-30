@@ -267,6 +267,7 @@ class TestContentPageAPI:
         # same tag
         response = uclient.get("/api/v2/pages/?tag=menu")
         content = json.loads(response.content)
+        pp.pprint(content)
         assert content["count"] == 1
 
         # it should return 1 page for Uppercase tag
@@ -308,6 +309,7 @@ class TestContentPageAPI:
         # it should return only web pages if filtered
         response = uclient.get("/api/v2/pages/?web=true")
         content = json.loads(response.content)
+        pp.pprint(content)
         assert content["count"] == 1
 
         # it should return only whatsapp pages if filtered
@@ -575,7 +577,7 @@ class TestContentPageAPI:
         page = self.create_content_page()
         page = self.create_content_page(page, title="Content Page 1")
         uclient.get("/api/v2/pages/")
-        with django_assert_num_queries(17):
+        with django_assert_num_queries(16):
             uclient.get("/api/v2/pages/")
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)
