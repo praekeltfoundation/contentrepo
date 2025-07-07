@@ -1471,6 +1471,12 @@ class TemplateQuickReplyContent(ItemBase):
     )
 
 
+class TemplateTag(TaggedItemBase):
+    content_object = ParentalKey(
+        "WhatsAppTemplate", on_delete=models.CASCADE, related_name="tagged_items"
+    )
+
+
 class WhatsAppTemplate(
     WorkflowMixin,
     DraftStateMixin,
@@ -1515,6 +1521,7 @@ class WhatsAppTemplate(
         for_concrete_model=False,
     )
 
+    tags = ClusterTaggableManager(through=TemplateTag, blank=True)
     # name = models.CharField(max_length=512, blank=True, default="")
     slug = models.SlugField(
         max_length=255,
@@ -1586,7 +1593,9 @@ class WhatsAppTemplate(
     )
 
     search_fields = [
-        index.SearchField("locale"),
+        index.SearchField("slug"),
+        index.AutocompleteField("slug"),
+        index.SearchField("message"),
     ]
 
     @property

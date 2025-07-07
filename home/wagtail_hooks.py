@@ -280,15 +280,23 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
         "status",
         "get_submission_status_display",
     )
-    list_filter = ("locale",)
+    list_filter = ["locale", "tags__name", "category"]
     search_fields = (
         "slug",
-        "category",
         "message",
-        "locale",
     )
 
     index_view_class = CustomIndexViewWhatsAppTemplate
+
+    # class Meta:
+    #     filter_overrides = {
+    #         ManyToManyField: {
+    #             'filter_class': DjangoFilterBackend,
+    #             'extra': lambda f: {
+    #                 'lookup_expr': 'icontains',
+    #             }
+    #         },
+    #     }
 
     panels = [
         MultiFieldPanel(
@@ -298,6 +306,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
                 FieldPanel("image"),
                 FieldPanel("message"),
                 FieldPanel("buttons"),
+                FieldPanel("tags"),
                 FieldPanel("locale"),
                 FieldPanel("example_values"),
                 FieldPanel("submission_name", read_only=True),
