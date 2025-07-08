@@ -4,10 +4,11 @@ from typing import Any
 from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
-from wagtail.admin.menu import AdminOnlyMenuItem
+from wagtail.admin.menu import AdminOnlyMenuItem, MenuItem
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, TitleFieldPanel
 from wagtail.admin.widgets.slug import SlugInput
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
@@ -154,6 +155,38 @@ def get_page_views_report_url() -> list[Any]:
     ]
 
 
+@hooks.register("register_admin_urls")
+def register_template_explorer_url() -> list[Any]:
+    return [
+        path(
+            "whatsapp-templates/explorer/",
+            template_explorer_view,
+            name="whatsapp_template_explorer",
+        ),
+    ]
+
+
+@hooks.register("register_admin_menu_item")
+def register_template_explorer_menu_item() -> Any:
+    return MenuItem(
+        "Template Explorer",
+        reverse("whatsapp_template_explorer"),
+        icon_name="list-ul",
+        order=1000,
+    )
+
+
+def template_explorer_view(request: Any) -> Any:
+    templates = WhatsAppTemplate.objects.all()
+    return render(
+        request,
+        "admin/whatsapp_templates/explorer.html",
+        {
+            "templates": templates,
+        },
+    )
+
+
 class SubmitToMetaMenuItem(ActionMenuItem):
     name = "action-submit-to-meta"
     label = "Submit to Meta"
@@ -267,7 +300,7 @@ class OrderedContentSetViewSet(SnippetViewSet):
 class WhatsAppTemplateAdmin(SnippetViewSet):
     model = WhatsAppTemplate
     body_truncate_size = 200
-    icon = "order"
+    icon = "draft"
     menu_order = 200
     add_to_admin_menu = True
     add_to_settings_menu = False
@@ -302,6 +335,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
         MultiFieldPanel(
             [
                 FieldPanel("slug"),
+                FieldPanel("parent"),
                 FieldPanel("category"),
                 FieldPanel("image"),
                 FieldPanel("message"),

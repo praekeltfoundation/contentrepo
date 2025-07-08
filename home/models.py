@@ -1686,5 +1686,30 @@ class WhatsAppTemplate(
             [b["value"]["title"] for b in self.buttons.raw_data],
         )
 
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="children",
+    )  # type: ignore
+    depth = models.PositiveIntegerField(default=0, editable=False)  # type: ignore
+    path = models.CharField(max_length=255, blank=True, editable=False)  # type: ignore
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        # Update depth and path when saving
+        if self.parent:
+            self.depth = self.parent.depth + 1
+            self.path = f"{self.parent.path}{self.parent.id}/"
+        else:
+            self.depth = 0
+            self.path = ""
+
+        super().save(*args, **kwargs)
+
+        # Update all children's paths if this is a move
+        for child in self.children.all():
+            child.save()
+
     def create_whatsapp_template_name(self) -> str:
         return f"{self.prefix}_{self.get_latest_revision().pk}"
