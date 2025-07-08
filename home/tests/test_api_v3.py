@@ -1,4 +1,5 @@
 import json
+import pprint
 from pathlib import Path
 
 import pytest
@@ -24,6 +25,9 @@ from .page_builder import (
     WABlk,
     WABody,
 )
+
+pp = pprint.PrettyPrinter(indent=4, depth=8)
+pp.pprint("Forget me not")
 
 TEST_STATIC_PATH = Path("home/tests/test_static")
 ALL_PLATFORMS_EXCL_WHATSAPP = ["viber", "messenger", "ussd", "sms"]
@@ -105,7 +109,7 @@ class TestWhatsAppTemplateAPIV3:
 
         # it should return 1 page for correct tag, excluding unpublished pages with the
         # same tag
-        response = uclient.get("/api/v3/whatsapptemplates/?qa=True")
+        response = uclient.get("/api/v3/whatsapptemplates/?return_drafts=True")
         content = json.loads(response.content)
         assert content["count"] == 1
 
@@ -128,7 +132,7 @@ class TestWhatsAppTemplateAPIV3:
             publish=False,
         )
 
-        url = f"/api/v3/whatsapptemplates/{template.id}/?qa=True"
+        url = f"/api/v3/whatsapptemplates/{template.id}/?return_drafts=True"
         response = uclient.get(url)
         # the page is not live but whatsapp content is returned
         content = response.json()
@@ -255,7 +259,10 @@ class TestContentPageAPIV3:
         # it should return 1 page for correct tag, excluding unpublished pages with the
         # same tag
         response = uclient.get("/api/v3/pages/?tag=menu")
+
         content = json.loads(response.content)
+        print("First tag test check below")
+        print(content)
         assert content["count"] == 1
 
         # it should return 1 page for Uppercase tag
@@ -274,7 +281,7 @@ class TestContentPageAPIV3:
         assert content["count"] == 3
 
         # If QA flag is sent then it should return pages with tags in the draft
-        response = uclient.get("/api/v3/pages/?tag=Menu&qa=True")
+        response = uclient.get("/api/v3/pages/?tag=Menu&return_drafts=True")
         content = json.loads(response.content)
         assert content["count"] == 2
 
@@ -294,27 +301,27 @@ class TestContentPageAPIV3:
         self.create_content_page(title="Self Help SMS", body_type="sms")
         self.create_content_page(title="Self Help USSD", body_type="ussd")
         # it should return only web pages if filtered
-        response = uclient.get("/api/v3/pages/?web=true")
+        response = uclient.get("/api/v3/pages/?channel=web")
         content = json.loads(response.content)
         assert content["count"] == 1
         # it should return only whatsapp pages if filtered
-        response = uclient.get("/api/v3/pages/?whatsapp=true")
+        response = uclient.get("/api/v3/pages/?channel=whatsapp")
         content = json.loads(response.content)
         assert content["count"] == 1
         # it should return only sms pages if filtered
-        response = uclient.get("/api/v3/pages/?sms=true")
+        response = uclient.get("/api/v3/pages/?channel=sms")
         content = json.loads(response.content)
         assert content["count"] == 1
         # it should return only ussd pages if filtered
-        response = uclient.get("/api/v3/pages/?ussd=true")
+        response = uclient.get("/api/v3/pages/?channel=ussd")
         content = json.loads(response.content)
         assert content["count"] == 1
         # it should return only messenger pages if filtered
-        response = uclient.get("/api/v3/pages/?messenger=true")
+        response = uclient.get("/api/v3/pages/?channel=messenger")
         content = json.loads(response.content)
         assert content["count"] == 1
         # it should return only viber pages if filtered
-        response = uclient.get("/api/v3/pages/?viber=true")
+        response = uclient.get("/api/v3/pages/?channel=viber")
         content = json.loads(response.content)
         assert content["count"] == 0
         # it should return all pages for no filter
@@ -329,10 +336,12 @@ class TestContentPageAPIV3:
         """
         page = self.create_content_page(publish=False)
 
-        url = f"/api/v3/pages/{page.id}/?whatsapp=true&qa=True"
+        url = f"/api/v3/pages/{page.id}/?channel=whatsapp&return_drafts=True"
         # it should return specific page that is in draft
         response = uclient.get(url)
         content = response.json()
+        print("Content below")
+        pp.pprint(content)
         # the page is not live but whatsapp content is returned
         assert not page.live
         body = content["messages"][0]["text"]
@@ -346,7 +355,7 @@ class TestContentPageAPIV3:
     #     """
     #     page = self.create_content_page(publish=False, body_type=platform)
 
-    #     url = f"/api/v3/pages/{page.id}/?{platform}=True&qa=True"
+    #     url = f"/api/v3/pages/{page.id}/?{platform}=True&return_drafts=True"
     #     # it should return specific page that is in draft
     #     response = uclient.get(url)
     #     content = response.json()
@@ -362,29 +371,43 @@ class TestContentPageAPIV3:
         """
         page = self.create_content_page(body_type=platform)
 
-        response = uclient.get(f"/api/v3/pages/{page.id}/?{platform}=True")
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={platform}")
         assert response.content != b""
 
         setattr(page, f"enable_{platform}", False)
         page.save_revision().publish()
 
-        response = uclient.get(f"/api/v3/pages/{page.id}/?{platform}=True")
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={platform}")
         assert response.status_code == 404
 
-        def test_number_of_queries(self, uclient, django_assert_num_queries):
-            """
-            Make sure we aren't making an enormous number of queries.
+    def test_detail_view_unknown_platform(self, uclient):
+        """
+        It should not return the body for a requested channel that does not exist
+        """
+        platform = "unknown"
+        page = self.create_content_page()
 
-            FIXME:
-             * Should we document what these queries actually are?
-            """
-            # Run this once without counting, because there are two queries at the
-            # end that only happen if this is the first test that runs.
-            page = self.create_content_page()
-            page = self.create_content_page(page, title="Content Page 1")
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={platform}")
+
+        assert response.status_code == 404
+        content = json.loads(response.content)
+        print(content.get("page"))
+        assert content.get("page") == ["Page matching query does not exist."]
+
+    def test_number_of_queries(self, uclient, django_assert_num_queries):
+        """
+        Make sure we aren't making an enormous number of queries.
+
+        FIXME:
+         * Should we document what these queries actually are?
+        """
+        # Run this once without counting, because there are two queries at the
+        # end that only happen if this is the first test that runs.
+        page = self.create_content_page()
+        page = self.create_content_page(page, title="Content Page 1")
+        uclient.get("/api/v3/pages/")
+        with django_assert_num_queries(16):
             uclient.get("/api/v3/pages/")
-            with django_assert_num_queries(16):
-                uclient.get("/api/v3/pages/")
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)
     def test_detail_view_content(self, uclient, platform):
@@ -462,7 +485,7 @@ class TestContentPageAPIV3:
             parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
         )
 
-        response = uclient.get(f"/api/v3/pages/{page.id}/?whatsapp=true")
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel=whatsapp")
 
         content = response.json()
 

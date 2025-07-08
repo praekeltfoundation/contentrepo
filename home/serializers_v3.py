@@ -1,3 +1,4 @@
+import pprint
 from collections import OrderedDict
 
 from rest_framework import serializers
@@ -7,6 +8,9 @@ from wagtail.api.v2.serializers import PageSerializer
 from wagtail.api.v2.utils import get_object_detail_url
 
 from home.models import Assessment, ContentPage, WhatsAppTemplate
+
+pp = pprint.PrettyPrinter(indent=4, depth=8)
+pp.pprint("Forget me not")
 
 
 def has_next_message(message_index, content_page, platform):
@@ -83,30 +87,35 @@ def format_related_pages(page, request):
 
 
 def format_generic_channel_body(page, channel, message):
-    print(channel)
-    channel_body = getattr(page, f"{channel}_body")
-    if channel_body != []:
-        print("Past geattr")
-        try:
-            print(channel_body._raw_data[message]["value"]["message"])
-            return OrderedDict(
-                [
-                    # TODO: Not sure if we want this or not
-                    # ("message", message + 1),
-                    # (
-                    #     "next_message",
-                    #     has_next_message(message, page, channel),
-                    # ),
-                    # (
-                    #     "previous_message",
-                    #     has_previous_message(message, page, channel),
-                    # ),
-                    # ("total_messages", len(channel_body._raw_data)),
-                    ("text", channel_body._raw_data[message]["value"]["message"]),
-                ]
-            )
-        except IndexError:
-            raise ValidationError("The requested message does not exist")
+    print("********PAGE HERE******")
+    pp.pprint(vars(page))
+    if channel == "web":
+        print("TODO Do web things")
+    else:
+        channel_body = getattr(page, f"{channel}_body")
+        if channel_body != []:
+            print("Past geattr")
+            print(channel_body)
+            try:
+                print(channel_body.raw_data[message]["value"]["message"])
+                return OrderedDict(
+                    [
+                        # TODO: Not sure if we want this or not
+                        # ("message", message + 1),
+                        # (
+                        #     "next_message",
+                        #     has_next_message(message, page, channel),
+                        # ),
+                        # (
+                        #     "previous_message",
+                        #     has_previous_message(message, page, channel),
+                        # ),
+                        # ("total_messages", len(channel_body._raw_data)),
+                        ("text", channel_body._raw_data[message]["value"]["message"]),
+                    ]
+                )
+            except IndexError:
+                raise ValidationError("The requested message does not exist")
 
 
 def format_messages(page, request):
@@ -263,6 +272,18 @@ def format_detail_url(obj, request):
 
 
 class ContentPageSerializerV3(PageSerializer):
+    def __init__(self, *args, **kwargs):
+        print("__init__ - Initializing SerializerV3")
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def many_init(cls, *args, **kwargs):
+        print("many_init - Initializing SerializerV3")
+        # Example: Add a custom_data_for_item to each child serializer
+        # This could be dynamic based on some logic
+
+        return super().many_init(*args, **kwargs)
+
     title = serializers.CharField(read_only=True)
     slug = serializers.SlugField(read_only=True)
     messages = serializers.SerializerMethodField()
@@ -285,13 +306,17 @@ class ContentPageSerializerV3(PageSerializer):
             "related_pages",
         ]
 
-    def get_messages(self, obj):
-        return format_messages(page=obj, request=self.context["request"])
-
     def get_detail_url(self, obj):
+        print("")
+        print(f"SERIALIZERV3 Called get_detail_url(obj = {obj})")
         return format_detail_url(obj=obj, request=self.context["request"])
 
+    def get_messages(self, obj):
+        print(f"SERIALIZERV3 Called get_messages(obj = {obj})")
+        return format_messages(page=obj, request=self.context["request"])
+
     def get_related_pages(self, obj):
+        print(f"SERIALIZERV3 Called get_related_pages(obj = {obj})")
         return format_related_pages(page=obj, request=self.context["request"])
 
 
