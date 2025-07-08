@@ -1,5 +1,4 @@
 import json
-import pprint as pp
 import queue
 from pathlib import Path
 from typing import Any
@@ -267,7 +266,6 @@ class TestContentPageAPI:
         # same tag
         response = uclient.get("/api/v2/pages/?tag=menu")
         content = json.loads(response.content)
-        pp.pprint(content)
         assert content["count"] == 1
 
         # it should return 1 page for Uppercase tag
@@ -309,7 +307,6 @@ class TestContentPageAPI:
         # it should return only web pages if filtered
         response = uclient.get("/api/v2/pages/?web=true")
         content = json.loads(response.content)
-        pp.pprint(content)
         assert content["count"] == 1
 
         # it should return only whatsapp pages if filtered
@@ -403,13 +400,7 @@ class TestContentPageAPI:
         assert q2["body"]["text"]["value"]["message"] == "p2 live 1"
         assert q3["body"]["text"]["value"]["message"] == "p3 draft 1"
 
-        print("")
-        print("Done with QA")
-        print("")
-
         live_response = uclient.get("/api/v2/pages/?whatsapp=true")
-        print("Live Reponse")
-        pp.pprint(live_response.json()["results"])
 
         [l2, l3] = live_response.json()["results"]
         assert l2["body"]["text"]["value"]["message"] == "p2 live 1"

@@ -1,4 +1,3 @@
-import pprint
 from collections import OrderedDict
 
 from rest_framework import serializers
@@ -8,9 +7,6 @@ from wagtail.api.v2.serializers import PageSerializer
 from wagtail.api.v2.utils import get_object_detail_url
 
 from home.models import Assessment, ContentPage, WhatsAppTemplate
-
-pp = pprint.PrettyPrinter(indent=4, depth=8)
-pp.pprint("Forget me not")
 
 
 def has_next_message(message_index, content_page, platform):
@@ -58,37 +54,35 @@ def get_related_page_as_content_page(page):
 
 def format_related_pages(page, request):
     related_pages = []
+    channel = ""
+    if "channel" in request.query_params:
+        channel = request.query_params.get("channel", "").lower()
+
     for related in page.related_pages:
         related_page = get_related_page_as_content_page(related.value)
-        title = related_page.title
-        if "whatsapp" in request.GET and related_page.enable_whatsapp is True:
-            if related_page.whatsapp_title:
-                title = related_page.whatsapp_title
-        elif "sms" in request.GET and related_page.enable_sms is True:
-            if related_page.sms_title:
-                title = related_page.sms_title
-        elif "ussd" in request.GET and related_page.enable_ussd is True:
-            if related_page.ussd_title:
-                title = related_page.ussd_title
-        elif "messenger" in request.GET and related_page.enable_messenger is True:
-            if related_page.messenger_title:
-                title = related_page.messenger_title
-        elif "viber" in request.GET and related_page.enable_viber is True:
-            if related_page.viber_title:
-                title = related_page.viber_title
 
-        related_pages.append(
-            {
-                "slug": related_page.slug,
-                "title": title,
-            }
-        )
+        if channel != "" and channel != "web":
+            channel_title = getattr(page, f"{channel}_title")
+            related_pages.append(
+                {
+                    "slug": related_page.slug,
+                    "title": channel_title,
+                }
+            )
+        else:
+            related_pages.append(
+                {
+                    "slug": related_page.slug,
+                    "title": related_page.title,
+                }
+            )
+
     return related_pages
 
 
 def format_generic_channel_body(page, channel, message):
     if channel == "web":
-        print("TODO Do web things")
+        channel_body = page.body
     else:
         channel_body = getattr(page, f"{channel}_body")
         if channel_body != []:
@@ -119,7 +113,7 @@ def format_messages(page, request):
             message = int(request.GET["message"]) - 1
         except ValueError:
             raise ValidationError(
-                "Please insert a positive integer for message in " "the query string"
+                "Please insert a positive integer for message in the query string"
             )
     else:
         message = 0
@@ -132,7 +126,7 @@ def format_messages(page, request):
             return format_whatsapp_body_V3(page)
 
         elif not hasattr(page, f"enable_{channel}"):
-            # TODO: Add test for this
+            # TODO JT: Add test for this
             raise ValidationError(f"Unknown channel '{channel}'")
         elif getattr(page, f"enable_{channel}") or return_drafts:
             return format_generic_channel_body(page, channel, message)
@@ -171,7 +165,6 @@ def format_example_values(given_list: blocks.StreamValue.StreamChild):
 
 def format_variation_messages(given_list: blocks.list_block.ListValue):
     variation_messages = []
-    # TODO: Can probably do this cleaner?
     for var in given_list:
         variation_messages.append(
             {

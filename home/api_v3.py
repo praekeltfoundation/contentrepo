@@ -17,11 +17,6 @@ from .models import (  # isort:skip
     WhatsAppTemplate,
 )
 
-import pprint
-
-pp = pprint.PrettyPrinter(indent=4)
-pp.pprint("Forget me not")
-
 
 class WhatsAppTemplateViewset(BaseAPIViewSet):
     model = WhatsAppTemplate
@@ -136,6 +131,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             return Response(serializer.data)
 
         except NotFound as nf:
+            # TODO JT:
             print("Begin NF")
             print(nf.detail["channel"][0])
             print("1")
@@ -144,7 +140,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             print(nf.detail)
 
         except Exception as e:
-            print(f"hiert error type{type(e)}")
+            print(f"error type{type(e)}")
             raise NotFound({"page": ["Page matching query does not exist."]})
 
         return super().detail_view(request, pk)
@@ -202,15 +198,13 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
                     draft_queryset = draft_queryset.filter(enable_viber=True)
                     combined_queryset = combined_queryset.filter(enable_viber=True)
                 case _:
-                    print("raising notfound from getqueryset")
                     raise NotFound(
                         {
                             "channel": [
-                                f"channel matching query '{channel}' does not exist."
+                                f"Channel matching query '{channel}' does not exist."
                             ]
                         }
                     )
-        print("after channel case")
 
         tag = self.request.query_params.get("tag")
         if tag:

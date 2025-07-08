@@ -1,5 +1,4 @@
 import json
-import pprint
 from pathlib import Path
 
 import pytest
@@ -25,9 +24,6 @@ from .page_builder import (
     WABlk,
     WABody,
 )
-
-pp = pprint.PrettyPrinter(indent=4, depth=8)
-pp.pprint("Forget me not")
 
 TEST_STATIC_PATH = Path("home/tests/test_static")
 ALL_PLATFORMS_EXCL_WHATSAPP = ["viber", "messenger", "ussd", "sms"]
@@ -261,8 +257,6 @@ class TestContentPageAPIV3:
         response = uclient.get("/api/v3/pages/?tag=menu")
 
         content = json.loads(response.content)
-        print("First tag test check below")
-        print(content)
         assert content["count"] == 1
 
         # it should return 1 page for Uppercase tag
@@ -340,29 +334,27 @@ class TestContentPageAPIV3:
         # it should return specific page that is in draft
         response = uclient.get(url)
         content = response.json()
-        print("Content below")
-        pp.pprint(content)
+
         # the page is not live but whatsapp content is returned
         assert not page.live
         body = content["messages"][0]["text"]
         assert body == "*Default whatsapp Content 1* 🏥"
 
-    # TODO: This is currently breaking. Fix as part of API refining
-    # @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
-    # def test_message_draft(self, uclient, platform):
-    #     """
-    #     Unpublished <platform> pages are returned if the qa param is set.
-    #     """
-    #     page = self.create_content_page(publish=False, body_type=platform)
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
+    def test_message_draft(self, uclient, platform):
+        """
+        Unpublished <platform> pages are returned if the qa param is set.
+        """
+        page = self.create_content_page(publish=False, body_type=platform)
 
-    #     url = f"/api/v3/pages/{page.id}/?{platform}=True&return_drafts=True"
-    #     # it should return specific page that is in draft
-    #     response = uclient.get(url)
-    #     content = response.json()
-    #     # the page is not live but messenger content is returned
-    #     assert not page.live
-    #     body = content["messages"][0]["message"]
-    #     assert body == f"*Default {platform} Content 1* 🏥"
+        url = f"/api/v3/pages/{page.id}/?channel={platform}&return_drafts=True"
+        # it should return specific page that is in draft
+        response = uclient.get(url)
+        content = response.json()
+        # the page is not live but messenger content is returned
+        assert not page.live
+        body = content["messages"]["text"]
+        assert body == f"*Default {platform} Content 1* 🏥"
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)
     def test_platform_disabled(self, uclient, platform):
@@ -384,6 +376,7 @@ class TestContentPageAPIV3:
         """
         It should not return the body for a requested channel that does not exist
         """
+        # TODO JT:
         platform = "unknown"
         page = self.create_content_page()
 
@@ -393,7 +386,7 @@ class TestContentPageAPIV3:
         content = json.loads(response.content)
 
         assert (
-            content["channel"][0] == "channel matching query 'unknown' does not exist."
+            content["channel"][0] == "Channel matching query 'unknown' does not exist."
         )
 
     def test_number_of_queries(self, uclient, django_assert_num_queries):
@@ -408,7 +401,7 @@ class TestContentPageAPIV3:
         page = self.create_content_page()
         page = self.create_content_page(page, title="Content Page 1")
         uclient.get("/api/v3/pages/")
-        # TODO: Keep an eye on this chang from 16 to 10.
+        # TODO: Keep an eye on this change from 16 to 10.
         with django_assert_num_queries(10):
             uclient.get("/api/v3/pages/")
 
