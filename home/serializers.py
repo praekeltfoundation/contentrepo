@@ -266,11 +266,13 @@ def body_field_representation(page: Any, request: Any) -> Any:
                             and "value" in formatted_message
                             and "message" in formatted_message["value"]
                         ):
-                            formatted_message["value"]["message"] = (
-                                latest_revision.whatsapp_body.raw_data[
-                                    message
-                                ]["value"]["message"]
-                            )  # Your modified message
+                            formatted_message["value"][
+                                "message"
+                            ] = latest_revision.whatsapp_body.raw_data[message][
+                                "value"
+                            ][
+                                "message"
+                            ]  # Your modified message
                     api_body.update(
                         [
                             (
