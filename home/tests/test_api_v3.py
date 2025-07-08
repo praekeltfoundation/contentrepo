@@ -391,8 +391,10 @@ class TestContentPageAPIV3:
 
         assert response.status_code == 404
         content = json.loads(response.content)
-        print(content.get("page"))
-        assert content.get("page") == ["Page matching query does not exist."]
+
+        assert (
+            content["channel"][0] == "channel matching query 'unknown' does not exist."
+        )
 
     def test_number_of_queries(self, uclient, django_assert_num_queries):
         """
@@ -406,7 +408,8 @@ class TestContentPageAPIV3:
         page = self.create_content_page()
         page = self.create_content_page(page, title="Content Page 1")
         uclient.get("/api/v3/pages/")
-        with django_assert_num_queries(16):
+        # TODO: Keep an eye on this chang from 16 to 10.
+        with django_assert_num_queries(10):
             uclient.get("/api/v3/pages/")
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)

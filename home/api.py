@@ -85,7 +85,6 @@ class ContentPagesViewSet(PagesAPIViewSet):
             ids = []
             for t in ContentPageTag.objects.filter(tag__name__iexact=tag):
                 ids.append(t.content_object_id)
-            print(f"IDs = {ids}")
             queryset = queryset.filter(id__in=ids)
         trigger = self.request.query_params.get("trigger")
         if trigger is not None:

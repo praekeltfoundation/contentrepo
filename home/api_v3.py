@@ -51,8 +51,6 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         except Exception as e:
             # TODO: Handle this better
             print(f"Exception = {e}")
-        # TODO: I couldn't get the call to get_serializer to work correctly,  Rudi can we try fix this together please
-        # serializer = self.get_serializer(instance)
         serializer = WhatsAppTemplateSerializer(instance, context={"request": request})
 
         return Response(serializer.data)
@@ -139,7 +137,10 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
         except NotFound as nf:
             print("Begin NF")
-            print(nf)
+            print(nf.detail["channel"][0])
+            print("1")
+            print(vars(nf))
+            print("2")
             print(nf.detail)
 
         except Exception as e:
@@ -149,86 +150,17 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         return super().detail_view(request, pk)
 
     def listing_view(self, request, *args, **kwargs):
-        # If this request is flagged as QA then we should display the pages that have the filtering tags
-        # or triggers in their draft versions
-        print("Starting Listing View")
-        # queryset = ContentPage.objects.live().prefetch_related("locale")
-        # self.check_query_parameters(queryset)
-
-        # return_drafts = (
-        #     self.request.query_params.get("return_drafts", "").lower() == "true"
-        # )
-        # if return_drafts:
-        #     queryset = queryset | ContentPage.objects.all().order_by(
-        #         "latest_revision_id"
-        #     )
-        # print(f"Initital Queryset Below - {len(list(queryset))} Items")
-        # # pp.pprint(list(queryset))
-
-        # slug = self.request.query_params.get("slug", "").lower()
-        # # If a slug is proviced as query param, filter on that
-        # if slug != "":
-        #     for cp in queryset:
-        #         print(f"CP Title = {cp.title}")
-        #         print(f"CP Slug = {cp.slug}")
-
-        #     queryset = queryset.filter(slug=slug)
-
-        #     print("Slug filteredQUERYSET BELOW ")
-        #     pp.pprint(queryset)
-
-        # # TODO: Check this section properly.  Are these all we need to filter on? Should we add buttons, list items
-        # # ************ SECTION START
-
-        # tag = self.request.query_params.get("tag")
-        # trigger = self.request.query_params.get("trigger")
-        # have_new_triggers = []
-        # have_new_tags = []
-        # # have_new_buttons = []
-        # unpublished = ContentPage.objects.filter(has_unpublished_changes="True")
-
-        # for page in unpublished:
-        #     # print("")
-        #     # print(f"Unpublished page = '{page}' with ID = {page.id}")
-        #     latest_rev = page.get_latest_revision_as_object()
-        #     # print("Latest Revision Vars")
-        #     # pp.pprint(vars(latest_rev))
-        #     if trigger and latest_rev.triggers.filter(name=trigger).exists():
-        #         have_new_triggers.append(page.id)
-
-        #     if tag and latest_rev.tags.filter(name=tag).exists():
-        #         print(f"Tag exists {latest_rev.tags.filter(name=tag)}")
-        #         have_new_tags.append(page.id)
-
-        # print(f"have_new_triggers = {have_new_triggers}")
-        # print(f"have_new_tags = {have_new_tags}")
         queryset = self.get_queryset()
-        # print(f"Before TagTrig filtered Queryset Below - {len(list(queryset))} Items")
-        # # pp.pprint(list(queryset))
-        # # queryset = self.filter_queryset(queryset)
-        # queryset = queryset | ContentPage.objects.filter(id__in=have_new_triggers)
-        # print(f"Trig filtered Queryset Below- {len(list(queryset))} Items")
-        # # pp.pprint(list(queryset))
-        # queryset = queryset | ContentPage.objects.filter(id__in=have_new_tags)
-        # print(f"Tag filtered Queryset Below - {len(list(queryset))} Items")
-        # # pp.pprint(list(queryset))
 
-        # # ************ SECTION END
-        # print("1")
         queryset_list = self.paginate_queryset(queryset)
-        # print("2")
+
         serializer = ContentPageSerializerV3(
             queryset_list, context={"request": request}, many=True
         )
-        print("3")
 
         return self.get_paginated_response(serializer.data)
-        # return super().listing_view(request, *args, **kwargs)
 
     def get_queryset(self) -> Any:
-        print("")
-        print("Starting GetQuerySet")
-
         live_queryset = ContentPage.objects.live().prefetch_related("locale")
         combined_queryset = live_queryset
         draft_queryset = ContentPage.objects.not_live()
@@ -239,15 +171,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         if return_drafts:
             draft_queryset = draft_queryset | live_queryset
             combined_queryset = draft_queryset | live_queryset
-        # print("***************************************************")
-        # print("")
-        # print("LiveQuerySet Before Channels")
-        # pp.pprint([page.title for page in live_queryset])
-        # print("DraftQuerySet Before Channels")
-        # pp.pprint([page.title for page in draft_queryset])
-        # print("CombinedQuerySet Before Channels")
-        # pp.pprint([page.title for page in combined_queryset])
-        print("before channel case")
 
         channel = ""
         if "channel" in self.request.query_params:
@@ -288,13 +211,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
                         }
                     )
         print("after channel case")
-        # print("LiveQuerySet Before Tags")
-        # pp.pprint([page.title for page in live_queryset])
-        # print("DraftQuerySet Before Tags")
-        # pp.pprint([page.title for page in draft_queryset])
-        # print("CombinedQuerySet Before Tags")
-        # pp.pprint([page.title for page in combined_queryset])
-        # print("")
 
         tag = self.request.query_params.get("tag")
         if tag:
@@ -304,13 +220,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             live_queryset = live_queryset.filter(id__in=ids)
             draft_queryset = draft_queryset.filter(id__in=ids)
             combined_queryset = combined_queryset.filter(id__in=ids)
-        print("LiveQuerySet After Tags")
-        pp.pprint([page.title for page in live_queryset])
-        print("DraftQuerySet After Tags")
-        pp.pprint([page.title for page in draft_queryset])
-        print("CombinedQuerySet After Tags")
-        pp.pprint([page.title for page in combined_queryset])
-        print("")
 
         trigger = self.request.query_params.get("trigger")
         if trigger is not None:
@@ -320,13 +229,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             live_queryset = live_queryset.filter(id__in=ids)
             draft_queryset = draft_queryset.filter(id__in=ids)
             combined_queryset = combined_queryset.filter(id__in=ids)
-        # print("LiveQuerySet After Triggers")
-        # pp.pprint([page.title for page in live_queryset])
-        # print("DraftQuerySet After Triggers")
-        # pp.pprint([page.title for page in draft_queryset])
-        # print("CombinedQuerySet After Triggers")
-        # pp.pprint([page.title for page in combined_queryset])
-        # print("")
 
         return combined_queryset
 
