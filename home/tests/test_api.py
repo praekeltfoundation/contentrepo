@@ -382,10 +382,10 @@ class TestContentPageAPI:
         """
         Unpublished <platform> pages are returned if the qa param is set.
         """
-        page1 = self.create_content_page(
+        self.create_content_page(
             title="page1", publish=False, body_type="whatsapp", msg_prefix="p1 draft"
         )
-        page2 = self.create_content_page(
+        self.create_content_page(
             title="page2", publish=True, body_type="whatsapp", msg_prefix="p2 live"
         )
         page3 = self.create_content_page(
@@ -395,21 +395,10 @@ class TestContentPageAPI:
         # live page.
         page3.whatsapp_body[0].value["message"] = "p3 draft 1"
         page3.save_revision()
-        # page3.save()
-        # pp.pprint(
-        #     f"page3.live={page3.live} page3.has_unpublished_changes={page3.has_unpublished_changes} & message = {page3.whatsapp_body[0].value["message"]}"
-        # )
+
         qa_response = uclient.get("/api/v2/pages/?whatsapp=true&qa=true")
         [q1, q2, q3] = qa_response.json()["results"]
-        # pp.pprint(qa_response.json()["results"])
-        print("********")
-        # pp.pprint(q3)
-        # for item in qa_response:
-        #     print("")
-        #     print("Item found")
-        #     # print(item)
-        #     pp.pprint(item)
-        # print(p3["body"]["text"]["value"]["message"])
+
         assert q1["body"]["text"]["value"]["message"] == "p1 draft 1"
         assert q2["body"]["text"]["value"]["message"] == "p2 live 1"
         assert q3["body"]["text"]["value"]["message"] == "p3 draft 1"
