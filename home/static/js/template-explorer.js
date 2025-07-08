@@ -2,10 +2,10 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Template explorer script loaded');
     
     // Make rows with children clickable
-    document.querySelectorAll('.template-row.has-children').forEach(row => {
+    document.querySelectorAll('.folder-row.has-children').forEach(row => {
         const toggle = row.querySelector('.toggle-children');
         const depth = parseInt(row.dataset.depth);
-        const templateId = row.dataset.templateId;
+        const folderId = row.dataset.folderId;
         
         // Function to toggle children
         const toggleChildren = (e) => {
@@ -14,11 +14,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const isCollapsed = row.classList.toggle('collapsed');
-            
-            // Find and toggle all direct children
             let nextRow = row.nextElementSibling;
+            
+            // Toggle all children until we hit another item at the same or higher level
             while (nextRow) {
-                const nextDepth = parseInt(nextRow.dataset.depth);
+                const nextDepth = parseInt(nextRow.dataset.depth || '0');
                 if (nextDepth <= depth) break;
                 
                 if (nextDepth === depth + 1) {

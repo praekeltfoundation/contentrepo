@@ -18,7 +18,13 @@ from wagtail.snippets.bulk_actions.snippet_bulk_action import SnippetBulkAction
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
-from .models import Assessment, ContentPage, OrderedContentSet, WhatsAppTemplate
+from .models import (
+    Assessment,
+    ContentPage,
+    OrderedContentSet,
+    WhatsAppTemplate,
+    WhatsAppTemplateFolder,
+)
 
 from .views import (  # isort:skip
     ContentPageReportView,
@@ -31,6 +37,9 @@ from .views import (  # isort:skip
     CustomIndexViewWhatsAppTemplate,
     WhatsAppTemplateUploadView,
 )
+
+from django.utils.translation import gettext_lazy as _
+from wagtail.admin.menu import Menu, SubmenuMenuItem
 
 from .whatsapp import submit_to_meta_action
 
@@ -166,24 +175,46 @@ def register_template_explorer_url() -> list[Any]:
     ]
 
 
-@hooks.register("register_admin_menu_item")
-def register_template_explorer_menu_item() -> Any:
-    return MenuItem(
-        "Template Explorer",
-        reverse("whatsapp_template_explorer"),
-        icon_name="list-ul",
-        order=1000,
-    )
-
-
 def template_explorer_view(request: Any) -> Any:
-    templates = WhatsAppTemplate.objects.all()
+    # Get all root folders (folders with no parent)
+    root_folders = WhatsAppTemplateFolder.objects.filter(parent__isnull=True)
+    # Get all templates without a folder
+    root_templates = WhatsAppTemplate.objects.filter(folder__isnull=True)
+
     return render(
         request,
         "admin/whatsapp_templates/explorer.html",
         {
-            "templates": templates,
+            "root_folders": root_folders,
+            "root_templates": root_templates,
         },
+    )
+
+
+@hooks.register("register_admin_menu_item")
+def register_whatsapp_menu_item() -> Any:
+    submenu = Menu(
+        items=[
+            MenuItem(
+                _("WhatsApp Templates"),
+                reverse("wagtailsnippets_home_whatsapptemplate:list"),
+                icon_name="doc-empty",
+            ),
+            MenuItem(
+                _("WhatsApp Template Explorer"),
+                reverse("whatsapp_template_explorer"),
+                icon_name="list-ul",
+            ),
+            MenuItem(
+                _("WhatsApp Template Folders"),
+                reverse("wagtailsnippets_home_whatsapptemplatefolder:list"),
+                icon_name="folder",
+            ),
+        ]
+    )
+
+    return SubmenuMenuItem(
+        _("WhatsApp Templates"), submenu, icon_name="mail", order=300
     )
 
 
@@ -302,7 +333,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
     body_truncate_size = 200
     icon = "draft"
     menu_order = 200
-    add_to_admin_menu = True
+    add_to_admin_menu = False
     add_to_settings_menu = False
     exclude_from_explorer = False
     list_export = "slug"
@@ -335,7 +366,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
         MultiFieldPanel(
             [
                 FieldPanel("slug"),
-                FieldPanel("parent"),
+                FieldPanel("folder"),
                 FieldPanel("category"),
                 FieldPanel("image"),
                 FieldPanel("message"),
@@ -397,6 +428,17 @@ class AssessmentAdmin(SnippetViewSet):
     ]
 
 
+class WhatsAppTemplateFolderAdmin(SnippetViewSet):
+    model = WhatsAppTemplateFolder
+    menu_label = "Template Folders"
+    icon = "folder"
+    menu_order = 300
+    add_to_admin_menu = False
+    list_display = ["name", "parent", "templates_count"]
+    list_filter = ["parent"]
+    search_fields = ["name"]
+
+
 # Now you just need to register your customised ModelAdmin class with Wagtail
 modeladmin_register(ContentPageAdmin)
 register_snippet(AssessmentAdmin)
@@ -404,3 +446,4 @@ register_snippet(OrderedContentSetViewSet)
 # Flag for turning on Standalone Whatsapp Templates, still in development
 if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
     register_snippet(WhatsAppTemplateAdmin)
+    register_snippet(WhatsAppTemplateFolderAdmin)

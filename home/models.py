@@ -36,6 +36,7 @@ from wagtail.models import (
     DraftStateMixin,
     Locale,
     LockableMixin,
+    Orderable,
     Page,
     ReferenceIndex,
     Revision,
@@ -1477,6 +1478,58 @@ class TemplateTag(TaggedItemBase):
     )
 
 
+class WhatsAppTemplateFolder(Orderable, models.Model):
+    """
+    A folder for organizing WhatsApp templates in a hierarchical structure.
+    """
+
+    name = models.CharField(max_length=255, help_text="The name of the folder")  # type: ignore
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="children",
+    )  # type: ignore
+    depth = models.PositiveIntegerField(default=0, editable=False)  # type: ignore
+    path = models.CharField(max_length=255, blank=True, editable=False)  # type: ignore
+    created_at = models.DateTimeField(auto_now_add=True)  # type: ignore
+    updated_at = models.DateTimeField(auto_now=True)  # type: ignore
+
+    panels = [
+        FieldPanel("name"),
+        FieldPanel("parent"),
+    ]
+
+    def __str__(self) -> str:
+        return self.name
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        # Update depth and path when saving
+        if self.parent:
+            self.depth = self.parent.depth + 1
+            self.path = f"{self.parent.path}{self.parent.id}/"
+        else:
+            self.depth = 0
+            self.path = ""
+
+        super().save(*args, **kwargs)
+
+        # Update all children's paths if this is a move
+        for child in self.children.all():
+            child.save()
+
+    def templates_count(self) -> int:
+        return self.templates.count()
+
+    templates_count.short_description = "Templates"
+
+    class Meta:
+        verbose_name = "WhatsApp Template Folder"
+        verbose_name_plural = "WhatsApp Template Folders"
+        ordering = ["name"]
+
+
 class WhatsAppTemplate(
     WorkflowMixin,
     DraftStateMixin,
@@ -1686,30 +1739,13 @@ class WhatsAppTemplate(
             [b["value"]["title"] for b in self.buttons.raw_data],
         )
 
-    parent = models.ForeignKey(
-        "self",
+    folder = models.ForeignKey(
+        WhatsAppTemplateFolder,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="children",
+        related_name="templates",
     )  # type: ignore
-    depth = models.PositiveIntegerField(default=0, editable=False)  # type: ignore
-    path = models.CharField(max_length=255, blank=True, editable=False)  # type: ignore
-
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        # Update depth and path when saving
-        if self.parent:
-            self.depth = self.parent.depth + 1
-            self.path = f"{self.parent.path}{self.parent.id}/"
-        else:
-            self.depth = 0
-            self.path = ""
-
-        super().save(*args, **kwargs)
-
-        # Update all children's paths if this is a move
-        for child in self.children.all():
-            child.save()
 
     def create_whatsapp_template_name(self) -> str:
         return f"{self.prefix}_{self.get_latest_revision().pk}"

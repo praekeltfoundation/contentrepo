@@ -1,0 +1,16 @@
+<tr class="template-row" 
+    data-depth="{% if template.folder %}{{ template.folder.depth|add:1 }}{% else %}0{% endif %}"
+    data-template-id="{{ template.id }}">
+    <td class="title">
+        <div style="padding-left: {% if template.folder %}{% widthratio template.folder.depth|add:1 1 20 %}{% else %}0{% endif %}px">
+            <a href="{% url 'wagtailsnippets_home_whatsapptemplate:edit' template.id %}">
+                <span class="icon icon-doc-empty"></span>
+                {{ template.slug }}
+            </a>
+        </div>
+    </td>
+    <td>Template</td>
+    <td>{{ template.get_category_display|default:"-" }}</td>
+    <td>{{ template.get_status_display|default:"-" }}</td>
+    <td>{{ template.get_latest_revision.created_at|date:"d-M-Y" }}</td>
+</tr>

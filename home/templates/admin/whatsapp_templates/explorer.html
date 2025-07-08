@@ -9,16 +9,16 @@
 {% block extra_css %}
     {{ block.super }}
     <style>
-        .template-row { cursor: pointer; }
-        .template-row .icon { 
+        .template-row, .folder-row { cursor: pointer; }
+        .template-row .icon, .folder-row .icon { 
             transition: transform 0.2s;
             display: inline-block;
             margin-right: 5px;
         }
-        .template-row.collapsed .icon-arrow-down { 
+        .template-row.collapsed .icon-arrow-down,
+        .folder-row.collapsed .icon-arrow-down { 
             transform: rotate(-90deg); 
         }
-        .template-row .children { display: table-row; }
     </style>
 {% endblock %}
 
@@ -26,7 +26,7 @@
     <header class="header">
         <div class="row">
             <div class="left nice-padding">
-                <h1>Template Explorer</h1>
+                <h1>WhatsApp Template Explorer</h1>
             </div>
         </div>
     </header>
@@ -37,42 +37,30 @@
                 <div class="button-group">
                     <a href="{% url 'wagtailsnippets_home_whatsapptemplate:add' %}" 
                        class="button bicolor icon icon-plus">
-                        Add Template
+                        Add WhatsApp Template
+                    </a>
+                    <a href="{% url 'wagtailsnippets_home_whatsapptemplatefolder:add' %}" class="button bicolor icon icon-folder" id="add-folder-btn">
+                        Add Folder
                     </a>
                 </div>
                 
                 <table class="listing" id="template-explorer">
                     <thead>
                         <tr>
-                            <th>Slug</th>
+                            <th>Name</th>
+                            <th>Type</th>
                             <th>Category</th>
                             <th>Status</th>
-                            <th>Path</th>
                             <th>Last Modified</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for template in templates %}
-                            {% with has_children=template.children.exists %}
-                            <tr class="template-row {% if has_children %}has-children{% endif %}" 
-                                data-depth="{{ template.depth }}"
-                                data-template-id="{{ template.id }}">
-                                <td class="title">
-                                    <div style="padding-left: {% widthratio template.depth 1 20 %}px">
-                                        {% if has_children %}
-                                            <span class="icon icon-arrow-down toggle-children"></span>
-                                        {% endif %}
-                                        <a href="{% url 'wagtailsnippets_home_whatsapptemplate:edit' template.id %}">
-                                            {{ template.slug }}
-                                        </a>
-                                    </div>
-                                </td>
-                                <td>{{ template.get_category_display|default:"-" }}</td>
-                                <td>{{ template.get_status_display|default:"-" }}</td>
-                                <td>{{ template.path }}{{ template.id }}/</td>
-                                <td>{{ template.get_latest_revision.created_at|date:"d-M-Y" }}</td>
-                            </tr>
-                            {% endwith %}
+                        {% for folder in root_folders %}
+                            {% include "admin/whatsapp_templates/_folder_row.html" with folder=folder %}
+                        {% endfor %}
+                        
+                        {% for template in root_templates %}
+                            {% include "admin/whatsapp_templates/_template_row.html" with template=template %}
                         {% empty %}
                             <tr>
                                 <td colspan="5">No templates found.</td>
