@@ -7,7 +7,6 @@
     {{ block.super }}
     <script>
         document.title = "{% trans 'WhatsApp Template Explorer' %} - {{ settings.home.SiteSettings.title }}";
-        // Add this at the top of your script
         const CSRF_TOKEN = "{{ csrf_token }}";
     </script>
     <script src="{% static 'js/template-explorer.js' %}"></script>
@@ -23,7 +22,7 @@
             position: relative;
         }
 
-        /* Toggle button styles - make these more specific */
+        /* Toggle button styles */
         .folder-row .title .toggle-children {
             cursor: pointer;
             margin-right: 5px;
@@ -32,7 +31,7 @@
             width: 16px;
             text-align: center;
             position: relative;
-            z-index: 1; /* Ensure it's above other elements */
+            z-index: 1;
         }
 
         /* Folder icon styles */
@@ -40,11 +39,6 @@
             transition: transform 0.2s;
             display: inline-block;
             margin-right: 5px;
-        }
-
-        /* Show direct children of expanded folders */
-        tr.folder-row:not(.collapsed) + tr[data-depth] {
-            display: table-row;
         }
 
         /* Ensure proper indentation */

@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Function to get all direct children of a row
 function getDirectChildren(parentRow) {
     const children = [];
     if (!parentRow) return children;
@@ -72,7 +71,6 @@ function getDirectChildren(parentRow) {
         const nextDepth = parseInt(nextRow.dataset.depth || '0');
         if (nextDepth <= parentDepth) break;
         
-        // For direct children (depth + 1)
         if (nextDepth === parentDepth + 1) {
             // If this is a template, check if it belongs to this folder
             if (nextRow.classList.contains('template-row')) {
@@ -96,7 +94,6 @@ function getDirectChildren(parentRow) {
     return children;
 }
 
-// Function to set visibility of all children
 function setChildrenVisibility(parentRow, isVisible) {
     const children = getDirectChildren(parentRow);
     console.log(`Setting visibility for ${children.length} children of folder ${parentRow.dataset.folderId} to ${isVisible ? 'visible' : 'hidden'}`);
