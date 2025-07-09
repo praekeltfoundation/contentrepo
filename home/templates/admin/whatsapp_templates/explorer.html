@@ -1,9 +1,12 @@
 {% extends "wagtailadmin/base.html" %}
 {% load i18n wagtailadmin_tags static %}
+{% load wagtailsettings_tags %}
+{% get_settings %}
 
 {% block extra_js %}
     {{ block.super }}
     <script>
+        document.title = "{% trans 'WhatsApp Template Explorer' %} - {{ settings.home.SiteSettings.title }}";
         // Add this at the top of your script
         const CSRF_TOKEN = "{{ csrf_token }}";
     </script>
@@ -112,10 +115,12 @@
 {% endblock %}
 
 {% block content %}
-    <header class="header">
+    <header class="w-header">
         <div class="row">
-            <div class="left nice-padding">
-                <h1>WhatsApp Template Explorer</h1>
+            <div class="left">
+                <div class="col">
+                    <h1>{% trans "WhatsApp Template Explorer" %}</h1>
+                </div>
             </div>
         </div>
     </header>
