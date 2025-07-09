@@ -13,62 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
         dropTarget.addEventListener('dragenter', handleDragEnter);
         dropTarget.addEventListener('dragleave', handleDragLeave);
     });
-    
-    // Function to get all direct children of a row
-    const getDirectChildren = (parentRow) => {
-        const children = [];
-        if (!parentRow) return children;
-        
-        const parentDepth = parseInt(parentRow.dataset.depth || '0');
-        const parentId = parentRow.dataset.folderId || null;
-        let nextRow = parentRow.nextElementSibling;
-        
-        console.log(`Getting children for folder: ${parentId} at depth ${parentDepth}`);
-        
-        while (nextRow) {
-            const nextDepth = parseInt(nextRow.dataset.depth || '0');
-            if (nextDepth <= parentDepth) break;
-            
-            // For direct children (depth + 1)
-            if (nextDepth === parentDepth + 1) {
-                // If this is a template, check if it belongs to this folder
-                if (nextRow.classList.contains('template-row')) {
-                    const templateFolderId = nextRow.dataset.folderId || null;
-                    if ((!parentId && !templateFolderId) || (parentId === templateFolderId)) {
-                        console.log(`  Found direct child template: ${nextRow.dataset.templateId}`);
-                        children.push(nextRow);
-                    }
-                } 
-                // If it's a folder, it's a direct child
-                else if (nextRow.classList.contains('folder-row')) {
-                    console.log(`  Found direct child folder: ${nextRow.dataset.folderId}`);
-                    children.push(nextRow);
-                }
-            }
-            
-            nextRow = nextRow.nextElementSibling;
-        }
-        
-        console.log(`  Total direct children: ${children.length}`);
-        return children;
-    };
-
-    // Function to set visibility of all children
-    const setChildrenVisibility = (parentRow, isVisible) => {
-        const children = getDirectChildren(parentRow);
-        console.log(`Setting visibility for ${children.length} children of folder ${parentRow.dataset.folderId} to ${isVisible ? 'visible' : 'hidden'}`);
-        
-        children.forEach(child => {
-            console.log(`  ${isVisible ? 'Showing' : 'Hiding'} ${child.classList.contains('folder-row') ? 'folder' : 'template'} ${child.classList.contains('folder-row') ? child.dataset.folderId : child.dataset.templateId}`);
-            child.style.display = isVisible ? '' : 'none';
-            
-            // If we're hiding, also hide all descendants
-            if (!isVisible && child.classList.contains('folder-row')) {
-                child.classList.add('collapsed');
-                setChildrenVisibility(child, false);
-            }
-        });
-    };
 
     // Initialize all folders
     document.querySelectorAll('.folder-row').forEach(folderRow => {
@@ -112,6 +56,62 @@ document.addEventListener('DOMContentLoaded', function() {
         row.style.display = 'table-row';
     });
 });
+
+// Function to get all direct children of a row
+function getDirectChildren(parentRow) {
+    const children = [];
+    if (!parentRow) return children;
+    
+    const parentDepth = parseInt(parentRow.dataset.depth || '0');
+    const parentId = parentRow.dataset.folderId || null;
+    let nextRow = parentRow.nextElementSibling;
+    
+    console.log(`Getting children for folder: ${parentId} at depth ${parentDepth}`);
+    
+    while (nextRow) {
+        const nextDepth = parseInt(nextRow.dataset.depth || '0');
+        if (nextDepth <= parentDepth) break;
+        
+        // For direct children (depth + 1)
+        if (nextDepth === parentDepth + 1) {
+            // If this is a template, check if it belongs to this folder
+            if (nextRow.classList.contains('template-row')) {
+                const templateFolderId = nextRow.dataset.folderId || null;
+                if ((!parentId && !templateFolderId) || (parentId === templateFolderId)) {
+                    console.log(`  Found direct child template: ${nextRow.dataset.templateId}`);
+                    children.push(nextRow);
+                }
+            } 
+            // If it's a folder, it's a direct child
+            else if (nextRow.classList.contains('folder-row')) {
+                console.log(`  Found direct child folder: ${nextRow.dataset.folderId}`);
+                children.push(nextRow);
+            }
+        }
+        
+        nextRow = nextRow.nextElementSibling;
+    }
+    
+    console.log(`  Total direct children: ${children.length}`);
+    return children;
+}
+
+// Function to set visibility of all children
+function setChildrenVisibility(parentRow, isVisible) {
+    const children = getDirectChildren(parentRow);
+    console.log(`Setting visibility for ${children.length} children of folder ${parentRow.dataset.folderId} to ${isVisible ? 'visible' : 'hidden'}`);
+    
+    children.forEach(child => {
+        console.log(`  ${isVisible ? 'Showing' : 'Hiding'} ${child.classList.contains('folder-row') ? 'folder' : 'template'} ${child.classList.contains('folder-row') ? child.dataset.folderId : child.dataset.templateId}`);
+        child.style.display = isVisible ? '' : 'none';
+        
+        // If we're hiding, also hide all descendants
+        if (!isVisible && child.classList.contains('folder-row')) {
+            child.classList.add('collapsed');
+            setChildrenVisibility(child, false);
+        }
+    });
+}
 
 let draggedItem = null;
 let currentDropTarget = null;
@@ -167,7 +167,6 @@ async function handleDrop(e) {
     document.querySelectorAll('[data-drop-target]').forEach(el => {
         el.classList.remove('drag-over');
     });
-    currentDropTarget = null;
     
     const templateId = draggedItem.dataset.templateId;
     const targetFolderId = this.closest('[data-folder-id]').dataset.folderId || null;
@@ -196,7 +195,12 @@ async function handleDrop(e) {
                 targetContainer.insertBefore(templateRow, this.closest('tr').nextSibling);
                 
                 // Update the folder ID
-                templateRow.dataset.folderId = targetFolderId;
+                draggedItem.dataset.folderId = targetFolderId;
+
+                // Calculate new depth (parent folder's depth + 1, or 0 if no folder)
+                const newDepth = currentDropTarget.closest('tr').dataset.depth ? 
+                    parseInt(currentDropTarget.closest('tr').dataset.depth) + 1 : 0;
+                draggedItem.dataset.depth = newDepth;
                 
                 // Update the indentation
                 const depth = targetFolderId ? 
@@ -204,6 +208,26 @@ async function handleDrop(e) {
                 const titleDiv = templateRow.querySelector('.title > div');
                 if (titleDiv) {
                     titleDiv.style.paddingLeft = `${depth * 20}px`;
+                }
+
+                // Find the closest folder row that contains this template
+                let currentRow = draggedItem.previousElementSibling;
+                let parentFolderRow = null;
+                
+                // Look backwards to find the parent folder
+                while (currentRow) {
+                    if (currentRow.classList.contains('folder-row') && 
+                        parseInt(currentRow.dataset.depth) < newDepth) {
+                        parentFolderRow = currentRow;
+                        break;
+                    }
+                    currentRow = currentRow.previousElementSibling;
+                }
+                
+                // If we found a parent folder, refresh its visibility
+                if (parentFolderRow) {
+                    const isExpanded = !parentFolderRow.classList.contains('collapsed');
+                    setChildrenVisibility(parentFolderRow, isExpanded);
                 }
             }
         } else {
@@ -217,6 +241,7 @@ async function handleDrop(e) {
             draggedItem.classList.remove('dragging');
             draggedItem = null;
         }
+        currentDropTarget = null;
     }
 }
 
