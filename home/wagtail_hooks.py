@@ -3,9 +3,11 @@ from typing import Any
 
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import path, reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from wagtail import hooks
 from wagtail.admin import widgets as wagtailadmin_widgets
 from wagtail.admin.menu import AdminOnlyMenuItem, MenuItem
@@ -216,6 +218,52 @@ def register_whatsapp_menu_item() -> Any:
     return SubmenuMenuItem(
         _("WhatsApp Templates"), submenu, icon_name="mail", order=300
     )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def move_template(request: Any, template_id: int) -> Any:
+    try:
+        template = WhatsAppTemplate.objects.get(pk=template_id)
+        folder_id = request.POST.get("folder")
+
+        if folder_id:
+            try:
+                folder = WhatsAppTemplateFolder.objects.get(pk=folder_id)
+                template.folder = folder
+            except WhatsAppTemplateFolder.DoesNotExist:
+                return JsonResponse(
+                    {"status": "error", "message": "Folder not found"}, status=400
+                )
+        else:
+            template.folder = None
+
+        template.save(update_fields=["folder"])
+        return JsonResponse({"status": "success"})
+    except WhatsAppTemplate.DoesNotExist:
+        return JsonResponse(
+            {"status": "error", "message": "Template not found"}, status=404
+        )
+    except Exception as e:
+        logger.error(f"Error moving template {template_id}: {str(e)}")
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
+
+# Add the URL pattern
+@hooks.register("register_admin_urls")
+def register_template_urls() -> list[Any]:
+    return [
+        path(
+            "whatsapp-templates/explorer/",
+            template_explorer_view,
+            name="whatsapp_template_explorer",
+        ),
+        path(
+            "whatsapp-templates/<int:template_id>/move/",
+            move_template,
+            name="whatsapp_template_move",
+        ),
+    ]
 
 
 class SubmitToMetaMenuItem(ActionMenuItem):

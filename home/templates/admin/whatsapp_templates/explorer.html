@@ -3,21 +3,110 @@
 
 {% block extra_js %}
     {{ block.super }}
+    <script>
+        // Add this at the top of your script
+        const CSRF_TOKEN = "{{ csrf_token }}";
+    </script>
     <script src="{% static 'js/template-explorer.js' %}"></script>
 {% endblock %}
 
 {% block extra_css %}
     {{ block.super }}
     <style>
-        .template-row, .folder-row { cursor: pointer; }
-        .template-row .icon, .folder-row .icon { 
+        /* Base styles for folder rows */
+        .folder-row .title {
+            padding: 8px;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+
+        /* Toggle button styles - make these more specific */
+        .folder-row .title .toggle-children {
+            cursor: pointer;
+            margin-right: 5px;
+            transition: transform 0.2s;
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+            position: relative;
+            z-index: 1; /* Ensure it's above other elements */
+        }
+
+        /* Folder icon styles */
+        .folder-row .title .icon {
             transition: transform 0.2s;
             display: inline-block;
             margin-right: 5px;
         }
-        .template-row.collapsed .icon-arrow-down,
-        .folder-row.collapsed .icon-arrow-down { 
-            transform: rotate(-90deg); 
+
+        /* Show direct children of expanded folders */
+        tr.folder-row:not(.collapsed) + tr[data-depth] {
+            display: table-row;
+        }
+
+        /* Ensure proper indentation */
+        .folder-row .title > div {
+            padding-left: 20px;
+        }
+
+        /* Make sure the toggle button is visible and clickable */
+        .toggle-children {
+            cursor: pointer;
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+            margin-right: 5px;
+        }
+
+        /* Rotate the toggle icon when collapsed */
+        .folder-row.collapsed .toggle-children {
+            transform: rotate(-90deg);
+        }
+
+        /* Indentation for nested items */
+        .template-row .title > div,
+        .folder-row .title > div {
+            padding-left: 20px;
+        }
+
+        /* Template row styles */
+        .template-row {
+            cursor: move;
+            transition: background-color 0.2s;
+        }
+
+        .template-row.dragging {
+            opacity: 0.5;
+        }
+
+        /* Show direct children of expanded folders */
+        tr.folder-row:not(.collapsed) + tr[data-depth] {
+            display: table-row;
+        }
+
+        /* Drag and drop target styles */
+        [data-drop-target].drag-over {
+            background-color: rgba(0, 120, 212, 0.1) !important;
+            outline: 2px dashed #0078d4;
+            position: relative;
+        }
+
+        /* Ensure the highlight appears above other elements */
+        [data-drop-target].drag-over::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Make sure the toggle button is clickable */
+        .folder-row .title > div {
+            position: relative;
+            z-index: 1;
         }
     </style>
 {% endblock %}

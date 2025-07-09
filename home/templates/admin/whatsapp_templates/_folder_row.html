@@ -1,11 +1,14 @@
-<tr class="folder-row has-children" 
-    data-depth="{{ folder.depth }}"
-    data-folder-id="{{ folder.id }}">
-    <td class="title">
+<tr class="folder-row {% if folder.children.exists %}has-children{% endif %}"
+    draggable="false"
+    data-folder-id="{{ folder.id }}"
+    data-depth="{{ folder.depth }}">
+    <td class="title" colspan="5" data-drop-target="true">
         <div style="padding-left: {% widthratio folder.depth 1 20 %}px">
             <span class="icon icon-arrow-down toggle-children"></span>
             <span class="icon icon-folder"></span>
-            {{ folder.name }}
+            <a href="{% url 'wagtailsnippets_home_whatsapptemplatefolder:edit' folder.id %}">
+                {{ folder.name }}
+            </a>
         </div>
     </td>
     <td>Folder</td>
