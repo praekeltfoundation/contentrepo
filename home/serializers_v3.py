@@ -85,26 +85,22 @@ def format_generic_channel_body(page, channel, message):
         channel_body = page.body
     else:
         channel_body = getattr(page, f"{channel}_body")
-        if channel_body != []:
+
+        if channel_body._raw_data != []:
             try:
                 return OrderedDict(
                     [
-                        # TODO: Not sure if we want this or not
-                        # ("message", message + 1),
-                        # (
-                        #     "next_message",
-                        #     has_next_message(message, page, channel),
-                        # ),
-                        # (
-                        #     "previous_message",
-                        #     has_previous_message(message, page, channel),
-                        # ),
-                        # ("total_messages", len(channel_body._raw_data)),
                         ("text", channel_body._raw_data[message]["value"]["message"]),
                     ]
                 )
             except IndexError:
                 raise ValidationError("The requested message does not exist")
+        else:
+            return OrderedDict(
+                [
+                    ("text", []),
+                ]
+            )
 
 
 def format_messages(page, request):
@@ -122,14 +118,13 @@ def format_messages(page, request):
     if "channel" in request.query_params:
         channel = request.query_params.get("channel", "").lower()
         return_drafts = request.query_params.get("return_drafts", "").lower() == "true"
-        if channel == "whatsapp":
-            return format_whatsapp_body_V3(page)
 
-        elif not hasattr(page, f"enable_{channel}"):
-            # TODO JT: Add test for this
-            raise ValidationError(f"Unknown channel '{channel}'")
-        elif getattr(page, f"enable_{channel}") or return_drafts:
-            return format_generic_channel_body(page, channel, message)
+        if getattr(page, f"enable_{channel}") or return_drafts:
+            if channel == "whatsapp":
+                return format_whatsapp_body_V3(page)
+            else:
+                return format_generic_channel_body(page, channel, message)
+
     return OrderedDict([("text", page.body._raw_data)])
 
 
@@ -179,6 +174,7 @@ def format_variation_messages(given_list: blocks.list_block.ListValue):
 def format_whatsapp_body_V3(content_page):
     message_number = 0
     messages = []
+
     for block in content_page.whatsapp_body:
         message_number += 1  # noqa: SIM113
 

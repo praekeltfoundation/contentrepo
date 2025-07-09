@@ -196,11 +196,12 @@ class TestContentPageAPIV3:
             body_type = body_type.casefold()
 
         bodies = []
-
+        print("before")
         for i in range(body_count):
             msg_body = f"*Default {body_type} Content {i+1}* 🏥"
             match body_type:
                 case "whatsapp":
+                    print("append")
                     bodies.append(WABody(title, [WABlk(msg_body)]))
                 case "messenger":
                     bodies.append(MBody(title, [MBlk(msg_body)]))
@@ -216,7 +217,7 @@ class TestContentPageAPIV3:
                     raise ValueError(
                         f"{body_type} not a valid platform, valid options include, whatsapp, messenger, sms, ussd, viber or None"
                     )
-
+        print(f"bodies = {bodies}")
         content_page = PageBuilder.build_cp(
             parent=parent,
             slug=title.replace(" ", "-"),
@@ -326,7 +327,7 @@ class TestContentPageAPIV3:
 
     def test_whatsapp_draft(self, uclient):
         """
-        Unpublished whatsapp pages are returned if the qa param is set.
+        Unpublished whatsapp pages are returned if the return_drafts param is set.
         """
         page = self.create_content_page(publish=False)
 
@@ -337,6 +338,7 @@ class TestContentPageAPIV3:
 
         # the page is not live but whatsapp content is returned
         assert not page.live
+        print(f"CONTENT = {content}")
         body = content["messages"][0]["text"]
         assert body == "*Default whatsapp Content 1* 🏥"
 
@@ -370,7 +372,11 @@ class TestContentPageAPIV3:
         page.save_revision().publish()
 
         response = uclient.get(f"/api/v3/pages/{page.id}/?channel={platform}")
-        assert response.status_code == 404
+        content = response.json()
+
+        # The page is return successfully, but the list of messages is empty
+        assert response.status_code == 200
+        assert content["messages"] == {"text": []}
 
     def test_detail_view_unknown_platform(self, uclient):
         """
@@ -382,9 +388,8 @@ class TestContentPageAPIV3:
 
         response = uclient.get(f"/api/v3/pages/{page.id}/?channel={platform}")
 
-        assert response.status_code == 404
+        assert response.status_code == 400
         content = json.loads(response.content)
-
         assert (
             content["channel"][0] == "Channel matching query 'unknown' does not exist."
         )
@@ -456,6 +461,7 @@ class TestContentPageAPIV3:
         assert response.status_code == 404
 
         content = response.json()
+        print(f"Content = |{content}|")
         assert content == {"page": ["Page matching query does not exist."]}
         assert content.get("page") == ["Page matching query does not exist."]
 

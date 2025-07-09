@@ -1,7 +1,8 @@
 from typing import Any
 
+from django.http.response import Http404
 from django.urls import path
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -112,41 +113,48 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
     pagination_class = PageNumberPagination
 
     def detail_view(self, request, pk=None, slug=None):
+        if "channel" in self.request.query_params:
+            channel = self.request.query_params.get("channel", "").lower()
+            if channel not in {"web", "whatsapp", "sms", "ussd", "messenger", "viber"}:
+                raise ValidationError(
+                    {"channel": [f"Channel matching query '{channel}' does not exist."]}
+                )
         if slug is not None:
             self.lookup_field = "slug"
+
         else:
             self.lookup_field = "pk"
 
         try:
             if (
                 "return_drafts" in request.GET
-                and request.GET["return_drafts"].lower() == "true"
+                and self.request.query_params.get("return_drafts", "").lower() == "true"
             ):
                 instance = self.get_object().get_latest_revision_as_object()
+
             else:
                 instance = self.get_object()
 
-            instance.save_page_view(request.query_params)
-            serializer = ContentPageSerializerV3(instance, context={"request": request})
-            return Response(serializer.data)
-
-        except NotFound as nf:
-            # TODO JT:
-            print("Begin NF")
-            print(nf.detail["channel"][0])
-            print("1")
-            print(vars(nf))
-            print("2")
-            print(nf.detail)
-
-        except Exception as e:
-            print(f"error type{type(e)}")
+        except Http404:
             raise NotFound({"page": ["Page matching query does not exist."]})
 
-        return super().detail_view(request, pk)
+        instance.save_page_view(request.query_params)
+        serializer = ContentPageSerializerV3(instance, context={"request": request})
+        return Response(serializer.data)
 
     def listing_view(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+
+        channel = ""
+        if "channel" in self.request.query_params:
+            channel = self.request.query_params.get("channel", "").lower()
+
+            if channel in {"web", "whatsapp", "sms", "ussd", "messenger", "viber"}:
+                queryset = queryset.filter(**{f"enable_{channel}": True})
+            else:
+                raise ValidationError(
+                    {"channel": [f"Channel matching query '{channel}' does not exist."]}
+                )
 
         queryset_list = self.paginate_queryset(queryset)
 
@@ -157,74 +165,38 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         return self.get_paginated_response(serializer.data)
 
     def get_queryset(self) -> Any:
-        live_queryset = ContentPage.objects.live().prefetch_related("locale")
-        combined_queryset = live_queryset
-        draft_queryset = ContentPage.objects.not_live()
+        # In this context, 'live()' means ONLY page revisions that have been published
+        # 'not_live()' refers to page revisions that has been saved as a draft, but not published
+        # 'return_drafts' means 'Give me the latest revisions of everything, whether that is a published page, or an unpublished revision'
 
+        draft_queryset = ContentPage.objects.not_live().prefetch_related("locale")
+        live_queryset = ContentPage.objects.live().prefetch_related("locale")
+        queryset_to_return = live_queryset
         return_drafts = (
             self.request.query_params.get("return_drafts", "").lower() == "true"
         )
         if return_drafts:
-            draft_queryset = draft_queryset | live_queryset
-            combined_queryset = draft_queryset | live_queryset
-
-        channel = ""
-        if "channel" in self.request.query_params:
-            channel = self.request.query_params.get("channel", "").lower()
-
-            match channel:
-                case "web":
-                    live_queryset = live_queryset.filter(enable_web=True)
-                    draft_queryset = draft_queryset.filter(enable_web=True)
-                    combined_queryset = combined_queryset.filter(enable_web=True)
-                case "whatsapp":
-                    live_queryset = live_queryset.filter(enable_whatsapp=True)
-                    draft_queryset = draft_queryset.filter(enable_whatsapp=True)
-                    combined_queryset = combined_queryset.filter(enable_whatsapp=True)
-                case "sms":
-                    live_queryset = live_queryset.filter(enable_sms=True)
-                    draft_queryset = draft_queryset.filter(enable_sms=True)
-                    combined_queryset = combined_queryset.filter(enable_sms=True)
-                case "ussd":
-                    live_queryset = live_queryset.filter(enable_ussd=True)
-                    draft_queryset = draft_queryset.filter(enable_ussd=True)
-                    combined_queryset = combined_queryset.filter(enable_ussd=True)
-                case "messenger":
-                    live_queryset = live_queryset.filter(enable_messenger=True)
-                    draft_queryset = draft_queryset.filter(enable_messenger=True)
-                    combined_queryset = combined_queryset.filter(enable_messenger=True)
-                case "viber":
-                    live_queryset = live_queryset.filter(enable_viber=True)
-                    draft_queryset = draft_queryset.filter(enable_viber=True)
-                    combined_queryset = combined_queryset.filter(enable_viber=True)
-                case _:
-                    raise NotFound(
-                        {
-                            "channel": [
-                                f"Channel matching query '{channel}' does not exist."
-                            ]
-                        }
-                    )
+            queryset_to_return = draft_queryset | live_queryset
+        else:
+            queryset_to_return = live_queryset
 
         tag = self.request.query_params.get("tag")
         if tag:
             ids = []
             for t in ContentPageTag.objects.filter(tag__name__iexact=tag):
                 ids.append(t.content_object_id)
-            live_queryset = live_queryset.filter(id__in=ids)
-            draft_queryset = draft_queryset.filter(id__in=ids)
-            combined_queryset = combined_queryset.filter(id__in=ids)
+
+            queryset_to_return = queryset_to_return.filter(id__in=ids)
 
         trigger = self.request.query_params.get("trigger")
         if trigger is not None:
             ids = []
             for t in TriggeredContent.objects.filter(tag__name__iexact=trigger.strip()):
                 ids.append(t.content_object_id)
-            live_queryset = live_queryset.filter(id__in=ids)
-            draft_queryset = draft_queryset.filter(id__in=ids)
-            combined_queryset = combined_queryset.filter(id__in=ids)
 
-        return combined_queryset
+            queryset_to_return = queryset_to_return.filter(id__in=ids)
+
+        return queryset_to_return
 
     @classmethod
     def get_urlpatterns(cls):
