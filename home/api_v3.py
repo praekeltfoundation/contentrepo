@@ -144,7 +144,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         channel = self.validate_channel()
         queryset = self.get_queryset()
         if channel:
-            print(f"CHANNEL = {channel}")
             queryset = queryset.filter(**{f"enable_{channel}": True})
 
         queryset_list = self.paginate_queryset(queryset)

@@ -66,23 +66,12 @@ def format_generic_channel_body(page, channel):
 
 
 def format_messages(page, request):
-    print("Running format_messages")
-    # if "message" in request.GET:
-    #     try:
-    #         message = int(request.GET["message"]) - 1
-    #     except ValueError:
-    #         raise ValidationError(
-    #             "Please insert a positive integer for message in the query string"
-    #         )
-    # else:
-    #     message = 0
-
     channel = ""
 
     if "channel" in request.query_params:
         channel = request.query_params.get("channel", "").lower()
         return_drafts = request.query_params.get("return_drafts", "").lower() == "true"
-        print(f"Channel = {channel}")
+
         if getattr(page, f"enable_{channel}") or return_drafts:
             if channel == "whatsapp":
                 return format_whatsapp_body_V3(page)
