@@ -143,17 +143,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for folder in root_folders %}
-                            {% include "admin/whatsapp_templates/_folder_row.html" with folder=folder %}
-                        {% endfor %}
-                        
-                        {% for template in root_templates %}
-                            {% include "admin/whatsapp_templates/_template_row.html" with template=template %}
-                        {% empty %}
+                        {% if not root_folders and not root_templates %}
                             <tr>
                                 <td colspan="5">No templates found.</td>
                             </tr>
-                        {% endfor %}
+                        {% else %}
+                            {% for folder in root_folders %}
+                                {% include "admin/whatsapp_templates/_folder_row.html" with folder=folder %}
+                            {% endfor %}
+                            
+                            {% for template in root_templates %}
+                                {% include "admin/whatsapp_templates/_template_row.html" with template=template %}
+                            {% endfor %}
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
