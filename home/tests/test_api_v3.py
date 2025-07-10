@@ -299,8 +299,6 @@ class TestContentPageAPIV3:
         # it should return only web pages if filtered
         response = uclient.get("/api/v3/pages/?channel=web")
         content = json.loads(response.content)
-        print("CONTENT BELOW")
-        pp.pprint(content)
         assert content["count"] == 1
         # it should return only whatsapp pages if filtered
         response = uclient.get("/api/v3/pages/?channel=whatsapp")
@@ -498,3 +496,40 @@ class TestContentPageAPIV3:
         image_id = content["messages"][0]["image"]
 
         assert image_id == image_id_expected
+
+    def test_format_related_pages(self, uclient):
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")]),
+                MBody("HealthAlert menu", [MBlk("Welcome to HealthAlert M")]),
+            ],
+        )
+        health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[MBody("health info", [MBlk("*Health information* M")])],
+            tags=["tag2", "tag3"],
+        )
+        self_help = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="self-help-slug",
+            title="Self Help Title",
+            bodies=[WABody("self-help", [WABlk("*Self-help programs* WA")])],
+        )
+
+        PageBuilder.link_related(health_info, [self_help])
+        PageBuilder.link_related(self_help, [health_info, ha_menu])
+
+        response = uclient.get(f"/api/v3/pages/{health_info.id}/?channel=whatsapp")
+
+        content = response.json()
+        pp.pprint(content["related_pages"])
+        assert content["related_pages"] == [
+            {"slug": "self-help-slug", "title": "Self Help Title"}
+        ]

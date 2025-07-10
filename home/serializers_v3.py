@@ -22,15 +22,17 @@ def format_related_pages(page, request):
 
     for related in page.related_pages:
         related_page = get_related_page_as_content_page(related.value)
-
         if channel != "" and channel != "web":
             channel_title = getattr(page, f"{channel}_title")
+            if channel_title == "":
+                channel_title = related_page.title
             related_pages.append(
                 {
                     "slug": related_page.slug,
                     "title": channel_title,
                 }
             )
+
         else:
             related_pages.append(
                 {
