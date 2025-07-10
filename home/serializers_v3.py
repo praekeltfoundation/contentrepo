@@ -9,44 +9,6 @@ from wagtail.api.v2.utils import get_object_detail_url
 from home.models import Assessment, ContentPage, WhatsAppTemplate
 
 
-def has_next_message(message_index, content_page, platform):
-    messages_length = None
-    if platform == "whatsapp":
-        messages_length = len(content_page.whatsapp_body._raw_data) - 1
-    elif platform == "sms":
-        messages_length = len(content_page.sms_body._raw_data) - 1
-    elif platform == "ussd":
-        messages_length = len(content_page.ussd_body._raw_data) - 1
-    elif platform == "viber":
-        messages_length = len(content_page.viber_body._raw_data) - 1
-    elif platform == "messenger":
-        messages_length = len(content_page.messenger_body._raw_data) - 1
-    else:
-        return None
-    if messages_length == message_index:
-        return None
-    elif messages_length > message_index:
-        return message_index + 2
-
-
-def has_previous_message(message_index, content_page, platform):
-    messages_length = None
-    if platform == "whatsapp":
-        messages_length = len(content_page.whatsapp_body._raw_data) - 1
-    elif platform == "sms":
-        messages_length = len(content_page.sms_body._raw_data) - 1
-    elif platform == "ussd":
-        messages_length = len(content_page.ussd_body._raw_data) - 1
-    elif platform == "viber":
-        messages_length = len(content_page.viber_body._raw_data) - 1
-    elif platform == "messenger":
-        messages_length = len(content_page.messenger_body._raw_data) - 1
-    else:
-        return None
-    if messages_length != 0 and message_index > 0:
-        return message_index
-
-
 def get_related_page_as_content_page(page):
     if page.id:
         return ContentPage.objects.filter(id=page.id).first()
@@ -80,7 +42,7 @@ def format_related_pages(page, request):
     return related_pages
 
 
-def format_generic_channel_body(page, channel, message):
+def format_generic_channel_body(page, channel):
     if channel == "web":
         channel_body = page.body
     else:
@@ -90,7 +52,7 @@ def format_generic_channel_body(page, channel, message):
             try:
                 return OrderedDict(
                     [
-                        ("text", channel_body._raw_data[message]["value"]["message"]),
+                        ("text", channel_body._raw_data[0]["value"]["message"]),
                     ]
                 )
             except IndexError:
@@ -105,15 +67,15 @@ def format_generic_channel_body(page, channel, message):
 
 def format_messages(page, request):
     print("Running format_messages")
-    if "message" in request.GET:
-        try:
-            message = int(request.GET["message"]) - 1
-        except ValueError:
-            raise ValidationError(
-                "Please insert a positive integer for message in the query string"
-            )
-    else:
-        message = 0
+    # if "message" in request.GET:
+    #     try:
+    #         message = int(request.GET["message"]) - 1
+    #     except ValueError:
+    #         raise ValidationError(
+    #             "Please insert a positive integer for message in the query string"
+    #         )
+    # else:
+    #     message = 0
 
     channel = ""
 
@@ -125,7 +87,7 @@ def format_messages(page, request):
             if channel == "whatsapp":
                 return format_whatsapp_body_V3(page)
             else:
-                return format_generic_channel_body(page, channel, message)
+                return format_generic_channel_body(page, channel)
 
     return OrderedDict([("text", page.body._raw_data)])
 
