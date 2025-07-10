@@ -141,7 +141,8 @@ def format_whatsapp_body_V3(content_page):
                     [
                         ("type", block.block_type),
                         ("slug", template.slug),
-                        ("image", template.image.id),
+                        # TODO: Add test for this image check
+                        ("image", template.image.id if template.image else None),
                         ("media", None),
                         ("document", None),
                         ("text", template.message),
