@@ -112,26 +112,24 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
     pagination_class = PageNumberPagination
 
+    def validate_channel(self):
+        channel = self.request.query_params.get("channel", "").lower()
+        if channel not in {"", "web", "whatsapp", "sms", "ussd", "messenger", "viber"}:
+            raise ValidationError(
+                {"channel": [f"Channel matching query '{channel}' does not exist."]}
+            )
+        return channel
+
     def detail_view(self, request, pk=None, slug=None):
-        if "channel" in self.request.query_params:
-            channel = self.request.query_params.get("channel", "").lower()
-            if channel not in {"web", "whatsapp", "sms", "ussd", "messenger", "viber"}:
-                raise ValidationError(
-                    {"channel": [f"Channel matching query '{channel}' does not exist."]}
-                )
+        _channel = self.validate_channel()
         if slug is not None:
             self.lookup_field = "slug"
-
         else:
             self.lookup_field = "pk"
 
         try:
-            if (
-                "return_drafts" in request.GET
-                and self.request.query_params.get("return_drafts", "").lower() == "true"
-            ):
+            if self.request.query_params.get("return_drafts", "").lower() == "true":
                 instance = self.get_object().get_latest_revision_as_object()
-
             else:
                 instance = self.get_object()
 
@@ -143,18 +141,11 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         return Response(serializer.data)
 
     def listing_view(self, request, *args, **kwargs):
+        channel = self.validate_channel()
         queryset = self.get_queryset()
-
-        channel = ""
-        if "channel" in self.request.query_params:
-            channel = self.request.query_params.get("channel", "").lower()
-
-            if channel in {"web", "whatsapp", "sms", "ussd", "messenger", "viber"}:
-                queryset = queryset.filter(**{f"enable_{channel}": True})
-            else:
-                raise ValidationError(
-                    {"channel": [f"Channel matching query '{channel}' does not exist."]}
-                )
+        if channel:
+            print(f"CHANNEL = {channel}")
+            queryset = queryset.filter(**{f"enable_{channel}": True})
 
         queryset_list = self.paginate_queryset(queryset)
 

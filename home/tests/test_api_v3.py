@@ -1,4 +1,5 @@
 import json
+import pprint as pp
 from pathlib import Path
 
 import pytest
@@ -285,10 +286,10 @@ class TestContentPageAPIV3:
         content = json.loads(response.content)
         assert content["count"] == 3
 
-    def test_platform_filtering(self, uclient):
+    def test_channel_filtering(self, uclient):
         """
-        If a platform filter is provided, only pages with content for that
-        platform are returned.
+        If a channel filter is provided, only pages with content for that
+        channel are returned.
         """
         self.create_content_page(web_body=["Colour"], body_type=None)
         self.create_content_page(title="Health Info")
@@ -298,6 +299,8 @@ class TestContentPageAPIV3:
         # it should return only web pages if filtered
         response = uclient.get("/api/v3/pages/?channel=web")
         content = json.loads(response.content)
+        print("CONTENT BELOW")
+        pp.pprint(content)
         assert content["count"] == 1
         # it should return only whatsapp pages if filtered
         response = uclient.get("/api/v3/pages/?channel=whatsapp")
@@ -322,6 +325,7 @@ class TestContentPageAPIV3:
         # it should return all pages for no filter
         response = uclient.get("/api/v3/pages/")
         content = json.loads(response.content)
+
         # exclude home pages and index pages
         assert content["count"] == 5
 
