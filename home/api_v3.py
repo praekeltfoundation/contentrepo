@@ -134,10 +134,9 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             self.lookup_field = "pk"
 
         try:
+            instance = self.get_object()
             if self.request.query_params.get("return_drafts", "").lower() == "true":
-                instance = self.get_object().get_latest_revision_as_object()
-            else:
-                instance = self.get_object()
+                instance = instance.get_latest_revision_as_object()
 
         except Http404:
             raise NotFound({"page": ["Page matching query does not exist."]})
