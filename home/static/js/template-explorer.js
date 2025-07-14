@@ -248,9 +248,14 @@ async function handleDrop(e) {
             const newDepth = targetFolderId ? 
                 parseInt(this.closest('[data-depth]').dataset.depth) + 1 : 0;
                 
-            const updateDepth = (element, depth) => {
+            const updateDepth = (element, depth, parentFolderId) => {
+                // Only update depth for the folder itself, not its children yet
                 element.dataset.depth = depth;
-                element.dataset.folderId = targetFolderId;
+                
+                // For templates, set the folder ID to the parent folder's ID
+                if (element.classList.contains('template-row')) {
+                    element.dataset.folderId = parentFolderId;
+                }
                 
                 // Update indentation
                 const titleDiv = element.querySelector('.title > div');
@@ -260,14 +265,55 @@ async function handleDrop(e) {
                 
                 // If this is a folder, update all its children
                 if (element.classList.contains('folder-row')) {
+                    const folderId = element.dataset.folderId;
                     const children = getDirectChildren(element);
                     children.forEach(child => {
-                        updateDepth(child, depth + 1);
+                        // For direct children of this folder, use this folder's ID
+                        updateDepth(child, depth + 1, folderId);
                     });
                 }
             };
             
-            updateDepth(movedItem, newDepth);
+            // For the moved folder, use the target folder ID as parent
+            updateDepth(movedItem, newDepth, targetFolderId);
+            
+            // If we moved a folder, update all its children's folder IDs and ensure proper ordering
+            if (dragData.type === 'folder') {
+                const folderId = movedItem.dataset.folderId;
+                const folderChildren = [];
+                let nextSibling = movedItem.nextElementSibling;
+                const startDepth = parseInt(movedItem.dataset.depth);
+                
+                // First pass: collect all children and update their folder IDs
+                while (nextSibling) {
+                    const depth = parseInt(nextSibling.dataset.depth || '0');
+                    if (depth <= startDepth) break;
+                    
+                    folderChildren.push(nextSibling);
+                    if (nextSibling.classList.contains('template-row')) {
+                        nextSibling.dataset.folderId = folderId;
+                    }
+                    nextSibling = nextSibling.nextElementSibling;
+                }
+                
+                // Remove the folder and its children from DOM
+                const targetContainer = movedItem.parentNode;
+                const insertAfter = this.closest('tr').nextElementSibling;
+                
+                // Create a document fragment to hold the folder and its children
+                const fragment = document.createDocumentFragment();
+                fragment.appendChild(movedItem);
+                folderChildren.forEach(child => {
+                    fragment.appendChild(child);
+                });
+                
+                // Insert the entire fragment at the target position
+                if (insertAfter) {
+                    targetContainer.insertBefore(fragment, insertAfter);
+                } else {
+                    targetContainer.appendChild(fragment);
+                }
+            }
             
             // Update parent folder's visibility if needed
             const parentFolderRow = this.closest('.folder-row');
