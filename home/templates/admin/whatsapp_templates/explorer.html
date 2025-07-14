@@ -144,17 +144,39 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% if not root_folders and not root_templates %}
+                        {% if not root_folders_data and not grouped_templates %}
                             <tr>
-                                <td colspan="5">No templates found.</td>
+                                <td colspan="6">No templates found.</td>
                             </tr>
                         {% else %}
-                            {% for folder in root_folders %}
-                                {% include "admin/whatsapp_templates/_folder_row.html" with folder=folder %}
+                            {# Show root folders with their hierarchy #}
+                            {% for folder_data in root_folders_data %}
+                                {% include "admin/whatsapp_templates/_folder_row.html" with folder=folder_data %}
                             {% endfor %}
                             
-                            {% for template in root_templates %}
-                                {% include "admin/whatsapp_templates/_template_row.html" with template=template %}
+                            {# Show root level grouped templates #}
+                            {% for group in grouped_templates %}
+                                {% with template=group.template %}
+                                <tr class="template-row" 
+                                    draggable="true"
+                                    data-template-id="{{ template.id }}"
+                                    data-folder-id=""
+                                    data-depth="0">
+                                    <td class="title">
+                                        <div style="padding-left: 0">
+                                            <a href="{% url 'wagtailsnippets_home_whatsapptemplate:edit' template.id %}">
+                                                <span class="icon icon-doc-empty"></span>
+                                                {{ template.slug }}
+                                            </a>
+                                        </div>
+                                    </td>
+                                    <td>Template</td>
+                                    <td>{{ template.get_category_display|default:"-" }}</td>
+                                    <td>{{ group.locales|join:", " }}</td>
+                                    <td>{{ template.get_status_display|default:"-" }}</td>
+                                    <td>{{ template.get_latest_revision.created_at|date:"d-M-Y" }}</td>
+                                </tr>
+                                {% endwith %}
                             {% endfor %}
                         {% endif %}
                     </tbody>

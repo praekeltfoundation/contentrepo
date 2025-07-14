@@ -118,7 +118,7 @@ function handleDragStart(e) {
     e.dataTransfer.effectAllowed = 'move';
     // Store both the type and ID of the dragged item
     const type = this.classList.contains('folder-row') ? 'folder' : 'template';
-    const id = this.dataset.folderId || this.dataset.templateId;
+    const id = this.classList.contains('folder-row') ? this.dataset.folderId : this.dataset.templateId;
     e.dataTransfer.setData('application/json', JSON.stringify({ type, id }));
     this.classList.add('dragging');
 }

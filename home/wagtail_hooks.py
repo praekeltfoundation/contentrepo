@@ -177,18 +177,77 @@ def register_template_explorer_url() -> list[Any]:
     ]
 
 
+def group_templates(templates_queryset: list[WhatsAppTemplate]) -> list[dict[str, Any]]:
+    """Helper function to group templates by slug and collect their locales."""
+    templates_by_slug = {}
+    for template in templates_queryset:
+        if template.slug not in templates_by_slug:
+            templates_by_slug[template.slug] = {
+                "template": template,
+                "locales": set(),
+                "templates": [],
+            }
+        if template.locale:
+            templates_by_slug[template.slug]["locales"].add(
+                template.locale.get_display_name()
+            )
+        templates_by_slug[template.slug]["templates"].append(template)
+
+    # Convert to list and sort by slug
+    grouped = []
+    for _slug, data in templates_by_slug.items():
+        data["locales"] = sorted(data["locales"])
+        grouped.append(data)
+
+    grouped.sort(key=lambda x: x["template"].slug)
+    return grouped
+
+
+def get_folder_data(folder: WhatsAppTemplateFolder) -> dict[str, Any]:
+    """Recursively get folder data with grouped templates."""
+    # Get all templates in this folder
+    templates = WhatsAppTemplate.objects.filter(folder=folder).select_related("locale")
+
+    # Group templates by slug
+    grouped_templates = group_templates(templates)
+
+    # Get all subfolders
+    subfolders = WhatsAppTemplateFolder.objects.filter(parent=folder)
+
+    # Process subfolders recursively
+    folder_data = {
+        "folder": folder,
+        "templates": grouped_templates,
+        "subfolders": [get_folder_data(sf) for sf in subfolders],
+    }
+
+    return folder_data
+
+
 def template_explorer_view(request: Any) -> Any:
     # Get all root folders (folders with no parent)
     root_folders = WhatsAppTemplateFolder.objects.filter(parent__isnull=True)
-    # Get all templates without a folder
-    root_templates = WhatsAppTemplate.objects.filter(folder__isnull=True)
+
+    # Get all templates without a folder and prefetch related data
+    root_templates = WhatsAppTemplate.objects.filter(
+        folder__isnull=True
+    ).select_related("locale")
+
+    # Group root templates by slug
+    grouped_root_templates = group_templates(root_templates)
+
+    # Process all root folders with their hierarchy
+    processed_folders = [get_folder_data(folder) for folder in root_folders]
+
+    # Sort root folders by name
+    processed_folders.sort(key=lambda x: x["folder"].name.lower())
 
     return render(
         request,
         "admin/whatsapp_templates/explorer.html",
         {
-            "root_folders": root_folders,
-            "root_templates": root_templates,
+            "root_folders_data": processed_folders,
+            "grouped_templates": grouped_root_templates,
         },
     )
 
@@ -265,7 +324,9 @@ def move_folder(request: Any, folder_id: int) -> Any:
                 )
 
             # Check if the target folder is a descendant of the current folder
-            def is_descendant(parent, child):
+            def is_descendant(
+                parent: WhatsAppTemplateFolder, child: WhatsAppTemplateFolder
+            ) -> bool:
                 if not parent or not child:
                     return False
                 if parent.id == child.id:
@@ -292,7 +353,9 @@ def move_folder(request: Any, folder_id: int) -> Any:
         folder.save(update_fields=["parent"])
 
         # Update the depth for this folder and all its descendants
-        def update_folder_and_children(folder_to_update, new_depth):
+        def update_folder_and_children(
+            folder_to_update: WhatsAppTemplateFolder, new_depth: int
+        ) -> None:
             folder_to_update.depth = new_depth
             folder_to_update.save(update_fields=["depth"])
 
