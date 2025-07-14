@@ -283,22 +283,31 @@ def register_whatsapp_menu_item() -> Any:
 @require_http_methods(["POST"])
 def move_template(request: Any, template_id: int) -> Any:
     try:
+        # Get the template being moved
         template = WhatsAppTemplate.objects.get(pk=template_id)
         folder_id = request.POST.get("folder")
 
+        # Get all templates with the same slug (across all locales)
+        templates_to_move = WhatsAppTemplate.objects.filter(slug=template.slug)
+
+        # Update folder for all templates with the same slug
         if folder_id:
             try:
                 folder = WhatsAppTemplateFolder.objects.get(pk=folder_id)
-                template.folder = folder
+                updated_count = templates_to_move.update(folder=folder)
             except WhatsAppTemplateFolder.DoesNotExist:
                 return JsonResponse(
                     {"status": "error", "message": "Folder not found"}, status=400
                 )
         else:
-            template.folder = None
+            updated_count = templates_to_move.update(folder=None)
 
-        template.save(update_fields=["folder"])
-        return JsonResponse({"status": "success"})
+        return JsonResponse(
+            {
+                "status": "success",
+                "message": f"Moved {updated_count} template(s) to {'folder' if folder_id else 'root'}",
+            }
+        )
     except WhatsAppTemplate.DoesNotExist:
         return JsonResponse(
             {"status": "error", "message": "Template not found"}, status=404

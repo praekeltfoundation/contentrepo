@@ -201,13 +201,14 @@ async function handleDrop(e) {
         });
         
         if (response.ok) {
-            // Get the moved item (in case it was re-rendered)
-            const movedItem = document.querySelector(`[data-${dragData.type}-id="${dragData.id}"]`);
-            if (!movedItem) {
-                // If the item was re-rendered, reload the page
-                window.location.reload();
-                return;
-            }
+            const result = await response.json();
+            console.log(result.message);
+            
+            // Always reload the page to reflect all changes
+            // This ensures that all templates with the same slug are properly moved
+            // and the UI is in sync with the server state
+            window.location.reload();
+            return;
             
             // Move the row to the new location in the DOM
             const targetContainer = this.closest('tbody');
