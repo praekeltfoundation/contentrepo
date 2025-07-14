@@ -9,6 +9,21 @@ from wagtail.api.v2.utils import get_object_detail_url
 from home.models import Assessment, ContentPage, WhatsAppTemplate
 
 
+def format_title(page, request):
+    channel = ""
+    title_to_return = ""
+    if "channel" in request.query_params:
+        channel = request.query_params.get("channel", "").lower()
+
+    if channel != "" and channel != "web":
+        title_to_return = getattr(page, f"{channel}_title")
+
+    if title_to_return == "":
+        title_to_return = page.title
+
+    return title_to_return
+
+
 def get_related_page_as_content_page(page):
     if page.id:
         return ContentPage.objects.filter(id=page.id).first()
@@ -23,7 +38,7 @@ def format_related_pages(page, request):
     for related in page.related_pages:
         related_page = get_related_page_as_content_page(related.value)
         if channel != "" and channel != "web":
-            channel_title = getattr(page, f"{channel}_title")
+            channel_title = getattr(related_page, f"{channel}_title")
             if channel_title == "":
                 channel_title = related_page.title
             related_pages.append(
@@ -219,7 +234,7 @@ def format_detail_url(obj, request):
 
 
 class ContentPageSerializerV3(PageSerializer):
-    title = serializers.CharField(read_only=True)
+    title = serializers.SerializerMethodField()
     slug = serializers.SlugField(read_only=True)
     messages = serializers.SerializerMethodField()
     detail_url = serializers.SerializerMethodField()
@@ -240,6 +255,9 @@ class ContentPageSerializerV3(PageSerializer):
             "has_children",
             "related_pages",
         ]
+
+    def get_title(self, obj):
+        return format_title(page=obj, request=self.context["request"])
 
     def get_detail_url(self, obj):
         return format_detail_url(obj=obj, request=self.context["request"])

@@ -1,5 +1,4 @@
 import json
-import pprint as pp
 from pathlib import Path
 from typing import Any
 
@@ -198,28 +197,27 @@ class TestContentPageAPIV3:
             body_type = body_type.casefold()
 
         bodies = []
-        print("before")
+
         for i in range(body_count):
             msg_body = f"*Default {body_type} Content {i+1}* 🏥"
             match body_type:
                 case "whatsapp":
-                    print("append")
-                    bodies.append(WABody(title, [WABlk(msg_body)]))
+                    bodies.append(WABody(f"{title} for {body_type}", [WABlk(msg_body)]))
                 case "messenger":
-                    bodies.append(MBody(title, [MBlk(msg_body)]))
+                    bodies.append(MBody(f"{title} for {body_type}", [MBlk(msg_body)]))
                 case "sms":
-                    bodies.append(SBody(title, [SBlk(msg_body)]))
+                    bodies.append(SBody(f"{title} for {body_type}", [SBlk(msg_body)]))
                 case "ussd":
-                    bodies.append(UBody(title, [UBlk(msg_body)]))
+                    bodies.append(UBody(f"{title} for {body_type}", [UBlk(msg_body)]))
                 case "viber":
-                    bodies.append(VBody(title, [VBlk(msg_body)]))
+                    bodies.append(VBody(f"{title} for {body_type}", [VBlk(msg_body)]))
                 case None:
                     pass
                 case _:
                     raise ValueError(
                         f"{body_type} not a valid platform, valid options include, whatsapp, messenger, sms, ussd, viber or None"
                     )
-        print(f"bodies = {bodies}")
+
         content_page = PageBuilder.build_cp(
             parent=parent,
             slug=title.replace(" ", "-"),
@@ -341,7 +339,7 @@ class TestContentPageAPIV3:
 
         # the page is not live but whatsapp content is returned
         assert not page.live
-        print(f"CONTENT = {content}")
+
         body = content["messages"][0]["text"]
         assert body == "*Default whatsapp Content 1* 🏥"
 
@@ -464,7 +462,7 @@ class TestContentPageAPIV3:
         assert response.status_code == 404
 
         content = response.json()
-        print(f"Content = |{content}|")
+
         assert content == {"page": ["Page matching query does not exist."]}
         assert content.get("page") == ["Page matching query does not exist."]
 
@@ -546,7 +544,7 @@ class TestContentPageAPIV3:
             parent=ha_menu,
             slug="self-help-slug",
             title="Self Help Title",
-            bodies=[WABody("self-help", [WABlk("*Self-help programs* WA")])],
+            bodies=[WABody("self help wa title", [WABlk("*Self-help programs* WA")])],
         )
 
         PageBuilder.link_related(health_info, [self_help])
@@ -555,7 +553,67 @@ class TestContentPageAPIV3:
         response = uclient.get(f"/api/v3/pages/{health_info.id}/?channel=whatsapp")
 
         content = response.json()
-        pp.pprint(content["related_pages"])
+
         assert content["related_pages"] == [
-            {"slug": "self-help-slug", "title": "Self Help Title"}
+            {"slug": "self-help-slug", "title": "self help wa title"}
         ]
+
+    def test_format_related_page_with_blank_channel_title(self, uclient):
+        """
+        If a channel is requested, and the related page does not have a channel
+        specific title set, return the related page's Page title
+        """
+        home_page = HomePage.objects.first()
+        main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        ha_menu = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="ha-menu",
+            title="HealthAlert menu",
+            bodies=[
+                WABody("HealthAlert menu", [WABlk("*Welcome to HealthAlert* WA")]),
+                MBody("HealthAlert menu", [MBlk("Welcome to HealthAlert M")]),
+            ],
+        )
+        health_info = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="health-info",
+            title="health info",
+            bodies=[MBody("health info", [MBlk("*Health information* M")])],
+            tags=["tag2", "tag3"],
+        )
+        self_help = PageBuilder.build_cp(
+            parent=ha_menu,
+            slug="self-help-slug",
+            title="Self Help Page Title",
+            # No channel specific title provided
+            bodies=[WABody("", [WABlk("*Self-help programs* WA")])],
+        )
+
+        PageBuilder.link_related(health_info, [self_help])
+        PageBuilder.link_related(self_help, [health_info, ha_menu])
+
+        response = uclient.get(f"/api/v3/pages/{health_info.id}/?channel=whatsapp")
+
+        content = response.json()
+
+        assert content["related_pages"] == [
+            {"slug": "self-help-slug", "title": "Self Help Page Title"}
+        ]
+
+    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
+    def test_channel_title(self, uclient, platform):
+        """
+        If a title is supplied for the channel, use that, otherwise fall back to page title
+        """
+        page = self.create_content_page(tags=["self_help"], body_type=platform)
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={platform }")
+        content = response.json()
+
+        assert content["slug"] == page.slug
+        assert content["locale"] == "en"
+        assert (
+            content["detail_url"]
+            == f"http://localhost/api/v3/pages/{page.slug}/?channel={platform }"
+        )
+
+        assert content["title"] == f"default page for {platform}"
