@@ -1,10 +1,45 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Template explorer script loaded');
+    let allExpanded = false;
 
     // Make templates and folders draggable
     document.querySelectorAll('.template-row, .folder-row').forEach(row => {
         row.addEventListener('dragstart', handleDragStart);
     });
+    
+    // Toggle all folders
+    const toggleAllButton = document.getElementById('toggle-all-folders');
+    if (toggleAllButton) {
+        toggleAllButton.addEventListener('click', function() {
+            const folderRows = document.querySelectorAll('.folder-row');
+            allExpanded = !allExpanded;
+            
+            // Update button text and icon
+            const icon = toggleAllButton.querySelector('.icon');
+            if (allExpanded) {
+                toggleAllButton.innerHTML = '<span class="icon icon-arrow-up"></span>Collapse All';
+            } else {
+                toggleAllButton.innerHTML = '<span class="icon icon-arrow-down"></span>Expand All';
+            }
+            
+            // Toggle all folders
+            folderRows.forEach(row => {
+                const hasChildren = row.classList.contains('has-children');
+                if (hasChildren) {
+                    setChildrenVisibility(row, allExpanded);
+                    // Update the toggle icon
+                    const toggle = row.querySelector('.toggle-children');
+                    if (toggle) {
+                        if (allExpanded) {
+                            toggle.classList.remove('collapsed');
+                        } else {
+                            toggle.classList.add('collapsed');
+                        }
+                    }
+                }
+            });
+        });
+    }
 
     // Make folder titles drop targets
     document.querySelectorAll('[data-drop-target="true"]').forEach(dropTarget => {
@@ -14,13 +49,15 @@ document.addEventListener('DOMContentLoaded', function() {
         dropTarget.addEventListener('dragleave', handleDragLeave);
     });
 
-    // Initialize all folders
+    // Initialize all folders - collapse all by default
     document.querySelectorAll('.folder-row').forEach(folderRow => {
         const toggle = folderRow.querySelector('.toggle-children');
-        const isCollapsed = folderRow.classList.contains('collapsed');
-        
-        console.log(`Initializing folder ${folderRow.dataset.folderId}, collapsed: ${isCollapsed}`);
-        setChildrenVisibility(folderRow, !isCollapsed);
+        // Always start with folders collapsed
+        folderRow.classList.add('collapsed');
+        if (toggle) {
+            toggle.classList.add('collapsed');
+        }
+        setChildrenVisibility(folderRow, false);
 
         // Toggle handler
         const toggleHandler = (e) => {

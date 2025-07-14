@@ -42,8 +42,8 @@
         }
 
         /* Ensure proper indentation */
-        .folder-row .title > div {
-            padding-left: 20px;
+        .folder-title {
+            padding-left: calc(var(--depth, 0) * 20px);
         }
 
         /* Make sure the toggle button is visible and clickable */
@@ -59,11 +59,19 @@
         .folder-row.collapsed .toggle-children {
             transform: rotate(-90deg);
         }
+        
+        /* Style for the expand/collapse all button */
+        #toggle-all-folders {
+            margin-left: 10px;
+        }
+        
+        #toggle-all-folders .icon {
+            margin-right: 5px;
+        }
 
         /* Indentation for nested items */
-        .template-row .title > div,
-        .folder-row .title > div {
-            padding-left: 20px;
+        .template-row .title > div {
+            padding-left: calc((var(--depth, 0) + 1) * 20px);
         }
 
         /* Template row styles */
@@ -123,6 +131,10 @@
         <div class="row">
             <div class="col12">
                 <div class="button-group">
+                    <button type="button" id="toggle-all-folders" class="button">
+                        <span class="icon icon-arrow-down"></span>
+                        Expand All
+                    </button>
                     <a href="{% url 'wagtailsnippets_home_whatsapptemplate:add' %}" 
                        class="button bicolor icon icon-plus">
                         Add WhatsApp Template
