@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Template explorer script loaded');
 
-    // Make templates draggable
-    document.querySelectorAll('.template-row').forEach(row => {
+    // Make templates and folders draggable
+    document.querySelectorAll('.template-row, .folder-row').forEach(row => {
         row.addEventListener('dragstart', handleDragStart);
     });
 
@@ -116,7 +116,10 @@ let currentDropTarget = null;
 function handleDragStart(e) {
     draggedItem = this;
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', this.dataset.templateId);
+    // Store both the type and ID of the dragged item
+    const type = this.classList.contains('folder-row') ? 'folder' : 'template';
+    const id = this.dataset.folderId || this.dataset.templateId;
+    e.dataTransfer.setData('application/json', JSON.stringify({ type, id }));
     this.classList.add('dragging');
 }
 
@@ -165,8 +168,18 @@ async function handleDrop(e) {
         el.classList.remove('drag-over');
     });
     
-    const templateId = draggedItem.dataset.templateId;
+    // Get the dragged item's data
+    const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
     const targetFolderId = this.closest('[data-folder-id]').dataset.folderId || null;
+    
+    // Prevent dropping a folder into itself or its own children
+    if (dragData.type === 'folder' && targetFolderId) {
+        const targetFolder = document.querySelector(`[data-folder-id="${targetFolderId}"]`);
+        if (targetFolder && (targetFolder === draggedItem || targetFolder.closest(`[data-folder-id="${dragData.id}"]`))) {
+            console.error('Cannot move a folder into itself or its children');
+            return;
+        }
+    }
     
     try {
         const formData = new FormData();
@@ -174,7 +187,11 @@ async function handleDrop(e) {
             formData.append('folder', targetFolderId);
         }
         
-        const response = await fetch(`/admin/whatsapp-templates/${templateId}/move/`, {
+        const endpoint = dragData.type === 'folder' 
+            ? `/admin/whatsapp-template-folders/${dragData.id}/move/`
+            : `/admin/whatsapp-templates/${dragData.id}/move/`;
+        
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -184,55 +201,87 @@ async function handleDrop(e) {
         });
         
         if (response.ok) {
-            // Update the UI to reflect the move
-            const templateRow = document.querySelector(`[data-template-id="${templateId}"]`);
-            if (templateRow) {
-                // Move the row to the new location in the DOM
-                const targetContainer = this.closest('tbody');
-                targetContainer.insertBefore(templateRow, this.closest('tr').nextSibling);
+            // Get the moved item (in case it was re-rendered)
+            const movedItem = document.querySelector(`[data-${dragData.type}-id="${dragData.id}"]`);
+            if (!movedItem) {
+                // If the item was re-rendered, reload the page
+                window.location.reload();
+                return;
+            }
+            
+            // Move the row to the new location in the DOM
+            const targetContainer = this.closest('tbody');
+            const targetSibling = this.closest('tr').nextSibling;
+            
+            // If moving a folder, we need to move all its children as well
+            if (dragData.type === 'folder') {
+                const folderAndChildren = [movedItem];
+                let nextSibling = movedItem.nextElementSibling;
+                const startDepth = parseInt(movedItem.dataset.depth);
                 
-                // Update the folder ID
-                draggedItem.dataset.folderId = targetFolderId;
-
-                // Calculate new depth (parent folder's depth + 1, or 0 if no folder)
-                const newDepth = currentDropTarget.closest('tr').dataset.depth ? 
-                    parseInt(currentDropTarget.closest('tr').dataset.depth) + 1 : 0;
-                draggedItem.dataset.depth = newDepth;
+                // Find all children of the moved folder
+                while (nextSibling) {
+                    const depth = parseInt(nextSibling.dataset.depth || '0');
+                    if (depth <= startDepth) break;
+                    folderAndChildren.push(nextSibling);
+                    nextSibling = nextSibling.nextElementSibling;
+                }
                 
-                // Update the indentation
-                const depth = targetFolderId ? 
-                    parseInt(this.closest('[data-depth]').dataset.depth) + 1 : 0;
-                const titleDiv = templateRow.querySelector('.title > div');
+                // Move all elements
+                folderAndChildren.reverse().forEach(el => {
+                    if (targetSibling) {
+                        targetContainer.insertBefore(el, targetSibling);
+                    } else {
+                        targetContainer.appendChild(el);
+                    }
+                });
+            } else {
+                // For templates, just move the single row
+                if (targetSibling) {
+                    targetContainer.insertBefore(movedItem, targetSibling);
+                } else {
+                    targetContainer.appendChild(movedItem);
+                }
+            }
+            
+            // Update the folder ID and depth for the moved item and its children
+            const newDepth = targetFolderId ? 
+                parseInt(this.closest('[data-depth]').dataset.depth) + 1 : 0;
+                
+            const updateDepth = (element, depth) => {
+                element.dataset.depth = depth;
+                element.dataset.folderId = targetFolderId;
+                
+                // Update indentation
+                const titleDiv = element.querySelector('.title > div');
                 if (titleDiv) {
                     titleDiv.style.paddingLeft = `${depth * 20}px`;
                 }
-
-                // Find the closest folder row that contains this template
-                let currentRow = draggedItem.previousElementSibling;
-                let parentFolderRow = null;
                 
-                // Look backwards to find the parent folder
-                while (currentRow) {
-                    if (currentRow.classList.contains('folder-row') && 
-                        parseInt(currentRow.dataset.depth) < newDepth) {
-                        parentFolderRow = currentRow;
-                        break;
-                    }
-                    currentRow = currentRow.previousElementSibling;
+                // If this is a folder, update all its children
+                if (element.classList.contains('folder-row')) {
+                    const children = getDirectChildren(element);
+                    children.forEach(child => {
+                        updateDepth(child, depth + 1);
+                    });
                 }
-                
-                // If we found a parent folder, refresh its visibility
-                if (parentFolderRow) {
-                    const isExpanded = !parentFolderRow.classList.contains('collapsed');
-                    setChildrenVisibility(parentFolderRow, isExpanded);
-                }
+            };
+            
+            updateDepth(movedItem, newDepth);
+            
+            // Update parent folder's visibility if needed
+            const parentFolderRow = this.closest('.folder-row');
+            if (parentFolderRow) {
+                const isExpanded = !parentFolderRow.classList.contains('collapsed');
+                setChildrenVisibility(parentFolderRow, isExpanded);
             }
+            
         } else {
-            throw new Error('Failed to move template');
+            throw new Error(`Failed to move ${dragData.type}`);
         }
     } catch (error) {
-        console.error('Error moving template:', error);
-        alert('Error moving template. Please try again.');
+        console.error(`Error moving ${dragData.type}:`, error);
+        alert(`Error moving ${dragData.type}. Please try again.`);
     } finally {
         if (draggedItem) {
             draggedItem.classList.remove('dragging');

@@ -249,6 +249,72 @@ def move_template(request: Any, template_id: int) -> Any:
         return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def move_folder(request: Any, folder_id: int) -> Any:
+    try:
+        folder = WhatsAppTemplateFolder.objects.get(pk=folder_id)
+        parent_id = request.POST.get("folder")  # This is the new parent folder ID
+
+        # Prevent moving a folder to be a child of itself
+        if parent_id:
+            if str(folder.id) == parent_id:
+                return JsonResponse(
+                    {"status": "error", "message": "Cannot move folder into itself"},
+                    status=400,
+                )
+
+            # Check if the target folder is a descendant of the current folder
+            def is_descendant(parent, child):
+                if not parent or not child:
+                    return False
+                if parent.id == child.id:
+                    return True
+                if child.parent:
+                    return is_descendant(parent, child.parent)
+                return False
+
+            target_folder = WhatsAppTemplateFolder.objects.get(pk=parent_id)
+            if is_descendant(folder, target_folder):
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "Cannot move folder into its own descendant",
+                    },
+                    status=400,
+                )
+
+            folder.parent = target_folder
+        else:
+            folder.parent = None  # Move to root
+
+        # Save the folder with the new parent
+        folder.save(update_fields=["parent"])
+
+        # Update the depth for this folder and all its descendants
+        def update_folder_and_children(folder_to_update, new_depth):
+            folder_to_update.depth = new_depth
+            folder_to_update.save(update_fields=["depth"])
+
+            # Update all child folders
+            for child in folder_to_update.children.all():
+                update_folder_and_children(child, new_depth + 1)
+
+        update_folder_and_children(
+            folder, (folder.parent.depth + 1) if folder.parent else 0
+        )
+
+        return JsonResponse({"status": "success"})
+
+    except WhatsAppTemplateFolder.DoesNotExist:
+        return JsonResponse(
+            {"status": "error", "message": "Folder not found"}, status=404
+        )
+    except Exception as e:
+        logger.error(f"Error moving folder {folder_id}: {str(e)}")
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
+
 # Add the URL pattern
 @hooks.register("register_admin_urls")
 def register_template_urls() -> list[Any]:
@@ -261,7 +327,12 @@ def register_template_urls() -> list[Any]:
         path(
             "whatsapp-templates/<int:template_id>/move/",
             move_template,
-            name="whatsapp_template_move",
+            name="move_whatsapp_template",
+        ),
+        path(
+            "whatsapp-template-folders/<int:folder_id>/move/",
+            move_folder,
+            name="move_whatsapp_template_folder",
         ),
     ]
 
