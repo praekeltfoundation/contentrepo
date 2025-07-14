@@ -209,7 +209,7 @@ def format_whatsapp_body_V3(content_page):
 
 def format_detail_url(obj, request):
     router = request.wagtailapi_router
-    detail_url = get_object_detail_url(router, request, type(obj), obj.slug)
+    detail_url = get_object_detail_url(router, request, type(obj), obj.id)
     query_params = request.query_params
     if query_params:
         detail_url = (
