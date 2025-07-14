@@ -78,13 +78,22 @@ class TestWhatsAppTemplateAPIV3:
         self,
         slug="default-slug",
         message="Default message",
+        buttons=None,
+        image=None,
+        example_values=None,
         category="UTILITY",
         locale="en",
         publish=False,
     ) -> WhatsAppTemplate:
         locale = Locale.objects.get(language_code="en")
         template = WhatsAppTemplate(
-            slug=slug, message=message, category=category, locale=locale
+            slug=slug,
+            message=message,
+            buttons=buttons,
+            example_values=example_values,
+            image=image,
+            category=category,
+            locale=locale,
         )
         template.save()
 
@@ -190,6 +199,73 @@ class TestWhatsAppTemplateAPIV3:
         content = response.json()
 
         assert content["message"] == "Message changed in unpublished revision"
+
+    def test_template_detail_buttons(self, uclient):
+        """
+        Unpublished templates are returned if the return_drafts param is set.
+        """
+        template = self.create_whatsapp_template(
+            slug="test-template-1",
+            message="*Default template 1* 🏥",
+            buttons=[
+                ("next_message", {"title": "Test Button 2"}),
+            ],
+            image=None,
+            category="UTILITY",
+            locale="en",
+            publish=False,
+        )
+
+        url = f"/api/v3/whatsapptemplates/{template.id}/?return_drafts=True"
+        response = uclient.get(url)
+        content = response.json()
+
+        assert content["buttons"] == [
+            {"title": "Test Button 2", "type": "next_message"}
+        ]
+
+    def test_template_detail_image(self, uclient):
+        """
+        Unpublished templates are returned if the return_drafts param is set.
+        """
+        mk_test_img()
+        image_obj = Image.objects.first()
+
+        template = self.create_whatsapp_template(
+            slug="test-template-1",
+            message="*Default template 1* 🏥",
+            image=image_obj,
+            category="UTILITY",
+            locale="en",
+            publish=False,
+        )
+
+        url = f"/api/v3/whatsapptemplates/{template.id}/?return_drafts=True"
+        response = uclient.get(url)
+        content = response.json()
+        assert content["image"] == image_obj.id
+
+    def test_template_detail_example_values(self, uclient):
+        """
+        Unpublished templates are returned if the return_drafts param is set.
+        """
+
+        template = self.create_whatsapp_template(
+            slug="test-template-1",
+            message="*Default template with 2 placeholders {{1}} and {{2}}* 🏥",
+            example_values=[
+                ("example_values", "Ev1"),
+                ("example_values", "Ev2"),
+            ],
+            category="UTILITY",
+            locale="en",
+            publish=False,
+        )
+
+        url = f"/api/v3/whatsapptemplates/{template.id}/?return_drafts=True"
+        response = uclient.get(url)
+        content = response.json()
+        assert content["example_values"] == ["Ev1", "Ev2"]
 
 
 @pytest.mark.django_db
