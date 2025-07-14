@@ -168,13 +168,19 @@ def format_whatsapp_body_V3(content_page):
             image = message["image"]
             image = image.id if image is not None else None
 
+            media = message["media"]
+            media = media.id if media is not None else None
+
+            document = message["document"]
+            document = document.id if document is not None else None
+
             messages.append(
                 OrderedDict(
                     [
                         ("type", block.block_type),
                         ("image", image),
-                        ("media", message["media"]),
-                        ("document", message["document"]),
+                        ("media", media),
+                        ("document", document),
                         ("text", message["message"]),
                         (
                             "buttons",
@@ -195,6 +201,7 @@ def format_whatsapp_body_V3(content_page):
                 )
             )
         else:
+            # TODO: Exclude from coverage, or remove this code.  Code unreachable unless we add a new block type
             raise Exception("Unknown Block Type detected")
 
     return messages

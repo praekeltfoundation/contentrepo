@@ -1,6 +1,7 @@
 import json
 import pprint as pp
 from pathlib import Path
+from typing import Any
 
 import pytest
 from django.core.files.base import File  # type: ignore
@@ -496,6 +497,31 @@ class TestContentPageAPIV3:
         image_id = content["messages"][0]["image"]
 
         assert image_id == image_id_expected
+
+    def test_wa_media(self, uclient: Any) -> None:
+        """
+        Test that API returns media ID for whatsapp
+        """
+        mk_test_media()
+        media_id_expected = Media.objects.first().id
+        msg_body = "*Default whatsapp Content* 🏥"
+        title = "default page"
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = [WABody(title, [WABlk(msg_body, media=media_id_expected)])]
+
+        page = PageBuilder.build_cp(
+            parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
+        )
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        content = response.json()
+
+        media_id = content["body"]["text"]["value"]["media"]
+        assert media_id == page.whatsapp_body._raw_data[0]["value"]["media"]
 
     def test_format_related_pages(self, uclient):
         home_page = HomePage.objects.first()
