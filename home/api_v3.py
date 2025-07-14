@@ -25,7 +25,7 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
     meta_fields = []
     known_query_parameters = BaseAPIViewSet.known_query_parameters.union(
         [
-            "qa",
+            "return_drafts",
         ]
     )
 
@@ -39,8 +39,12 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         if slug is not None:
             self.lookup_field = "slug"
 
+        return_drafts = (
+            self.request.query_params.get("return_drafts", "").lower() == "true"
+        )
+
         try:
-            if "qa" in request.GET and request.GET["qa"].lower() == "true":
+            if return_drafts:
                 instance = self.get_object().get_latest_revision_as_object()
             else:
                 instance = self.get_object()
@@ -60,9 +64,11 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         return self.get_paginated_response(serializer.data)
 
     def get_queryset(self):
-        qa = self.request.query_params.get("qa")
+        return_drafts = (
+            self.request.query_params.get("return_drafts", "").lower() == "true"
+        )
 
-        if qa:
+        if return_drafts:
             # return the latest revision for each WhatsApp Template
             queryset = WhatsAppTemplate.objects.all().order_by("latest_revision_id")
             for wat in queryset:

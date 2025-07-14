@@ -87,28 +87,14 @@ class TestWhatsAppTemplateAPIV3:
             slug=slug, message=message, category=category, locale=locale
         )
         template.save()
+
         rev = template.save_revision()
         if publish:
             rev.publish()
+        else:
+            template.unpublish()
         template.refresh_from_db()
         return template
-
-    def test_template_list(self, uclient):
-        """
-        If we create a template we can find it in the listing view
-        """
-        self.create_whatsapp_template(
-            slug="test-template-1",
-            message="This is a test message",
-            category="UTILITY",
-            locale="en",
-        )
-
-        # it should return 1 page for correct tag, excluding unpublished pages with the
-        # same tag
-        response = uclient.get("/api/v3/whatsapptemplates/?return_drafts=True")
-        content = json.loads(response.content)
-        assert content["count"] == 1
 
     def test_login_required(self, client):
         """
@@ -117,9 +103,52 @@ class TestWhatsAppTemplateAPIV3:
         response = client.get("/api/v3/whatsapptemplates/")
         assert response.status_code == 401
 
-    def test_whatsapp_draft(self, uclient):
+    def test_template_list_drafts(self, uclient):
         """
-        Unpublished templates are returned if the qa param is set.
+        If we create a draft template we can find it in the listing view with return_drafts=true
+        """
+        self.create_whatsapp_template(
+            slug="test-template-1",
+            message="This is a test message",
+            category="UTILITY",
+            locale="en",
+        )
+
+        response = uclient.get("/api/v3/whatsapptemplates/?return_drafts=True")
+        content = json.loads(response.content)
+
+        assert content["count"] == 1
+        assert content["results"][0]["slug"] == "test-template-1"
+
+    def test_template_list_published(self, uclient):
+        """
+        Only published templates show up in the listing view by default.
+        """
+        self.create_whatsapp_template(
+            slug="test-template-1",
+            message="This is a test message",
+            category="UTILITY",
+            locale="en",
+            publish=True,
+        )
+
+        self.create_whatsapp_template(
+            slug="test-template-2",
+            message="This is a test message",
+            category="UTILITY",
+            locale="en",
+            publish=False,
+        )
+
+        response = uclient.get("/api/v3/whatsapptemplates/")
+        content = json.loads(response.content)
+
+        assert content["count"] == 1
+        assert content["results"][0]["slug"] == "test-template-1"
+
+    def test_template_detail_draft(self, uclient):
+        """
+        Unpublished templates are returned if the return_drafts param is set.
         """
         template = self.create_whatsapp_template(
             slug="test-template-2",
@@ -131,9 +160,36 @@ class TestWhatsAppTemplateAPIV3:
 
         url = f"/api/v3/whatsapptemplates/{template.id}/?return_drafts=True"
         response = uclient.get(url)
-        # the page is not live but whatsapp content is returned
         content = response.json()
         assert content["message"] == "*Default unpublished template 1* 🏥"
+
+    def test_template_detail_published_only(self, uclient):
+        """
+        If we have a published page that an unpublished drafts
+        only the published template details are returned if the return_drafts
+        param is not set to true.
+        """
+        template = self.create_whatsapp_template(
+            slug="test-template-2",
+            message="*Default published template 1* 🏥",
+            category="UTILITY",
+            locale="en",
+            publish=True,
+        )
+
+        template.message = "Message changed in unpublished revision"
+        template.save_revision()
+
+        url = f"/api/v3/whatsapptemplates/{template.id}/"
+        response = uclient.get(url)
+        content = response.json()
+        assert content["message"] == "*Default published template 1* 🏥"
+
+        url = f"/api/v3/whatsapptemplates/{template.id}/?return_drafts=true"
+        response = uclient.get(url)
+        content = response.json()
+
+        assert content["message"] == "Message changed in unpublished revision"
 
 
 @pytest.mark.django_db
