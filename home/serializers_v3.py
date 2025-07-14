@@ -31,30 +31,15 @@ def get_related_page_as_content_page(page):
 
 def format_related_pages(page, request):
     related_pages = []
-    channel = ""
-    if "channel" in request.query_params:
-        channel = request.query_params.get("channel", "").lower()
 
     for related in page.related_pages:
         related_page = get_related_page_as_content_page(related.value)
-        if channel != "" and channel != "web":
-            channel_title = getattr(related_page, f"{channel}_title")
-            if channel_title == "":
-                channel_title = related_page.title
-            related_pages.append(
-                {
-                    "slug": related_page.slug,
-                    "title": channel_title,
-                }
-            )
-
-        else:
-            related_pages.append(
-                {
-                    "slug": related_page.slug,
-                    "title": related_page.title,
-                }
-            )
+        related_pages.append(
+            {
+                "slug": related_page.slug,
+                "title": format_title(related_page, request),
+            }
+        )
 
     return related_pages
 
