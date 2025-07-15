@@ -18,7 +18,7 @@
     <!-- Locale -->
     <td>{{ template.locale }}</td>
     <!-- Status -->
-    <td>{{ template.get_status_display|default:"-" }}</td>
+    <td>{{ template.get_submission_status_display|default:"-" }}</td>
     <!-- Last Modified -->
     <td>{{ template.get_latest_revision.created_at|date:"d-M-Y" }}</td>
 </tr>

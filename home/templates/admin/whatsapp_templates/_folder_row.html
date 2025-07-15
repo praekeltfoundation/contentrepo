@@ -48,7 +48,7 @@
         <td>Template</td>
         <td>{{ template.get_category_display|default:"-" }}</td>
         <td>{{ group.locales|join:", " }}</td>
-        <td>{{ template.get_status_display|default:"-" }}</td>
+        <td>{{ template.get_submission_status_display|default:"-" }}</td>
         <td>{{ template.get_latest_revision.created_at|date:"d-M-Y" }}</td>
     </tr>
     {% endwith %}
