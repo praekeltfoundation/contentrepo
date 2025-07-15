@@ -69,6 +69,47 @@
             margin-right: 5px;
         }
         
+        /* Search styles */
+        .search-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+            margin: 10px;
+        }
+        
+        .search-input {
+            padding: 8px 32px 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 250px;
+            transition: all 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #0078d4;
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+        }
+        
+        .clear-search {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: #666;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        
+        .clear-search:hover {
+            opacity: 1;
+        }
+        
         /* Sortable column styles */
         th.sortable {
             cursor: pointer;
@@ -161,6 +202,14 @@
         <div class="row">
             <div class="col12">
                 <div class="button-group">
+                    <div class="search-container">
+                        <input type="text" id="search-input" class="search-input" 
+                               placeholder="Search templates and folders..." 
+                               value="{{ search_query }}">
+                        <button type="button" id="clear-search" class="clear-search" {% if not search_query %}style="display: none;"{% endif %}>
+                            <span class="icon icon-cross"></span>
+                        </button>
+                    </div>
                     <button type="button" id="toggle-all-folders" class="button">
                         <span class="icon icon-arrow-down"></span>
                         Expand All

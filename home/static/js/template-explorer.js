@@ -2,6 +2,36 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Template explorer script loaded');
     let allExpanded = false;
 
+    // Search functionality
+    const searchInput = document.getElementById('search-input');
+    const clearSearch = document.getElementById('clear-search');
+    const searchForm = document.createElement('form');
+    
+    if (searchInput) {
+        // Wrap the search input in a form
+        searchInput.parentNode.appendChild(searchForm);
+        searchForm.appendChild(searchInput);
+        searchForm.appendChild(clearSearch);
+        
+        // Handle search submission
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            window.location.href = `?q=${encodeURIComponent(query)}`;
+        });
+        
+        // Handle clear search
+        clearSearch.addEventListener('click', function() {
+            searchInput.value = '';
+            window.location.href = '?';
+        });
+        
+        // Show/hide clear button
+        searchInput.addEventListener('input', function() {
+            clearSearch.style.display = this.value.trim() ? 'block' : 'none';
+        });
+    }
+
     // Make templates and folders draggable
     document.querySelectorAll('.template-row, .folder-row').forEach(row => {
         row.addEventListener('dragstart', handleDragStart);

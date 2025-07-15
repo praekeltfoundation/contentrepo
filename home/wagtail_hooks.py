@@ -3,6 +3,7 @@ from typing import Any
 
 from django.conf import settings
 from django.contrib import messages
+from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import path, reverse
@@ -225,6 +226,9 @@ def get_folder_data(folder: WhatsAppTemplateFolder) -> dict[str, Any]:
 
 
 def template_explorer_view(request: Any) -> Any:
+    # Get search parameters
+    search_query = request.GET.get("q", "").strip()
+
     # Get sort parameters from request
     sort_by = request.GET.get("sort", "name")
     sort_order = request.GET.get("order", "asc")
@@ -243,10 +247,29 @@ def template_explorer_view(request: Any) -> Any:
     sort_field = valid_sort_fields.get(sort_by, "slug")
     sort_prefix = "" if sort_order == "asc" else "-"
 
-    # Get all root folders (folders with no parent) and sort them
-    root_folders = WhatsAppTemplateFolder.objects.filter(parent__isnull=True)
+    # Get all templates and filter by search query
+    all_templates = WhatsAppTemplate.objects.all()
+    if search_query:
+        all_templates = all_templates.filter(Q(slug__icontains=search_query))
 
-    # Get all templates without a folder and sort them
+    # Get all root folders (folders with no parent) and filter by search query
+    root_folders = WhatsAppTemplateFolder.objects.filter(parent__isnull=True)
+    if search_query:
+        # Filter folders that contain matching templates or match the search query
+        folder_ids_with_templates = all_templates.values_list("folder_id", flat=True)
+        root_folders = root_folders.filter(
+            Q(name__icontains=search_query) | Q(id__in=folder_ids_with_templates)
+        ).distinct()
+
+    # Get all templates without a folder and filter by search query
+    root_templates = WhatsAppTemplate.objects.filter(folder__isnull=True)
+    if search_query:
+        root_templates = root_templates.filter(Q(slug__icontains=search_query))
+
+    # Apply sorting
+    root_templates = root_templates.select_related("locale", "latest_revision")
+    root_folders = root_folders.order_by(f"{sort_prefix}name")
+    root_templates = root_templates.order_by(f"{sort_prefix}{sort_field}")
     root_templates = (
         WhatsAppTemplate.objects.filter(folder__isnull=True)
         .select_related("locale", "latest_revision")
@@ -299,6 +322,7 @@ def template_explorer_view(request: Any) -> Any:
     context = {
         "root_folders_data": processed_folders,
         "grouped_templates": grouped_root_templates,
+        "search_query": search_query,
     }
     context.update(sort_context)
 
