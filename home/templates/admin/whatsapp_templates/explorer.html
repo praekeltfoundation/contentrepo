@@ -68,6 +68,36 @@
         #toggle-all-folders .icon {
             margin-right: 5px;
         }
+        
+        /* Sortable column styles */
+        th.sortable {
+            cursor: pointer;
+            position: relative;
+            padding-right: 20px;
+        }
+        
+        th.sortable a {
+            color: inherit;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        th.sortable .icon {
+            margin-left: 5px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        
+        th.sortable:hover .icon {
+            opacity: 1;
+        }
+        
+        th.sortable .icon-arrow-up,
+        th.sortable .icon-arrow-down {
+            opacity: 1;
+        }
 
         /* Indentation for nested items */
         .template-row .title > div {
@@ -147,12 +177,42 @@
                 <table class="listing" id="template-explorer">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Category</th>
-                            <th>Locale</th>
-                            <th>Status</th>
-                            <th>Last Modified</th>
+                            <th class="sortable">
+                                <a href="?sort=name&order={% if current_sort == 'name' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                    Name
+                                    <span class="icon {% if current_sort == 'name' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                </a>
+                            </th>
+                            <th class="sortable">
+                                <a href="?sort=type&order={% if current_sort == 'type' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                    Type
+                                    <span class="icon {% if current_sort == 'type' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                </a>
+                            </th>
+                            <th class="sortable">
+                                <a href="?sort=category&order={% if current_sort == 'category' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                    Category
+                                    <span class="icon {% if current_sort == 'category' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                </a>
+                            </th>
+                            <th class="sortable">
+                                <a href="?sort=locale&order={% if current_sort == 'locale' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                    Locale
+                                    <span class="icon {% if current_sort == 'locale' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                </a>
+                            </th>
+                            <th class="sortable">
+                                <a href="?sort=status&order={% if current_sort == 'status' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                    Status
+                                    <span class="icon {% if current_sort == 'status' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                </a>
+                            </th>
+                            <th class="sortable">
+                                <a href="?sort=modified&order={% if current_sort == 'modified' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                    Last Modified
+                                    <span class="icon {% if current_sort == 'modified' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                </a>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>

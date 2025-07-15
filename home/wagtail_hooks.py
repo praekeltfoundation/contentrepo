@@ -225,30 +225,87 @@ def get_folder_data(folder: WhatsAppTemplateFolder) -> dict[str, Any]:
 
 
 def template_explorer_view(request: Any) -> Any:
-    # Get all root folders (folders with no parent)
+    # Get sort parameters from request
+    sort_by = request.GET.get("sort", "name")
+    sort_order = request.GET.get("order", "asc")
+
+    # Define valid sort fields
+    valid_sort_fields = {
+        "name": "slug",
+        "type": "type",
+        "category": "category",
+        "locale": "locale__language_code",
+        "status": "status",
+        "modified": "latest_revision__created_at",
+    }
+
+    # Default sort field and order
+    sort_field = valid_sort_fields.get(sort_by, "slug")
+    sort_prefix = "" if sort_order == "asc" else "-"
+
+    # Get all root folders (folders with no parent) and sort them
     root_folders = WhatsAppTemplateFolder.objects.filter(parent__isnull=True)
 
-    # Get all templates without a folder and prefetch related data
-    root_templates = WhatsAppTemplate.objects.filter(
-        folder__isnull=True
-    ).select_related("locale")
+    # Get all templates without a folder and sort them
+    root_templates = (
+        WhatsAppTemplate.objects.filter(folder__isnull=True)
+        .select_related("locale", "latest_revision")
+        .order_by(f"{sort_prefix}{sort_field}")
+    )
 
     # Group root templates by slug
     grouped_root_templates = group_templates(root_templates)
 
-    # Process all root folders with their hierarchy
-    processed_folders = [get_folder_data(folder) for folder in root_folders]
+    # Sort the grouped templates
+    def get_sort_key(item: dict[str, Any]) -> str:
+        template = item["template"]
+        if sort_by == "name":
+            return template.slug.lower()
+        elif sort_by == "type":
+            return template.template_type or ""
+        elif sort_by == "category":
+            return template.get_category_display() or ""
+        elif sort_by == "locale":
+            return template.locale.get_display_name() if template.locale else ""
+        elif sort_by == "status":
+            return template.get_status_display() or ""
+        elif sort_by == "modified":
+            return (
+                template.latest_revision.created_at if template.latest_revision else ""
+            )
+        return ""
 
-    # Sort root folders by name
-    processed_folders.sort(key=lambda x: x["folder"].name.lower())
+    grouped_root_templates.sort(key=get_sort_key, reverse=sort_order == "desc")
+
+    # Process all root folders with their hierarchy
+    def sort_folder_templates(folder_data: dict[str, Any]) -> dict[str, Any]:
+        folder_data["templates"].sort(key=get_sort_key, reverse=sort_order == "desc")
+        for subfolder in folder_data["subfolders"]:
+            sort_folder_templates(subfolder)
+        return folder_data
+
+    processed_folders = [
+        sort_folder_templates(get_folder_data(folder))
+        for folder in root_folders.order_by("name")
+    ]
+
+    # Pass sort parameters to template
+    sort_context = {
+        "current_sort": sort_by,
+        "current_order": sort_order,
+        "next_order": "desc" if sort_order == "asc" else "asc",
+    }
+
+    context = {
+        "root_folders_data": processed_folders,
+        "grouped_templates": grouped_root_templates,
+    }
+    context.update(sort_context)
 
     return render(
         request,
         "admin/whatsapp_templates/explorer.html",
-        {
-            "root_folders_data": processed_folders,
-            "grouped_templates": grouped_root_templates,
-        },
+        context,
     )
 
 
