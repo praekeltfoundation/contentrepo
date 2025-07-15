@@ -319,19 +319,44 @@ def template_explorer_view(request: Any) -> Any:
 
     # Process folders with filtered templates
     processed_folders = []
-    for folder in root_folders.order_by("name"):
-        folder_data = get_folder_data(folder)
-        # Filter folder's templates by the same criteria
+
+    def process_folder(folder_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Recursively process a folder and its subfolders."""
+        # Filter this folder's templates
         folder_data["templates"] = [
             t
             for t in folder_data["templates"]
-            if (t["template"].locale_id == int(locale_filter) or locale_filter == -1)
+            if (
+                int(locale_filter) in [inner_t.locale_id for inner_t in t["templates"]]
+                or locale_filter == -1
+            )
             and (t["template"].category == category_filter or not category_filter)
             and (t["template"].submission_status == status_filter or not status_filter)
         ]
-        # Only include folders that have templates
-        if folder_data["templates"] or folder_data["subfolders"]:
-            processed_folders.append(sort_folder_templates(folder_data))
+
+        # Recursively process subfolders
+        folder_data["subfolders"] = [
+            process_folder(subfolder) for subfolder in folder_data["subfolders"]
+        ]
+        folder_data["subfolders"] = [
+            sf for sf in folder_data["subfolders"] if sf is not None
+        ]
+
+        # Only include folders that have templates or non-empty subfolders
+        has_content = folder_data["templates"] or any(
+            subfolder["templates"] or subfolder["subfolders"]
+            for subfolder in folder_data["subfolders"]
+        )
+
+        if has_content:
+            return sort_folder_templates(folder_data)
+        return None
+
+    for folder in root_folders.order_by("name"):
+        folder_data = get_folder_data(folder)
+        result = process_folder(folder_data)
+        if result:
+            processed_folders.append(result)
 
     # Apply sorting to both folders and templates
     if sort_by in valid_sort_fields:
