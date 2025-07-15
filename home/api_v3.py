@@ -64,25 +64,39 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         return self.get_paginated_response(serializer.data)
 
     def get_queryset(self):
+        draft_queryset = (
+            WhatsAppTemplate.objects.all()
+            .order_by("latest_revision_id")
+            .prefetch_related("locale")
+        )
+        live_queryset = draft_queryset.filter(live=True).order_by("last_published_at")
+
+        queryset_to_return = live_queryset
+
         return_drafts = (
             self.request.query_params.get("return_drafts", "").lower() == "true"
         )
 
         if return_drafts:
-            # return the latest revision for each WhatsApp Template
-            queryset = WhatsAppTemplate.objects.all().order_by("latest_revision_id")
-            for wat in queryset:
-                latest_revision = wat.revisions.order_by("-created_at").first()
-                if latest_revision:
-                    latest_revision = latest_revision.as_object()
-                    wat.slug = latest_revision.slug
-
+            queryset_to_return = draft_queryset | live_queryset
         else:
-            queryset = WhatsAppTemplate.objects.filter(live=True).order_by(
-                "last_published_at"
-            )
+            queryset_to_return = live_queryset
 
-        return queryset
+        # if return_drafts:
+        #     # return the latest revision for each WhatsApp Template
+        #     queryset = WhatsAppTemplate.objects.all().order_by("latest_revision_id")
+        #     for wat in queryset:
+        #         latest_revision = wat.revisions.order_by("-created_at").first()
+        #         if latest_revision:
+        #             latest_revision = latest_revision.as_object()
+        #             wat.slug = latest_revision.slug
+
+        # else:
+        #     queryset = WhatsAppTemplate.objects.filter(live=True).order_by(
+        #         "last_published_at"
+        #     )
+
+        return queryset_to_return
 
     @classmethod
     def get_urlpatterns(cls):
