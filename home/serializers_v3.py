@@ -212,7 +212,7 @@ def format_detail_url(obj, request):
     if not obj.slug:
         # TODO: Add test for pages and templates
         raise Exception(
-            f"Error finding detail URL. Blank slug detected for {type(obj)} id={obj.id} {obj}"
+            f"Error finding detail URL. Blank slug detected for {type(obj)} id={obj.id} {obj} - Revision = {obj.revision}"
         )
     detail_url = get_object_detail_url(router, request, type(obj), obj.slug)
     query_params = request.query_params
