@@ -44,13 +44,13 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         )
 
         try:
+            instance = self.get_object()
             if return_drafts:
-                instance = self.get_object().get_latest_revision_as_object()
-            else:
-                instance = self.get_object()
-        except Exception as e:
-            # TODO: Handle this better
-            print(f"Exception = {e}")
+                instance = instance.get_latest_revision_as_object()
+
+        except Http404:
+            raise NotFound({"template": ["Template matching query does not exist."]})
+
         serializer = WhatsAppTemplateSerializer(instance, context={"request": request})
 
         return Response(serializer.data)

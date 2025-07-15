@@ -112,6 +112,23 @@ class TestWhatsAppTemplateAPIV3:
         response = client.get("/api/v3/whatsapptemplates/")
         assert response.status_code == 401
 
+    def test_slug_not_found(self, uclient):
+        """
+        If a slug can't be found, the error is handled gracefully
+        """
+        self.create_whatsapp_template(
+            slug="some-test-template",
+            message="*Default unpublished template * 🏥",
+            category="UTILITY",
+            locale="en",
+            publish=False,
+        )
+
+        url = "/api/v3/whatsapptemplates/a-slug-that-doesnt-exist/?return_drafts=True"
+        response = uclient.get(url)
+        content = response.json()
+        assert content == {"template": ["Template matching query does not exist."]}
+
     def test_template_list_drafts(self, uclient):
         """
         If we create a draft template we can find it in the listing view with return_drafts=true
