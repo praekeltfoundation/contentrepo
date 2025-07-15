@@ -27,8 +27,8 @@ from .page_builder import (
 )
 
 TEST_STATIC_PATH = Path("home/tests/test_static")
-ALL_PLATFORMS_EXCL_WHATSAPP = ["viber", "messenger", "ussd", "sms"]
-ALL_PLATFORMS = ALL_PLATFORMS_EXCL_WHATSAPP + ["whatsapp"]
+ALL_CHANNELS_EXCL_WHATSAPP = ["viber", "messenger", "ussd", "sms"]
+ALL_CHANNELS = ALL_CHANNELS_EXCL_WHATSAPP + ["whatsapp"]
 
 
 @pytest.fixture()
@@ -364,7 +364,7 @@ class TestContentPageAPIV3:
                     pass
                 case _:
                     raise ValueError(
-                        f"{body_type} not a valid platform, valid options include, whatsapp, messenger, sms, ussd, viber or None"
+                        f"{body_type} not a valid channel, valid options include, whatsapp, messenger, sms, ussd, viber or None"
                     )
 
         content_page = PageBuilder.build_cp(
@@ -492,51 +492,51 @@ class TestContentPageAPIV3:
         body = content["messages"][0]["text"]
         assert body == "*Default whatsapp Content 1* 🏥"
 
-    @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
-    def test_message_draft(self, uclient, platform):
+    @pytest.mark.parametrize("channel", ALL_CHANNELS_EXCL_WHATSAPP)
+    def test_message_draft(self, uclient, channel):
         """
-        Unpublished <platform> pages are returned if the qa param is set.
+        Unpublished <channel> pages are returned if the qa param is set.
         """
-        page = self.create_content_page(publish=False, body_type=platform)
+        page = self.create_content_page(publish=False, body_type=channel)
 
-        url = f"/api/v3/pages/{page.id}/?channel={platform}&return_drafts=True"
+        url = f"/api/v3/pages/{page.id}/?channel={channel}&return_drafts=True"
         # it should return specific page that is in draft
         response = uclient.get(url)
         content = response.json()
         # the page is not live but messenger content is returned
         assert not page.live
         body = content["messages"]["text"]
-        assert body == f"*Default {platform} Content 1* 🏥"
+        assert body == f"*Default {channel} Content 1* 🏥"
 
-    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
-    def test_platform_disabled(self, uclient, platform):
+    @pytest.mark.parametrize("channel", ALL_CHANNELS)
+    def test_channel_disabled(self, uclient, channel):
         """
-        It should not return the body if enable_<platform>=false
+        It should not return the body if enable_<channel>=false
         """
-        page = self.create_content_page(body_type=platform)
+        page = self.create_content_page(body_type=channel)
 
-        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={platform}")
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
         assert response.content != b""
 
-        setattr(page, f"enable_{platform}", False)
+        setattr(page, f"enable_{channel}", False)
         page.save_revision().publish()
 
-        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={platform}")
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
         content = response.json()
 
         # The page is return successfully, but the list of messages is empty
         assert response.status_code == 200
         assert content["messages"] == {"text": []}
 
-    def test_detail_view_unknown_platform(self, uclient):
+    def test_detail_view_unknown_channel(self, uclient):
         """
         It should not return the body for a requested channel that does not exist
         """
         # TODO JT:
-        platform = "unknown"
+        channel = "unknown"
         page = self.create_content_page()
 
-        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={platform}")
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
 
         assert response.status_code == 400
         content = json.loads(response.content)
@@ -560,12 +560,12 @@ class TestContentPageAPIV3:
         with django_assert_num_queries(10):
             uclient.get("/api/v3/pages/")
 
-    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
-    def test_detail_view_content(self, uclient, platform):
+    @pytest.mark.parametrize("channel", ALL_CHANNELS)
+    def test_detail_view_content(self, uclient, channel):
         """
         Fetching the detail view of a page returns the page content.
         """
-        page = self.create_content_page(tags=["self_help"], body_type=platform)
+        page = self.create_content_page(tags=["self_help"], body_type=channel)
         response = uclient.get(f"/api/v3/pages/{page.id}/")
         content = response.json()
         assert content["slug"] == page.slug
@@ -603,6 +603,19 @@ class TestContentPageAPIV3:
         assert content["has_children"] is True
 
     def test_detail_view_no_content_page(self, uclient):
+        """
+        We get a validation error if we request a page that doesn't exist.
+        """
+        # it should return the validation error for content page that doesn't exist
+        response = uclient.get("/api/v3/pages/some-slug-with-no-page/")
+        assert response.status_code == 404
+
+        content = response.json()
+
+        assert content == {"page": ["Page matching query does not exist."]}
+        assert content.get("page") == ["Page matching query does not exist."]
+
+    def test_detail_view_by_slug(self, uclient):
         """
         We get a validation error if we request a page that doesn't exist.
         """
@@ -749,20 +762,20 @@ class TestContentPageAPIV3:
             {"slug": "self-help-slug", "title": "Self Help Page Title"}
         ]
 
-    @pytest.mark.parametrize("platform", ALL_PLATFORMS)
-    def test_channel_title(self, uclient, platform):
+    @pytest.mark.parametrize("channel", ALL_CHANNELS)
+    def test_channel_title(self, uclient, channel):
         """
         If a title is supplied for the channel, use that, otherwise fall back to page title
         """
-        page = self.create_content_page(tags=["self_help"], body_type=platform)
-        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={platform }")
+        page = self.create_content_page(tags=["self_help"], body_type=channel)
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel }")
         content = response.json()
 
         assert content["slug"] == page.slug
         assert content["locale"] == "en"
         assert (
             content["detail_url"]
-            == f"http://localhost/api/v3/pages/{page.slug}/?channel={platform }"
+            == f"http://localhost/api/v3/pages/{page.slug}/?channel={channel }"
         )
 
-        assert content["title"] == f"default page for {platform}"
+        assert content["title"] == f"default page for {channel}"
