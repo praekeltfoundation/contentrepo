@@ -178,6 +178,7 @@ def register_template_explorer_url() -> list[Any]:
     ]
 
 
+# TODO: tests
 def group_templates(templates_queryset: list[WhatsAppTemplate]) -> list[dict[str, Any]]:
     """Helper function to group templates by slug and collect their locales."""
     templates_by_slug = {}
@@ -204,6 +205,7 @@ def group_templates(templates_queryset: list[WhatsAppTemplate]) -> list[dict[str
     return grouped
 
 
+# TODO: tests
 def get_folder_data(folder: WhatsAppTemplateFolder) -> dict[str, Any]:
     """Recursively get folder data with grouped templates."""
     # Get all templates in this folder
@@ -225,6 +227,7 @@ def get_folder_data(folder: WhatsAppTemplateFolder) -> dict[str, Any]:
     return folder_data
 
 
+# TODO: I feel like this can live in its own file, along with all the subfunctions
 def template_explorer_view(request: Any) -> Any:
     # Sort the grouped templates
     def get_sort_key(item: dict[str, Any]) -> str:
