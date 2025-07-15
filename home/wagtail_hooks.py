@@ -15,7 +15,7 @@ from wagtail.admin.menu import AdminOnlyMenuItem, MenuItem
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, TitleFieldPanel
 from wagtail.admin.widgets.slug import SlugInput
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
-from wagtail.models import Page
+from wagtail.models import Locale, Page
 from wagtail.snippets.action_menu import ActionMenuItem
 from wagtail.snippets.bulk_actions.snippet_bulk_action import SnippetBulkAction
 from wagtail.snippets.models import register_snippet
@@ -226,12 +226,41 @@ def get_folder_data(folder: WhatsAppTemplateFolder) -> dict[str, Any]:
 
 
 def template_explorer_view(request: Any) -> Any:
+    # Sort the grouped templates
+    def get_sort_key(item: dict[str, Any]) -> str:
+        template = item["template"]
+        if sort_by == "name":
+            return template.slug.lower()
+        elif sort_by == "type":
+            return template.template_type or ""
+        elif sort_by == "category":
+            return template.get_category_display() or ""
+        elif sort_by == "locale":
+            return template.locale.get_display_name() if template.locale else ""
+        elif sort_by == "status":
+            return template.get_status_display() or ""
+        elif sort_by == "modified":
+            return (
+                template.latest_revision.created_at if template.latest_revision else ""
+            )
+        return ""
+
+    # Process all root folders with their hierarchy
+    def sort_folder_templates(folder_data: dict[str, Any]) -> dict[str, Any]:
+        folder_data["templates"].sort(key=get_sort_key, reverse=sort_order == "desc")
+        for subfolder in folder_data["subfolders"]:
+            sort_folder_templates(subfolder)
+        return folder_data
+
     # Get search parameters
     search_query = request.GET.get("q", "").strip()
 
     # Get sort parameters from request
     sort_by = request.GET.get("sort", "name")
     sort_order = request.GET.get("order", "asc")
+    locale_filter = request.GET.get("locale", -1) or -1
+    category_filter = request.GET.get("category", "")
+    status_filter = request.GET.get("status", "")
 
     # Define valid sort fields
     valid_sort_fields = {
@@ -252,22 +281,70 @@ def template_explorer_view(request: Any) -> Any:
     if search_query:
         all_templates = all_templates.filter(Q(slug__icontains=search_query))
 
-    # Get all root folders (folders with no parent) and filter by search query
+    # Get all templates and folders
+    all_templates = WhatsAppTemplate.objects.all()
     root_folders = WhatsAppTemplateFolder.objects.filter(parent__isnull=True)
+
+    # Apply filters to templates
+    filtered_templates = all_templates
+    if locale_filter:
+        filtered_templates = filtered_templates.filter(locale__id=locale_filter)
+    if category_filter:
+        filtered_templates = filtered_templates.filter(category=category_filter)
+    if status_filter:
+        filtered_templates = filtered_templates.filter(submission_status=status_filter)
+
+    # Search
     if search_query:
         # Filter folders that contain matching templates or match the search query
-        folder_ids_with_templates = all_templates.values_list("folder_id", flat=True)
+        folder_ids_with_templates = filtered_templates.values_list(
+            "folder_id", flat=True
+        )
         root_folders = root_folders.filter(
             Q(name__icontains=search_query) | Q(id__in=folder_ids_with_templates)
         ).distinct()
 
-    # Get all templates without a folder and filter by search query
-    root_templates = WhatsAppTemplate.objects.filter(folder__isnull=True)
+    # Filter root templates by search and filters
+    root_templates = filtered_templates.filter(folder__isnull=True)
     if search_query:
         root_templates = root_templates.filter(Q(slug__icontains=search_query))
 
-    # Apply sorting
-    root_templates = root_templates.select_related("locale", "latest_revision")
+    # Group templates by slug
+    grouped_templates = []
+    for template in root_templates:
+        # Get all locales for this template's slug that match the filters
+        matching_templates = filtered_templates.filter(slug=template.slug)
+        locales = matching_templates.values_list("locale__language_code", flat=True)
+        grouped_templates.append({"template": template, "locales": list(locales)})
+
+    # Process folders with filtered templates
+    processed_folders = []
+    for folder in root_folders.order_by("name"):
+        folder_data = get_folder_data(folder)
+        # Filter folder's templates by the same criteria
+        folder_data["templates"] = [
+            t
+            for t in folder_data["templates"]
+            if (t["template"].locale_id == int(locale_filter) or locale_filter == -1)
+            and (t["template"].category == category_filter or not category_filter)
+            and (t["template"].submission_status == status_filter or not status_filter)
+        ]
+        # Only include folders that have templates
+        if folder_data["templates"] or folder_data["subfolders"]:
+            processed_folders.append(sort_folder_templates(folder_data))
+
+    # Apply sorting to both folders and templates
+    if sort_by in valid_sort_fields:
+        sort_field = valid_sort_fields[sort_by]
+        if sort_order == "desc":
+            sort_field = f"-{sort_field}"
+
+        # Sort folders
+        for folder_data in processed_folders:
+            sort_folder_templates(folder_data)
+
+        # Sort templates
+        grouped_templates.sort(key=lambda x: getattr(x["template"], sort_field))
     root_folders = root_folders.order_by(f"{sort_prefix}name")
     root_templates = root_templates.order_by(f"{sort_prefix}{sort_field}")
     root_templates = (
@@ -279,38 +356,18 @@ def template_explorer_view(request: Any) -> Any:
     # Group root templates by slug
     grouped_root_templates = group_templates(root_templates)
 
-    # Sort the grouped templates
-    def get_sort_key(item: dict[str, Any]) -> str:
-        template = item["template"]
-        if sort_by == "name":
-            return template.slug.lower()
-        elif sort_by == "type":
-            return template.template_type or ""
-        elif sort_by == "category":
-            return template.get_category_display() or ""
-        elif sort_by == "locale":
-            return template.locale.get_display_name() if template.locale else ""
-        elif sort_by == "status":
-            return template.get_status_display() or ""
-        elif sort_by == "modified":
-            return (
-                template.latest_revision.created_at if template.latest_revision else ""
-            )
-        return ""
-
     grouped_root_templates.sort(key=get_sort_key, reverse=sort_order == "desc")
 
-    # Process all root folders with their hierarchy
-    def sort_folder_templates(folder_data: dict[str, Any]) -> dict[str, Any]:
-        folder_data["templates"].sort(key=get_sort_key, reverse=sort_order == "desc")
-        for subfolder in folder_data["subfolders"]:
-            sort_folder_templates(subfolder)
-        return folder_data
+    # Get all available locales, categories, and statuses
+    # Get all unique locale IDs from templates
+    locale_ids = WhatsAppTemplate.objects.values_list("locale", flat=True).distinct()
+    # Get the actual Locale objects and their display names
+    locales = Locale.objects.filter(id__in=locale_ids)
 
-    processed_folders = [
-        sort_folder_templates(get_folder_data(folder))
-        for folder in root_folders.order_by("name")
-    ]
+    categories = WhatsAppTemplate.objects.values_list("category", flat=True).distinct()
+    statuses = WhatsAppTemplate.objects.values_list(
+        "submission_status", flat=True
+    ).distinct()
 
     # Pass sort parameters to template
     sort_context = {
@@ -323,6 +380,12 @@ def template_explorer_view(request: Any) -> Any:
         "root_folders_data": processed_folders,
         "grouped_templates": grouped_root_templates,
         "search_query": search_query,
+        "locales": locales,
+        "categories": categories,
+        "statuses": statuses,
+        "locale_filter": locale_filter,
+        "category_filter": category_filter,
+        "status_filter": status_filter,
     }
     context.update(sort_context)
 

@@ -60,23 +60,61 @@
     margin: 10px;
 }
 
-/* Filter controls */
+/* Filter panel */
+.filter-panel {
+    padding: 20px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.filter-panel .heading {
+    color: #fff;
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
 .filter-group {
     display: flex;
+    flex-direction: column;
     gap: 10px;
-    justify-content: flex-end;
-    margin-right: -10px;
+}
+
+.filter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-label {
+    color: #aeb5be;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .filter-select {
-    padding: 8px;
-    border: 1px solid #ddd;
+    padding: 8px 12px;
+    border: 1px solid #4a505b;
     border-radius: 4px;
     font-size: 14px;
-    min-width: 150px;
-    max-width: 200px;
-    background-color: white;
+    background-color: #33373e;
+    color: #fff;
     transition: all 0.2s;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #0078d4;
+    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+    background-color: #33373e;
+}
+
+.filter-actions {
+    margin-top: 15px;
+}
+
+.filter-actions .button {
+    width: 100%;
 }
 
 .filter-select:focus {

@@ -10,6 +10,32 @@
         const CSRF_TOKEN = "{{ csrf_token }}";
     </script>
     <script src="{% static 'js/template-explorer.js' %}"></script>
+    <script>
+        // Handle filter changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const localeFilter = document.getElementById('locale-filter');
+            const categoryFilter = document.getElementById('category-filter');
+            const statusFilter = document.getElementById('status-filter');
+            const applyFiltersButton = document.getElementById('apply-filters');
+
+            function updateFilters() {
+                const locale = localeFilter ? localeFilter.value : '';
+                const category = categoryFilter ? categoryFilter.value : '';
+                const status = statusFilter ? statusFilter.value : '';
+
+                const params = new URLSearchParams(window.location.search);
+                params.set('locale', locale);
+                params.set('category', category);
+                params.set('status', status);
+                
+                window.location.search = params.toString();
+            }
+
+            if (applyFiltersButton) {
+                applyFiltersButton.addEventListener('click', updateFilters);
+            }
+        });
+    </script>
 {% endblock %}
 
 {% block extra_css %}
@@ -30,108 +56,158 @@
 
     <div class="nice-padding">
         <div class="row">
-            <div class="col12">
-                <div class="button-group">
-                    <div class="search-container">
-                        <input type="text" id="search-input" class="search-input" 
-                               placeholder="Search templates and folders..." 
-                               value="{{ search_query }}">
-                        <button type="button" id="clear-search" class="clear-search" {% if not search_query %}style="display: none;"{% endif %}>
-                            <span class="icon icon-cross"></span>
-                        </button>
-                    </div>
-                    <button type="button" id="toggle-all-folders" class="button">
-                        <span class="icon icon-arrow-down"></span>
-                        Expand All
-                    </button>
-                    <a href="{% url 'wagtailsnippets_home_whatsapptemplate:add' %}" 
-                       class="button bicolor icon icon-plus">
-                        Add WhatsApp Template
-                    </a>
-                    <a href="{% url 'wagtailsnippets_home_whatsapptemplatefolder:add' %}" class="button bicolor icon icon-folder" id="add-folder-btn">
-                        Add Folder
-                    </a>
-                </div>
+            <div class="col6">
                 
-                <table class="listing" id="template-explorer">
-                    <thead>
-                        <tr>
-                            <th class="sortable">
-                                <a href="?sort=name&order={% if current_sort == 'name' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
-                                    Name
-                                    <span class="icon {% if current_sort == 'name' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
-                                </a>
-                            </th>
-                            <th class="sortable">
-                                <a href="?sort=type&order={% if current_sort == 'type' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
-                                    Type
-                                    <span class="icon {% if current_sort == 'type' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
-                                </a>
-                            </th>
-                            <th class="sortable">
-                                <a href="?sort=category&order={% if current_sort == 'category' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
-                                    Category
-                                    <span class="icon {% if current_sort == 'category' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
-                                </a>
-                            </th>
-                            <th class="sortable">
-                                <a href="?sort=locale&order={% if current_sort == 'locale' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
-                                    Locale
-                                    <span class="icon {% if current_sort == 'locale' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
-                                </a>
-                            </th>
-                            <th class="sortable">
-                                <a href="?sort=status&order={% if current_sort == 'status' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
-                                    Status
-                                    <span class="icon {% if current_sort == 'status' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
-                                </a>
-                            </th>
-                            <th class="sortable">
-                                <a href="?sort=modified&order={% if current_sort == 'modified' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
-                                    Last Modified
-                                    <span class="icon {% if current_sort == 'modified' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
-                                </a>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if not root_folders_data and not grouped_templates %}
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col12">
+                <div class="search-container">
+                    <input type="text" id="search-input" class="search-input" 
+                            placeholder="Search templates and folders..." 
+                            value="{{ search_query }}">
+                    <button type="button" id="clear-search" class="clear-search" {% if not search_query %}style="display: none;"{% endif %}>
+                        <span class="icon icon-cross"></span>
+                    </button>
+                </div>
+                <button type="button" id="toggle-all-folders" class="button">
+                    <span class="icon icon-arrow-down"></span>
+                    Expand All
+                </button>
+                <a href="{% url 'wagtailsnippets_home_whatsapptemplate:add' %}" 
+                    class="button bicolor icon icon-plus">
+                    Add WhatsApp Template
+                </a>
+                <a href="{% url 'wagtailsnippets_home_whatsapptemplatefolder:add' %}" class="button bicolor icon icon-folder" id="add-folder-btn">
+                    Add Folder
+                </a>
+            </div>
+            <div class="row">
+                <div class="col8">
+                    <table class="listing" id="template-explorer">
+                        <thead>
                             <tr>
-                                <td colspan="6">No templates found.</td>
+                                <th class="sortable">
+                                    <a href="?sort=name&order={% if current_sort == 'name' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                        Name
+                                        <span class="icon {% if current_sort == 'name' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                    </a>
+                                </th>
+                                <th class="sortable">
+                                    <a href="?sort=type&order={% if current_sort == 'type' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                        Type
+                                        <span class="icon {% if current_sort == 'type' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                    </a>
+                                </th>
+                                <th class="sortable">
+                                    <a href="?sort=category&order={% if current_sort == 'category' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                        Category
+                                        <span class="icon {% if current_sort == 'category' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                    </a>
+                                </th>
+                                <th class="sortable">
+                                    <a href="?sort=locale&order={% if current_sort == 'locale' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                        Locale
+                                        <span class="icon {% if current_sort == 'locale' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                    </a>
+                                </th>
+                                <th class="sortable">
+                                    <a href="?sort=status&order={% if current_sort == 'status' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                        Status
+                                        <span class="icon {% if current_sort == 'status' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                    </a>
+                                </th>
+                                <th class="sortable">
+                                    <a href="?sort=modified&order={% if current_sort == 'modified' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header">
+                                        Last Modified
+                                        <span class="icon {% if current_sort == 'modified' %}{% if current_order == 'asc' %}icon-arrow-up{% else %}icon-arrow-down{% endif %}{% else %}icon-arrow-up-down{% endif %}"></span>
+                                    </a>
+                                </th>
                             </tr>
-                        {% else %}
-                            {# Show root folders with their hierarchy #}
-                            {% for folder_data in root_folders_data %}
-                                {% include "admin/whatsapp_templates/_folder_row.html" with folder=folder_data %}
-                            {% endfor %}
-                            
-                            {# Show root level grouped templates #}
-                            {% for group in grouped_templates %}
-                                {% with template=group.template %}
-                                <tr class="template-row" 
-                                    draggable="true"
-                                    data-template-id="{{ template.id }}"
-                                    data-folder-id=""
-                                    data-depth="0">
-                                    <td class="title">
-                                        <div style="padding-left: 0">
-                                            <a href="{% url 'wagtailsnippets_home_whatsapptemplate:edit' template.id %}">
-                                                <span class="icon icon-doc-empty"></span>
-                                                {{ template.slug }}
-                                            </a>
-                                        </div>
-                                    </td>
-                                    <td>Template</td>
-                                    <td>{{ template.get_category_display|default:"-" }}</td>
-                                    <td>{{ group.locales|join:", " }}</td>
-                                    <td>{{ template.get_status_display|default:"-" }}</td>
-                                    <td>{{ template.get_latest_revision.created_at|date:"d-M-Y" }}</td>
+                        </thead>
+                        <tbody>
+                            {% if not root_folders_data and not grouped_templates %}
+                                <tr>
+                                    <td colspan="6">No templates found.</td>
                                 </tr>
-                                {% endwith %}
-                            {% endfor %}
-                        {% endif %}
-                    </tbody>
-                </table>
+                            {% else %}
+                                {# Show root folders with their hierarchy #}
+                                {% for folder_data in root_folders_data %}
+                                    {% include "admin/whatsapp_templates/_folder_row.html" with folder=folder_data %}
+                                {% endfor %}
+                                
+                                {# Show root level grouped templates #}
+                                {% for group in grouped_templates %}
+                                    {% with template=group.template %}
+                                    <tr class="template-row" 
+                                        draggable="true"
+                                        data-template-id="{{ template.id }}"
+                                        data-folder-id=""
+                                        data-depth="0">
+                                        <td class="title">
+                                            <div style="padding-left: 0">
+                                                <a href="{% url 'wagtailsnippets_home_whatsapptemplate:edit' template.id %}">
+                                                    <span class="icon icon-doc-empty"></span>
+                                                    {{ template.slug }}
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td>Template</td>
+                                        <td>{{ template.get_category_display|default:"-" }}</td>
+                                        <td>{{ group.locales|join:", " }}</td>
+                                        <td>{{ template.get_status_display|default:"-" }}</td>
+                                        <td>{{ template.get_latest_revision.created_at|date:"d-M-Y" }}</td>
+                                    </tr>
+                                    {% endwith %}
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="filter-panel">
+                    <h3 class="heading">Filters</h3>
+                    <div class="filter-group">
+                        <div class="filter-row">
+                            <label class="filter-label">Locale</label>
+                            <select name="locale" id="locale-filter" class="filter-select">
+                                <option value="">All Locales</option>
+                                {% for locale in locales %}
+                                    <option value="{{ locale.id }}" {% if locale.id|stringformat:"s" == locale_filter %}selected{% endif %}>
+                                        {{ locale.get_display_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="filter-row">
+                            <label class="filter-label">Category</label>
+                            <select name="category" id="category-filter" class="filter-select">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                    <option value="{{ category }}" {% if category == category_filter %}selected{% endif %}>
+                                        {{ category }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="filter-row">
+                            <label class="filter-label">Status</label>
+                            <select name="status" id="status-filter" class="filter-select">
+                                <option value="">All Statuses</option>
+                                {% for status in statuses %}
+                                    <option value="{{ status }}" {% if status == status_filter %}selected{% endif %}>
+                                        {{ status }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="filter-actions">
+                            <button type="button" id="apply-filters" class="button bicolor">
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
