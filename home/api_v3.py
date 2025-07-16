@@ -1,5 +1,6 @@
 from typing import Any
 
+from django.core.exceptions import MultipleObjectsReturned
 from django.http.response import Http404
 from django.urls import path
 from rest_framework.exceptions import NotFound, ValidationError
@@ -8,6 +9,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
+from wagtail.models.sites import Site
 
 from home.serializers_v3 import ContentPageSerializerV3, WhatsAppTemplateSerializer
 
@@ -82,20 +84,6 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         else:
             queryset_to_return = live_queryset
 
-        # if return_drafts:
-        #     # return the latest revision for each WhatsApp Template
-        #     queryset = WhatsAppTemplate.objects.all().order_by("latest_revision_id")
-        #     for wat in queryset:
-        #         latest_revision = wat.revisions.order_by("-created_at").first()
-        #         if latest_revision:
-        #             latest_revision = latest_revision.as_object()
-        #             wat.slug = latest_revision.slug
-
-        # else:
-        #     queryset = WhatsAppTemplate.objects.filter(live=True).order_by(
-        #         "last_published_at"
-        #     )
-
         return queryset_to_return
 
     @classmethod
@@ -152,6 +140,15 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             if self.request.query_params.get("return_drafts", "").lower() == "true":
                 instance = instance.get_latest_revision_as_object()
 
+        # TODO: Add tests for this once we have locale support in test page builder
+        except MultipleObjectsReturned:
+            default_language_code = Site.objects.get(
+                is_default_site=True
+            ).root_page.locale.language_code
+            raise MultipleObjectsReturned(
+                f"Multiple pages found. Detail View requires a single page.  Please try narrowing down your query by adding a locale query parameter e.g. '&locale={default_language_code}'"
+            )
+
         except Http404:
             raise NotFound({"page": ["Page matching query does not exist."]})
 
@@ -181,13 +178,36 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         draft_queryset = ContentPage.objects.not_live().prefetch_related("locale")
         live_queryset = ContentPage.objects.live().prefetch_related("locale")
         queryset_to_return = live_queryset
+
         return_drafts = (
             self.request.query_params.get("return_drafts", "").lower() == "true"
         )
+
         if return_drafts:
             queryset_to_return = draft_queryset | live_queryset
         else:
             queryset_to_return = live_queryset
+
+        title = self.request.query_params.get("title", "")
+        if title:
+            queryset_to_return = queryset_to_return.filter(title__icontains=title)
+
+        slug = self.request.query_params.get("slug", "")
+        if slug:
+            queryset_to_return = queryset_to_return.filter(slug__icontains=slug)
+
+        # TODO: The V2 API allowed a "search" query param to be passed.
+        # I don't think we want that here, but leaving this here for now
+
+        # search = self.request.query_params.get("search", "")
+        # if search:
+        #     queryset_to_return = queryset_to_return.search(search)
+
+        # TODO: We may want to add an environment variable for
+        # V3_LOCALE_OPTIONAL = True
+        # If false, then not sending locale with request is an error, 400
+        # If true, then not sending locale with request use default
+        # Query param overwrites regardless
 
         tag = self.request.query_params.get("tag")
         if tag:

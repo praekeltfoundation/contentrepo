@@ -369,7 +369,7 @@ class TestContentPageAPIV3:
 
         content_page = PageBuilder.build_cp(
             parent=parent,
-            slug=title.replace(" ", "-"),
+            slug=title.replace(" ", "-").lower(),
             title=title,
             bodies=bodies,
             tags=tags or [],
@@ -617,16 +617,111 @@ class TestContentPageAPIV3:
 
     def test_detail_view_by_slug(self, uclient):
         """
-        We get a validation error if we request a page that doesn't exist.
+        We can use the page slug in detail view URL
         """
         # it should return the validation error for content page that doesn't exist
-        response = uclient.get("/api/v3/pages/some-slug-with-no-page/")
-        assert response.status_code == 404
+        page1 = self.create_content_page(title="Content Page 1")
 
+        response = uclient.get(f"/api/v3/pages/{page1.slug}/")
         content = response.json()
 
-        assert content == {"page": ["Page matching query does not exist."]}
-        assert content.get("page") == ["Page matching query does not exist."]
+        assert response.status_code == 200
+
+        assert content == {
+            "slug": "content-page-1",
+            "detail_url": "http://localhost/api/v3/pages/content-page-1/",
+            "locale": "en",
+            "title": "Content Page 1",
+            "subtitle": "",
+            "messages": {"text": []},
+            "tags": [],
+            "triggers": [],
+            "has_children": False,
+            "related_pages": [],
+        }
+
+    def test_detail_view_by_id(self, uclient):
+        """
+        We can use the page id in detail view URL
+        """
+        # it should return the validation error for content page that doesn't exist
+        page1 = self.create_content_page(title="Content Page 1")
+
+        response = uclient.get(f"/api/v3/pages/{page1.id}/")
+        content = response.json()
+
+        assert response.status_code == 200
+
+        assert content == {
+            "slug": "content-page-1",
+            "detail_url": "http://localhost/api/v3/pages/content-page-1/",
+            "locale": "en",
+            "title": "Content Page 1",
+            "subtitle": "",
+            "messages": {"text": []},
+            "tags": [],
+            "triggers": [],
+            "has_children": False,
+            "related_pages": [],
+        }
+
+    def test_list_view_slug_search(self, uclient):
+        """
+        Querying the list view with a slug parameter, returns case insensitive partial matches
+        """
+        page = self.create_content_page(title="default-page")
+        self.create_content_page(page, title="Content Page 1")
+        self.create_content_page(page, title="Content Page 2")
+        self.create_content_page(page, title="Unrelated Page 2")
+
+        slug_to_search = "content-page-"
+        url = f"/api/v3/pages/?slug={slug_to_search}&return_drafts=True"
+        content = uclient.get(url).json()
+        assert content["count"] == 2
+
+        slug_to_search = "content-page-1"
+        url = f"/api/v3/pages/?slug={slug_to_search}&return_drafts=True"
+        content = uclient.get(url).json()
+        assert content["count"] == 1
+
+        slug_to_search = "page"
+        url = f"/api/v3/pages/?slug={slug_to_search}&return_drafts=True"
+        content = uclient.get(url).json()
+        assert content["count"] == 4
+
+        slug_to_search = "page-"
+        url = f"/api/v3/pages/?slug={slug_to_search}&return_drafts=True"
+        content = uclient.get(url).json()
+        assert content["count"] == 3
+
+    def test_list_view_title_search(self, uclient):
+        """
+        Querying the list view with a title parameter, returns case insensitive partial matches
+        """
+        page = self.create_content_page(title="default-page")
+        self.create_content_page(page, title="Content Page 1")
+        self.create_content_page(page, title="Content Page 2")
+        self.create_content_page(page, title="Unrelated Page 2")
+
+        title_to_search = "Content page"
+        url = f"/api/v3/pages/?title={title_to_search}&return_drafts=True"
+        content = uclient.get(url).json()
+        assert content["count"] == 2
+
+        title_to_search = "unrelated"
+        url = f"/api/v3/pages/?title={title_to_search}&return_drafts=True"
+        content = uclient.get(url).json()
+        assert content["count"] == 1
+
+        title_to_search = "page"
+        url = f"/api/v3/pages/?title={title_to_search}&return_drafts=True"
+        content = uclient.get(url).json()
+        assert content["count"] == 4
+
+        title_to_search = "default"
+        url = f"/api/v3/pages/?title={title_to_search}&return_drafts=True"
+        content = uclient.get(url).json()
+        assert content["count"] == 1
 
     def test_wa_image(self, uclient):
         """
