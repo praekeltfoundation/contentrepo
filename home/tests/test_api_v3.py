@@ -73,6 +73,15 @@ def mk_test_doc() -> Document:
 
 @pytest.mark.django_db
 class TestWhatsAppTemplateAPIV3:
+    @pytest.fixture(autouse=True)
+    def create_test_data(self):
+        """
+        Create the content that the tests in this class will use.
+        """
+        # TODO: Rework all tests to use fixture data as far as possible
+        self.locale_pt, _ = Locale.objects.get_or_create(language_code="pt")
+        self.locale_en, _ = Locale.objects.get_or_create(language_code="en")
+
     @classmethod
     def create_whatsapp_template(
         self,
@@ -82,10 +91,12 @@ class TestWhatsAppTemplateAPIV3:
         image=None,
         example_values=None,
         category="UTILITY",
-        locale="en",
+        locale=None,
         publish=False,
     ) -> WhatsAppTemplate:
-        locale = Locale.objects.get(language_code="en")
+        if locale:
+            locale = Locale.objects.get(language_code=locale)
+
         template = WhatsAppTemplate(
             slug=slug,
             message=message,
@@ -171,6 +182,74 @@ class TestWhatsAppTemplateAPIV3:
 
         assert content["count"] == 1
         assert content["results"][0]["slug"] == "test-template-1"
+
+    def test_template_list_filter_locale(self, uclient):
+        """
+        Can filter template list by locale
+        """
+        self.create_whatsapp_template(
+            slug="test-template-1",
+            message="This is a test message",
+            category="UTILITY",
+            locale="en",
+            publish=True,
+        )
+
+        self.create_whatsapp_template(
+            slug="test-template-2",
+            message="This is a test message",
+            category="UTILITY",
+            locale="en",
+            publish=True,
+        )
+
+        self.create_whatsapp_template(
+            slug="test-template-2",
+            message="This is a test message",
+            category="UTILITY",
+            locale="pt",
+            publish=True,
+        )
+
+        response = uclient.get("/api/v3/whatsapptemplates/?locale=pt")
+        content = json.loads(response.content)
+
+        assert content["count"] == 1
+        assert content["results"][0]["slug"] == "test-template-2"
+
+    def test_template_list_filter_slug(self, uclient):
+        """
+        Can filter template list by slug
+        """
+        self.create_whatsapp_template(
+            slug="test-template-1",
+            message="This is a test message",
+            category="UTILITY",
+            locale="en",
+            publish=True,
+        )
+
+        self.create_whatsapp_template(
+            slug="test-template-2",
+            message="This is a test message",
+            category="UTILITY",
+            locale="en",
+            publish=True,
+        )
+
+        self.create_whatsapp_template(
+            slug="test-other-1",
+            message="This is a test message",
+            category="UTILITY",
+            locale="en",
+            publish=True,
+        )
+
+        response = uclient.get("/api/v3/whatsapptemplates/?slug=other")
+        content = json.loads(response.content)
+
+        assert content["count"] == 1
+        assert content["results"][0]["slug"] == "test-other-1"
 
     def test_template_detail_draft(self, uclient):
         """

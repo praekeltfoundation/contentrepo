@@ -84,6 +84,13 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         else:
             queryset_to_return = live_queryset
 
+        slug = self.request.query_params.get("slug", "")
+        if slug:
+            queryset_to_return = queryset_to_return.filter(slug__icontains=slug)
+
+        locale = self.request.query_params.get("locale", "")
+        if locale:
+            queryset_to_return = queryset_to_return.filter(locale__language_code=locale)
         return queryset_to_return
 
     @classmethod
@@ -196,18 +203,22 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         if slug:
             queryset_to_return = queryset_to_return.filter(slug__icontains=slug)
 
-        # TODO: The V2 API allowed a "search" query param to be passed.
-        # I don't think we want that here, but leaving this here for now
-
-        # search = self.request.query_params.get("search", "")
-        # if search:
-        #     queryset_to_return = queryset_to_return.search(search)
+        # TODO: Add tests for this once we have locale support in test page builder
+        locale = self.request.query_params.get("locale", "")
+        if locale:
+            queryset_to_return = queryset_to_return.filter(locale__language_code=locale)
 
         # TODO: We may want to add an environment variable for
         # V3_LOCALE_OPTIONAL = True
         # If false, then not sending locale with request is an error, 400
         # If true, then not sending locale with request use default
         # Query param overwrites regardless
+        # TODO: The V2 API allowed a "search" query param to be passed.
+        # I don't think we want that here, but leaving this here for now
+
+        # search = self.request.query_params.get("search", "")
+        # if search:
+        #     queryset_to_return = queryset_to_return.search(search)
 
         tag = self.request.query_params.get("tag")
         if tag:
