@@ -266,6 +266,7 @@ class TestWhatsAppTemplateAPIV3:
         url = f"/api/v3/whatsapptemplates/{template.id}/?return_drafts=True"
         response = uclient.get(url)
         content = response.json()
+
         assert content["message"] == "*Default unpublished template 1* 🏥"
 
     def test_template_detail_published_only(self, uclient):

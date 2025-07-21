@@ -203,7 +203,11 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "ContentRepo API",
-    "VERSION": "1.0.0",
+    "VERSION": "1.0.1",
+    "SWAGGER_UI_SETTINGS": {
+        "displayOperationId": True,
+        "defaultModelsExpandDepth": -1,
+    },
 }
 
 AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")

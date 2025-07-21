@@ -3,6 +3,7 @@ from typing import Any
 from django.core.exceptions import MultipleObjectsReturned
 from django.http.response import Http404
 from django.urls import path
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -21,6 +22,7 @@ from .models import (  # isort:skip
 )
 
 
+@extend_schema(tags=["v3 api"])
 class WhatsAppTemplateViewset(BaseAPIViewSet):
     model = WhatsAppTemplate
     base_serializer_class = WhatsAppTemplateSerializer
@@ -37,7 +39,7 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
     ]
     filter_backends = (SearchFilter,)
 
-    def detail_view(self, request, pk=None, slug=None):
+    def process_detail_view(self, request, pk=None, slug=None):
         if slug is not None:
             self.lookup_field = "slug"
 
@@ -57,6 +59,158 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
 
         return Response(serializer.data)
 
+    @extend_schema(
+        operation_id="api_v3_whatsapptemplates_detail_by_id",
+        parameters=[
+            OpenApiParameter(
+                name="return_drafts",
+                description="Returns all latest content, regardless of live/draft status",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "True",
+                        value="true",
+                    ),
+                    OpenApiExample(
+                        "False",
+                        value="false",
+                    ),
+                ],
+            ),
+        ],
+    )
+    def detail_view_by_id(self, request, pk):
+        return self.process_detail_view(request, pk=pk)
+
+    @extend_schema(
+        operation_id="api_v3_whatsapptemplates_detail_by_slug",
+        parameters=[
+            OpenApiParameter(
+                name="return_drafts",
+                description="Returns all latest content, regardless of live/draft status",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "True",
+                        value="true",
+                    ),
+                    OpenApiExample(
+                        "False",
+                        value="false",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="locale",
+                description="Filter by exact match on locale",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "blank",
+                        value="",
+                    ),
+                    OpenApiExample(
+                        "English",
+                        value="en",
+                    ),
+                ],
+            ),
+        ],
+    )
+    def detail_view_by_slug(self, request, slug):
+        return self.process_detail_view(request, slug=slug)
+
+    @extend_schema(
+        operation_id="api_v3_whatsapptemplates_list_all",
+        parameters=[
+            OpenApiParameter(
+                name="slug",
+                description="Filter by partial match on slug",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "blank",
+                        value="",
+                    ),
+                    OpenApiExample(
+                        "Template",
+                        value="template",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="locale",
+                description="Filter by exact match on locale",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "blank",
+                        value="",
+                    ),
+                    OpenApiExample(
+                        "English",
+                        value="en",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="channel",
+                description="Filter by exact match on channel",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "Web",
+                        value="web",
+                    ),
+                    OpenApiExample(
+                        "SMS",
+                        value="sms",
+                    ),
+                    OpenApiExample(
+                        "Whatsapp",
+                        value="whatsapp",
+                    ),
+                    OpenApiExample(
+                        "Messenger",
+                        value="messenger",
+                    ),
+                    OpenApiExample(
+                        "Viber",
+                        value="viber",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="return_drafts",
+                description="Returns all latest pages, regardless of live/draft status",
+                required=False,
+                type=bool,
+                examples=[
+                    OpenApiExample(
+                        "None",
+                        value="False",
+                    ),
+                    OpenApiExample(
+                        "True",
+                        value="true",
+                    ),
+                    OpenApiExample(
+                        "False",
+                        value="false",
+                    ),
+                ],
+            ),
+        ],
+        responses={
+            201: WhatsAppTemplateSerializer,
+        },
+    )
     def listing_view(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset_list = self.paginate_queryset(queryset)
@@ -100,12 +254,17 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         """
         return [
             path("", cls.as_view({"get": "listing_view"}), name="listing"),
-            path("<int:pk>/", cls.as_view({"get": "detail_view"}), name="detail"),
-            path("<slug:slug>/", cls.as_view({"get": "detail_view"}), name="detail"),
-            path("find/", cls.as_view({"get": "find_view"}), name="find"),
+            path("<int:pk>/", cls.as_view({"get": "detail_view_by_id"}), name="detail"),
+            path(
+                "<slug:slug>/",
+                cls.as_view({"get": "detail_view_by_slug"}),
+                name="detail",
+            ),
+            # path("find/", cls.as_view({"get": "find_view"}), name="find"),
         ]
 
 
+@extend_schema(tags=["v3 api"])
 class ContentPagesV3APIViewset(PagesAPIViewSet):
     """
     Our custom V3 Pages API endpoint that allows finding pages by pk or slug
@@ -135,7 +294,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             )
         return channel
 
-    def detail_view(self, request, pk=None, slug=None):
+    def process_detail_view(self, request, pk=None, slug=None):
         _channel = self.validate_channel()
         if slug is not None:
             self.lookup_field = "slug"
@@ -152,6 +311,13 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             default_language_code = Site.objects.get(
                 is_default_site=True
             ).root_page.locale.language_code
+            raise NotFound(
+                {
+                    "page": [
+                        f"Multiple pages found. Detail View requires a single page.  Please try narrowing down your query by adding a locale query parameter e.g. '&locale={default_language_code}"
+                    ]
+                }
+            )
             raise MultipleObjectsReturned(
                 f"Multiple pages found. Detail View requires a single page.  Please try narrowing down your query by adding a locale query parameter e.g. '&locale={default_language_code}'"
             )
@@ -163,6 +329,202 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         serializer = ContentPageSerializerV3(instance, context={"request": request})
         return Response(serializer.data)
 
+    @extend_schema(
+        operation_id="api_v3_pages_detail_by_id",
+        parameters=[
+            OpenApiParameter(
+                name="return_drafts",
+                description="Returns all latest content, regardless of live/draft status",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "True",
+                        value="true",
+                    ),
+                    OpenApiExample(
+                        "False",
+                        value="false",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="channel",
+                description="Filter by exact match on channel",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "Web",
+                        value="web",
+                    ),
+                    OpenApiExample(
+                        "SMS",
+                        value="sms",
+                    ),
+                    OpenApiExample(
+                        "Whatsapp",
+                        value="whatsapp",
+                    ),
+                    OpenApiExample(
+                        "Messenger",
+                        value="messenger",
+                    ),
+                    OpenApiExample(
+                        "Viber",
+                        value="viber",
+                    ),
+                ],
+            ),
+        ],
+    )
+    def detail_view_by_id(self, request, pk):
+        return self.process_detail_view(request, pk=pk)
+
+    @extend_schema(
+        operation_id="api_v3_pages_detail_by_slug",
+        parameters=[
+            OpenApiParameter(
+                name="return_drafts",
+                description="Returns all latest content, regardless of live/draft status",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "True",
+                        value="true",
+                    ),
+                    OpenApiExample(
+                        "False",
+                        value="false",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="channel",
+                description="Filter by exact match on channel",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "Web",
+                        value="web",
+                    ),
+                    OpenApiExample(
+                        "SMS",
+                        value="sms",
+                    ),
+                    OpenApiExample(
+                        "Whatsapp",
+                        value="whatsapp",
+                    ),
+                    OpenApiExample(
+                        "Messenger",
+                        value="messenger",
+                    ),
+                    OpenApiExample(
+                        "Viber",
+                        value="viber",
+                    ),
+                ],
+            ),
+        ],
+    )
+    def detail_view_by_slug(self, request, slug):
+        return self.process_detail_view(request, slug=slug)
+
+    @extend_schema(
+        operation_id="api_v3_pages_list_all",
+        parameters=[
+            OpenApiParameter(
+                name="slug",
+                description="Filter by partial match on slug",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "blank",
+                        value="",
+                    ),
+                    OpenApiExample(
+                        "Template",
+                        value="template",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="locale",
+                description="Filter by exact match on locale",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "blank",
+                        value="",
+                    ),
+                    OpenApiExample(
+                        "English",
+                        value="en",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="title",
+                description="Filter by partial match on title",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "Example 1",
+                        value="page",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="channel",
+                description="Filter by exact match on channel",
+                required=False,
+                type=str,
+                examples=[
+                    OpenApiExample(
+                        "None",
+                        value="",
+                    ),
+                    OpenApiExample(
+                        "Whatsapp",
+                        value="whatsapp",
+                    ),
+                    OpenApiExample(
+                        "Messenger",
+                        value="messenger",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="return_drafts",
+                description="Returns all latest pages, regardless of live/draft status",
+                required=False,
+                type=bool,
+                examples=[
+                    OpenApiExample(
+                        "None",
+                        value="False",
+                    ),
+                    OpenApiExample(
+                        "True",
+                        value="true",
+                    ),
+                    OpenApiExample(
+                        "False",
+                        value="false",
+                    ),
+                ],
+            ),
+        ],
+        responses={
+            201: ContentPageSerializerV3,
+        },
+    )
     def listing_view(self, request, *args, **kwargs):
         channel = self.validate_channel()
         queryset = self.get_queryset()
@@ -246,9 +608,13 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
         return [
             path("", cls.as_view({"get": "listing_view"}), name="listing"),
-            path("<int:pk>/", cls.as_view({"get": "detail_view"}), name="detail"),
-            path("<slug:slug>/", cls.as_view({"get": "detail_view"}), name="detail"),
-            path("find/", cls.as_view({"get": "find_view"}), name="find"),
+            path("<int:pk>/", cls.as_view({"get": "detail_view_by_id"}), name="detail"),
+            path(
+                "<slug:slug>/",
+                cls.as_view({"get": "detail_view_by_slug"}),
+                name="detail",
+            ),
+            # path("find/", cls.as_view({"get": "find_view"}), name="find"),
         ]
 
 

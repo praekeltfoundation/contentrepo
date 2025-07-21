@@ -209,12 +209,14 @@ def format_whatsapp_body_V3(content_page):
 
 def format_detail_url(obj, request):
     router = request.wagtailapi_router
+
     if not obj.slug:
         # TODO: Add test for pages and templates
         raise Exception(
             f"Error finding detail URL. Blank slug detected for {type(obj)} id={obj.id} {obj} - OBJVars = {vars(obj)}"
         )
     detail_url = get_object_detail_url(router, request, type(obj), obj.slug)
+
     query_params = request.query_params
     if query_params:
         detail_url = (
@@ -260,10 +262,11 @@ class ContentPageSerializerV3(PageSerializer):
 
 
 class WhatsAppTemplateSerializer(serializers.ModelSerializer):
-    locale = serializers.CharField(source="locale.language_code")
+    slug = serializers.CharField(default="default-slug")
+    locale = serializers.CharField(source="locale.language_code", default="en")
     revision = serializers.IntegerField(source="get_latest_revision.id")
     buttons = serializers.SerializerMethodField()
-    example_values = serializers.SerializerMethodField()
+    example_values = serializers.SerializerMethodField(default=["Example Value 1"])
     detail_url = serializers.SerializerMethodField()
 
     meta_fields = []
