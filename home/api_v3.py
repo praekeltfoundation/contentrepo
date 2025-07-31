@@ -159,34 +159,6 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
                 ],
             ),
             OpenApiParameter(
-                name="channel",
-                description="Filter by exact match on channel",
-                required=False,
-                type=str,
-                examples=[
-                    OpenApiExample(
-                        "Web",
-                        value="web",
-                    ),
-                    OpenApiExample(
-                        "SMS",
-                        value="sms",
-                    ),
-                    OpenApiExample(
-                        "Whatsapp",
-                        value="whatsapp",
-                    ),
-                    OpenApiExample(
-                        "Messenger",
-                        value="messenger",
-                    ),
-                    OpenApiExample(
-                        "Viber",
-                        value="viber",
-                    ),
-                ],
-            ),
-            OpenApiParameter(
                 name="return_drafts",
                 description="Returns all latest pages, regardless of live/draft status",
                 required=False,
