@@ -290,6 +290,12 @@ class WhatsappBlock(blocks.StructBlock):
     image = ImageChooserBlock(required=False)
     document = DocumentChooserBlock(icon="document", required=False)
     media = MediaBlock(icon="media", required=False)
+    title = blocks.CharBlock(
+        required=False,
+        help_text="Short heading shown above the message body, up to 60 characters.",
+        max_length=60,
+        default="",
+    )
     message = blocks.TextBlock(
         help_text="each text message cannot exceed 4096 characters, messages with "
         "media cannot exceed 1024 characters.",
@@ -1624,6 +1630,12 @@ class WhatsAppTemplate(
     def __str__(self) -> str:
         """String repr of this snippet."""
         return self.slug
+
+    # Provide a minimal snippet_viewset interface for chooser widgets when the
+    # snippet isn't registered in the admin (feature-flagged). Wagtail's
+    # SnippetChooserBlock accesses `target_model.snippet_viewset.icon`.
+    class snippet_viewset:
+        icon = "order"
 
     def clean(self) -> None:
         result = super().clean()

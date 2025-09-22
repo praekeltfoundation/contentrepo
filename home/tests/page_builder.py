@@ -169,6 +169,7 @@ class WABlk(ContentBlock):
     BLOCK_TYPE = WhatsappBlock
 
     # TODO: More body things.
+    title: str = ""
     next_prompt: str | None = None
     variation_messages: list[VarMsg] = field(default_factory=list)
     buttons: list[Btn] = field(default_factory=list)

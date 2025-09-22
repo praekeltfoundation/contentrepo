@@ -85,6 +85,7 @@ def add_new_fields(entry: ExpDict) -> ExpDict:
     return {
         "whatsapp_template_slug": "",
         **entry,
+        "whatsapp_message_title": entry.get("whatsapp_message_title") or "",
         "whatsapp_template_category": entry.get("whatsapp_template_category")
         or "UTILITY",
         "example_values": entry.get("example_values") or "[]",

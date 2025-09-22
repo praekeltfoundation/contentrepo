@@ -459,6 +459,7 @@ class ContentImporter:
             page.whatsapp_body.append(
                 ShadowWhatsappBlock(
                     message=row.whatsapp_body,
+                    title=row.whatsapp_message_title,
                     next_prompt=row.next_prompt,
                     example_values=row.example_values,
                     buttons=buttons,
@@ -685,6 +686,7 @@ class ShadowContentPage:
 @dataclass(slots=True)
 class ShadowWhatsappBlock:
     message: str = ""
+    title: str = ""
     next_prompt: str = ""
     buttons: list[dict[str, Any]] = field(default_factory=list)
     example_values: list[str] = field(default_factory=list)
@@ -699,6 +701,7 @@ class ShadowWhatsappBlock:
     ) -> dict[str, str | list[dict[str, str | list[dict[str, str]]]] | list[str]]:
         return {
             "message": self.message,
+            "title": self.title,
             "next_prompt": self.next_prompt,
             "example_values": self.example_values,
             "buttons": self.buttons,
@@ -782,6 +785,7 @@ class ContentRow:
     web_body: str = ""
     whatsapp_title: str = ""
     whatsapp_body: str = ""
+    whatsapp_message_title: str = ""
     whatsapp_template_slug: str = ""
     example_values: list[str] = field(default_factory=list)
     variation_title: dict[str, str] = field(default_factory=dict)

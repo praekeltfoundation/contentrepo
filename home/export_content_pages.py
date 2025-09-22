@@ -54,6 +54,7 @@ class ExportRow:
     web_body: str = ""
     whatsapp_title: str = ""
     whatsapp_body: str = ""
+    whatsapp_message_title: str = ""
     whatsapp_template_slug: str = ""
     variation_title: str = ""
     variation_body: str = ""
@@ -126,6 +127,8 @@ class ExportRow:
                 self.whatsapp_template_slug = whatsapp.value.slug
             else:
                 self.whatsapp_body = whatsapp.value["message"].strip()
+                # Per-message WhatsApp title (not the page-level whatsapp_title)
+                self.whatsapp_message_title = whatsapp.value.get("title", "")
                 if "image" in whatsapp.value and whatsapp.value["image"] is not None:
                     self.image_link = whatsapp.value["image"].file.url
                 if (
@@ -344,6 +347,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "web_body": 370,
         "whatsapp_title": 118,
         "whatsapp_body": 370,
+    "whatsapp_message_title": 118,
         "whatsapp_template_slug": 118,
         "variation_title": 118,
         "variation_body": 370,

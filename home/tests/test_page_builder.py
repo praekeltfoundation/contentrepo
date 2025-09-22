@@ -109,6 +109,7 @@ def test_build_simple_pages() -> None:
         (
             "Whatsapp_Message",
             {
+                "title": "",
                 "document": None,
                 "image": None,
                 "list_title": "",
@@ -289,6 +290,7 @@ def test_build_variations() -> None:
         (
             "Whatsapp_Message",
             {
+                "title": "",
                 "document": None,
                 "image": None,
                 "list_title": "",
