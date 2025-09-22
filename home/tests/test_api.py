@@ -655,6 +655,7 @@ class TestContentPageAPI:
         assert body["total_messages"] == 1
         assert body["text"]["type"] == "Whatsapp_Message"
         assert body["text"]["value"]["message"] == "*Default whatsapp Content 1* 🏥"
+        assert body["text"]["value"].get("title", "") == ""
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)
     def test_detail_view_platform_enabled_no_message(self, uclient, platform):
@@ -1221,6 +1222,7 @@ class TestWhatsAppMessages:
         whatsapp_value = content["body"]["text"]["value"]
 
         assert whatsapp_value == {
+            "title": "",
             "image": None,
             "media": None,
             "footer": "",

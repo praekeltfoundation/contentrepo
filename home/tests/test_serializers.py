@@ -468,6 +468,7 @@ class TestFormatMessage:
         expected_result = {
             "type": "Whatsapp_Message",
             "value": {
+                "title": "",
                 "image": None,
                 "document": None,
                 "media": None,
@@ -499,6 +500,7 @@ class TestFormatMessage:
         expected_result = {
             "type": "Whatsapp_Message",
             "value": {
+                "title": "",
                 "image": None,
                 "document": None,
                 "media": None,

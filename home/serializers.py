@@ -125,6 +125,7 @@ def format_whatsapp_template_message(message_index, content_page) -> dict[str, A
         # to retain the v2 api behaviour. We also return some fields as null or empty values, for the same reason
         "type": "Whatsapp_Message",
         "value": {
+            "title": "",
             "image": wa_template.image.id if wa_template.image else "",
             "media": None,
             "footer": "",
@@ -145,6 +146,8 @@ def format_whatsapp_message(message_index, content_page, platform):
     text = content_page.whatsapp_body._raw_data[message_index]
 
     if str(text["type"]) == "Whatsapp_Message":
+        # Ensure the new title field always exists in API output
+        text["value"].setdefault("title", "")
         # Flattens the variation_messages field in the whatsapp message
         variation_messages = text["value"].get("variation_messages", [])
         new_var_messages = []
