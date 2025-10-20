@@ -21,6 +21,8 @@ from .models import (  # isort:skip
     WhatsAppTemplate,
 )
 
+DEFAULT_LOCALE = Site.objects.get(is_default_site=True).root_page.locale.language_code
+
 
 @extend_schema(tags=["v3 api"])
 class WhatsAppTemplateViewset(BaseAPIViewSet):
@@ -214,7 +216,7 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         if slug:
             queryset_to_return = queryset_to_return.filter(slug__icontains=slug)
 
-        locale = self.request.query_params.get("locale", "")
+        locale = self.request.query_params.get("locale", DEFAULT_LOCALE)
         if locale:
             queryset_to_return = queryset_to_return.filter(locale__language_code=locale)
         return queryset_to_return
@@ -538,15 +540,10 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             queryset_to_return = queryset_to_return.filter(slug__icontains=slug)
 
         # TODO: Add tests for this once we have locale support in test page builder
-        locale = self.request.query_params.get("locale", "")
+        locale = self.request.query_params.get("locale", DEFAULT_LOCALE)
         if locale:
             queryset_to_return = queryset_to_return.filter(locale__language_code=locale)
 
-        # TODO: We may want to add an environment variable for
-        # V3_LOCALE_OPTIONAL = True
-        # If false, then not sending locale with request is an error, 400
-        # If true, then not sending locale with request use default
-        # Query param overwrites regardless
         # TODO: The V2 API allowed a "search" query param to be passed.
         # I don't think we want that here, but leaving this here for now
 
