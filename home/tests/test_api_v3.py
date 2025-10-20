@@ -299,7 +299,7 @@ class TestWhatsAppTemplateAPIV3:
 
     def test_template_detail_buttons(self, uclient):
         """
-        Unpublished templates are returned if the return_drafts param is set.
+        The buttons are returned correctly in the detail view for unpublished templates.
         """
         template = self.create_whatsapp_template(
             slug="test-template-1",
@@ -323,7 +323,7 @@ class TestWhatsAppTemplateAPIV3:
 
     def test_template_detail_image(self, uclient):
         """
-        Unpublished templates are returned if the return_drafts param is set.
+        The image is returned correctly in the detail view for unpublished templates.
         """
         mk_test_img()
         image_obj = Image.objects.first()
@@ -344,7 +344,7 @@ class TestWhatsAppTemplateAPIV3:
 
     def test_template_detail_example_values(self, uclient):
         """
-        Unpublished templates are returned if the return_drafts param is set.
+        The example values are returned correctly in the detail view for unpublished templates.
         """
 
         template = self.create_whatsapp_template(
