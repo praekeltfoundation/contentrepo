@@ -190,7 +190,7 @@ CACHES = {"default": env.cache("CACHE_URL", default="redis://127.0.0.1:6379/1")}
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",  # noqa
-    "PAGE_SIZE": env.int("PAGE_SIZE", 5),
+    "PAGE_SIZE": env.int("PAGE_SIZE", 10),
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.TokenAuthentication",
