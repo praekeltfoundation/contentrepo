@@ -528,7 +528,7 @@ class TestContentPageAPIV3:
         content = json.loads(response.content)
         assert content["count"] == 3
 
-        # If QA flag is sent then it should return pages with tags in the draft
+        # If return_drafts flag is sent then it should return pages with tags in the draft
         response = uclient.get("/api/v3/pages/?tag=Menu&return_drafts=True")
         content = json.loads(response.content)
         assert content["count"] == 2

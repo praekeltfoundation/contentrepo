@@ -522,7 +522,10 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             self.request.query_params.get("return_drafts", "").lower() == "true"
         )
 
-        queryset_to_return = draft_queryset if return_drafts else live_queryset
+        if return_drafts:
+            queryset_to_return = draft_queryset | live_queryset
+        else:
+            queryset_to_return = live_queryset
 
         title = self.request.query_params.get("title", "")
         if title:
