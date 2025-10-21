@@ -195,74 +195,15 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
 
     def get_queryset(self):
         draft_queryset = (
-            WhatsAppTemplate.objects.all()
-            .order_by("latest_revision_id")
-            .prefetch_related("locale")
+            WhatsAppTemplate.objects.all().order_by("pk").prefetch_related("locale")
         )
-        # draft_queryset = (
-        #     WhatsAppTemplate.objects.all()
-        #     .order_by("latest_revision_id")
-        #     .prefetch_related("locale")
-        # )
-        # print("*************")
-        # print("*************")
-        # draft_queryset = (
-        #     WhatsAppTemplate.objects.filter(has_unpublished_changes=True)
-        #     .order_by("latest_revision_id")
-        #     .prefetch_related("locale")
-        # )
-
-    #     for wt in draft_queryset:
-    #         latest_revision = wt.revisions.order_by("-created_at").first()
-    #         if latest_revision:
-    #             latest_revision = latest_revision.as_object()
-    #             print(f"Latest revision for template {wt.slug} is {latest_revision.id}")
-
-    #     for dq in draft_queryset:
-    #         print(
-    #             f"""
-    # DraftQS item: {dq} 
-    # live={dq.live}  
-    # latest_rev_id={dq.latest_revision_id}
-    # live_rev_id={dq.live_revision_id}
-    #         """
-    #         )
-    #         # print(vars(dq))
-    #         for rev in dq.revisions.all():
-    #             print(rev.id)
-    #             # print("")
-    #             # print(vars(rev))
-
-        live_queryset = WhatsAppTemplate.objects.filter(
-            has_unpublished_changes=False
-        ).prefetch_related("locale")
-
-        live_queryset = draft_queryset.filter(live=True).order_by("last_published_at")
-
-        queryset_to_return = live_queryset
+        live_queryset = draft_queryset.filter(live=True)
 
         return_drafts = (
             self.request.query_params.get("return_drafts", "").lower() == "true"
         )
 
-        if return_drafts:
-            queryset_to_return = draft_queryset | live_queryset
-        else:
-            queryset_to_return = live_queryset
-
-        # for qtr in queryset_to_return:
-        #     print(f"Draft QTR item: {qtr} ")
-        #     # print(f"""
-        #     # Draft QTR item: {qtr}
-        #     # live={qtr.live}
-        #     # latest_rev_id={qtr.latest_revision_id}
-        #     # live_rev_id={qtr.live_revision_id}
-        #     # """)
-        #     # print(vars(qtr))
-        #     # for rev in qtr.revisions.all():
-        #     #     print(rev.id)
-        #     #     # print("")
-        #     #     # print(vars(rev))
+        queryset_to_return = draft_queryset if return_drafts else live_queryset
 
         slug = self.request.query_params.get("slug", "")
         if slug:
@@ -569,75 +510,19 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         # In this context, 'live()' means ONLY page revisions that have been published
         # 'not_live()' refers to page revisions that has been saved as a draft, but not published
         # 'return_drafts' means 'Give me the latest revisions of everything, whether that is a published page, or an unpublished revision'
-        print("")
-        print("****************************************************")
-        print("****************************************************")
-        print("")
-
         draft_queryset = (
-            ContentPage.objects.not_live()
-            .order_by("latest_revision_id")
-            .prefetch_related("locale")
+            ContentPage.objects.not_live().order_by("pk").prefetch_related("locale")
         )
-        draft_queryset = draft_queryset.filter(locale__language_code=DEFAULT_LOCALE)
-        print("")
-        print("**************************")
-        print(f"Draft Queryset: {draft_queryset.count()} items")
-        print("**************************")
-        for dq in draft_queryset:
-
-            latest_revision = dq.revisions.order_by("-created_at").first()
-            if latest_revision:
-                latest_revision = latest_revision.as_object()
-                # ocs.name = latest_revision.name
-                # ocs.pages = latest_revision.pages
-                # ocs.profile_fields = latest_revision.profile_fields
-                # ocs.locale = latest_revision.locale
-                # dq.slug = latest_revision.slug
-                dq = latest_revision
-
-            print(
-                f"""
-DQS item: {dq.slug}
-    title={dq.title}   
-    live={dq.live}
-    locale={dq.locale.language_code}
-    latest_rev_id={dq.latest_revision_id}
-    live_rev_id={dq.live_revision_id}"""
-            )
-            print(f"     Revisions:{[item.id for item in dq.revisions.all()]} ")
-
-        live_queryset = ContentPage.objects.live().prefetch_related("locale")
-        live_queryset = live_queryset.filter(locale__language_code=DEFAULT_LOCALE)
-
-        print("")
-        print("**************************")
-        print(f"Live Queryset: {live_queryset.count()} items")
-        print("**************************")
-        for lq in live_queryset:
-            print(
-                f"""
-LQS item: {lq.slug} 
-    live={lq.live}
-    locale={lq.locale.language_code}   
-    latest_rev_id={lq.latest_revision_id}
-    live_rev_id={lq.live_revision_id}"""
-            )
-            # print("     Revisions:")
-            # print(vars(lq))
-
-            print(f"    Revisions:{[item.id for item in lq.revisions.all()]} ")
-
+        live_queryset = (
+            ContentPage.objects.live().order_by("pk").prefetch_related("locale")
+        )
         queryset_to_return = live_queryset
 
         return_drafts = (
             self.request.query_params.get("return_drafts", "").lower() == "true"
         )
 
-        if return_drafts:
-            queryset_to_return = draft_queryset | live_queryset
-        else:
-            queryset_to_return = live_queryset
+        queryset_to_return = draft_queryset if return_drafts else live_queryset
 
         title = self.request.query_params.get("title", "")
         if title:
@@ -650,10 +535,7 @@ LQS item: {lq.slug}
         # TODO: Add tests for this once we have locale support in test page builder
         locale = self.request.query_params.get("locale", DEFAULT_LOCALE)
         if locale:
-            queryset_to_return = queryset_to_return.filter(
-                locale__language_code=DEFAULT_LOCALE
-            )
-
+            queryset_to_return = queryset_to_return.filter(locale__language_code=locale)
         # TODO: The V2 API allowed a "search" query param to be passed.
         # I don't think we want that here, but leaving this here for now
 
@@ -676,30 +558,6 @@ LQS item: {lq.slug}
                 ids.append(t.content_object_id)
 
             queryset_to_return = queryset_to_return.filter(id__in=ids)
-
-        print("")
-        print("**************************")
-        print(f"Queryset to return: {queryset_to_return.count()} items")
-        print("**************************")
-        for qtr in queryset_to_return:
-            latest_revision = qtr.revisions.order_by("-created_at").first()
-            if latest_revision:
-                latest_revision = latest_revision.as_object()
-                # ocs.name = latest_revision.name
-                # ocs.pages = latest_revision.pages
-                # ocs.profile_fields = latest_revision.profile_fields
-                # ocs.locale = latest_revision.locale
-                # dq.slug = latest_revision.slug
-                qtr = latest_revision
-            print(
-                f"""
-QTR item: {qtr.slug} 
-    live={qtr.live}
-    locale={qtr.locale.language_code}   
-    latest_rev_id={qtr.latest_revision_id}
-    live_rev_id={qtr.live_revision_id}"""
-            )
-            print(f"    Revisions:{[item.id for item in qtr.revisions.all()]} ")
 
         return queryset_to_return
 

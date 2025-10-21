@@ -248,6 +248,14 @@ class ContentPageSerializerV3(PageSerializer):
             "related_pages",
         ]
 
+    def to_representation(self, instance):
+        request = self.context["request"]
+        return_drafts = request.query_params.get("return_drafts", "").lower() == "true"
+        if return_drafts:
+            return super().to_representation(instance.get_latest_revision().as_object())
+
+        return super().to_representation(instance)
+
     def get_title(self, obj):
         return format_title(page=obj, request=self.context["request"])
 
@@ -289,6 +297,14 @@ class WhatsAppTemplateSerializer(serializers.ModelSerializer):
             "submission_result",
         ]
 
+    def to_representation(self, instance):
+        request = self.context["request"]
+        return_drafts = request.query_params.get("return_drafts", "").lower() == "true"
+        if return_drafts:
+            return super().to_representation(instance.get_latest_revision().as_object())
+
+        return super().to_representation(instance)
+
     def get_buttons(self, obj):
         return format_buttons_and_list_items(obj.buttons.raw_data)
 
@@ -297,3 +313,6 @@ class WhatsAppTemplateSerializer(serializers.ModelSerializer):
 
     def get_detail_url(self, obj):
         return format_detail_url(obj=obj, request=self.context["request"])
+
+    # In the serializer see if we can check for QA and return the draft objects
+    # Check DRF magic if there is any way to convert revision queryset to objects directly

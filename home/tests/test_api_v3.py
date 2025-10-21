@@ -251,29 +251,29 @@ class TestWhatsAppTemplateAPIV3:
         assert content["count"] == 1
         assert content["results"][0]["slug"] == "test-other-1"
 
-    # def test_template_list_unpublished_after_published(self, uclient):
-    #     """
-    #     If we have a published page that has had new draft revisions after the published one,
-    #     the unpublished details will be returned if return_drafts is set to true
-    #     """
-    #     template = self.create_whatsapp_template(
-    #         slug="test-template-2",
-    #         message="*Default published template 1* 🏥",
-    #         category="UTILITY",
-    #         locale="en",
-    #         publish=True,
-    #     )
+    def test_template_list_unpublished_after_published(self, uclient):
+        """
+        If we have a published template that has had new draft revisions after the published one,
+        the unpublished details will be returned if return_drafts is set to true
+        """
+        template = self.create_whatsapp_template(
+            slug="test-template-2",
+            message="*Default published template 1* 🏥",
+            category="UTILITY",
+            locale="en",
+            publish=True,
+        )
 
-    #     template.message = "Message changed in unpublished revision"
-    #     template.save_revision()
+        template.message = "Message changed in unpublished revision"
+        template.save_revision()
 
-    #     url = f"/api/v3/whatsapptemplates/?return_drafts=true"
-    #     response = uclient.get(url)
-    #     content = response.json()
-    #     assert (
-    #         content["results"][0]["message"]
-    #         == "Message changed in unpublished revision"
-    #     )
+        url = "/api/v3/whatsapptemplates/?return_drafts=true"
+        response = uclient.get(url)
+        content = response.json()
+        assert (
+            content["results"][0]["message"]
+            == "Message changed in unpublished revision"
+        )
 
     def test_template_detail_draft(self, uclient):
         """
@@ -313,14 +313,12 @@ class TestWhatsAppTemplateAPIV3:
         url = f"/api/v3/whatsapptemplates/{template.id}/"
         response = uclient.get(url)
         content = response.json()
-        print("Here is the content:")
-        print(content)
         assert content["message"] == "*Default published template 1* 🏥"
 
         url = f"/api/v3/whatsapptemplates/{template.id}/?return_drafts=true"
         response = uclient.get(url)
         content = response.json()
-       
+
         assert content["message"] == "Message changed in unpublished revision"
 
     def test_template_detail_buttons(self, uclient):
@@ -770,6 +768,26 @@ class TestContentPageAPIV3:
             "has_children": False,
             "related_pages": [],
         }
+
+    def test_page_list_unpublished_after_published(self, uclient):
+        """
+        If we have a published page that has had new draft revisions after the published one,
+        the unpublished details will be returned if return_drafts is set to true
+        """
+        channel = "whatsapp"
+        page = self.create_content_page(publish=True, body_type=channel)
+
+        page.whatsapp_body[0].value[
+            "message"
+        ] = "Message changed in unpublished revision"
+        page.save_revision()
+
+        url = f"/api/v3/pages/?channel={channel}&return_drafts=True"
+        # it should return specific page that is in draft
+        content = uclient.get(url).json()
+        # the page is not live but messenger content is returned
+        body = content["results"][0]["messages"][0]["text"]
+        assert body == "Message changed in unpublished revision"
 
     def test_list_view_slug_search(self, uclient):
         """
