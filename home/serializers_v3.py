@@ -313,6 +313,3 @@ class WhatsAppTemplateSerializer(serializers.ModelSerializer):
 
     def get_detail_url(self, obj):
         return format_detail_url(obj=obj, request=self.context["request"])
-
-    # In the serializer see if we can check for QA and return the draft objects
-    # Check DRF magic if there is any way to convert revision queryset to objects directly
