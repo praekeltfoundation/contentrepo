@@ -799,22 +799,22 @@ class TestContentPageAPIV3:
         self.create_content_page(page, title="Unrelated Page 2")
 
         slug_to_search = "content-page-"
-        url = f"/api/v3/pages/?slug={slug_to_search}&return_drafts=True"
+        url = f"/api/v3/pages/?slug={slug_to_search}"
         content = uclient.get(url).json()
         assert content["count"] == 2
 
         slug_to_search = "content-page-1"
-        url = f"/api/v3/pages/?slug={slug_to_search}&return_drafts=True"
+        url = f"/api/v3/pages/?slug={slug_to_search}"
         content = uclient.get(url).json()
         assert content["count"] == 1
 
         slug_to_search = "page"
-        url = f"/api/v3/pages/?slug={slug_to_search}&return_drafts=True"
+        url = f"/api/v3/pages/?slug={slug_to_search}"
         content = uclient.get(url).json()
         assert content["count"] == 4
 
         slug_to_search = "page-"
-        url = f"/api/v3/pages/?slug={slug_to_search}&return_drafts=True"
+        url = f"/api/v3/pages/?slug={slug_to_search}"
         content = uclient.get(url).json()
         assert content["count"] == 3
 
