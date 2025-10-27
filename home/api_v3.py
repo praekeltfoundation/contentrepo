@@ -10,6 +10,7 @@ from typing import Any
 from django.core.exceptions import MultipleObjectsReturned
 from django.http.response import Http404
 from django.urls import path
+from django.db.models import Q, Exists, OuterRef
 from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.filters import SearchFilter
@@ -133,6 +134,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
     model = ContentPage
     base_serializer_class = ContentPageSerializerV3
     meta_fields = []
+    _cached_queryset = None  # Cache for the queryset
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
         [
             "tag",
@@ -212,13 +214,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             default_language_code = Site.objects.get(
                 is_default_site=True
             ).root_page.locale.language_code
-            raise NotFound(
-                {
-                    "page": [
-                        f"Multiple pages found. Detail View requires a single page.  Please try narrowing down your query by adding a locale query parameter e.g. '&locale={default_language_code}"
-                    ]
-                }
-            )
             raise MultipleObjectsReturned(
                 f"Multiple pages found. Detail View requires a single page.  Please try narrowing down your query by adding a locale query parameter e.g. '&locale={default_language_code}'"
             )
@@ -251,14 +246,25 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         return self.get_paginated_response(serializer.data)
 
     def get_queryset(self) -> Any:
-
         logger.debug(f"Getting V3 Pages Queryset - Called from {self.calling_endpoint}")
+
+        # Return cached queryset if available and we're in listing view
+        if self.calling_endpoint == "listing" and self._cached_queryset is not None:
+            logger.debug("Returning cached queryset")
+            return self._cached_queryset
 
         return_drafts = (
             self.request.query_params.get("return_drafts", "").lower() == "true"
         )
         all_queryset = (
-            ContentPage.objects.all().order_by("pk").prefetch_related("locale")
+            ContentPage.objects.all()
+            .order_by("pk")
+            .select_related("locale")
+            .prefetch_related(
+                "latest_revision",
+                "triggers",
+                "tags"
+            )
         )
         draft_queryset = all_queryset.filter(has_unpublished_changes="True")
 
@@ -280,100 +286,67 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
             return page_to_return
 
-        all_match_ids = [a.id for a in all_queryset.all() if a]
-
+        # Get and normalize query parameters
         locale = self.request.query_params.get("locale", DEFAULT_LOCALE).casefold()
         slug = self.request.query_params.get("slug", "").casefold()
         title = self.request.query_params.get("title", "").casefold()
         trigger = self.request.query_params.get("trigger", "").casefold()
         tag = self.request.query_params.get("tag", "").casefold()
 
-        locale_matches = []
-        slug_matches = [] if slug else all_match_ids
-        title_matches = [] if title else all_match_ids
-        trigger_matches = [] if trigger else all_match_ids
-        tag_matches = [] if tag else all_match_ids
-
-        if return_drafts:
-            for dp in draft_queryset:
-                l_rev = dp.get_latest_revision_as_object()
-                if locale == l_rev.locale.language_code.casefold():
-                    locale_matches.append(dp.pk)
-
-                if slug and slug in l_rev.slug.casefold():
-                    slug_matches.append(dp.pk)
-
-                if title and title in l_rev.title.casefold():
-                    title_matches.append(dp.pk)
-
-                if trigger:
-                    l_rev_triggers = [
-                        t.name.casefold() for t in l_rev.triggers.all() if t
-                    ]
-
-                    for t in l_rev_triggers:
-                        if trigger in t:
-                            trigger_matches.append(dp.pk)
-
-                if tag:
-                    l_rev_tags = [t.name.casefold() for t in l_rev.tags.all() if t]
-
-                    for t in l_rev_tags:
-                        if tag in t:
-                            tag_matches.append(dp.pk)
-
-        locale_set = set(locale_matches)
-        slug_set = set(slug_matches)
-        title_set = set(title_matches)
-        trigger_set = set(trigger_matches)
-        tag_set = set(tag_matches)
-
-        unique_draft_matches = locale_set.intersection(
-            slug_set, title_set, locale_set, trigger_set, tag_set
-        )
-        unique_draft_list = list(unique_draft_matches)
-        logger.debug(
-            f"Drafts to add: {len(unique_draft_list)} items - {unique_draft_list}"
-        )
-
-        live_queryset = all_queryset.filter(live=True, has_unpublished_changes="False")
-        logger.debug(
-            f"Live Queryset = {live_queryset.count()} items - {[page.id for page in live_queryset.all() if page]}"
-        )
-
+        # Initialize filters
+        base_filters = Q()
         if locale:
-            live_queryset = live_queryset.filter(locale__language_code=locale)
-
+            base_filters &= Q(locale__language_code__iexact=locale)
         if slug:
-            live_queryset = live_queryset.filter(slug__icontains=slug)
-
+            base_filters &= Q(slug__icontains=slug)
         if title:
-            live_queryset = live_queryset.filter(title__icontains=title)
-
+            base_filters &= Q(title__icontains=title)
         if trigger:
-            ids = []
-            for t in TriggeredContent.objects.filter(tag__name__iexact=trigger.strip()):
-                ids.append(t.content_object_id)
-
-            live_queryset = live_queryset.filter(id__in=ids)
-
+            trigger_subquery = TriggeredContent.objects.filter(
+                tag__name__icontains=trigger.strip(),
+                content_object_id=OuterRef('pk')
+            ).values('id')[:1]
+            base_filters &= Q(Exists(trigger_subquery))
         if tag:
-            ids = []
-            for t in ContentPageTag.objects.filter(tag__name__iexact=tag):
-                ids.append(t.content_object_id)
+            tag_subquery = ContentPageTag.objects.filter(
+                tag__name__iexact=tag,
+                content_object_id=OuterRef('pk')
+            ).values('id')[:1]
+            base_filters &= Q(Exists(tag_subquery))
 
-            live_queryset = live_queryset.filter(id__in=ids)
-
-        queryset_to_return = live_queryset | ContentPage.objects.filter(
-            id__in=unique_draft_list
+        # Start with live queryset
+        live_queryset = all_queryset.filter(base_filters & Q(live=True, has_unpublished_changes="False"))
+        logger.debug(
+            f"Live Queryset = {live_queryset.count()} items - {list(live_queryset.values_list('id', flat=True))}"
         )
 
-        logger.debug("**** QUERYSET TO RETURN ****")
-        # [t.name.casefold() for t in l_rev.tags.all() if t]
+        # Initialize result queryset
+        queryset_to_return = live_queryset
+
+        # Add drafts if requested
+        if return_drafts:
+            draft_matches = draft_queryset.filter(base_filters).values_list('id', flat=True)
+            if draft_matches:
+                logger.debug(f"Adding {len(draft_matches)} drafts - {list(draft_matches)}")
+                queryset_to_return = (
+                    queryset_to_return | 
+                    ContentPage.objects.filter(id__in=draft_matches)
+                    .select_related("locale")
+                    .prefetch_related(
+                        "latest_revision",
+                        "triggers",
+                        "tags"
+                    )
+                )
+
         logger.debug(
             f"QuerysetToReturn IDs: {[page.id for page in queryset_to_return.all() if page]}"
         )
 
+        # Cache the queryset if we're in listing view
+        if self.calling_endpoint == "listing":
+            self._cached_queryset = queryset_to_return
+            
         return queryset_to_return
 
     @classmethod
