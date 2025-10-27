@@ -190,7 +190,7 @@ CACHES = {"default": env.cache("CACHE_URL", default="redis://127.0.0.1:6379/1")}
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",  # noqa
-    "PAGE_SIZE": env.int("PAGE_SIZE", 10),
+    "PAGE_SIZE": env.int("PAGE_SIZE", 5),
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.TokenAuthentication",
@@ -203,11 +203,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "ContentRepo API",
-    "VERSION": "1.0.1",
-    "SWAGGER_UI_SETTINGS": {
-        "displayOperationId": True,
-        "defaultModelsExpandDepth": -1,
-    },
+    "VERSION": "1.0.0",
 }
 
 AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")

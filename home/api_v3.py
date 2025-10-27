@@ -37,8 +37,6 @@ DEFAULT_LOCALE = Site.objects.get(is_default_site=True).root_page.locale.languag
 
 VALID_CHANNELS = {"", "web", "whatsapp", "sms", "ussd", "messenger", "viber"}
 
-
-@extend_schema(tags=["v3 api"])
 class WhatsAppTemplateViewset(BaseAPIViewSet):
     model = WhatsAppTemplate
     base_serializer_class = WhatsAppTemplateSerializer
@@ -129,7 +127,6 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         ]
 
 
-@extend_schema(tags=["v3 api"])
 class ContentPagesV3APIViewset(PagesAPIViewSet):
     """
     Our custom V3 Pages API endpoint that allows finding pages by pk or slug
@@ -322,10 +319,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
         base_queryset = self._get_base_queryset()
 
-        if self.calling_endpoint == "detail":
-            if not hasattr(self, 'lookup_value'):  # No specific page requested
-                return base_queryset
-            return base_queryset.filter(id=self.lookup_value)
 
         filters = self._build_filters()
         live_filters = filters & Q(live=True, has_unpublished_changes="False")
