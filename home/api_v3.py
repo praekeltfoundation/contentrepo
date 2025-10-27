@@ -6,7 +6,7 @@ from .models import (  # isort:skip
 )
 import logging
 from typing import Optional, Set, List
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Prefetch
 from django.http import HttpRequest
 from django.core.exceptions import MultipleObjectsReturned
 from django.http.response import Http404
@@ -92,7 +92,9 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
 
     def get_queryset(self):
         draft_queryset = (
-            WhatsAppTemplate.objects.all().order_by("pk").prefetch_related("locale")
+            WhatsAppTemplate.objects.all()
+            .order_by("pk")
+            .select_related("locale")
         )
         live_queryset = draft_queryset.filter(live=True)
 
@@ -159,45 +161,59 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             )
         return channel
 
-    def get_object(self):
+    def _get_base_queryset(self) -> QuerySet[ContentPage]:
+        """Get the base queryset with all necessary relations."""
+        return (
+            ContentPage.objects.all()
+            .order_by("pk")
+            .select_related(
+                "locale", 
+                "owner",
+                "latest_revision",
+                "live_revision",
+                "locked_by"
+            )
+        )
+
+    def _get_draft_by_slug(self, slug: str, draft_queryset: QuerySet[ContentPage]) -> Optional[ContentPage]:
+        """Find a draft page matching the given slug."""
+        for dp in draft_queryset:
+            l_rev = dp.get_latest_revision_as_object()
+            if slug.casefold() in l_rev.slug.casefold():
+                logger.debug(
+                    f"Found draft match for slug `{slug}` in draft page ID {dp.id} with slug `{l_rev.slug}`"
+                )
+                return ContentPage.objects.filter(id=dp.id).first()
+        return None
+
+    def get_object(self) -> Optional[ContentPage]:
+        """Get a specific page by ID or slug, handling both live and draft content."""
         logger.debug(f"Get_object called from {self.calling_endpoint} page")
+        
+        if self.calling_endpoint != "detail":
+            return super().get_object()
+
         return_drafts = (
             self.request.query_params.get("return_drafts", "").lower() == "true"
         )
         slug_to_display = self.request.parser_context["kwargs"].get("slug", None)
         int_to_display = self.request.parser_context["kwargs"].get("pk", None)
 
-        all_queryset = (
-            ContentPage.objects.all().order_by("pk").prefetch_related("locale")
-        )
-        draft_queryset = all_queryset.filter(has_unpublished_changes="True")
-        page_to_return = ""
-        if self.calling_endpoint == "detail":
-            if slug_to_display:
-                if return_drafts:
+        all_queryset = self._get_base_queryset()
+        page_to_return = None
 
-                    for dp in draft_queryset:
+        if slug_to_display:
+            if return_drafts:
+                draft_queryset = all_queryset.filter(has_unpublished_changes="True")
+                page_to_return = self._get_draft_by_slug(slug_to_display, draft_queryset)
+            if not page_to_return:
+                page_to_return = all_queryset.filter(slug=slug_to_display).first()
 
-                        l_rev = dp.get_latest_revision_as_object()
-                        if slug_to_display in l_rev.slug:
-                            logger.debug(
-                                f"    Found draft match for slug `{slug_to_display}` in draft page ID {dp.id} with slug `{l_rev.slug}`"
-                            )
-                            page_to_return = ContentPage.objects.filter(
-                                id=dp.id
-                            ).first()
-                else:
-                    page_to_return = all_queryset.filter(slug=slug_to_display).first()
+        elif int_to_display:
+            page_to_return = all_queryset.filter(id=int_to_display).first()
 
-                if not page_to_return:
-                    raise NotFound({"page": ["Page matching query does not exist."]})
-
-                    page_to_return = super().get_object()
-
-            if int_to_display:
-                page_to_return = all_queryset.filter(id=int_to_display).first()
-                if not page_to_return:
-                    raise NotFound({"page": ["Page matching query does not exist."]})
+        if not page_to_return:
+            raise NotFound({"page": ["Page matching query does not exist."]})
 
         return page_to_return
 
@@ -253,47 +269,10 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         )
         return self.get_paginated_response(serializer.data)
 
-    def get_queryset(self) -> QuerySet[ContentPage]:
-        logger.debug(f"Getting V3 Pages Queryset - Called from {self.calling_endpoint}")
-
-        # Return cached queryset if available and we're in listing view
-        if self.calling_endpoint == "listing" and self._cached_queryset is not None:
-            logger.debug("Returning cached queryset")
-            return self._cached_queryset
-
-        return_drafts = (
-            self.request.query_params.get("return_drafts", "").lower() == "true"
-        )
-        all_queryset = (
-            ContentPage.objects.all()
-            .order_by("pk")
-            .select_related("locale")
-            .prefetch_related(
-                "latest_revision",
-                "triggers",
-                "tags"
-            )
-        )
-        draft_queryset = all_queryset.filter(has_unpublished_changes="True")
-
-        if self.calling_endpoint == "detail":
-            page_to_return = ""
-            if return_drafts:
-                slug_to_display = self.request.parser_context["kwargs"][
-                    "slug"
-                ].casefold()
-
-                for dp in draft_queryset:
-                    l_rev = dp.get_latest_revision_as_object()
-                    if slug_to_display in l_rev.slug:
-                        logger.debug(
-                            f"    Found draft match for slug `{slug_to_display}` in draft page ID {dp.id} with slug `{l_rev.slug}`"
-                        )
-                        page_to_return = ContentPage.objects.filter(id=dp.id)
-                        logger.debug(f"Page to return is {page_to_return}")
-
-            return page_to_return
-
+    def _build_filters(self) -> Q:
+        """Build query filters based on request parameters."""
+        base_filters = Q()
+        
         # Get and normalize query parameters
         locale = self.request.query_params.get("locale", DEFAULT_LOCALE).casefold()
         slug = self.request.query_params.get("slug", "").casefold()
@@ -301,8 +280,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         trigger = self.request.query_params.get("trigger", "").casefold()
         tag = self.request.query_params.get("tag", "").casefold()
 
-        # Initialize filters
-        base_filters = Q()
         if locale:
             base_filters &= Q(locale__language_code__iexact=locale)
         if slug:
@@ -310,52 +287,76 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         if title:
             base_filters &= Q(title__icontains=title)
         if trigger:
-            trigger_subquery = TriggeredContent.objects.filter(
-                tag__name__icontains=trigger.strip(),
-                content_object_id=OuterRef('pk')
-            ).values('id')[:1]
+            trigger_subquery = (
+                TriggeredContent.objects
+                .filter(
+                    tag__name__icontains=trigger.strip(),
+                    content_object_id=OuterRef('pk')
+                )
+                .values('id')[:1]
+            )
             base_filters &= Q(Exists(trigger_subquery))
         if tag:
-            tag_subquery = ContentPageTag.objects.filter(
-                tag__name__iexact=tag,
-                content_object_id=OuterRef('pk')
-            ).values('id')[:1]
+            tag_subquery = (
+                ContentPageTag.objects
+                .filter(
+                    tag__name__iexact=tag,
+                    content_object_id=OuterRef('pk')
+                )
+                .values('id')[:1]
+            )
             base_filters &= Q(Exists(tag_subquery))
+            
+        return base_filters
 
-        # Start with live queryset
-        live_queryset = all_queryset.filter(base_filters & Q(live=True, has_unpublished_changes="False"))
+    def _get_filtered_queryset(self, queryset: QuerySet[ContentPage], filters: Q) -> QuerySet[ContentPage]:
+        """Apply filters to a queryset and maintain proper select/prefetch."""
+        return queryset.filter(filters)
+
+    def get_queryset(self) -> QuerySet[ContentPage]:
+        """Get a queryset of pages, handling both live and draft content."""
+        logger.debug(f"Getting V3 Pages Queryset - Called from {self.calling_endpoint}")
+
+        if self.calling_endpoint == "listing" and self._cached_queryset is not None:
+            logger.debug("Returning cached queryset")
+            return self._cached_queryset
+
+        base_queryset = self._get_base_queryset()
+        
+        if self.calling_endpoint == "detail":
+            if not hasattr(self, 'lookup_value'):  # No specific page requested
+                return base_queryset
+            return base_queryset.filter(id=self.lookup_value)
+
+        filters = self._build_filters()
+        live_filters = filters & Q(live=True, has_unpublished_changes="False")
+        live_queryset = self._get_filtered_queryset(base_queryset, live_filters)
+        
         logger.debug(
             f"Live Queryset = {live_queryset.count()} items - {list(live_queryset.values_list('id', flat=True))}"
         )
 
-        # Initialize result queryset
-        queryset_to_return = live_queryset
-
-        # Add drafts if requested
+        return_drafts = self.request.query_params.get("return_drafts", "").lower() == "true"
         if return_drafts:
-            draft_matches = draft_queryset.filter(base_filters).values_list('id', flat=True)
+            draft_queryset = base_queryset.filter(has_unpublished_changes="True")
+            draft_matches = draft_queryset.filter(filters).values_list('id', flat=True)
+            
             if draft_matches:
                 logger.debug(f"Adding {len(draft_matches)} drafts - {list(draft_matches)}")
-                queryset_to_return = (
-                    queryset_to_return | 
-                    ContentPage.objects.filter(id__in=draft_matches)
-                    .select_related("locale")
-                    .prefetch_related(
-                        "latest_revision",
-                        "triggers",
-                        "tags"
-                    )
+                draft_queryset = self._get_filtered_queryset(
+                    ContentPage.objects.filter(id__in=draft_matches),
+                    Q()
                 )
+                live_queryset = live_queryset | draft_queryset
 
         logger.debug(
-            f"QuerysetToReturn IDs: {[page.id for page in queryset_to_return.all() if page]}"
+            f"QuerysetToReturn IDs: {[page.id for page in live_queryset.all() if page]}"
         )
 
-        # Cache the queryset if we're in listing view
         if self.calling_endpoint == "listing":
-            self._cached_queryset = queryset_to_return
+            self._cached_queryset = live_queryset
             
-        return queryset_to_return
+        return live_queryset
 
     @classmethod
     def get_urlpatterns(cls):

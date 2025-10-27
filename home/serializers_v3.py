@@ -127,83 +127,23 @@ def format_variation_messages(given_list: blocks.list_block.ListValue):
 
 
 def format_whatsapp_body_V3(content_page):
-    message_number = 0
+    if not content_page.whatsapp_body:
+        return []
+        
     messages = []
-
     for block in content_page.whatsapp_body:
-        message_number += 1  # noqa: SIM113
-
-        if str(block.block_type) == "Whatsapp_Template":
-            template = block.value
-
-            messages.append(
-                OrderedDict(
-                    [
-                        ("type", block.block_type),
-                        ("slug", template.slug),
-                        # TODO: Add test for this image check
-                        ("image", template.image.id if template.image else None),
-                        ("media", None),
-                        ("document", None),
-                        ("text", template.message),
-                        (
-                            "buttons",
-                            format_buttons_and_list_items(template.buttons.raw_data),
-                        ),
-                        (
-                            "example_values",
-                            format_example_values(template.example_values.raw_data),
-                        ),
-                        ("category", template.category),
-                        ("submission_name", template.submission_name),
-                        ("submission_status", template.submission_status),
-                        ("submission_result", template.submission_result),
-                    ]
-                )
-            )
-
-        elif str(block.block_type) == "Whatsapp_Message":
-            message = block.value
-
-            image = message["image"]
-            image = image.id if image is not None else None
-
-            media = message["media"]
-            media = media.id if media is not None else None
-
-            document = message["document"]
-            document = document.id if document is not None else None
-
-            messages.append(
-                OrderedDict(
-                    [
-                        ("type", block.block_type),
-                        ("image", image),
-                        ("media", media),
-                        ("document", document),
-                        ("text", message["message"]),
-                        (
-                            "buttons",
-                            format_buttons_and_list_items(message["buttons"].raw_data),
-                        ),
-                        (
-                            "list_items",
-                            format_buttons_and_list_items(
-                                message["list_items"].raw_data
-                            ),
-                        ),
-                        ("list_title", message["list_title"]),
-                        (
-                            "variation_messages",
-                            format_variation_messages(message["variation_messages"]),
-                        ),
-                    ]
-                )
-            )
-        else:
-            # TODO: Exclude from coverage, or remove this code.  Code unreachable unless we add a new block type
-            raise Exception("Unknown Block Type detected")
-
+        if str(block.block_type) == "Whatsapp_Message":
+            message = {}
+            message["text"] = block.value["message"]
+            
+            # Get just the ID for images and media
+            if block.value.get("image"):
+                message["image"] = block.value["image"].id if hasattr(block.value["image"], 'id') else block.value["image"]
+            if block.value.get("media"):
+                message["media"] = block.value["media"].id if hasattr(block.value["media"], 'id') else block.value["media"]
+                
+            messages.append(message)
+            
     return messages
 
 
@@ -247,6 +187,7 @@ class ContentPageSerializerV3(PageSerializer):
             "has_children",
             "related_pages",
         ]
+        depth = 1  # Include related fields
 
     def to_representation(self, instance):
         request = self.context["request"]

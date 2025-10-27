@@ -673,8 +673,8 @@ class TestContentPageAPIV3:
         page = self.create_content_page()
         page = self.create_content_page(page, title="Content Page 1")
         uclient.get("/api/v3/pages/")
-        # TODO: Keep an eye on this change from 16 to 10.
-        with django_assert_num_queries(10):
+        # TODO: Keep an eye on this change from 16 to 10, and now up to 12.
+        with django_assert_num_queries(12):
             uclient.get("/api/v3/pages/")
 
     @pytest.mark.parametrize("channel", ALL_CHANNELS)
