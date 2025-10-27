@@ -129,21 +129,21 @@ def format_variation_messages(given_list: blocks.list_block.ListValue):
 def format_whatsapp_body_V3(content_page):
     if not content_page.whatsapp_body:
         return []
-        
+
     messages = []
     for block in content_page.whatsapp_body:
         if str(block.block_type) == "Whatsapp_Message":
             message = {}
             message["text"] = block.value["message"]
-            
+
             # Get just the ID for images and media
             if block.value.get("image"):
                 message["image"] = block.value["image"].id if hasattr(block.value["image"], 'id') else block.value["image"]
             if block.value.get("media"):
                 message["media"] = block.value["media"].id if hasattr(block.value["media"], 'id') else block.value["media"]
-                
+
             messages.append(message)
-            
+
     return messages
 
 
