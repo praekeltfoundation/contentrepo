@@ -138,9 +138,17 @@ def format_whatsapp_body_V3(content_page):
 
             # Get just the ID for images and media
             if block.value.get("image"):
-                message["image"] = block.value["image"].id if hasattr(block.value["image"], 'id') else block.value["image"]
+                message["image"] = (
+                    block.value["image"].id
+                    if hasattr(block.value["image"], "id")
+                    else block.value["image"]
+                )
             if block.value.get("media"):
-                message["media"] = block.value["media"].id if hasattr(block.value["media"], 'id') else block.value["media"]
+                message["media"] = (
+                    block.value["media"].id
+                    if hasattr(block.value["media"], "id")
+                    else block.value["media"]
+                )
 
             messages.append(message)
 

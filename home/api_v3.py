@@ -11,7 +11,6 @@ from django.db.models import Exists, OuterRef, Q, QuerySet
 from django.http import HttpRequest
 from django.http.response import Http404
 from django.urls import path
-from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -36,6 +35,7 @@ logging.basicConfig(
 DEFAULT_LOCALE = Site.objects.get(is_default_site=True).root_page.locale.language_code
 
 VALID_CHANNELS = {"", "web", "whatsapp", "sms", "ussd", "messenger", "viber"}
+
 
 class WhatsAppTemplateViewset(BaseAPIViewSet):
     model = WhatsAppTemplate
@@ -89,9 +89,7 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
 
     def get_queryset(self):
         draft_queryset = (
-            WhatsAppTemplate.objects.all()
-            .order_by("pk")
-            .select_related("locale")
+            WhatsAppTemplate.objects.all().order_by("pk").select_related("locale")
         )
         live_queryset = draft_queryset.filter(live=True)
 
@@ -163,15 +161,13 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             ContentPage.objects.all()
             .order_by("pk")
             .select_related(
-                "locale",
-                "owner",
-                "latest_revision",
-                "live_revision",
-                "locked_by"
+                "locale", "owner", "latest_revision", "live_revision", "locked_by"
             )
         )
 
-    def _get_draft_by_slug(self, slug: str, draft_queryset: QuerySet[ContentPage]) -> ContentPage | None:
+    def _get_draft_by_slug(
+        self, slug: str, draft_queryset: QuerySet[ContentPage]
+    ) -> ContentPage | None:
         """Find a draft page matching the given slug."""
         for dp in draft_queryset:
             l_rev = dp.get_latest_revision_as_object()
@@ -201,7 +197,9 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         if slug_to_display:
             if return_drafts:
                 draft_queryset = all_queryset.filter(has_unpublished_changes="True")
-                page_to_return = self._get_draft_by_slug(slug_to_display, draft_queryset)
+                page_to_return = self._get_draft_by_slug(
+                    slug_to_display, draft_queryset
+                )
             if not page_to_return:
                 page_to_return = all_queryset.filter(slug=slug_to_display).first()
 
@@ -214,10 +212,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         return page_to_return
 
     def process_detail_view(
-        self,
-        request: HttpRequest,
-        pk: int | None = None,
-        slug: str | None = None
+        self, request: HttpRequest, pk: int | None = None, slug: str | None = None
     ) -> Response:
         self.calling_endpoint = "detail"
         _channel = self.validate_channel()
@@ -283,29 +278,21 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         if title:
             base_filters &= Q(title__icontains=title)
         if trigger:
-            trigger_subquery = (
-                TriggeredContent.objects
-                .filter(
-                    tag__name__icontains=trigger.strip(),
-                    content_object_id=OuterRef('pk')
-                )
-                .values('id')[:1]
-            )
+            trigger_subquery = TriggeredContent.objects.filter(
+                tag__name__icontains=trigger.strip(), content_object_id=OuterRef("pk")
+            ).values("id")[:1]
             base_filters &= Q(Exists(trigger_subquery))
         if tag:
-            tag_subquery = (
-                ContentPageTag.objects
-                .filter(
-                    tag__name__iexact=tag,
-                    content_object_id=OuterRef('pk')
-                )
-                .values('id')[:1]
-            )
+            tag_subquery = ContentPageTag.objects.filter(
+                tag__name__iexact=tag, content_object_id=OuterRef("pk")
+            ).values("id")[:1]
             base_filters &= Q(Exists(tag_subquery))
 
         return base_filters
 
-    def _get_filtered_queryset(self, queryset: QuerySet[ContentPage], filters: Q) -> QuerySet[ContentPage]:
+    def _get_filtered_queryset(
+        self, queryset: QuerySet[ContentPage], filters: Q
+    ) -> QuerySet[ContentPage]:
         """Apply filters to a queryset and maintain proper select/prefetch."""
         return queryset.filter(filters)
 
@@ -319,7 +306,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
         base_queryset = self._get_base_queryset()
 
-
         filters = self._build_filters()
         live_filters = filters & Q(live=True, has_unpublished_changes="False")
         live_queryset = self._get_filtered_queryset(base_queryset, live_filters)
@@ -328,16 +314,19 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             f"Live Queryset = {live_queryset.count()} items - {list(live_queryset.values_list('id', flat=True))}"
         )
 
-        return_drafts = self.request.query_params.get("return_drafts", "").lower() == "true"
+        return_drafts = (
+            self.request.query_params.get("return_drafts", "").lower() == "true"
+        )
         if return_drafts:
             draft_queryset = base_queryset.filter(has_unpublished_changes="True")
-            draft_matches = draft_queryset.filter(filters).values_list('id', flat=True)
+            draft_matches = draft_queryset.filter(filters).values_list("id", flat=True)
 
             if draft_matches:
-                logger.debug(f"Adding {len(draft_matches)} drafts - {list(draft_matches)}")
+                logger.debug(
+                    f"Adding {len(draft_matches)} drafts - {list(draft_matches)}"
+                )
                 draft_queryset = self._get_filtered_queryset(
-                    ContentPage.objects.filter(id__in=draft_matches),
-                    Q()
+                    ContentPage.objects.filter(id__in=draft_matches), Q()
                 )
                 live_queryset = live_queryset | draft_queryset
 
