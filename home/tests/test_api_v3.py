@@ -1,4 +1,5 @@
 import json
+import pprint
 from pathlib import Path
 from typing import Any
 
@@ -9,7 +10,6 @@ from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale
 from wagtailmedia.models import Media  # type: ignore
-import pprint
 
 from home.models import HomePage, WhatsAppTemplate
 
@@ -795,7 +795,6 @@ class TestContentPageAPIV3:
         """
         Looking up a page by slug, only works on published slugs. Draft slugs are ignored.
         """
-        original_slug = "content-page-1"
         drafted_slug = "unpublished-slug-change"
         default_page = self.create_content_page(title="default-page")
         page_1 = self.create_content_page(default_page, title="Content Page 1")
@@ -826,7 +825,7 @@ class TestContentPageAPIV3:
             "triggers": [],
             "has_children": False,
             "related_pages": [],
-        }    
+        }
 
     def test_detail_view_by_id(self, uclient):
         """
