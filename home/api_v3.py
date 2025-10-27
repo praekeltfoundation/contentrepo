@@ -5,8 +5,9 @@ from .models import (  # isort:skip
     TriggeredContent,
 )
 import logging
-from typing import Any
-
+from typing import Optional, Set, List
+from django.db.models import QuerySet
+from django.http import HttpRequest
 from django.core.exceptions import MultipleObjectsReturned
 from django.http.response import Http404
 from django.urls import path
@@ -34,6 +35,8 @@ logging.basicConfig(
 
 
 DEFAULT_LOCALE = Site.objects.get(is_default_site=True).root_page.locale.language_code
+
+VALID_CHANNELS = {"", "web", "whatsapp", "sms", "ussd", "messenger", "viber"}
 
 
 @extend_schema(tags=["v3 api"])
@@ -133,8 +136,8 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
     model = ContentPage
     base_serializer_class = ContentPageSerializerV3
-    meta_fields = []
-    _cached_queryset = None  # Cache for the queryset
+    meta_fields: List[str] = []
+    _cached_queryset: Optional[QuerySet[ContentPage]] = None  # Cache for the queryset
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
         [
             "tag",
@@ -148,9 +151,9 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
     calling_endpoint = ""
     pagination_class = PageNumberPagination
 
-    def validate_channel(self):
+    def validate_channel(self) -> str:
         channel = self.request.query_params.get("channel", "").lower()
-        if channel not in {"", "web", "whatsapp", "sms", "ussd", "messenger", "viber"}:
+        if channel not in VALID_CHANNELS:
             raise ValidationError(
                 {"channel": [f"Channel matching query '{channel}' does not exist."]}
             )
@@ -198,7 +201,12 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
         return page_to_return
 
-    def process_detail_view(self, request, pk=None, slug=None):
+    def process_detail_view(
+        self, 
+        request: HttpRequest, 
+        pk: Optional[int] = None, 
+        slug: Optional[str] = None
+    ) -> Response:
         self.calling_endpoint = "detail"
         _channel = self.validate_channel()
         if slug is not None:
@@ -225,13 +233,13 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         serializer = ContentPageSerializerV3(instance, context={"request": request})
         return Response(serializer.data)
 
-    def detail_view_by_id(self, request, pk):
+    def detail_view_by_id(self, request: HttpRequest, pk: int) -> Response:
         return self.process_detail_view(request, pk=pk)
 
-    def detail_view_by_slug(self, request, slug):
+    def detail_view_by_slug(self, request: HttpRequest, slug: str) -> Response:
         return self.process_detail_view(request, slug=slug)
 
-    def listing_view(self, request, *args, **kwargs):
+    def listing_view(self, request: HttpRequest, *args, **kwargs) -> Response:
         self.calling_endpoint = "listing"
         channel = self.validate_channel()
         queryset = self.get_queryset()
@@ -245,7 +253,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         )
         return self.get_paginated_response(serializer.data)
 
-    def get_queryset(self) -> Any:
+    def get_queryset(self) -> QuerySet[ContentPage]:
         logger.debug(f"Getting V3 Pages Queryset - Called from {self.calling_endpoint}")
 
         # Return cached queryset if available and we're in listing view
