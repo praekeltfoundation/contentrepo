@@ -587,9 +587,12 @@ class PageViewViewSet(GenericListViewset):
     serializer_class = PageViewSerializer
     filterset_class = PageViewFilter
 
+    # FWB TODO: I AM NOT SURE THE BELOW CODE EVER GETS CALLED
     def get_queryset(self):
         # filter the queryset by data jsonfield:
+        print("**** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** **** ***** From PageViewViewSet - Getting Queryset")
         queryset = self.queryset
+        
         for key, value in self.request.GET.items():
             if "data__" in key:
                 queryset = queryset.filter(**{key: value})

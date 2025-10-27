@@ -9,6 +9,7 @@ from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale
 from wagtailmedia.models import Media  # type: ignore
+import pprint
 
 from home.models import HomePage, WhatsAppTemplate
 
@@ -530,6 +531,18 @@ class TestContentPageAPIV3:
 
         # If return_drafts flag is sent then it should return pages with tags in the draft
         response = uclient.get("/api/v3/pages/?tag=Menu&return_drafts=True")
+        print("**** CONTENT ****")
+        content = json.loads(response.content)
+        pprint.pp(content)
+        assert content["count"] == 2
+
+        # it should return all pages for no tag, excluding home pages and index pages
+        response = uclient.get("/api/v3/pages/?tag=")
+        content = json.loads(response.content)
+        assert content["count"] == 3
+
+        # If return_drafts flag is sent then it should return pages with tags in the draft
+        response = uclient.get("/api/v3/pages/?tag=Menu&return_drafts=True")
         content = json.loads(response.content)
         assert content["count"] == 2
 
@@ -778,6 +791,43 @@ class TestContentPageAPIV3:
             "related_pages": [],
         }
 
+    def test_detail_view_by_draft_slug_return_drafts_true(self, uclient):
+        """
+        Looking up a page by slug, only works on published slugs. Draft slugs are ignored.
+        """
+        original_slug = "content-page-1"
+        drafted_slug = "unpublished-slug-change"
+        default_page = self.create_content_page(title="default-page")
+        page_1 = self.create_content_page(default_page, title="Content Page 1")
+        self.create_content_page(default_page, title="Content Page 2")
+
+        page_1.slug = drafted_slug
+        page_1.save_revision()
+
+        response = uclient.get(f"/api/v3/pages/{drafted_slug}/")
+        content = response.json()
+        pprint.pp(content)
+
+        assert response.status_code == 404
+
+        response = uclient.get("/api/v3/pages/content-page-1/")
+        content = response.json()
+
+        assert response.status_code == 200
+
+        assert content == {
+            "slug": "content-page-1",
+            "detail_url": "http://localhost/api/v3/pages/content-page-1/",
+            "locale": "en",
+            "title": "Content Page 1",
+            "subtitle": "",
+            "messages": {"text": []},
+            "tags": [],
+            "triggers": [],
+            "has_children": False,
+            "related_pages": [],
+        }    
+
     def test_detail_view_by_id(self, uclient):
         """
         We can use the page id in detail view URL
@@ -852,31 +902,33 @@ class TestContentPageAPIV3:
         content = uclient.get(url).json()
         assert content["count"] == 3
 
-    def test_list_view_slug_search_not_on_drafts(self, uclient):
-        """
-        Filtering a list by slug, only filters on published slugs. Draft slugs are ignored.
-        """
-        default_page = self.create_content_page(title="default-page")
-        page_1 = self.create_content_page(default_page, title="Content Page 1")
-        self.create_content_page(default_page, title="Content Page 2")
+    # FWB TODO: CONFIRM THIS CAN BE DELETED AS THE FUNCTIONALITY NOW FILTERS ON DRAFTS TOO
 
-        page_1.slug = "unpublished-slug-change"
-        page_1.save_revision()
+    # def test_list_view_slug_search_not_on_drafts(self, uclient):
+    #     """
+    #     Filtering a list by slug, only filters on published slugs. Draft slugs are ignored.
+    #     """
+    #     default_page = self.create_content_page(title="default-page")
+    #     page_1 = self.create_content_page(default_page, title="Content Page 1")
+    #     self.create_content_page(default_page, title="Content Page 2")
 
-        slug_to_search = "unpublished-slug-change"
-        url = f"/api/v3/pages/?slug={slug_to_search}"
-        content = uclient.get(url).json()
-        assert content["count"] == 0
+    #     page_1.slug = "unpublished-slug-change"
+    #     page_1.save_revision()
 
-        slug_to_search = "content-page-"
-        url = f"/api/v3/pages/?slug={slug_to_search}"
-        content = uclient.get(url).json()
-        assert content["count"] == 2
+    #     slug_to_search = "unpublished-slug-change"
+    #     url = f"/api/v3/pages/?slug={slug_to_search}"
+    #     content = uclient.get(url).json()
+    #     assert content["count"] == 0
 
-        slug_to_search = "content-page-1"
-        url = f"/api/v3/pages/?slug={slug_to_search}"
-        content = uclient.get(url).json()
-        assert content["count"] == 1
+    #     slug_to_search = "content-page-"
+    #     url = f"/api/v3/pages/?slug={slug_to_search}"
+    #     content = uclient.get(url).json()
+    #     assert content["count"] == 2
+
+    #     slug_to_search = "content-page-1"
+    #     url = f"/api/v3/pages/?slug={slug_to_search}"
+    #     content = uclient.get(url).json()
+    #     assert content["count"] == 1
 
     def test_list_view_title_search(self, uclient):
         """
