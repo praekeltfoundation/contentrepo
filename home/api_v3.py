@@ -19,7 +19,7 @@ from .models import (  # isort:skip
     ContentPage,
     ContentPageTag,
     WhatsAppTemplate,
-    TriggeredContent
+    TriggeredContent,
 )
 
 DEFAULT_LOCALE = Site.objects.get(is_default_site=True).root_page.locale.language_code
@@ -62,15 +62,12 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
 
         return Response(serializer.data)
 
-
     def detail_view_by_id(self, request, pk):
         return self.process_detail_view(request, pk=pk)
-
 
     def detail_view_by_slug(self, request, slug):
         return self.process_detail_view(request, slug=slug)
 
- 
     def listing_view(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset_list = self.paginate_queryset(queryset)
@@ -153,46 +150,60 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             self.request.query_params.get("return_drafts", "").lower() == "true"
         )
         slug_to_display = self.request.parser_context["kwargs"].get("slug", None)
-        int_to_display = self.request.parser_context["kwargs"].get("pk", None)
-        print(f"INT = {slug_to_display}")
-        all_queryset = ContentPage.objects.all().order_by("pk").prefetch_related("locale")
+        id_to_display = self.request.parser_context["kwargs"].get("pk", None)
+        if slug_to_display:
+            print(f"Looking up by slug = {slug_to_display}")
+        if id_to_display:
+            print(f"Looking up by ID = {id_to_display}")
+        all_queryset = (
+            ContentPage.objects.all().order_by("pk").prefetch_related("locale")
+        )
         draft_queryset = all_queryset.filter(has_unpublished_changes="True")
         page_to_return = ""
         if self.calling_endpoint == "detail":
             if slug_to_display:
                 if return_drafts:
-                    
-                    print(f"Gonna go look for drafts with this slug `{slug_to_display}`")
+
+                    print(
+                        f"Gonna go look for drafts with this slug `{slug_to_display}`"
+                    )
 
                     for dp in draft_queryset:
-                    # print(f"Draft Page: {dp.pk} - {dp.title} - {dp.slug}")
+
+                        # print(f"Draft Page: {dp.pk} - {dp.title} - {dp.slug}")
                         l_rev = dp.get_latest_revision_as_object()
-                        if slug_to_display in l_rev.slug:
-                            print(f"    Found draft match for slug `{slug_to_display}` in draft page ID {dp.id} with slug `{l_rev.slug}`")
+                        print(
+                            f"Looking in draft page ID {dp.id} with slug `{l_rev.slug}`"
+                        )
+                        # pprint.pp(vars(l_rev))
+                        if slug_to_display == l_rev.slug:
+                            print(
+                                f"    Found draft match for slug `{slug_to_display}` in draft page ID {dp.id} with slug `{l_rev.slug}`"
+                            )
                             draft_page_id = dp.id
-                            page_to_return = ContentPage.objects.filter(id=dp.id).first()
+                            page_to_return = ContentPage.objects.filter(
+                                id=dp.id
+                            ).first()
                             print(f"Page to return is {page_to_return}")
                 else:
                     print("Getting live object only")
                     page_to_return = all_queryset.filter(slug=slug_to_display).first()
                     # page_to_return = super().get_object()
 
-
                 if not page_to_return:
                     print("No draft match found, going to get live object")
                     raise NotFound({"page": ["Page matching query does not exist."]})
-                    
+
                     page_to_return = super().get_object()
 
-
-            if int_to_display:
+            if id_to_display:
                 print("Getting by ID")
-                page_to_return = all_queryset.filter(id=int_to_display).first()
+                page_to_return = all_queryset.filter(id=id_to_display).first()
                 if not page_to_return:
-                    raise NotFound({"page": ["Page matching query does not exist."]})        
-                        
+                    raise NotFound({"page": ["Page matching query does not exist."]})
+
         return page_to_return
-        
+
     def process_detail_view(self, request, pk=None, slug=None):
         self.calling_endpoint = "detail"
         _channel = self.validate_channel()
@@ -212,13 +223,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             default_language_code = Site.objects.get(
                 is_default_site=True
             ).root_page.locale.language_code
-            raise NotFound(
-                {
-                    "page": [
-                        f"Multiple pages found. Detail View requires a single page.  Please try narrowing down your query by adding a locale query parameter e.g. '&locale={default_language_code}"
-                    ]
-                }
-            )
+
             raise MultipleObjectsReturned(
                 f"Multiple pages found. Detail View requires a single page.  Please try narrowing down your query by adding a locale query parameter e.g. '&locale={default_language_code}'"
             )
@@ -230,15 +235,12 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         serializer = ContentPageSerializerV3(instance, context={"request": request})
         return Response(serializer.data)
 
-
     def detail_view_by_id(self, request, pk):
         return self.process_detail_view(request, pk=pk)
 
-   
     def detail_view_by_slug(self, request, slug):
         return self.process_detail_view(request, slug=slug)
 
-    
     def listing_view(self, request, *args, **kwargs):
         self.calling_endpoint = "listing"
         print("From Listing View - Getting Queryset")
@@ -256,46 +258,53 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         return self.get_paginated_response(serializer.data)
 
     def get_queryset(self) -> Any:
-        
-        print("")
-        print("********************************")
+
         print(f"Getting V3 Pages Queryset - Called from {self.calling_endpoint}")
 
         return_drafts = (
             self.request.query_params.get("return_drafts", "").lower() == "true"
         )
-        all_queryset = ContentPage.objects.all().order_by("pk").prefetch_related("locale")
+        all_queryset = (
+            ContentPage.objects.all().order_by("pk").prefetch_related("locale")
+        )
         draft_queryset = all_queryset.filter(has_unpublished_changes="True")
+        live_queryset = all_queryset.filter(live=True)
+
 
         if self.calling_endpoint == "detail":
             page_to_return = ""
             if return_drafts:
-                slug_to_display = self.request.parser_context["kwargs"]["slug"].casefold()
+                slug_to_display = self.request.parser_context["kwargs"][
+                    "slug"
+                ].casefold()
                 print(f"Gonna go look for drafts with this slug `{slug_to_display}`")
 
                 for dp in draft_queryset:
-                # print(f"Draft Page: {dp.pk} - {dp.title} - {dp.slug}")
+                    # print(f"Draft Page: {dp.pk} - {dp.title} - {dp.slug}")
                     l_rev = dp.get_latest_revision_as_object()
                     if slug_to_display in l_rev.slug:
-                        print(f"    Found draft match for slug `{slug_to_display}` in draft page ID {dp.id} with slug `{l_rev.slug}`")
+                        print(
+                            f"    Found draft match for slug `{slug_to_display}` in draft page ID {dp.id} with slug `{l_rev.slug}`"
+                        )
                         draft_page_id = dp.id
                         page_to_return = ContentPage.objects.filter(id=dp.id)
                         print(f"Page to return is {page_to_return}")
 
-                        
             return page_to_return
 
-        
         all_match_ids = [a.id for a in all_queryset.all() if a]
         print(f"All Queryset = {all_queryset.count()} items - {all_match_ids}")
-        
+
+        for ap in all_queryset:
+            print(
+                f"  Page Id:{ap.id} - Slug:{ap.slug} - Locale:{ap.locale} - Live:{ap.live}"
+            )
+
         locale = self.request.query_params.get("locale", DEFAULT_LOCALE).casefold()
-        slug = self.request.query_params.get("slug", "").casefold()      
+        slug = self.request.query_params.get("slug", "").casefold()
         title = self.request.query_params.get("title", "").casefold()
         trigger = self.request.query_params.get("trigger", "").casefold()
         tag = self.request.query_params.get("tag", "").casefold()
-
-
 
         locale_matches = []
         slug_matches = [] if slug else all_match_ids
@@ -303,16 +312,10 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         trigger_matches = [] if trigger else all_match_ids
         tag_matches = [] if tag else all_match_ids
 
-
-
-        
-
-        print(f"BEFORE GOING INTO DRAFTS SLUG IS {slug_matches}")
+        unique_draft_list = []
         if return_drafts:
             print("")
-            print("**** DRAFT QUERYSET ****")
-            print("")
-            
+
             print(f"Draft Queryset = {draft_queryset.count()} items")
             for dp in draft_queryset:
                 # print(f"Draft Page: {dp.pk} - {dp.title} - {dp.slug}")
@@ -320,87 +323,104 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
                 if locale == l_rev.locale.language_code.casefold():
                     # print(f"    Locale match for DP {dp.id}")
                     locale_matches.append(dp.pk)
-               
+
                 if slug and slug in l_rev.slug.casefold():
                     # print(f"    Slug match for DP {dp.id} -> {slug} in {l_rev.slug.casefold()}")
                     slug_matches.append(dp.pk)
-               
+
                 if title and title in l_rev.title.casefold():
                     # print(f"    Title match for DP {dp.id} -> {title} in {l_rev.title.casefold()}")
                     title_matches.append(dp.pk)
-                             
+
                 if trigger:
-                    l_rev_triggers = [t.name.casefold() for t in l_rev.triggers.all() if t]
+                    l_rev_triggers = [
+                        t.name.casefold() for t in l_rev.triggers.all() if t
+                    ]
                     # print(f"    Trigger param supplied `{trigger}` and dp has triggers {l_rev_triggers}")
-                    
+
                     # print(f"Lrev triggers: {l_rev_triggers}")
                     for t in l_rev_triggers:
                         if trigger in t:
                             # print(f"    Trigger match for DP {dp.id}")
                             trigger_matches.append(dp.pk)
-                            
+
                 if tag:
                     l_rev_tags = [t.name.casefold() for t in l_rev.tags.all() if t]
                     # print(f"    Tag param supplied `{tag}` and dp has tags {l_rev_tags}")
-                    
+
                     # print(f"Lrev tags: {l_rev_tags}")
                     for t in l_rev_tags:
                         if tag in t:
                             # print(f"    Tag match for DP {dp.id}")
                             tag_matches.append(dp.pk)
-                                       
-    
-        # print("")
-        # print(f"    Locale matches from drafts: {len(locale_matches)} items - {locale_matches}")
-        # print(f"    Slug matches from drafts: {len(slug_matches)} items - {slug_matches}")
-        # print(f"    Title matches from drafts: {len(title_matches)} items - {title_matches}")
-        # print(f"    Trigger matches from drafts: {len(trigger_matches)} items - {trigger_matches}")
-        # print(f"    Tag matches from drafts: {len(tag_matches)} items - {tag_matches}")
-        # print("")
 
-        print("")
-        print(f"    Locale matches from drafts: {len(locale_matches)} items")
-        print(f"    Slug matches from drafts: {len(slug_matches)} items")
-        print(f"    Title matches from drafts: {len(title_matches)} items")
-        print(f"    Trigger matches from drafts: {len(trigger_matches)} items")
-        print(f"    Tag matches from drafts: {len(tag_matches)} items")
-        print("")
+            print("")
+            if locale:
+                print(
+                f"    Locale matches from drafts: {len(locale_matches)} items - {locale_matches}"
+            )
+            if slug:
+                print(
+                f"    Slug matches from drafts: {len(slug_matches)} items - {slug_matches}"
+            )
+            if title:
+                print(
+                f"    Title matches from drafts: {len(title_matches)} items - {title_matches}"
+            )
+            if trigger:
+                print(
+                f"    Trigger matches from drafts: {len(trigger_matches)} items - {trigger_matches}"
+            )
+            if tag:
+                print(f"    Tag matches from drafts: {len(tag_matches)} items - {tag_matches}")
+
+            locale_set = set(locale_matches)
+            slug_set = set(slug_matches)
+            title_set = set(title_matches)
+            trigger_set = set(trigger_matches)
+            tag_set = set(tag_matches)
+
+            unique_draft_matches = locale_set.intersection(
+                slug_set, title_set, locale_set, trigger_set, tag_set
+            )
+            unique_draft_list = list(unique_draft_matches)
+            print("")
+            print(
+                f"Draft matches combined: {len(unique_draft_list)} items - {unique_draft_list}"
+            )
+
+            live_queryset = live_queryset.exclude(id__in=unique_draft_list)
+
+            
         
-        locale_set = set(locale_matches)
-        slug_set = set(slug_matches)
-        title_set = set(title_matches)
-        trigger_set = set(trigger_matches)
-        tag_set = set(tag_matches)      
-
-        unique_draft_matches = locale_set.intersection(slug_set,title_set,locale_set, trigger_set, tag_set)
-        unique_draft_list = list(unique_draft_matches)
-        print(f"Draft matches combined: {len(unique_draft_list)} items - {unique_draft_list}")
+        
         print("")
-
-
-        # if title:
-            # queryset_to_return = queryset_to_return.filter(title__icontains=title)
-        print("")
-        print("**** LIVE QUERYSET ****")
-        print("")
-
-        live_queryset = all_queryset.filter(live=True, has_unpublished_changes="False")
-        print(f"Live Queryset = {live_queryset.count()} items - {[l.id for l in live_queryset.all() if l]}")
+        print(
+            f"Live Queryset = {live_queryset.count()} items - {[l.id for l in live_queryset.all() if l]}"
+        )
+        for lp in live_queryset:
+            print(
+                f"  Page Id:{lp.id} - Slug:{lp.slug} - Locale:{lp.locale} - Title:{lp.title} - Live:{lp.live}"
+            )
 
         if locale:
             # print(f"    Locale param supplied: {locale}")
             live_queryset = live_queryset.filter(locale__language_code=locale)
-            print(f"    Live Queryset after locale = {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}")      
+            print(
+                f"    Live Queryset after locale = {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}"
+            )
 
         if slug:
             live_queryset = live_queryset.filter(slug__icontains=slug)
-            print(f"    Live Queryset after slug = {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}")
+            print(
+                f"    Live Queryset after slug = {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}"
+            )
 
         if title:
             live_queryset = live_queryset.filter(title__icontains=title)
-            print(f"    Live Queryset after title = {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}")    
-       
- 
+            print(
+                f"    Live Queryset after title = {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}"
+            )
 
         if trigger:
             ids = []
@@ -409,8 +429,10 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
                 ids.append(t.content_object_id)
 
             live_queryset = live_queryset.filter(id__in=ids)
-            print(f"    Live Queryset after triggers =  {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}")
-       
+            print(
+                f"    Live Queryset after triggers =  {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}"
+            )
+
         if tag:
             ids = []
             for t in ContentPageTag.objects.filter(tag__name__iexact=tag):
@@ -418,19 +440,31 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
             live_queryset = live_queryset.filter(id__in=ids)
 
-            print(f"    Live Queryset afer tags = {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}")
+            print(
+                f"    Live Queryset afer tags = {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}"
+            )
 
- 
+        if return_drafts:
+            print("***********")
+            non_matching_draft_pages = draft_queryset.exclude(id__in=unique_draft_list)
+            for a in non_matching_draft_pages:
+                print(
+                    f"  Page Id:{a.id} - Slug:{a.slug} - Locale:{a.locale} - Live:{a.live}"
+                )
+            queryset_to_return = live_queryset.exclude(id__in=non_matching_draft_pages) | all_queryset.filter(
+            id__in=unique_draft_list
+        )
+        else:    
+            queryset_to_return = live_queryset 
 
-        
-        queryset_to_return = live_queryset | ContentPage.objects.filter(id__in=unique_draft_list)
-
-        print("")
-        print("**** QUERYSET TO RETURN ****")
-        print("")
         # [t.name.casefold() for t in l_rev.tags.all() if t]
+        print("")
         print(f"QuerysetToReturn IDs: {[l.id for l in queryset_to_return.all() if l]}")
-        print("")       
+
+        for qtrp in queryset_to_return:
+            print(
+                f"  Page Id:{qtrp.id} - Slug:{qtrp.slug} - Locale:{qtrp.locale} - Live:{qtrp.live}"
+            )
 
         return queryset_to_return
 
