@@ -2,6 +2,7 @@ from typing import Any
 
 from django.core.exceptions import MultipleObjectsReturned
 from django.http.response import Http404
+from django.shortcuts import get_object_or_404
 from django.urls import path
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
 from rest_framework.exceptions import NotFound, ValidationError
@@ -145,64 +146,24 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         return channel
 
     def get_object(self):
-        print(f"Custom get_object called in V3 Pages from {self.calling_endpoint}")
         return_drafts = (
-            self.request.query_params.get("return_drafts", "").lower() == "true"
+            self.request.query_params.get("return_drafts", "").casefold() == "true"
         )
-        slug_to_display = self.request.parser_context["kwargs"].get("slug", None)
-        id_to_display = self.request.parser_context["kwargs"].get("pk", None)
-        if slug_to_display:
-            print(f"Looking up by slug = {slug_to_display}")
-        if id_to_display:
-            print(f"Looking up by ID = {id_to_display}")
-        all_queryset = (
-            ContentPage.objects.all().order_by("pk").prefetch_related("locale")
-        )
-        draft_queryset = all_queryset.filter(has_unpublished_changes="True")
-        page_to_return = ""
-        if self.calling_endpoint == "detail":
-            if slug_to_display:
-                if return_drafts:
+        # A slug could have changed in a draft version of a page
+        if self.lookup_field == "slug" and return_drafts:
+            queryset = self.get_queryset()
+            # Check the latest draft of each page with changes
+            draft_queryset = queryset.filter(has_unpublished_changes=True)
+            for draft_page in draft_queryset:
+                latest_revision = draft_page.get_latest_revision_as_object()
+                if self.kwargs["slug"] == latest_revision.slug:
+                    return latest_revision
+            # Now check all pages without changes
+            published_queryset = queryset.filter(has_unpublished_changes=False)
+            return get_object_or_404(published_queryset, slug=self.kwargs["slug"])
 
-                    print(
-                        f"Gonna go look for drafts with this slug `{slug_to_display}`"
-                    )
+        return super().get_object()
 
-                    for dp in draft_queryset:
-
-                        # print(f"Draft Page: {dp.pk} - {dp.title} - {dp.slug}")
-                        l_rev = dp.get_latest_revision_as_object()
-                        print(
-                            f"Looking in draft page ID {dp.id} with slug `{l_rev.slug}`"
-                        )
-                        # pprint.pp(vars(l_rev))
-                        if slug_to_display == l_rev.slug:
-                            print(
-                                f"    Found draft match for slug `{slug_to_display}` in draft page ID {dp.id} with slug `{l_rev.slug}`"
-                            )
-                            draft_page_id = dp.id
-                            page_to_return = ContentPage.objects.filter(
-                                id=dp.id
-                            ).first()
-                            print(f"Page to return is {page_to_return}")
-                else:
-                    print("Getting live object only")
-                    page_to_return = all_queryset.filter(slug=slug_to_display).first()
-                    # page_to_return = super().get_object()
-
-                if not page_to_return:
-                    print("No draft match found, going to get live object")
-                    raise NotFound({"page": ["Page matching query does not exist."]})
-
-                    page_to_return = super().get_object()
-
-            if id_to_display:
-                print("Getting by ID")
-                page_to_return = all_queryset.filter(id=id_to_display).first()
-                if not page_to_return:
-                    raise NotFound({"page": ["Page matching query does not exist."]})
-
-        return page_to_return
 
     def process_detail_view(self, request, pk=None, slug=None):
         self.calling_endpoint = "detail"
@@ -269,28 +230,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         )
         draft_queryset = all_queryset.filter(has_unpublished_changes="True")
         live_queryset = all_queryset.filter(live=True)
-
-
-        if self.calling_endpoint == "detail":
-            page_to_return = ""
-            if return_drafts:
-                slug_to_display = self.request.parser_context["kwargs"][
-                    "slug"
-                ].casefold()
-                print(f"Gonna go look for drafts with this slug `{slug_to_display}`")
-
-                for dp in draft_queryset:
-                    # print(f"Draft Page: {dp.pk} - {dp.title} - {dp.slug}")
-                    l_rev = dp.get_latest_revision_as_object()
-                    if slug_to_display in l_rev.slug:
-                        print(
-                            f"    Found draft match for slug `{slug_to_display}` in draft page ID {dp.id} with slug `{l_rev.slug}`"
-                        )
-                        draft_page_id = dp.id
-                        page_to_return = ContentPage.objects.filter(id=dp.id)
-                        print(f"Page to return is {page_to_return}")
-
-            return page_to_return
 
         all_match_ids = [a.id for a in all_queryset.all() if a]
         print(f"All Queryset = {all_queryset.count()} items - {all_match_ids}")
@@ -391,9 +330,9 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
             live_queryset = live_queryset.exclude(id__in=unique_draft_list)
 
-            
-        
-        
+
+
+
         print("")
         print(
             f"Live Queryset = {live_queryset.count()} items - {[l.id for l in live_queryset.all() if l]}"
@@ -454,8 +393,8 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             queryset_to_return = live_queryset.exclude(id__in=non_matching_draft_pages) | all_queryset.filter(
             id__in=unique_draft_list
         )
-        else:    
-            queryset_to_return = live_queryset 
+        else:
+            queryset_to_return = live_queryset
 
         # [t.name.casefold() for t in l_rev.tags.all() if t]
         print("")
