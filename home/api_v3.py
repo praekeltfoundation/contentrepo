@@ -134,7 +134,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             "slug",
         ]
     )
-    calling_endpoint = ""
     pagination_class = PageNumberPagination
 
     def validate_channel(self):
@@ -145,12 +144,14 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             )
         return channel
 
+
+    @property
+    def return_drafts(self):
+        return self.request.query_params.get("return_drafts", "").casefold() == "true"
+
     def get_object(self):
-        return_drafts = (
-            self.request.query_params.get("return_drafts", "").casefold() == "true"
-        )
         # A slug could have changed in a draft version of a page
-        if self.lookup_field == "slug" and return_drafts:
+        if self.lookup_field == "slug" and self.return_drafts:
             queryset = self.get_queryset()
             # Check the latest draft of each page with changes
             draft_queryset = queryset.filter(has_unpublished_changes=True)
@@ -166,12 +167,9 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
 
     def process_detail_view(self, request, pk=None, slug=None):
-        self.calling_endpoint = "detail"
-        _channel = self.validate_channel()
+        self.validate_channel()
         if slug is not None:
             self.lookup_field = "slug"
-        else:
-            self.lookup_field = "pk"
 
         try:
             print("Trying to get object...")
@@ -203,7 +201,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         return self.process_detail_view(request, slug=slug)
 
     def listing_view(self, request, *args, **kwargs):
-        self.calling_endpoint = "listing"
         print("From Listing View - Getting Queryset")
         channel = self.validate_channel()
         queryset = self.get_queryset()
@@ -220,15 +217,12 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
     def get_queryset(self) -> Any:
 
-        print(f"Getting V3 Pages Queryset - Called from {self.calling_endpoint}")
+        print(f"Getting V3 Pages Queryset")
 
-        return_drafts = (
-            self.request.query_params.get("return_drafts", "").lower() == "true"
-        )
         all_queryset = (
             ContentPage.objects.all().order_by("pk").prefetch_related("locale")
         )
-        draft_queryset = all_queryset.filter(has_unpublished_changes="True")
+        draft_queryset = all_queryset.filter(has_unpublished_changes=True)
         live_queryset = all_queryset.filter(live=True)
 
         all_match_ids = [a.id for a in all_queryset.all() if a]
@@ -245,93 +239,80 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         trigger = self.request.query_params.get("trigger", "").casefold()
         tag = self.request.query_params.get("tag", "").casefold()
 
-        locale_matches = []
-        slug_matches = [] if slug else all_match_ids
-        title_matches = [] if title else all_match_ids
-        trigger_matches = [] if trigger else all_match_ids
-        tag_matches = [] if tag else all_match_ids
+        locale_matches = set()
+        slug_matches = set()
+        title_matches = set()
+        trigger_matches = set()
+        tag_matches = set()
 
-        unique_draft_list = []
-        if return_drafts:
+        if self.return_drafts:
             print("")
 
             print(f"Draft Queryset = {draft_queryset.count()} items")
             for dp in draft_queryset:
-                # print(f"Draft Page: {dp.pk} - {dp.title} - {dp.slug}")
+                print(f"Draft Page: {dp.pk} - {dp.title} - {dp.slug}")
                 l_rev = dp.get_latest_revision_as_object()
                 if locale == l_rev.locale.language_code.casefold():
-                    # print(f"    Locale match for DP {dp.id}")
-                    locale_matches.append(dp.pk)
+                    print(f"    Locale match for DP {dp.id}")
+                    locale_matches.add(dp.pk)
 
                 if slug and slug in l_rev.slug.casefold():
-                    # print(f"    Slug match for DP {dp.id} -> {slug} in {l_rev.slug.casefold()}")
-                    slug_matches.append(dp.pk)
+                    print(f"    Slug match for DP {dp.id} -> {slug} in {l_rev.slug.casefold()}")
+                    slug_matches.add(dp.pk)
 
                 if title and title in l_rev.title.casefold():
-                    # print(f"    Title match for DP {dp.id} -> {title} in {l_rev.title.casefold()}")
-                    title_matches.append(dp.pk)
+                    print(f"    Title match for DP {dp.id} -> {title} in {l_rev.title.casefold()}")
+                    title_matches.add(dp.pk)
 
                 if trigger:
-                    l_rev_triggers = [
+                    l_rev_triggers = set(
                         t.name.casefold() for t in l_rev.triggers.all() if t
-                    ]
-                    # print(f"    Trigger param supplied `{trigger}` and dp has triggers {l_rev_triggers}")
-
-                    # print(f"Lrev triggers: {l_rev_triggers}")
-                    for t in l_rev_triggers:
-                        if trigger in t:
-                            # print(f"    Trigger match for DP {dp.id}")
-                            trigger_matches.append(dp.pk)
+                    )
+                    print(f"    Trigger param supplied `{trigger}` and dp has triggers {l_rev_triggers}")
+                    if trigger in l_rev_triggers:
+                        print(f"    Trigger match for DP {dp.id}")
+                        trigger_matches.add(dp.pk)
 
                 if tag:
-                    l_rev_tags = [t.name.casefold() for t in l_rev.tags.all() if t]
-                    # print(f"    Tag param supplied `{tag}` and dp has tags {l_rev_tags}")
-
-                    # print(f"Lrev tags: {l_rev_tags}")
-                    for t in l_rev_tags:
-                        if tag in t:
-                            # print(f"    Tag match for DP {dp.id}")
-                            tag_matches.append(dp.pk)
+                    l_rev_tags = set(t.name.casefold() for t in l_rev.tags.all() if t)
+                    print(f"    Tag param supplied `{tag}` and dp has tags {l_rev_tags}")
+                    if tag in l_rev_tags:
+                        print(f"    Tag match for DP {dp.id}")
+                        tag_matches.add(dp.pk)
 
             print("")
+            draft_ids = locale_matches
             if locale:
                 print(
                 f"    Locale matches from drafts: {len(locale_matches)} items - {locale_matches}"
             )
             if slug:
+                draft_ids &= slug_matches
                 print(
                 f"    Slug matches from drafts: {len(slug_matches)} items - {slug_matches}"
             )
             if title:
+                draft_ids &= title_matches
                 print(
                 f"    Title matches from drafts: {len(title_matches)} items - {title_matches}"
             )
             if trigger:
+                draft_ids &= trigger_matches
                 print(
                 f"    Trigger matches from drafts: {len(trigger_matches)} items - {trigger_matches}"
             )
             if tag:
+                draft_ids &= tag_matches
                 print(f"    Tag matches from drafts: {len(tag_matches)} items - {tag_matches}")
 
-            locale_set = set(locale_matches)
-            slug_set = set(slug_matches)
-            title_set = set(title_matches)
-            trigger_set = set(trigger_matches)
-            tag_set = set(tag_matches)
 
-            unique_draft_matches = locale_set.intersection(
-                slug_set, title_set, locale_set, trigger_set, tag_set
-            )
-            unique_draft_list = list(unique_draft_matches)
             print("")
             print(
-                f"Draft matches combined: {len(unique_draft_list)} items - {unique_draft_list}"
+                f"Draft matches combined: {len(draft_ids)} items - {draft_ids}"
             )
 
-            live_queryset = live_queryset.exclude(id__in=unique_draft_list)
-
-
-
+            # We have filtered drafts, now we only need to filter pages without drafts
+            live_queryset = all_queryset.filter(has_unpublished_changes=False)
 
         print("")
         print(
@@ -362,37 +343,21 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             )
 
         if trigger:
-            ids = []
-            for t in TriggeredContent.objects.filter(tag__name__iexact=trigger.strip()):
-                # print(f"    Trigger match {t.tag}")
-                ids.append(t.content_object_id)
-
+            ids = TriggeredContent.objects.filter(tag__name__iexact=trigger).values_list("content_object_id")
             live_queryset = live_queryset.filter(id__in=ids)
             print(
                 f"    Live Queryset after triggers =  {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}"
             )
 
         if tag:
-            ids = []
-            for t in ContentPageTag.objects.filter(tag__name__iexact=tag):
-                ids.append(t.content_object_id)
-
+            ids = ContentPageTag.objects.filter(tag__name__iexact=tag).values_list("content_object_id")
             live_queryset = live_queryset.filter(id__in=ids)
-
             print(
                 f"    Live Queryset afer tags = {live_queryset.count()} items -> {[l.id for l in live_queryset.all() if l]}"
             )
 
-        if return_drafts:
-            print("***********")
-            non_matching_draft_pages = draft_queryset.exclude(id__in=unique_draft_list)
-            for a in non_matching_draft_pages:
-                print(
-                    f"  Page Id:{a.id} - Slug:{a.slug} - Locale:{a.locale} - Live:{a.live}"
-                )
-            queryset_to_return = live_queryset.exclude(id__in=non_matching_draft_pages) | all_queryset.filter(
-            id__in=unique_draft_list
-        )
+        if self.return_drafts:
+            queryset_to_return = all_queryset.filter(id__in=draft_ids) | live_queryset
         else:
             queryset_to_return = live_queryset
 
