@@ -4,12 +4,10 @@ from .models import (  # isort:skip
     WhatsAppTemplate,
     TriggeredContent,
 )
-import logging
 from typing import Any
 
 from django.core.exceptions import MultipleObjectsReturned
-from django.db.models import Exists, OuterRef, Q, QuerySet
-from django.http import HttpRequest
+from django.db.models import QuerySet
 from django.http.response import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import path
@@ -21,16 +19,7 @@ from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
 from wagtail.models.sites import Site
 
-
 from home.serializers_v3 import ContentPageSerializerV3, WhatsAppTemplateSerializer
-
-from .models import (  # isort:skip
-    ContentPage,
-    ContentPageTag,
-    WhatsAppTemplate,
-    TriggeredContent,
-)
-
 
 DEFAULT_LOCALE = Site.objects.get(is_default_site=True).root_page.locale.language_code
 
@@ -225,7 +214,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         draft_queryset = all_queryset.filter(has_unpublished_changes=True)
         live_queryset = all_queryset.filter(live=True)
 
-        all_match_ids = [a.id for a in all_queryset.all() if a]
+        [a.id for a in all_queryset.all() if a]
 
         locale = self.request.query_params.get("locale", DEFAULT_LOCALE).casefold()
         slug = self.request.query_params.get("slug", "").casefold()
@@ -257,16 +246,16 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
                     title_matches.add(dp.pk)
 
                 if trigger:
-                    l_rev_triggers = set(
+                    l_rev_triggers = {
                         t.name.casefold() for t in l_rev.triggers.all() if t
-                    )
+                    }
 
                     if trigger in l_rev_triggers:
 
                         trigger_matches.add(dp.pk)
 
                 if tag:
-                    l_rev_tags = set(t.name.casefold() for t in l_rev.tags.all() if t)
+                    l_rev_tags = {t.name.casefold() for t in l_rev.tags.all() if t}
 
                     if tag in l_rev_tags:
 

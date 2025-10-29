@@ -1,5 +1,4 @@
 import json
-import pprint
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +9,6 @@ from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale
 from wagtailmedia.models import Media  # type: ignore
-
 
 from home.models import HomePage, WhatsAppTemplate
 
@@ -842,18 +840,18 @@ class TestContentPageAPIV3:
 
         # Looking up with the original published slug should work with return_drafts not specified
         response = uclient.get(f"/api/v3/pages/{original_slug}/")
-        content = response.json()
+        response.json()
         assert response.status_code == 200
 
         # Looking up with the changed draft slug should work with return_drafts=true
         response = uclient.get(f"/api/v3/pages/{draft_slug}/?return_drafts=true")
-        content = response.json()
+        response.json()
         assert response.status_code == 200
 
         # Looking up with the original slug should fail with return_drafts=true,
         # as a newer draft with a different slug exists
         response = uclient.get(f"/api/v3/pages/{original_slug}/?return_drafts=true")
-        content = response.json()
+        response.json()
         assert response.status_code == 404
 
     def test_detail_view_by_id(self, uclient):
@@ -920,7 +918,7 @@ class TestContentPageAPIV3:
 
         url = f"/api/v3/pages/?channel={channel}&slug={draft_slug}&return_drafts=True"
         content = uclient.get(url).json()
-        body = content["results"][0]["messages"][0]["text"]
+        content["results"][0]["messages"][0]["text"]
         assert content["count"] == 1
 
     def test_list_view_multiple_filters(self, uclient):
@@ -942,14 +940,14 @@ class TestContentPageAPIV3:
         content_page_1.slug = "english-content-page-1-with-tag1"
         content_page_1.save_revision().publish()
 
-        content_page_2 = self.create_content_page(
+        self.create_content_page(
             root_en_page,
             title="English Content Page 2 with tag1",
             tags=["tag1"],
             body_type="whatsapp",
             publish=True,
         )
-        content_page_3 = self.create_content_page(
+        self.create_content_page(
             root_en_page,
             title="English Content Page 3",
             body_type="whatsapp",
@@ -966,22 +964,22 @@ class TestContentPageAPIV3:
         self.create_content_page(root_pt_page, title="Portuguese Page 6", publish=False)
 
         # Count ALL English pages
-        url = f"/api/v3/pages/?return_drafts=true&locale=en"
+        url = "/api/v3/pages/?return_drafts=true&locale=en"
         content = uclient.get(url).json()
         assert content["count"] == 5
 
         # Count LIVE English pages
-        url = f"/api/v3/pages/?locale=en"
+        url = "/api/v3/pages/?locale=en"
         content = uclient.get(url).json()
         assert content["count"] == 4
 
         # Count ALL Portuguese pages
-        url = f"/api/v3/pages/?return_drafts=true&locale=pt"
+        url = "/api/v3/pages/?return_drafts=true&locale=pt"
         content = uclient.get(url).json()
         assert content["count"] == 3
 
         # Count LIVE Portuguese pages
-        url = f"/api/v3/pages/?locale=pt"
+        url = "/api/v3/pages/?locale=pt"
         content = uclient.get(url).json()
         assert content["count"] == 2
 
