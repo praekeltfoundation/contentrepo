@@ -7,7 +7,6 @@ from .models import (  # isort:skip
 from typing import Any
 
 from django.core.exceptions import MultipleObjectsReturned
-from django.db.models import QuerySet
 from django.http.response import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import path
@@ -121,7 +120,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
     model = ContentPage
     base_serializer_class = ContentPageSerializerV3
     meta_fields: list[str] = []
-    _cached_queryset: QuerySet[ContentPage] | None = None  # Cache for the queryset
     known_query_parameters = PagesAPIViewSet.known_query_parameters.union(
         [
             "tag",
