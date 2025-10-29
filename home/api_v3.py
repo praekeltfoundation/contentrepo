@@ -276,8 +276,8 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             if tag:
                 draft_ids &= tag_matches
 
-        # We have filtered drafts, now we only need to filter pages without drafts
-        live_queryset = all_queryset.filter(has_unpublished_changes=False)
+            # We have filtered drafts, now we only need to filter pages without drafts
+            live_queryset = all_queryset.filter(has_unpublished_changes=False)
 
         if locale:
             live_queryset = live_queryset.filter(locale__language_code=locale)
