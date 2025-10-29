@@ -9,7 +9,7 @@ from wagtail.documents.models import Document  # type: ignore
 from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale
 from wagtailmedia.models import Media  # type: ignore
-import pprint
+
 
 from home.models import HomePage, WhatsAppTemplate
 
@@ -540,9 +540,7 @@ class TestContentPageAPIV3:
 
         # If return_drafts flag is sent then it should return pages with tags in the draft
         response = uclient.get("/api/v3/pages/?tag=Menu&return_drafts=True")
-        print("**** CONTENT ****")
         content = json.loads(response.content)
-        pprint.pp(content)
         assert content["count"] == 2
 
         # it should return all pages for no tag, excluding home pages and index pages
@@ -682,8 +680,8 @@ class TestContentPageAPIV3:
         page = self.create_content_page()
         page = self.create_content_page(page, title="Content Page 1")
         uclient.get("/api/v3/pages/")
-        # TODO: Keep an eye on this change from 16 to 10.
-        with django_assert_num_queries(24):
+
+        with django_assert_num_queries(12):
             uclient.get("/api/v3/pages/")
 
     @pytest.mark.parametrize("channel", ALL_CHANNELS)
@@ -800,6 +798,33 @@ class TestContentPageAPIV3:
             "related_pages": [],
         }
 
+    def test_detail_view_only_publish_no_drafts(self, uclient):
+        """
+        If we lookup a page that has only been published straight at creation time,
+        with no further revisions, it still works on the detail page if we
+        add 'return_drafts=true'
+        """
+        default_page = self.create_content_page(title="default-page")
+        page_1 = self.create_content_page(default_page, title="Content Page 1")
+
+        response = uclient.get(f"/api/v3/pages/{page_1.slug}/?return_drafts=true")
+        content = response.json()
+
+        assert response.status_code == 200
+
+        assert content == {
+            "slug": "content-page-1",
+            "detail_url": "http://localhost/api/v3/pages/content-page-1/?return_drafts=true",
+            "locale": "en",
+            "title": "Content Page 1",
+            "subtitle": "",
+            "messages": {"text": []},
+            "tags": [],
+            "triggers": [],
+            "has_children": False,
+            "related_pages": [],
+        }
+
     def test_detail_view_by_draft_slug(self, uclient):
         """
         Looking up a page by slug, with return_drafts=false, only works on published slugs. Draft slugs are ignored.
@@ -894,7 +919,6 @@ class TestContentPageAPIV3:
 
         url = f"/api/v3/pages/?channel={channel}&slug={draft_slug}&return_drafts=True"
         content = uclient.get(url).json()
-        pprint.pp(content)
         body = content["results"][0]["messages"][0]["text"]
         assert content["count"] == 1
 
@@ -1018,12 +1042,9 @@ class TestContentPageAPIV3:
         content = uclient.get(url).json()
         assert content["count"] == 2
 
-
-
-
     def test_list_view_slug_search(self, uclient):
         """
-        Filtering a list by slug returns the correct results based 
+        Filtering a list by slug returns the correct results based
         on whether return_drafts is true or not
         """
         root_page = self.create_content_page(title="Default page 5")
@@ -1061,9 +1082,7 @@ class TestContentPageAPIV3:
         content = uclient.get(url).json()
         assert content["count"] == 3
 
-        print("")
         slug_to_search = "content-page-6"
-        print(f"Searching for slug {slug_to_search}")
         url = f"/api/v3/pages/?slug={slug_to_search}"
         content = uclient.get(url).json()
         assert content["count"] == 1
@@ -1072,8 +1091,6 @@ class TestContentPageAPIV3:
         url = f"/api/v3/pages/?slug={slug_to_search}&return_drafts=true"
         content = uclient.get(url).json()
         assert content["count"] == 0
-        
-
 
     def test_list_view_title_search(self, uclient):
         """
