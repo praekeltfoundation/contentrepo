@@ -587,7 +587,6 @@ class PageViewViewSet(GenericListViewset):
     serializer_class = PageViewSerializer
     filterset_class = PageViewFilter
 
-    # FWB TODO: I am not sure the below code gets called at all, and if it is still needed
     def get_queryset(self):
         # filter the queryset by data jsonfield:
         queryset = self.queryset
