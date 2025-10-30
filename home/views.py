@@ -590,6 +590,7 @@ class PageViewViewSet(GenericListViewset):
     def get_queryset(self):
         # filter the queryset by data jsonfield:
         queryset = self.queryset
+
         for key, value in self.request.GET.items():
             if "data__" in key:
                 queryset = queryset.filter(**{key: value})
