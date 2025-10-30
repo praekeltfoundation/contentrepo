@@ -115,14 +115,28 @@ def has_previous_message(message_index, content_page, platform):
         return message_index
 
 
-def format_whatsapp_template_message(message: str) -> dict[str, Any]:
+def format_whatsapp_template_message(message_index, content_page) -> dict[str, Any]:
+    block = content_page.whatsapp_body._raw_data[message_index]
+    wa_template = WhatsAppTemplate.objects.get(id=block["value"])
+
     text = {
+        "id": str(wa_template.id),
+        # Even though this is technically of type a Whatsapp_Template, we "pretend" this is a Whatsapp_Message object
+        # to retain the v2 api behaviour. We also return some fields as null or empty values, for the same reason
+        "type": "Whatsapp_Message",
         "value": {
-            "variation_messages": [],
+            "image": wa_template.image.id if wa_template.image else "",
+            "media": None,
+            "footer": "",
+            "buttons": wa_template.buttons._raw_data,
+            "message": wa_template.message,
+            "document": None,
             "list_items": [],
-            "list_items_v2": [],
-            "message": message,
-        }
+            "list_title": "",
+            "next_prompt": "",
+            "example_values": wa_template.example_values._raw_data,
+            "variation_messages": [],
+        },
     }
     return text
 
@@ -195,7 +209,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
 
     if "whatsapp" in request.GET and (
         page.enable_whatsapp is True
-        or ("qa" in request.GET and request.GET["qa"] == "True")
+        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.whatsapp_body != []:
             try:
@@ -224,10 +238,11 @@ def body_field_representation(page: Any, request: Any) -> Any:
                         [
                             (
                                 "text",
-                                format_whatsapp_template_message(template.message),
+                                format_whatsapp_template_message(message, page),
                             ),
-                            ("is_whatsapp_template", "True"),
-                            ("whatsapp_template_name", template.slug),
+                            ("revision", page.get_latest_revision().id),
+                            ("is_whatsapp_template", True),
+                            ("whatsapp_template_name", template.submission_name),
                             (
                                 "whatsapp_template_category",
                                 template.category,
@@ -236,26 +251,47 @@ def body_field_representation(page: Any, request: Any) -> Any:
                     )
 
                 elif block["type"] == "Whatsapp_Message":
+                    # Get the formatted message
+                    formatted_message = format_whatsapp_message(
+                        message, page, "whatsapp"
+                    )
+
+                    # If in QA mode, modify the message
+                    if "qa" in request.GET and request.GET["qa"].lower() == "true":
+                        latest_revision = (
+                            page.revisions.order_by("-created_at").first().as_object()
+                        )
+                        if (
+                            isinstance(formatted_message, dict)
+                            and "value" in formatted_message
+                            and "message" in formatted_message["value"]
+                        ):
+                            formatted_message["value"][
+                                "message"
+                            ] = latest_revision.whatsapp_body.raw_data[message][
+                                "value"
+                            ][
+                                "message"
+                            ]  # Your modified message
                     api_body.update(
                         [
                             (
                                 "text",
-                                format_whatsapp_message(message, page, "whatsapp"),
+                                formatted_message,
                             ),
-                            ("is_whatsapp_template", "False"),
+                            ("revision", page.get_latest_revision().id),
+                            ("is_whatsapp_template", False),
+                            ("whatsapp_template_name", ""),
+                            ("whatsapp_template_category", "UTILITY"),
                         ]
                     )
-                api_body.update(
-                    [
-                        ("revision", page.get_latest_revision().id),
-                    ]
-                )
 
                 return api_body
             except IndexError:
                 raise ValidationError("The requested message does not exist")
     elif "sms" in request.GET and (
-        page.enable_sms is True or ("qa" in request.GET and request.GET["qa"] == "True")
+        page.enable_sms is True
+        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.sms_body != []:
             try:
@@ -278,7 +314,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
                 raise ValidationError("The requested message does not exist")
     elif "ussd" in request.GET and (
         page.enable_ussd is True
-        or ("qa" in request.GET and request.GET["qa"] == "True")
+        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.ussd_body != []:
             try:
@@ -301,7 +337,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
                 raise ValidationError("The requested message does not exist")
     elif "messenger" in request.GET and (
         page.enable_messenger is True
-        or ("qa" in request.GET and request.GET["qa"] == "True")
+        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.messenger_body != []:
             try:
@@ -324,7 +360,7 @@ def body_field_representation(page: Any, request: Any) -> Any:
                 raise ValidationError("The requested message does not exist")
     elif "viber" in request.GET and (
         page.enable_viber is True
-        or ("qa" in request.GET and request.GET["qa"] == "True")
+        or ("qa" in request.GET and request.GET["qa"].lower() == "true")
     ):
         if page.viber_body != []:
             try:

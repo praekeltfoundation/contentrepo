@@ -1648,7 +1648,6 @@ class WhatsAppTemplate(
                 errors["example_values"] = ValidationError(
                     "Example values cannot contain commas"
                 )
-
         # Check matching number of placeholders and example values
         if len(example_values) != len(vars_in_msg):
             errors.setdefault("message", []).append(
@@ -1658,10 +1657,8 @@ class WhatsAppTemplate(
                     )
                 }
             )
-
         if errors:
             raise ValidationError(errors)
-
         return result
 
     @property
