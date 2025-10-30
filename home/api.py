@@ -22,6 +22,7 @@ from .models import (  # isort:skip
     ContentPageTag,
     TriggeredContent,
 )
+from typing import Any
 
 
 class ContentPagesViewSet(PagesAPIViewSet):
@@ -59,35 +60,8 @@ class ContentPagesViewSet(PagesAPIViewSet):
 
         return super().detail_view(request, pk)
 
-    def listing_view(self, request, *args, **kwargs):
-        # If this request is flagged as QA then we should display the pages that have the filtering tags
-        # or triggers in their draft versions
-        if "qa" in request.GET and request.GET["qa"] == "True":
-            tag = self.request.query_params.get("tag")
-            trigger = self.request.query_params.get("trigger")
-            have_new_triggers = []
-            have_new_tags = []
-            unpublished = ContentPage.objects.filter(has_unpublished_changes="True")
-            for page in unpublished:
-                latest_rev = page.get_latest_revision_as_object()
-                if trigger and latest_rev.triggers.filter(name=trigger).exists():
-                    have_new_triggers.append(page.id)
-                if tag and latest_rev.tags.filter(name=tag).exists():
-                    have_new_tags.append(page.id)
-
-            queryset = self.get_queryset()
-            self.check_query_parameters(queryset)
-            queryset = self.filter_queryset(queryset)
-            queryset = queryset | ContentPage.objects.filter(id__in=have_new_triggers)
-            queryset = queryset | ContentPage.objects.filter(id__in=have_new_tags)
-            queryset_list = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(queryset_list, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        return super().listing_view(request)
-
-    def get_queryset(self):
-        qa = self.request.query_params.get("qa")
+    def get_queryset(self) -> Any:
+        qa = self.request.query_params.get("qa", "").lower() == "true"
         queryset = ContentPage.objects.live().prefetch_related("locale")
 
         if qa:
@@ -344,6 +318,5 @@ api_router.register_endpoint("indexes", ContentPageIndexViewSet)
 api_router.register_endpoint("images", ImagesAPIViewSet)
 api_router.register_endpoint("documents", DocumentsAPIViewSet)
 api_router.register_endpoint("media", MediaAPIViewSet)
-# api_router.register_endpoint("whatsapptemplates", WhatsAppTemplateViewset)
 api_router.register_endpoint("orderedcontent", OrderedContentSetViewSet)
 api_router.register_endpoint("assessment", AssessmentViewSet)
