@@ -137,6 +137,7 @@ class TestContentPageAPI:
         body_count: int = 1,
         publish: bool = True,
         web_body: Any | None = None,
+        msg_prefix: str = "",
     ) -> Any:
         """
         Helper function to create pages needed for each test.
@@ -178,7 +179,10 @@ class TestContentPageAPI:
         bodies = []
 
         for i in range(body_count):
-            msg_body = f"*Default {body_type} Content {i+1}* 🏥"
+            if msg_prefix:
+                msg_body = f"{msg_prefix} {i+1}"
+            else:
+                msg_body = f"*Default {body_type} Content {i+1}* 🏥"
             match body_type:
                 case "whatsapp":
                     bodies.append(WABody(title, [WABlk(msg_body)]))
@@ -368,6 +372,41 @@ class TestContentPageAPI:
         assert not page.live
         body = content["body"]["text"]["message"]
         assert body == f"*Default {platform} Content 1* 🏥"
+
+    # @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
+    # def test_message_draft_by_slug_qa_lowercase(self, uclient, platform):
+    def test_message_draft_by_slug_qa_lowercase(self, uclient: Any) -> None:
+        """
+        Unpublished <platform> pages are returned if the qa param is set.
+        """
+        self.create_content_page(
+            title="page1", publish=False, body_type="whatsapp", msg_prefix="p1 draft"
+        )
+        self.create_content_page(
+            title="page2", publish=True, body_type="whatsapp", msg_prefix="p2 live"
+        )
+        page3 = self.create_content_page(
+            title="page3", publish=True, body_type="whatsapp", msg_prefix="p3 live"
+        )
+        # I'm not sure if this is the correct way to add a draft revision to a
+        # live page.
+        page3.whatsapp_body[0].value["message"] = "p3 draft 1"
+        page3.save_revision()
+
+        qa_response = uclient.get("/api/v2/pages/?whatsapp=true&qa=true")
+        [q1, q2, q3] = qa_response.json()["results"]
+
+        assert q1["body"]["text"]["value"]["message"] == "p1 draft 1"
+        assert q2["body"]["text"]["value"]["message"] == "p2 live 1"
+        assert q3["body"]["text"]["value"]["message"] == "p3 draft 1"
+
+        live_response = uclient.get("/api/v2/pages/?whatsapp=true")
+
+        [l2, l3] = live_response.json()["results"]
+        assert l2["body"]["text"]["value"]["message"] == "p2 live 1"
+        # The following _should_ return the live content for page3, but
+        # apparently returns the draft content instead.
+        assert l3["body"]["text"]["value"]["message"] == "p3 live 1"
 
     @pytest.mark.parametrize("platform", ALL_PLATFORMS)
     def test_platform_disabled(self, uclient, platform):
