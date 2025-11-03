@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
 from wagtail.models.sites import Site
+from .models import ContentPageIndex
 
 from home.serializers_v3 import ContentPageSerializerV3, WhatsAppTemplateSerializer
 
@@ -111,6 +112,11 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
             ),
         ]
 
+class ContentPageIndexV3ViewSet(PagesAPIViewSet):
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        return ContentPageIndex.objects.live()
 
 class ContentPagesV3APIViewset(PagesAPIViewSet):
     """
@@ -128,6 +134,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             "return_drafts",
             "channel",
             "slug",
+            "child_of",
         ]
     )
     pagination_class = PageNumberPagination
@@ -216,6 +223,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         title = self.request.query_params.get("title", "").casefold()
         trigger = self.request.query_params.get("trigger", "").casefold()
         tag = self.request.query_params.get("tag", "").casefold()
+        child_of = self.request.query_params.get("child_of", "").casefold()
 
         locale_matches = set()
         slug_matches = set()
@@ -263,6 +271,13 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             live_queryset = live_queryset.filter(slug__icontains=slug)
         if title:
             live_queryset = live_queryset.filter(title__icontains=title)
+        if child_of:
+            try:
+                parent_page = ContentPage.objects.get(slug=child_of)
+                live_queryset = live_queryset.child_of(parent_page)
+            except ContentPage.DoesNotExist:
+                raise NotFound({"child_of": [f"Parent page with id {child_of} does not exist."]})
+
         if trigger:
             ids = TriggeredContent.objects.filter(
                 tag__name__iexact=trigger
@@ -302,3 +317,4 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 api_router_v3 = WagtailAPIRouter("wagtailapiv3_router")
 api_router_v3.register_endpoint("whatsapptemplates", WhatsAppTemplateViewset)
 api_router_v3.register_endpoint("pages", ContentPagesV3APIViewset)
+api_router_v3.register_endpoint("indexes", ContentPageIndexV3ViewSet)
