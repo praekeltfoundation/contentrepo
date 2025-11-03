@@ -25,7 +25,7 @@ def format_title(page, request):
 
 
 def get_related_page_as_content_page(page):
-    if page.id:
+    if page and page.id:
         return ContentPage.objects.filter(id=page.id).first()
 
 
@@ -34,12 +34,13 @@ def format_related_pages(page, request):
 
     for related in page.related_pages:
         related_page = get_related_page_as_content_page(related.value)
-        related_pages.append(
-            {
-                "slug": related_page.slug,
-                "title": format_title(related_page, request),
-            }
-        )
+        if related_page:
+            related_pages.append(
+                {
+                    "slug": related_page.slug,
+                    "title": format_title(related_page, request),
+                }
+            )
 
     return related_pages
 
