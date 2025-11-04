@@ -13,17 +13,17 @@ from wagtailmedia.models import Media  # type: ignore
 from home.models import HomePage, WhatsAppTemplate
 
 from .page_builder import (
-    Btn,
-    PageBtn,
-    NextBtn,
     FormBtn,
     MBlk,
     MBody,
+    NextBtn,
+    PageBtn,
     PageBuilder,
     SBlk,
     SBody,
     UBlk,
     UBody,
+    VarMsg,
     VBlk,
     VBody,
     WABlk,
@@ -1247,7 +1247,7 @@ class TestContentPageAPIV3:
 
         assert content["title"] == f"default page for {channel}"
 
-    def test_all_whatsapp_fields_v3(self, uclient):
+    def test_whatsapp_buttons(self, uclient):
         """
         Fetching the detail view of a page returns all the correct fields and content for whatsapp,
         including all three button types: PageBtn, NextBtn, and FormBtn.
@@ -1270,7 +1270,9 @@ class TestContentPageAPIV3:
         )
 
         # Create a form for FormBtn
-        test_form = Assessment(title="Test Form", slug="test-form", locale=target_page.locale)
+        test_form = Assessment(
+            title="Test Form", slug="test-form", locale=target_page.locale
+        )
         test_form.save()
 
         # Create page with all three button types
@@ -1298,6 +1300,7 @@ class TestContentPageAPIV3:
 
         response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
         content = response.json()
+
         assert content["slug"] == page.slug
         assert content["locale"] == "en"
         assert content["messages"][0]["text"] == "Test message with buttons"
@@ -1317,3 +1320,73 @@ class TestContentPageAPIV3:
         assert content["messages"][0]["buttons"][2]["type"] == "go_to_form"
         assert content["messages"][0]["buttons"][2]["slug"] == "test-form"
 
+    def test_whatsapp_variation_messages(self, uclient):
+        """
+        Test that variation messages with restrictions are correctly returned in the API.
+        """
+        channel = "whatsapp"
+
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="variation-test-page",
+            title="Variation Test Page",
+            bodies=[
+                WABody(
+                    "Variation Test Page",
+                    [
+                        WABlk(
+                            "Default message",
+                            variation_messages=[
+                                VarMsg("Message for male adults", gender="male"),
+                                VarMsg("Message for female teens", gender="female"),
+                                VarMsg(
+                                    "Message for single users", relationship="single"
+                                ),
+                            ],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
+        content = response.json()
+
+        assert content["messages"][0]["text"] == "Default message"
+        assert len(content["messages"][0]["variation_messages"]) == 3
+
+        # Check first variation message (male)
+        assert (
+            content["messages"][0]["variation_messages"][0]["message"]
+            == "Message for male adults"
+        )
+        assert (
+            content["messages"][0]["variation_messages"][0]["profile_field"] == "gender"
+        )
+        assert content["messages"][0]["variation_messages"][0]["value"] == "male"
+
+        # Check second variation message (female)
+        assert (
+            content["messages"][0]["variation_messages"][1]["message"]
+            == "Message for female teens"
+        )
+        assert (
+            content["messages"][0]["variation_messages"][1]["profile_field"] == "gender"
+        )
+        assert content["messages"][0]["variation_messages"][1]["value"] == "female"
+
+        # Check third variation message (single)
+        assert (
+            content["messages"][0]["variation_messages"][2]["message"]
+            == "Message for single users"
+        )
+        assert (
+            content["messages"][0]["variation_messages"][2]["profile_field"]
+            == "relationship"
+        )
+        assert content["messages"][0]["variation_messages"][2]["value"] == "single"
