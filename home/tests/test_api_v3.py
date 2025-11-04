@@ -14,11 +14,14 @@ from home.models import HomePage, WhatsAppTemplate
 
 from .page_builder import (
     FormBtn,
+    FormListItem,
     MBlk,
     MBody,
     NextBtn,
+    NextListItem,
     PageBtn,
     PageBuilder,
+    PageListItem,
     SBlk,
     SBody,
     UBlk,
@@ -1390,3 +1393,74 @@ class TestContentPageAPIV3:
             == "relationship"
         )
         assert content["messages"][0]["variation_messages"][2]["value"] == "single"
+
+    def test_whatsapp_list_items(self, uclient):
+        """
+        Test that list items with list_title are correctly returned in the API.
+        """
+        from home.models import Assessment
+
+        channel = "whatsapp"
+
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        # Create target page for PageListItem
+        target_page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="target-page",
+            title="Target Page",
+            bodies=[WABody("Target Page", [WABlk("Target content")])],
+        )
+
+        # Create a form for FormListItem
+        test_form = Assessment(
+            title="Test Form", slug="test-form-list", locale=target_page.locale
+        )
+        test_form.save()
+
+        # Create page with list items and list title
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="list-test-page",
+            title="List Test Page",
+            bodies=[
+                WABody(
+                    "List Test Page",
+                    [
+                        WABlk(
+                            "Choose an option from the list",
+                            list_title="Available Options",
+                            list_items=[
+                                PageListItem("Go to Target Page", target_page),
+                                NextListItem("Next Message"),
+                                FormListItem("Fill Form", test_form),
+                            ],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
+        content = response.json()
+
+        assert content["messages"][0]["text"] == "Choose an option from the list"
+        assert content["messages"][0]["list_title"] == "Available Options"
+        assert len(content["messages"][0]["list_items"]) == 3
+
+        # Check PageListItem
+        assert content["messages"][0]["list_items"][0]["title"] == "Go to Target Page"
+        assert content["messages"][0]["list_items"][0]["type"] == "go_to_page"
+        assert content["messages"][0]["list_items"][0]["slug"] == "target-page"
+
+        # Check NextListItem
+        assert content["messages"][0]["list_items"][1]["title"] == "Next Message"
+        assert content["messages"][0]["list_items"][1]["type"] == "next_message"
+
+        # Check FormListItem
+        assert content["messages"][0]["list_items"][2]["title"] == "Fill Form"
+        assert content["messages"][0]["list_items"][2]["type"] == "go_to_form"
+        assert content["messages"][0]["list_items"][2]["slug"] == "test-form-list"
