@@ -13,6 +13,10 @@ from wagtailmedia.models import Media  # type: ignore
 from home.models import HomePage, WhatsAppTemplate
 
 from .page_builder import (
+    Btn,
+    PageBtn,
+    NextBtn,
+    FormBtn,
     MBlk,
     MBody,
     PageBuilder,
@@ -1242,3 +1246,74 @@ class TestContentPageAPIV3:
         )
 
         assert content["title"] == f"default page for {channel}"
+
+    def test_all_whatsapp_fields_v3(self, uclient):
+        """
+        Fetching the detail view of a page returns all the correct fields and content for whatsapp,
+        including all three button types: PageBtn, NextBtn, and FormBtn.
+        """
+        from home.models import Assessment
+
+        channel = "whatsapp"
+
+        # Create target page for PageBtn
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        target_page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="test-page-1",
+            title="Test Page 1",
+            bodies=[WABody("Test Page 1", [WABlk("Target page content")])],
+        )
+
+        # Create a form for FormBtn
+        test_form = Assessment(title="Test Form", slug="test-form", locale=target_page.locale)
+        test_form.save()
+
+        # Create page with all three button types
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="content-page-1",
+            title="Content Page 1",
+            bodies=[
+                WABody(
+                    "Content Page 1",
+                    [
+                        WABlk(
+                            "Test message with buttons",
+                            buttons=[
+                                PageBtn("Go to Page Button", target_page),
+                                NextBtn("Next Message Button"),
+                                FormBtn("Go to Form Button", test_form),
+                            ],
+                        )
+                    ],
+                )
+            ],
+            tags=["self_help"],
+        )
+
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
+        content = response.json()
+        assert content["slug"] == page.slug
+        assert content["locale"] == "en"
+        assert content["messages"][0]["text"] == "Test message with buttons"
+        assert len(content["messages"][0]["buttons"]) == 3
+
+        # Check PageBtn
+        assert content["messages"][0]["buttons"][0]["title"] == "Go to Page Button"
+        assert content["messages"][0]["buttons"][0]["type"] == "go_to_page"
+        assert content["messages"][0]["buttons"][0]["slug"] == "test-page-1"
+
+        # Check NextBtn
+        assert content["messages"][0]["buttons"][1]["title"] == "Next Message Button"
+        assert content["messages"][0]["buttons"][1]["type"] == "next_message"
+
+        # Check FormBtn
+        assert content["messages"][0]["buttons"][2]["title"] == "Go to Form Button"
+        assert content["messages"][0]["buttons"][2]["type"] == "go_to_form"
+        assert content["messages"][0]["buttons"][2]["slug"] == "test-form"
+
