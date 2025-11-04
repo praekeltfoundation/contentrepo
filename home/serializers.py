@@ -133,7 +133,6 @@ def format_whatsapp_template_message(message_index, content_page) -> dict[str, A
             "document": None,
             "list_items": [],
             "list_title": "",
-            "next_prompt": "",
             "example_values": wa_template.example_values._raw_data,
             "variation_messages": [],
         },
