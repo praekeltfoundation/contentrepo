@@ -348,10 +348,6 @@ def null_to_emptystr(page: DbDict) -> DbDict:
     ]:
         if k in fields and fields[k] is None:
             fields[k] = ""
-    if "whatsapp_body" in fields:
-        for body in fields["whatsapp_body"]:
-            if "next_prompt" in body["value"] and not body["value"]["next_prompt"]:
-                body["value"]["next_prompt"] = ""
     return page | {"fields": fields}
 
 
@@ -601,6 +597,10 @@ class TestImportExportRoundtrip:
         """
         csv_bytes = csv_impexp.import_file("content2.csv")
         content = csv_impexp.export_content()
+        print("*****")
+        print(content)
+        print("*****")
+
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
         assert dst == src
 
@@ -2116,7 +2116,6 @@ class TestExportImportRoundtrip:
         cp_imp_exp_wablks = [
             WABlk(
                 "Message 1",
-                next_prompt="Next message",
                 buttons=[NextBtn("Next message")],
                 variation_messages=[
                     VarMsg("Var'n for Single", relationship="single"),
@@ -2128,7 +2127,7 @@ class TestExportImportRoundtrip:
                 buttons=[PageBtn("Import Export", page=imp_exp)],
                 variation_messages=[VarMsg("Var'n for Rather not say", gender="empty")],
             ),
-            WABlk("Message 3 with no variation", next_prompt="Next message"),
+            WABlk("Message 3 with no variation"),
         ]
         _cp_imp_exp = PageBuilder.build_cp(
             parent=imp_exp,

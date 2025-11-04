@@ -296,12 +296,6 @@ class WhatsappBlock(blocks.StructBlock):
         validators=(MaxLengthValidator(4096),),
     )
     variation_messages = blocks.ListBlock(VariationBlock(), default=[])
-    # TODO: next_prompt is deprecated, and should be removed in the next major version
-    next_prompt = blocks.CharBlock(
-        help_text="prompt text for next message",
-        required=False,
-        validators=(MaxLengthValidator(20),),
-    )
     buttons = blocks.StreamBlock(
         [
             ("next_message", NextMessageButton()),

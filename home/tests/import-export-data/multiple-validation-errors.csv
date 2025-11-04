@@ -1,4 +1,4 @@
-structure,message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,whatsapp_template_name,whatsapp_template_category,example_values,variation_title,variation_body,sms_title,sms_body,ussd_title,ussd_body,messenger_title,messenger_body,viber_title,viber_body,translation_tag,tags,quick_replies,triggers,locale,next_prompt,buttons,image_link,doc_link,media_link,related_pages
-Menu 1,0,1303,appointment-reminders,,Appointment reminders,,,,,,,,,,,,,,,,,,8cff04aa-cf08-4120-88b4-e2269b7d5d80,,,,English,,,,,,
+structure,message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,whatsapp_template_name,whatsapp_template_category,example_values,variation_title,variation_body,sms_title,sms_body,ussd_title,ussd_body,messenger_title,messenger_body,viber_title,viber_body,translation_tag,tags,quick_replies,triggers,locale,buttons,image_link,doc_link,media_link,related_pages
+Menu 1,0,1303,appointment-reminders,,Appointment reminders,,,,,,,,,,,,,,,,,,8cff04aa-cf08-4120-88b4-e2269b7d5d80,,,,English,,,,,
 Sub 1.13,1,1467,mnch_appointment_child_2,Appointment reminders,Appointment child 2,,,mnch_appointment_child_2,"Hi {{1}}
-{{2}} ",,Marketing,Helen,,,,,,,,,,,0c9857a5-e381-49d7-b2fd-123348c4a373,,,,English,,,,,,
+{{2}} ",,Marketing,Helen,,,,,,,,,,,0c9857a5-e381-49d7-b2fd-123348c4a373,,,,English,,,,,

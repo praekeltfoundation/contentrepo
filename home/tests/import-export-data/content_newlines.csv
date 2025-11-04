@@ -1,5 +1,5 @@
-Structure,Message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,variation_body,variation_title,next_prompt,messenger_title,messenger_body,viber_title,viber_body,tags,quick_replies,triggers,locale,image_link,doc_link,media_link,related_pages
-,0,,,,test,,,,,,,,,,,,,,,English,,,,
+Structure,Message,page_id,slug,parent,web_title,web_subtitle,web_body,whatsapp_title,whatsapp_body,variation_body,variation_title,messenger_title,messenger_body,viber_title,viber_body,tags,quick_replies,triggers,locale,image_link,doc_link,media_link,related_pages
+,0,,,,test,,,,,,,,,,,,,,English,,,,
 ,1,,,,Web Title 1,Web subtitle 1,web body,Whatsapp Title 1,"First whatsapp message
 ====
-second whatsapp message",,,Go Next====again,Messenger Title 1,Messenger Body 1,Viber Title 1,Viber body 1,"tag1,tag2",,,English,,,,
+second whatsapp message",,,Messenger Title 1,Messenger Body 1,Viber Title 1,Viber body 1,"tag1,tag2",,,English,,,,

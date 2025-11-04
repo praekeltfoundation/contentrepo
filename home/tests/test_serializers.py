@@ -479,7 +479,6 @@ class TestFormatMessage:
                         "message": "WhatsApp Varied 1",
                     }
                 ],
-                "next_prompt": None,
                 "buttons": [],
                 "list_title": "",
                 "list_items": [],
@@ -504,7 +503,6 @@ class TestFormatMessage:
                 "media": None,
                 "message": "WhatsApp 1",
                 "variation_messages": [],
-                "next_prompt": None,
                 "buttons": [],
                 "list_title": "",
                 "list_items": [],
