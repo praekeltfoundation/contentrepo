@@ -13,13 +13,20 @@ from wagtailmedia.models import Media  # type: ignore
 from home.models import HomePage, WhatsAppTemplate
 
 from .page_builder import (
+    FormBtn,
+    FormListItem,
     MBlk,
     MBody,
+    NextBtn,
+    NextListItem,
+    PageBtn,
     PageBuilder,
+    PageListItem,
     SBlk,
     SBody,
     UBlk,
     UBody,
+    VarMsg,
     VBlk,
     VBody,
     WABlk,
@@ -1140,11 +1147,36 @@ class TestContentPageAPIV3:
         page = PageBuilder.build_cp(
             parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
         )
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel=whatsapp")
         content = response.json()
 
-        media_id = content["body"]["text"]["value"]["media"]
-        assert media_id == page.whatsapp_body._raw_data[0]["value"]["media"]
+        media_id = content["messages"][0]["media"]
+        assert media_id == media_id_expected
+
+    def test_wa_doc(self, uclient: Any) -> None:
+        """
+        Test that API returns document ID for whatsapp
+        """
+        mk_test_doc()
+        doc_id_expected = Document.objects.first().id
+        msg_body = "*Default whatsapp Content* 🏥"
+        title = "default page"
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = [WABody(title, [WABlk(msg_body, document=doc_id_expected)])]
+
+        page = PageBuilder.build_cp(
+            parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
+        )
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel=whatsapp")
+        content = response.json()
+
+        doc_id = content["messages"][0]["document"]
+        assert doc_id == doc_id_expected
 
     def test_format_related_pages(self, uclient):
         home_page = HomePage.objects.first()
@@ -1242,3 +1274,218 @@ class TestContentPageAPIV3:
         )
 
         assert content["title"] == f"default page for {channel}"
+
+    def test_whatsapp_buttons(self, uclient):
+        """
+        Fetching the detail view of a page returns all the correct fields and content for whatsapp,
+        including all three button types: PageBtn, NextBtn, and FormBtn.
+        """
+        from home.models import Assessment
+
+        channel = "whatsapp"
+
+        # Create target page for PageBtn
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        target_page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="test-page-1",
+            title="Test Page 1",
+            bodies=[WABody("Test Page 1", [WABlk("Target page content")])],
+        )
+
+        # Create a form for FormBtn
+        test_form = Assessment(
+            title="Test Form", slug="test-form", locale=target_page.locale
+        )
+        test_form.save()
+
+        # Create page with all three button types
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="content-page-1",
+            title="Content Page 1",
+            bodies=[
+                WABody(
+                    "Content Page 1",
+                    [
+                        WABlk(
+                            "Test message with buttons",
+                            buttons=[
+                                PageBtn("Go to Page Button", target_page),
+                                NextBtn("Next Message Button"),
+                                FormBtn("Go to Form Button", test_form),
+                            ],
+                        )
+                    ],
+                )
+            ],
+            tags=["self_help"],
+        )
+
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
+        content = response.json()
+
+        assert content["slug"] == page.slug
+        assert content["locale"] == "en"
+        assert content["messages"][0]["text"] == "Test message with buttons"
+        assert len(content["messages"][0]["buttons"]) == 3
+
+        # Check PageBtn
+        assert content["messages"][0]["buttons"][0]["title"] == "Go to Page Button"
+        assert content["messages"][0]["buttons"][0]["type"] == "go_to_page"
+        assert content["messages"][0]["buttons"][0]["slug"] == "test-page-1"
+
+        # Check NextBtn
+        assert content["messages"][0]["buttons"][1]["title"] == "Next Message Button"
+        assert content["messages"][0]["buttons"][1]["type"] == "next_message"
+
+        # Check FormBtn
+        assert content["messages"][0]["buttons"][2]["title"] == "Go to Form Button"
+        assert content["messages"][0]["buttons"][2]["type"] == "go_to_form"
+        assert content["messages"][0]["buttons"][2]["slug"] == "test-form"
+
+    def test_whatsapp_variation_messages(self, uclient):
+        """
+        Test that variation messages with restrictions are correctly returned in the API.
+        """
+        channel = "whatsapp"
+
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="variation-test-page",
+            title="Variation Test Page",
+            bodies=[
+                WABody(
+                    "Variation Test Page",
+                    [
+                        WABlk(
+                            "Default message",
+                            variation_messages=[
+                                VarMsg("Message for male adults", gender="male"),
+                                VarMsg("Message for female teens", gender="female"),
+                                VarMsg(
+                                    "Message for single users", relationship="single"
+                                ),
+                            ],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
+        content = response.json()
+
+        assert content["messages"][0]["text"] == "Default message"
+        assert len(content["messages"][0]["variation_messages"]) == 3
+
+        # Check first variation message (male)
+        assert (
+            content["messages"][0]["variation_messages"][0]["message"]
+            == "Message for male adults"
+        )
+        assert (
+            content["messages"][0]["variation_messages"][0]["profile_field"] == "gender"
+        )
+        assert content["messages"][0]["variation_messages"][0]["value"] == "male"
+
+        # Check second variation message (female)
+        assert (
+            content["messages"][0]["variation_messages"][1]["message"]
+            == "Message for female teens"
+        )
+        assert (
+            content["messages"][0]["variation_messages"][1]["profile_field"] == "gender"
+        )
+        assert content["messages"][0]["variation_messages"][1]["value"] == "female"
+
+        # Check third variation message (single)
+        assert (
+            content["messages"][0]["variation_messages"][2]["message"]
+            == "Message for single users"
+        )
+        assert (
+            content["messages"][0]["variation_messages"][2]["profile_field"]
+            == "relationship"
+        )
+        assert content["messages"][0]["variation_messages"][2]["value"] == "single"
+
+    def test_whatsapp_list_items(self, uclient):
+        """
+        Test that list items with list_title are correctly returned in the API.
+        """
+        from home.models import Assessment
+
+        channel = "whatsapp"
+
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        # Create target page for PageListItem
+        target_page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="target-page",
+            title="Target Page",
+            bodies=[WABody("Target Page", [WABlk("Target content")])],
+        )
+
+        # Create a form for FormListItem
+        test_form = Assessment(
+            title="Test Form", slug="test-form-list", locale=target_page.locale
+        )
+        test_form.save()
+
+        # Create page with list items and list title
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="list-test-page",
+            title="List Test Page",
+            bodies=[
+                WABody(
+                    "List Test Page",
+                    [
+                        WABlk(
+                            "Choose an option from the list",
+                            list_title="Available Options",
+                            list_items=[
+                                PageListItem("Go to Target Page", target_page),
+                                NextListItem("Next Message"),
+                                FormListItem("Fill Form", test_form),
+                            ],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
+        content = response.json()
+
+        assert content["messages"][0]["text"] == "Choose an option from the list"
+        assert content["messages"][0]["list_title"] == "Available Options"
+        assert len(content["messages"][0]["list_items"]) == 3
+
+        # Check PageListItem
+        assert content["messages"][0]["list_items"][0]["title"] == "Go to Target Page"
+        assert content["messages"][0]["list_items"][0]["type"] == "go_to_page"
+        assert content["messages"][0]["list_items"][0]["slug"] == "target-page"
+
+        # Check NextListItem
+        assert content["messages"][0]["list_items"][1]["title"] == "Next Message"
+        assert content["messages"][0]["list_items"][1]["type"] == "next_message"
+
+        # Check FormListItem
+        assert content["messages"][0]["list_items"][2]["title"] == "Fill Form"
+        assert content["messages"][0]["list_items"][2]["type"] == "go_to_form"
+        assert content["messages"][0]["list_items"][2]["slug"] == "test-form-list"
