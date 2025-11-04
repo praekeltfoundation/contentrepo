@@ -1489,3 +1489,33 @@ class TestContentPageAPIV3:
         assert content["messages"][0]["list_items"][2]["title"] == "Fill Form"
         assert content["messages"][0]["list_items"][2]["type"] == "go_to_form"
         assert content["messages"][0]["list_items"][2]["slug"] == "test-form-list"
+
+    def test_whatsapp_footer(self, uclient):
+        """
+        Test that footer field is correctly returned in the API.
+        """
+        channel = "whatsapp"
+
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        # Create page with footer
+        page = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="footer-test-page",
+            title="Footer Test Page",
+            bodies=[
+                WABody(
+                    "Footer Test Page",
+                    [WABlk("Message with footer", footer="This is a footer text")],
+                )
+            ],
+        )
+
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel={channel}")
+        content = response.json()
+
+        assert content["messages"][0]["text"] == "Message with footer"
+        assert content["messages"][0]["footer"] == "This is a footer text"

@@ -173,6 +173,9 @@ def format_whatsapp_body_V3(content_page):
                     block.value.get("variation_messages")
                 )
 
+            if block.value.get("footer"):
+                message["footer"] = block.value.get("footer")
+
             messages.append(message)
 
     return messages
