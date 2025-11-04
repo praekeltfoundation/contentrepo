@@ -17,9 +17,10 @@ from rest_framework.response import Response
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
 from wagtail.models.sites import Site
-from .models import ContentPageIndex
+from .models import ContentPageIndex, Page
 
 from home.serializers_v3 import ContentPageSerializerV3, WhatsAppTemplateSerializer
+import pprint as pp
 
 DEFAULT_LOCALE = Site.objects.get(is_default_site=True).root_page.locale.language_code
 
@@ -273,7 +274,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             live_queryset = live_queryset.filter(title__icontains=title)
         if child_of:
             try:
-                parent_page = ContentPage.objects.get(slug=child_of)
+                parent_page = Page.objects.get(locale__language_code=locale, slug=child_of)
                 live_queryset = live_queryset.child_of(parent_page)
             except ContentPage.DoesNotExist:
                 raise NotFound({"child_of": [f"Parent page with id {child_of} does not exist."]})
