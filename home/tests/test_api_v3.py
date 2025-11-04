@@ -1147,11 +1147,36 @@ class TestContentPageAPIV3:
         page = PageBuilder.build_cp(
             parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
         )
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel=whatsapp")
         content = response.json()
 
-        media_id = content["body"]["text"]["value"]["media"]
-        assert media_id == page.whatsapp_body._raw_data[0]["value"]["media"]
+        media_id = content["messages"][0]["media"]
+        assert media_id == media_id_expected
+
+    def test_wa_doc(self, uclient: Any) -> None:
+        """
+        Test that API returns document ID for whatsapp
+        """
+        mk_test_doc()
+        doc_id_expected = Document.objects.first().id
+        msg_body = "*Default whatsapp Content* 🏥"
+        title = "default page"
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+        parent = main_menu
+
+        bodies = [WABody(title, [WABlk(msg_body, document=doc_id_expected)])]
+
+        page = PageBuilder.build_cp(
+            parent=parent, slug=title.replace(" ", "-"), title=title, bodies=bodies
+        )
+        response = uclient.get(f"/api/v3/pages/{page.id}/?channel=whatsapp")
+        content = response.json()
+
+        doc_id = content["messages"][0]["document"]
+        assert doc_id == doc_id_expected
 
     def test_format_related_pages(self, uclient):
         home_page = HomePage.objects.first()
