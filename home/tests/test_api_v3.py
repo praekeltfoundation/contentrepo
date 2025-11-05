@@ -1609,6 +1609,107 @@ class TestContentPageAPIV3:
         child_1 = self.create_content_page(
             parent_page, title="Child With Tag", tags=["menu"], publish=True
         )
+        self.create_content_page(
+            parent_page, title="Child Without Tag", publish=True
+        )
+
+        # Filter by parent and tag
+        response = uclient.get(f"/api/v3/pages/?child_of={parent_page.slug}&tag=menu")
+        content = json.loads(response.content)
+
+        # Should return only child with matching tag
+        assert content["count"] == 1
+        assert content["results"][0]["slug"] == child_1.slug
+
+    def test_child_of_filter_live(self, uclient):
+        """
+        Test that child_of filter returns only published child pages of a specified parent.
+        """
+        # Create parent page
+        parent_page = self.create_content_page(title="Parent Page", publish=True)
+
+        # Create child pages
+        child_1 = self.create_content_page(
+            parent_page, title="Child Page 1", publish=True
+        )
+        child_2 = self.create_content_page(
+            parent_page, title="Child Page 2", publish=True
+        )
+
+        # Create a non-child page
+        other_page = self.create_content_page(title="Other Page", publish=True)
+
+        # Filter by parent slug
+        response = uclient.get(f"/api/v3/pages/?child_of={parent_page.slug}")
+        content = json.loads(response.content)
+
+        # Should return only the 2 published child pages
+        assert content["count"] == 2
+        slugs = [page["slug"] for page in content["results"]]
+        assert child_1.slug in slugs
+        assert child_2.slug in slugs
+        assert other_page.slug not in slugs
+
+    def test_child_of_filter_draft(self, uclient):
+        """
+        Test that child_of filter returns draft child pages when return_drafts=True.
+        """
+        # Create parent page
+        parent_page = self.create_content_page(title="Parent Page Draft", publish=True)
+
+        # Create published child
+        child_1 = self.create_content_page(
+            parent_page, title="Published Child", publish=True
+        )
+
+        # Create unpublished child
+        child_2 = self.create_content_page(
+            parent_page, title="Draft Child", publish=False
+        )
+
+        # Create non-child page
+        other_page = self.create_content_page(title="Other Page", publish=False)
+
+        # Without return_drafts, should only return published child
+        response = uclient.get(f"/api/v3/pages/?child_of={parent_page.slug}")
+        content = json.loads(response.content)
+        assert content["count"] == 1
+        assert content["results"][0]["slug"] == child_1.slug
+
+        # With return_drafts, should return both children
+        response = uclient.get(
+            f"/api/v3/pages/?child_of={parent_page.slug}&return_drafts=True"
+        )
+        content = json.loads(response.content)
+        assert content["count"] == 2
+        slugs = [page["slug"] for page in content["results"]]
+        assert child_1.slug in slugs
+        assert child_2.slug in slugs
+        assert other_page.slug not in slugs
+
+    def test_child_of_filter_nonexistent_parent(self, uclient):
+        """
+        Test that child_of filter with non-existent parent slug returns 404 error.
+        """
+        self.create_content_page(title="Some Page", publish=True)
+
+        response = uclient.get("/api/v3/pages/?child_of=non-existent-slug")
+        assert response.status_code == 404
+
+        content = response.json()
+        assert content == {"page": ["Page matching query does not exist."]}
+
+    def test_child_of_combined_with_other_filters(self, uclient):
+        """
+        Test that child_of filter works correctly when combined with other filters.
+        """
+        # Create parent page
+        parent_page = self.create_content_page(title="Parent Combined", publish=True)
+
+        # Create child pages with different tags
+        child_1 = self.create_content_page(
+            parent_page, title="Child With Tag", tags=["menu"], publish=True
+        )
         self.create_content_page(parent_page, title="Child Without Tag", publish=True)
 
         # Filter by parent and tag
