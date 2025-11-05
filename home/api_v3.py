@@ -17,10 +17,10 @@ from rest_framework.response import Response
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import BaseAPIViewSet, PagesAPIViewSet
 from wagtail.models.sites import Site
-from .models import ContentPageIndex, Page
 
 from home.serializers_v3 import ContentPageSerializerV3, WhatsAppTemplateSerializer
-import pprint as pp
+
+from .models import ContentPageIndex, Page
 
 DEFAULT_LOCALE = Site.objects.get(is_default_site=True).root_page.locale.language_code
 
@@ -113,11 +113,13 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
             ),
         ]
 
+
 class ContentPageIndexV3ViewSet(PagesAPIViewSet):
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
         return ContentPageIndex.objects.live()
+
 
 class ContentPagesV3APIViewset(PagesAPIViewSet):
     """
@@ -231,6 +233,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         title_matches = set()
         trigger_matches = set()
         tag_matches = set()
+        child_of_matches = set()
 
         # Build of Draft results
         if self.return_drafts:
@@ -252,6 +255,18 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
                     l_rev_tags = {t.name.casefold() for t in l_rev.tags.all() if t}
                     if tag in l_rev_tags:
                         tag_matches.add(dp.pk)
+                if child_of:
+                    try:
+                        parent_page = Page.objects.get(
+                            locale__language_code=locale, slug=child_of
+                        )
+                        if l_rev.get_parent() == parent_page:
+                            child_of_matches.add(dp.pk)
+                    except Page.DoesNotExist:
+                        raise NotFound(
+                            {"page": ["Page matching query does not exist."]}
+                        )
+
             draft_ids = locale_matches
             if slug:
                 draft_ids &= slug_matches
@@ -261,6 +276,8 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
                 draft_ids &= trigger_matches
             if tag:
                 draft_ids &= tag_matches
+            if child_of:
+                draft_ids &= child_of_matches
 
             # We have filtered drafts, now we only need to filter pages without drafts
             live_queryset = all_queryset.filter(has_unpublished_changes=False)
@@ -274,10 +291,12 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             live_queryset = live_queryset.filter(title__icontains=title)
         if child_of:
             try:
-                parent_page = Page.objects.get(locale__language_code=locale, slug=child_of)
+                parent_page = Page.objects.get(
+                    locale__language_code=locale, slug=child_of
+                )
                 live_queryset = live_queryset.child_of(parent_page)
-            except ContentPage.DoesNotExist:
-                raise NotFound({"child_of": [f"Parent page with id {child_of} does not exist."]})
+            except Page.DoesNotExist:
+                raise NotFound({"page": ["Page matching query does not exist."]})
 
         if trigger:
             ids = TriggeredContent.objects.filter(
