@@ -13,7 +13,7 @@
 | home/\_\_init\_\_.py                                                                         |        0 |        0 |    100% |           |
 | home/admin.py                                                                                |        5 |        0 |    100% |           |
 | home/api.py                                                                                  |      176 |        5 |     97% |91-94, 102 |
-| home/api\_v3.py                                                                              |      174 |        9 |     95% |172-176, 235, 237-241, 252, 267-270 |
+| home/api\_v3.py                                                                              |      197 |       12 |     94% |121, 182-186, 247, 249-253, 265-266, 276, 302-305 |
 | home/assessment\_import\_export.py                                                           |       19 |        0 |    100% |           |
 | home/constants.py                                                                            |        5 |        0 |    100% |           |
 | home/content\_import\_export.py                                                              |       38 |        8 |     79% |41-45, 49-53 |
@@ -151,7 +151,7 @@
 | home/whatsapp.py                                                                             |      229 |        0 |    100% |           |
 | home/whatsapp\_template\_import\_export.py                                                   |       19 |        0 |    100% |           |
 | home/xlsx\_helpers.py                                                                        |        5 |        0 |    100% |           |
-|                                                                                    **TOTAL** | **5121** |  **473** | **91%** |           |
+|                                                                                    **TOTAL** | **5144** |  **476** | **91%** |           |
 
 
 ## Setup coverage badge
