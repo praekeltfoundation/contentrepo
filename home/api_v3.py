@@ -20,6 +20,8 @@ from wagtail.models.sites import Site
 
 from home.serializers_v3 import ContentPageSerializerV3, WhatsAppTemplateSerializer
 
+from .models import ContentPageIndex, Page
+
 DEFAULT_LOCALE = Site.objects.get(is_default_site=True).root_page.locale.language_code
 
 VALID_CHANNELS = {"", "web", "whatsapp", "sms", "ussd", "messenger", "viber"}
@@ -112,6 +114,13 @@ class WhatsAppTemplateViewset(BaseAPIViewSet):
         ]
 
 
+class ContentPageIndexV3ViewSet(PagesAPIViewSet):
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        return ContentPageIndex.objects.live()
+
+
 class ContentPagesV3APIViewset(PagesAPIViewSet):
     """
     Our custom V3 Pages API endpoint that allows finding pages by pk or slug
@@ -128,6 +137,7 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             "return_drafts",
             "channel",
             "slug",
+            "child_of",
         ]
     )
     pagination_class = PageNumberPagination
@@ -216,12 +226,14 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         title = self.request.query_params.get("title", "").casefold()
         trigger = self.request.query_params.get("trigger", "").casefold()
         tag = self.request.query_params.get("tag", "").casefold()
+        child_of = self.request.query_params.get("child_of", "").casefold()
 
         locale_matches = set()
         slug_matches = set()
         title_matches = set()
         trigger_matches = set()
         tag_matches = set()
+        child_of_matches = set()
 
         # Build of Draft results
         if self.return_drafts:
@@ -243,6 +255,18 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
                     l_rev_tags = {t.name.casefold() for t in l_rev.tags.all() if t}
                     if tag in l_rev_tags:
                         tag_matches.add(dp.pk)
+                if child_of:
+                    try:
+                        parent_page = Page.objects.get(
+                            locale__language_code=locale, slug=child_of
+                        )
+                        if l_rev.get_parent() == parent_page:
+                            child_of_matches.add(dp.pk)
+                    except Page.DoesNotExist:
+                        raise NotFound(
+                            {"page": ["Page matching query does not exist."]}
+                        )
+
             draft_ids = locale_matches
             if slug:
                 draft_ids &= slug_matches
@@ -252,6 +276,8 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
                 draft_ids &= trigger_matches
             if tag:
                 draft_ids &= tag_matches
+            if child_of:
+                draft_ids &= child_of_matches
 
             # We have filtered drafts, now we only need to filter pages without drafts
             live_queryset = all_queryset.filter(has_unpublished_changes=False)
@@ -263,6 +289,15 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
             live_queryset = live_queryset.filter(slug__icontains=slug)
         if title:
             live_queryset = live_queryset.filter(title__icontains=title)
+        if child_of:
+            try:
+                parent_page = Page.objects.get(
+                    locale__language_code=locale, slug=child_of
+                )
+                live_queryset = live_queryset.child_of(parent_page)
+            except Page.DoesNotExist:
+                raise NotFound({"page": ["Page matching query does not exist."]})
+
         if trigger:
             ids = TriggeredContent.objects.filter(
                 tag__name__iexact=trigger
@@ -302,3 +337,4 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 api_router_v3 = WagtailAPIRouter("wagtailapiv3_router")
 api_router_v3.register_endpoint("whatsapptemplates", WhatsAppTemplateViewset)
 api_router_v3.register_endpoint("pages", ContentPagesV3APIViewset)
+api_router_v3.register_endpoint("indexes", ContentPageIndexV3ViewSet)
