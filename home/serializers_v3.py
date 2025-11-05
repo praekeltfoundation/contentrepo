@@ -150,6 +150,31 @@ def format_whatsapp_body_V3(content_page):
                     if hasattr(block.value["media"], "id")
                     else block.value["media"]
                 )
+            if block.value.get("document"):
+                message["document"] = (
+                    block.value["document"].id
+                    if hasattr(block.value["document"], "id")
+                    else block.value["document"]
+                )
+            if block.value.get("buttons"):
+                message["buttons"] = format_buttons_and_list_items(
+                    block.value.get("buttons").raw_data
+                )
+
+            if block.value.get("list_title"):
+                message["list_title"] = block.value.get("list_title")
+            if block.value.get("list_items"):
+                message["list_items"] = format_buttons_and_list_items(
+                    block.value.get("list_items").raw_data
+                )
+
+            if block.value.get("variation_messages"):
+                message["variation_messages"] = format_variation_messages(
+                    block.value.get("variation_messages")
+                )
+
+            if block.value.get("footer"):
+                message["footer"] = block.value.get("footer")
 
             messages.append(message)
 

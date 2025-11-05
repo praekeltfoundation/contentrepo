@@ -115,7 +115,6 @@ def test_build_simple_pages() -> None:
                 "list_items": [],
                 "media": None,
                 "message": "*Welcome to HealthAlert* WA",
-                "next_prompt": None,
                 "buttons": [],
                 "variation_messages": [],
                 "footer": "",
@@ -188,8 +187,7 @@ def test_build_web_content() -> None:
 def test_build_variations() -> None:
     """
     PageBuilder.build_cp correctly builds a ContentPage with variation
-    messages. (This also tests multiple WhatsApp messages, buttons, and
-    non-empty next_prompt.)
+    messages. (This also tests multiple WhatsApp messages and buttons
     """
     set_profile_field_options()
     home_page = HomePage.objects.first()
@@ -198,7 +196,6 @@ def test_build_variations() -> None:
     cp_imp_exp_wablks = [
         WABlk(
             "Message 1",
-            next_prompt="Next message",
             buttons=[NextBtn("Next message")],
             variation_messages=[
                 VarMsg("Single male", gender="male", relationship="single"),
@@ -207,13 +204,11 @@ def test_build_variations() -> None:
         ),
         WABlk(
             "Message 2, variable placeholders as well {{0}}",
-            next_prompt="Next message",
             buttons=[PageBtn("Import Export", page=imp_exp)],
             variation_messages=[VarMsg("Teen", age="15-18")],
         ),
         WABlk(
             "Message 3 with no variation",
-            next_prompt="end",
             buttons=[NextBtn("end")],
         ),
     ]
@@ -229,7 +224,6 @@ def test_build_variations() -> None:
     wa_msgs: list[dict[str, Any]] = [
         {
             "message": "Message 1",
-            "next_prompt": "Next message",
             "buttons": [("next_message", {"title": "Next message"})],
             "variation_messages": [
                 {"message": "Single male", "variation_restrictions": v_single_male},
@@ -239,7 +233,6 @@ def test_build_variations() -> None:
         },
         {
             "message": "Message 2, variable placeholders as well {{0}}",
-            "next_prompt": "Next message",
             "buttons": [
                 ("go_to_page", {"title": "Import Export", "page": page_for(imp_exp)}),
             ],
@@ -250,7 +243,6 @@ def test_build_variations() -> None:
         },
         {
             "message": "Message 3 with no variation",
-            "next_prompt": "end",
             "buttons": [("next_message", {"title": "end"})],
             "variation_messages": [],
             "footer": "",

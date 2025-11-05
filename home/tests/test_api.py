@@ -896,7 +896,6 @@ class TestWhatsAppMessages:
         buttons: list[Btn] | None = None,
         list_title: str | None = None,
         list_items: list[str] | None = None,
-        next_prompt: str | None = None,
         footer: str | None = None,
         whatsapp_template_example_values: list[ExVal] | None = None,
         whatsapp_template_image: int | None = None,
@@ -916,8 +915,6 @@ class TestWhatsAppMessages:
             Title of the list to add to the content page.
         list_items : [str]
             List of list items to add to the content page.
-        next_prompt : str
-            Next prompt string to add to the content page.
         footer : str
             Footer string to add to the content page.
         whatsapp_template_image: int
@@ -968,7 +965,6 @@ class TestWhatsAppMessages:
                     buttons=buttons or [],
                     list_title=list_title or "",
                     list_items=list_items or [],
-                    next_prompt=next_prompt or "",
                     footer=footer or "",
                     variation_messages=variation_messages or [],
                 )
@@ -1222,19 +1218,6 @@ class TestWhatsAppMessages:
             "value": {"title": "list item 3", "form": form.id},
         }
 
-    def test_next_prompt(self, uclient: Any) -> None:
-        """
-        test that next prompt is present in the whatsapp message
-        """
-        page = self.create_content_page(next_prompt="next prompt 1")
-
-        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=true")
-        content = response.json()
-
-        next_prompt = content["body"]["text"]["value"]["next_prompt"]
-
-        assert next_prompt == "next prompt 1"
-
     def test_footer(self, uclient: Any) -> None:
         """
         test that footer is present in the whatsapp message
@@ -1268,7 +1251,6 @@ class TestWhatsAppMessages:
             "document": None,
             "list_title": "",
             "list_items": [],
-            "next_prompt": "",
             "variation_messages": [],
         }
 

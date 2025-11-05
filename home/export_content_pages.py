@@ -71,7 +71,6 @@ class ExportRow:
     tags: str = ""
     quick_replies: str = ""
     triggers: str = ""
-    next_prompt: str = ""
     buttons: str = ""
     image_link: str = ""
     doc_link: str = ""
@@ -135,8 +134,6 @@ class ExportRow:
                     self.doc_link = whatsapp.value["document"].file.url
                 if "media" in whatsapp.value and whatsapp.value["media"] is not None:
                     self.media_link = whatsapp.value["media"].file.url
-                if "next_prompt" in whatsapp.value:
-                    self.next_prompt = whatsapp.value["next_prompt"]
                 if "buttons" in whatsapp.value:
                     self.buttons = self.serialise_buttons(whatsapp.value["buttons"])
                 if "footer" in whatsapp.value:
@@ -359,7 +356,6 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "tags": 118,
         "quick_replies": 118,
         "triggers": 118,
-        "next_prompt": 118,
         "buttons": 118,
         "image_link": 118,
         "doc_link": 118,
