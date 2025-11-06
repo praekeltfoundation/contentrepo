@@ -1,16 +1,22 @@
-# Import/export guide for ContentPages and WhatsAppTemplates
+# Import/export guide for ContentPages with linked WhatsAppTemplates
 
 ## Overview
 
 This guide explains how to import and export ContentPages and WhatsAppTemplates using CSV or Excel files.
 
+**When does this apply?** This guide is relevant when you have ContentPages with linked WhatsAppTemplates attached to them. This typically occurs in:
+- Older systems built before the move to standalone templates
+- OrderedContentSets that need to contain templates
+
+If you're working with standalone WhatsAppTemplates only (not linked to ContentPages), you can import them independently without following the order requirements below.
+
 ## Quick Reference
 
-### Import Order (CRITICAL)
+### Import Order (CRITICAL - only when ContentPages reference templates)
 1. **WhatsAppTemplates FIRST**
 2. **ContentPages SECOND**
 
-**Why?** ContentPages can reference WhatsAppTemplates. If the template doesn't exist when you import pages, the import will fail.
+**Why?** ContentPages can reference WhatsAppTemplates via the `whatsapp_template_slug` field. If the template doesn't exist when you import pages that reference it, the import will fail.
 
 ### File Formats Supported
 - CSV (`.csv`)
@@ -149,9 +155,9 @@ Sub 1.2,1,102,appointment,Main Menu,Appointments,,,Appointment,,appointment-remi
 
 ## Relationship: ContentPages ↔ WhatsAppTemplates
 
-### How They Connect
+### When Templates Are Linked to Pages
 
-ContentPages reference WhatsAppTemplates via `whatsapp_template_slug` field:
+In older systems or when using OrderedContentSets, ContentPages can reference WhatsAppTemplates via the `whatsapp_template_slug` field:
 
 ```csv
 slug,parent,whatsapp_template_slug
@@ -160,12 +166,14 @@ appointment-page,Main Menu,appointment-reminder
 
 This page will use the `appointment-reminder` template instead of inline `whatsapp_body` text.
 
-### Important Rules
+### Important Rules (when linking templates to pages)
 
 1. **Choose One**: A page uses EITHER `whatsapp_template_slug` OR `whatsapp_body`, never both
-2. **Template Must Exist First**: If you reference a template, it must already be imported
+2. **Template Must Exist First**: If you reference a template via `whatsapp_template_slug`, it must already be imported
 3. **Same Language**: The template and page must use the same locale (e.g., both `en`)
 4. **First Message Only**: You can only use a template for the first message on a page
+
+**Note**: Some implementations use standalone templates that are not linked to ContentPages. In those cases, you can import templates independently without these constraints.
 
 ### Example Workflow
 
