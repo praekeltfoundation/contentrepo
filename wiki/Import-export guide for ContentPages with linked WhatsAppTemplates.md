@@ -40,17 +40,23 @@ WhatsAppTemplates are pre-approved message templates that you submit to Meta's W
 | `message` | Yes | The template message text (use {{1}}, {{2}} for variables) | `Hi {{1}}, your appointment is on {{2}}` |
 | `buttons` | No | Interactive buttons (formatted as JSON) | `[{"type": "next_message", "title": "Confirm"}]` |
 | `example_values` | No | Example values for variables (comma-separated) | `John,Monday` |
-| `image` | No | Image for the template | |
 | `submission_name` | No | Name used when submitting to Meta | |
 | `submission_status` | No | Approval status from Meta | |
 | `submission_result` | No | Result of Meta submission | |
 
+#### Export Only Fields
+These fields will show on Export, but are not supported for Import yet.
+
+| Field | Required | Description | Example |
+|-------|----------|-------------|---------|
+| `image` | No | Image for the template | |
+
 ### Template CSV Example
 
 ```csv
-slug,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
-appointment-reminder,MARKETING,"[{""type"": ""next_message"", ""title"": ""Confirm"", ""slug"": """"}]",en,,Hi {{1}}! Your appointment is on {{2}}.,John Smith,Monday,,,
-promo-offer,MARKETING,[],en,,Special offer: {{1}}% off!,20,,,
+slug,category,buttons,locale,message,example_values,submission_name,submission_status,submission_result
+appointment-reminder,MARKETING,"[{""type"": ""next_message"", ""title"": ""Confirm"", ""slug"": """"}]",en,Hi {{1}}! Your appointment is on {{2}}.,John Smith,Monday,,,
+promo-offer,MARKETING,[],en,Special offer: {{1}}% off!,20,,,
 ```
 
 ### Importing Templates
@@ -88,7 +94,6 @@ ContentPages are individual pieces of content (messages, menus, articles) organi
 |-------|----------|-------------|---------|
 | `structure` | No | Position in the content tree | `Sub 1.2` |
 | `message` | No | Whether this page has a message (0=no, 1=yes) | `1` |
-| `page_id` | No | Internal page ID | `101` |
 | `slug` | Yes | Unique identifier for the page | `pregnancy-week-1` |
 | `parent` | No | Parent page title (for organizing in tree) | `Pregnancy Journey` |
 | `web_title` | No | Title for web display | `Week 1: First Steps` |
@@ -111,15 +116,23 @@ ContentPages are individual pieces of content (messages, menus, articles) organi
 | `viber_body` | No | Message text for Viber | |
 | `translation_tag` | No | Tag for translation management | |
 | `tags` | No | Categories/tags (comma-separated) | `pregnancy,health` |
-| `quick_replies` | No | Quick reply buttons (JSON format) | `[{"type": "next_message", "title": "Next"}]` |
-| `triggers` | No | Custom triggers (JSON format) | |
+| `quick_replies` | No | Quick replies (comma-separated) | |
+| `triggers` | No | Custom triggers (comma-separated) | |
 | `buttons` | No | Interactive buttons (JSON format) | |
-| `image_link` | No | Image for the page | |
-| `doc_link` | No | Document attachment | |
-| `media_link` | No | Media file (audio/video) | |
 | `related_pages` | No | Related pages (comma-separated slugs) | `week-2,week-3` |
 | `footer` | No | Footer text for messages | |
 | `language_code` | Yes | Language code (or use `locale`) | `en` |
+
+#### Export Only Fields
+
+These fields will show on Export, but are not supported for Import yet.
+
+| Field | Required | Description | Example |
+|-------|----------|-------------|---------|
+| `page_id` | No | Internal page ID | `101` |
+| `image_link` | No | Image for the page | |
+| `doc_link` | No | Document attachment | |
+| `media_link` | No | Media file (audio/video) | |
 
 ### ContentPage CSV Example
 
@@ -146,7 +159,7 @@ Sub 1.2,1,102,appointment,Main Menu,Appointments,,,Appointment,,appointment-remi
 ### Exporting ContentPages
 
 **Via Admin UI:**
-1. Go to Pages list in admin
+1. Go to `ContentPages` list in admin
 2. Select pages to export
 3. Choose "Export as CSV" or "Export as XLSX"
 4. Click Go
@@ -260,15 +273,6 @@ appointments,Main Menu,Appointments,appointment-reminder,en
 2. Verify template locale matches page locale
 3. Import templates before pages
 4. Check template successfully imported (no errors)
-
-### Error: "Slug 'X' already exists"
-
-**Cause**: Duplicate slug in same locale
-
-**Solution**:
-1. Slugs must be unique within locale
-2. Use purge mode to clear existing content
-3. Or rename duplicate slugs
 
 ### Import Hangs/Takes Long Time
 
