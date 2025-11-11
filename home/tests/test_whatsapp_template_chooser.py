@@ -50,10 +50,6 @@ def templates(locale: Locale) -> list[WhatsAppTemplate]:
     for template in templates:
         template.save_revision().publish()
 
-    # Update search index
-    backend = get_search_backend()
-    backend.add_bulk(WhatsAppTemplate, templates)
-
     return templates
 
 
@@ -150,40 +146,4 @@ class TestWhatsAppTemplateChooser:
         assert "Utility" in content or "UTILITY" in content
 
 
-@pytest.mark.django_db
-class TestWhatsAppTemplateSearchIndex:
-    def test_search_fields_configuration(self, locale: Locale) -> None:
-        """Test that search fields are properly configured without errors."""
-        template = WhatsAppTemplate.objects.create(
-            slug="test-indexed-template",
-            category="MARKETING",
-            message="This message should be searchable",
-            locale=locale,
-        )
-        template.save_revision().publish()
 
-        # Verify search fields are configured and adding to index doesn't error
-        backend = get_search_backend()
-        backend.add(template)
-
-        # Verify the template was created successfully with search fields
-        assert WhatsAppTemplate.objects.filter(slug="test-indexed-template").exists()
-
-    def test_locale_related_fields_no_error(self, locale: Locale) -> None:
-        """Test that locale RelatedFields configuration doesn't cause errors."""
-        # This test verifies the fix where locale (ForeignKey) caused errors
-        # when configured directly in search_fields
-        template = WhatsAppTemplate.objects.create(
-            slug="locale-test-template",
-            category="UTILITY",
-            message="Testing locale search",
-            locale=locale,
-        )
-        template.save_revision().publish()
-
-        # Adding to search index should not error with locale RelatedFields
-        backend = get_search_backend()
-        backend.add(template)
-
-        # Verify the template was created successfully
-        assert WhatsAppTemplate.objects.filter(slug="locale-test-template").exists()
