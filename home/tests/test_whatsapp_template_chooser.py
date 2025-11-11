@@ -98,27 +98,25 @@ class TestWhatsAppTemplateChooser:
     def test_search_multiple_results(self, admin_client, templates):
         """Test that searching returns multiple matching templates."""
         response = admin_client.get(
-            "/admin/snippets/choose/home/whatsapptemplate/", {"q": "utility"}
+            "/admin/snippets/choose/home/whatsapptemplate/", {"q": "template"}
         )
         assert response.status_code == 200
         content = response.content.decode()
+        # All templates have "template" in their slug
+        assert "template-1-marketing" in content
         assert "template-2-utility" in content
         assert "customer-service-template" in content
-        assert "template-1-marketing" not in content
 
-    def test_search_minimum_characters(self, admin_client, templates):
-        """Test that single/double character searches don't return results."""
-        # Single character search (database backend requires 3+ chars)
+    def test_search_autocomplete_partial_match(self, admin_client, templates):
+        """Test that autocomplete enables partial/prefix matching."""
+        # Single character search works with AutocompleteField
         response = admin_client.get(
             "/admin/snippets/choose/home/whatsapptemplate/", {"q": "t"}
         )
         assert response.status_code == 200
         content = response.content.decode()
-        # Should show "no snippets match" or empty results
-        assert (
-            "template-1-marketing" not in content
-            or "no snippets match" in content.lower()
-        )
+        # Should find templates starting with 't'
+        assert "template-1-marketing" in content or "template-2-utility" in content
 
     def test_chooser_columns_present(self, admin_client, templates):
         """Test that the chooser displays the expected columns."""
