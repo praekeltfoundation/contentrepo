@@ -23,10 +23,16 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.pagination import CursorPagination
 from rest_framework.viewsets import GenericViewSet
 from wagtail.admin.filters import WagtailFilterSet
+from wagtail.admin.ui.tables import Column
 from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 from wagtail.contrib.modeladmin.views import IndexView
 from wagtail.snippets.models import get_snippet_models
+from wagtail.snippets.views.chooser import (
+    ChooseResultsView,
+    ChooseView,
+    SnippetChooserViewSet,
+)
 from wagtail.snippets.views.snippets import IndexView as IndexViewAssessment
 from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTemplate
 
@@ -73,6 +79,40 @@ class CustomIndexViewWhatsAppTemplate(
     SpreadsheetExportMixinWhatsAppTemplate, IndexViewWhatsAppTemplate
 ):
     pass
+
+
+class WhatsAppTemplateChooseView(ChooseView):
+    def get_object_list(self):
+        return super().get_object_list().select_related("locale")
+
+    @property
+    def columns(self):
+        base_columns = super().columns
+        return base_columns + [
+            Column("locale", label="Locale", sort_key="locale"),
+            Column("get_category_display", label="Category"),
+            Column("get_submission_status_display", label="Submission Status"),
+        ]
+
+
+class WhatsAppTemplateChooseResultsView(ChooseResultsView):
+    def get_object_list(self):
+        return super().get_object_list().select_related("locale")
+
+    @property
+    def columns(self):
+        base_columns = super().columns
+        return base_columns + [
+            Column("locale", label="Locale", sort_key="locale"),
+            Column("get_category_display", label="Category"),
+            Column("get_submission_status_display", label="Submission Status"),
+        ]
+
+
+class WhatsAppTemplateChooserViewSet(SnippetChooserViewSet):
+    choose_view_class = WhatsAppTemplateChooseView
+    choose_results_view_class = WhatsAppTemplateChooseResultsView
+    search_fields = ("slug", "category", "message", "locale__language_code")
 
 
 class StaleContentReportFilterSet(WagtailFilterSet):

@@ -28,6 +28,7 @@ from .views import (  # isort:skip
     ContentUploadView,
     AssessmentUploadView,
     CustomIndexViewWhatsAppTemplate,
+    WhatsAppTemplateChooserViewSet,
     WhatsAppTemplateUploadView,
 )
 
@@ -285,10 +286,11 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
         "slug",
         "category",
         "message",
-        "locale",
+        "locale__language_code",
     )
 
     index_view_class = CustomIndexViewWhatsAppTemplate
+    chooser_viewset_class = WhatsAppTemplateChooserViewSet
 
     panels = [
         MultiFieldPanel(
