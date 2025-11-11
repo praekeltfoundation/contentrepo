@@ -1,8 +1,8 @@
 from typing import Any
 
 import pytest
-from wagtail.models import Locale
-from wagtail.search.backends import get_search_backend
+from wagtail.models import Locale  # type: ignore
+from wagtail.search.backends import get_search_backend  # type: ignore
 
 from home.models import WhatsAppTemplate
 
