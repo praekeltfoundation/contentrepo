@@ -1,23 +1,16 @@
 import pytest
-from django.contrib.auth import get_user_model
-from django.test import Client
 from wagtail.models import Locale
 from wagtail.search.backends import get_search_backend
 
 from home.models import WhatsAppTemplate
 
 
-User = get_user_model()
-
-
 @pytest.fixture
-def admin_client():
+def admin_client(client, django_user_model):
     """Create an admin user and return an authenticated client."""
-    user = User.objects.create_superuser(
-        username="admin", email="admin@test.com", password="password"
-    )
-    client = Client()
-    client.force_login(user)
+    creds = {"username": "test", "password": "test"}
+    django_user_model.objects.create_superuser(**creds)
+    client.login(**creds)
     return client
 
 
