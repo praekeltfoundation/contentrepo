@@ -78,30 +78,37 @@ class CustomIndexViewWhatsAppTemplate(
 
 
 class WhatsAppTemplateChooseView(ChooseView):
+    def get_object_list(self):
+        return super().get_object_list().select_related("locale")
+
     @property
     def columns(self):
         base_columns = super().columns
         return base_columns + [
             Column("locale", label="Locale", sort_key="locale"),
-            Column("get_category_display", label="Category", sort_key="category"),
-            Column("get_submission_status_display", label="Submission Status", sort_key="submission_status"),
+            Column("get_category_display", label="Category"),
+            Column("get_submission_status_display", label="Submission Status"),
         ]
 
 
 class WhatsAppTemplateChooseResultsView(ChooseResultsView):
+    def get_object_list(self):
+        return super().get_object_list().select_related("locale")
+
     @property
     def columns(self):
         base_columns = super().columns
         return base_columns + [
             Column("locale", label="Locale", sort_key="locale"),
-            Column("get_category_display", label="Category", sort_key="category"),
-            Column("get_submission_status_display", label="Submission Status", sort_key="submission_status"),
+            Column("get_category_display", label="Category"),
+            Column("get_submission_status_display", label="Submission Status"),
         ]
 
 
 class WhatsAppTemplateChooserViewSet(SnippetChooserViewSet):
     choose_view_class = WhatsAppTemplateChooseView
     choose_results_view_class = WhatsAppTemplateChooseResultsView
+    search_fields = ("slug", "category", "message", "locale__language_code")
 
 
 class StaleContentReportFilterSet(WagtailFilterSet):

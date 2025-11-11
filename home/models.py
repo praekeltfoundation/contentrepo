@@ -1580,7 +1580,12 @@ class WhatsAppTemplate(
     )
 
     search_fields = [
-        index.SearchField("locale"),
+        index.SearchField("slug"),
+        index.SearchField("category"),
+        index.SearchField("message"),
+        index.RelatedFields("locale", [
+            index.SearchField("language_code"),
+        ]),
     ]
 
     @property
