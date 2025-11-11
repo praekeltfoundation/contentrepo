@@ -28,7 +28,11 @@ from wagtail.admin.views.reports import PageReportView, ReportView
 from wagtail.admin.widgets import AdminDateInput
 from wagtail.contrib.modeladmin.views import IndexView
 from wagtail.snippets.models import get_snippet_models
-from wagtail.snippets.views.chooser import ChooseResultsView, ChooseView, SnippetChooserViewSet
+from wagtail.snippets.views.chooser import (
+    ChooseResultsView,
+    ChooseView,
+    SnippetChooserViewSet,
+)
 from wagtail.snippets.views.snippets import IndexView as IndexViewAssessment
 from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTemplate
 

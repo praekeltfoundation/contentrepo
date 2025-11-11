@@ -59,7 +59,9 @@ def templates(locale: Locale) -> list[WhatsAppTemplate]:
 
 @pytest.mark.django_db
 class TestWhatsAppTemplateChooser:
-    def test_search_by_slug(self, admin_client: Any, templates: list[WhatsAppTemplate]) -> None:
+    def test_search_by_slug(
+        self, admin_client: Any, templates: list[WhatsAppTemplate]
+    ) -> None:
         """Test that searching by slug returns matching templates."""
         response = admin_client.get(
             "/admin/snippets/choose/home/whatsapptemplate/", {"q": "template-1"}
@@ -70,7 +72,9 @@ class TestWhatsAppTemplateChooser:
         assert "template-2-utility" not in content
         assert "customer-service-template" not in content
 
-    def test_search_by_category(self, admin_client: Any, templates: list[WhatsAppTemplate]) -> None:
+    def test_search_by_category(
+        self, admin_client: Any, templates: list[WhatsAppTemplate]
+    ) -> None:
         """Test that searching by category returns matching templates."""
         response = admin_client.get(
             "/admin/snippets/choose/home/whatsapptemplate/", {"q": "marketing"}
@@ -80,7 +84,9 @@ class TestWhatsAppTemplateChooser:
         assert "template-1-marketing" in content
         assert "template-2-utility" not in content
 
-    def test_search_by_message(self, admin_client: Any, templates: list[WhatsAppTemplate]) -> None:
+    def test_search_by_message(
+        self, admin_client: Any, templates: list[WhatsAppTemplate]
+    ) -> None:
         """Test that searching by message content returns matching templates."""
         response = admin_client.get(
             "/admin/snippets/choose/home/whatsapptemplate/", {"q": "customer service"}
@@ -90,7 +96,9 @@ class TestWhatsAppTemplateChooser:
         assert "customer-service-template" in content
         assert "template-1-marketing" not in content
 
-    def test_search_multiple_results(self, admin_client: Any, templates: list[WhatsAppTemplate]) -> None:
+    def test_search_multiple_results(
+        self, admin_client: Any, templates: list[WhatsAppTemplate]
+    ) -> None:
         """Test that searching returns multiple matching templates."""
         response = admin_client.get(
             "/admin/snippets/choose/home/whatsapptemplate/", {"q": "template"}
@@ -102,7 +110,9 @@ class TestWhatsAppTemplateChooser:
         assert "template-2-utility" in content
         assert "customer-service-template" in content
 
-    def test_search_autocomplete_partial_match(self, admin_client: Any, templates: list[WhatsAppTemplate]) -> None:
+    def test_search_autocomplete_partial_match(
+        self, admin_client: Any, templates: list[WhatsAppTemplate]
+    ) -> None:
         """Test that autocomplete enables partial/prefix matching."""
         # Single character search works with AutocompleteField
         response = admin_client.get(
@@ -113,7 +123,9 @@ class TestWhatsAppTemplateChooser:
         # Should find templates starting with 't'
         assert "template-1-marketing" in content or "template-2-utility" in content
 
-    def test_chooser_columns_present(self, admin_client: Any, templates: list[WhatsAppTemplate]) -> None:
+    def test_chooser_columns_present(
+        self, admin_client: Any, templates: list[WhatsAppTemplate]
+    ) -> None:
         """Test that the chooser displays the expected columns."""
         response = admin_client.get("/admin/snippets/choose/home/whatsapptemplate/")
         assert response.status_code == 200
@@ -124,7 +136,9 @@ class TestWhatsAppTemplateChooser:
         assert "Category" in content
         assert "Submission Status" in content
 
-    def test_chooser_shows_template_data(self, admin_client: Any, templates: list[WhatsAppTemplate]) -> None:
+    def test_chooser_shows_template_data(
+        self, admin_client: Any, templates: list[WhatsAppTemplate]
+    ) -> None:
         """Test that the chooser displays template data in columns."""
         response = admin_client.get("/admin/snippets/choose/home/whatsapptemplate/")
         assert response.status_code == 200
