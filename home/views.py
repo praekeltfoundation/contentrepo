@@ -680,7 +680,16 @@ def submit_to_meta_view(request: Any, snippet_id: int) -> HttpResponse:
 
 
 def kb_article_view(request, article_id):
-    """Render a knowledge base article from markdown."""
+    """
+    Render a knowledge base article from markdown.
+
+    Args:
+        request: HTTP request object
+        article_id: Integer ID of the KB article to display
+
+    Returns:
+        HttpResponse with rendered HTML or 404 if article not found
+    """
     # Get the project root directory
     base_dir = Path(__file__).resolve().parent.parent
     kb_path = base_dir / "kb" / f"{article_id}.md"
