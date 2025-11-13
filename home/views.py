@@ -692,11 +692,11 @@ def kb_article_view(request, article_id):
     with kb_path.open() as f:
         md_content = f.read()
 
-    html_content = markdown.markdown(md_content, extensions=['fenced_code', 'tables'])
+    html_content = markdown.markdown(md_content, extensions=["fenced_code", "tables"])
 
     context = {
-        'article_id': article_id,
-        'content': html_content,
+        "article_id": article_id,
+        "content": html_content,
     }
 
-    return render(request, 'kb/article.html', context)
+    return render(request, "kb/article.html", context)

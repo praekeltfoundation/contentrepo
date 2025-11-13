@@ -170,7 +170,9 @@ class ContentImporter:
                     ).values("slug")
 
                     # Check which parents are in import vs database only
-                    import_slugs = {slug for slug, loc in self.shadow_pages.keys() if loc == page.locale}
+                    import_slugs = {
+                        slug for slug, loc in self.shadow_pages if loc == page.locale
+                    }
 
                     parent_slugs = [p["slug"] for p in parents]
                     in_import = [s for s in parent_slugs if s in import_slugs]
@@ -189,7 +191,9 @@ class ContentImporter:
                         "Parent pages must have unique title+locale+slug combinations across Database and Import."
                     )
                     lines.append("")
-                    lines.append('See <a href="/kb/1/" target="_blank">KB1</a> for detailed resolution steps.')
+                    lines.append(
+                        'See <a href="/kb/1/" target="_blank">KB1</a> for detailed resolution steps.'
+                    )
 
                     raise ImportException("\n".join(lines), page.row_num)
 
