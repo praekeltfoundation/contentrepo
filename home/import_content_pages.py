@@ -59,6 +59,7 @@ class ContentImporter:
         self.locale = locale
         self.locale_map: dict[str, Locale] = {}
         self.shadow_pages: dict[PageId, ShadowContentPage] = {}
+        self.imported_index_pages: set[PageId] = set()
         self.go_to_page_buttons: dict[PageId, dict[int, list[dict[str, Any]]]] = (
             defaultdict(lambda: defaultdict(list))
         )
@@ -170,8 +171,13 @@ class ContentImporter:
                     ).values("slug")
 
                     # Check which parents are in import vs database only
+                    # Include both ContentPages (shadow_pages) and ContentPageIndex (imported_index_pages)
                     import_slugs = {
                         slug for slug, loc in self.shadow_pages if loc == page.locale
+                    } | {
+                        slug
+                        for slug, loc in self.imported_index_pages
+                        if loc == page.locale
                     }
 
                     parent_slugs = [p["slug"] for p in parents]
@@ -283,6 +289,7 @@ class ContentImporter:
 
     def create_content_page_index_from_row(self, row: "ContentRow") -> None:
         locale = self._get_locale_from_row(row)
+        self.imported_index_pages.add((row.slug, locale))
         try:
             index = ContentPageIndex.objects.get(slug=row.slug, locale=locale)
         except ContentPageIndex.DoesNotExist:

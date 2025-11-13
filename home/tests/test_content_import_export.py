@@ -958,10 +958,16 @@ class TestImportExport:
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("multiple-parents-import-db.csv", purge=False)
 
-        assert "Cannot determine parent" in e.value.message[0]
-        assert "Onboarding Parent" in e.value.message[0]
-        # Should show both import and database slugs
-        assert "Import:" in e.value.message[0] or "Database:" in e.value.message[0]
+        assert e.value.message == [
+            "Cannot determine parent for page 'child_page'. "
+            "Multiple pages found with title 'Onboarding Parent' and locale 'English':\n"
+            "  - Import: ['new_onboarding_slug']\n"
+            "  - Database: ['existing_onboarding_slug']\n"
+            "\n"
+            "Parent pages must have unique title+locale+slug combinations across Database and Import.\n"
+            "\n"
+            'See <a href="/kb/1/" target="_blank">KB1</a> for detailed resolution steps.'
+        ]
 
     def test_message_for_missing_page(self, csv_impexp: ImportExport) -> None:
         """
