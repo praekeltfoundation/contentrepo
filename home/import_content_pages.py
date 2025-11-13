@@ -189,7 +189,7 @@ class ContentImporter:
                         "Parent pages must have unique title+locale+slug combinations across Database and Import."
                     )
                     lines.append("")
-                    lines.append('See <a href="/kb/1/">KB1</a> for detailed resolution steps.')
+                    lines.append('See <a href="/kb/1/" target="_blank">KB1</a> for detailed resolution steps.')
 
                     raise ImportException("\n".join(lines), page.row_num)
 

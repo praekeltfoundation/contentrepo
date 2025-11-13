@@ -934,7 +934,7 @@ class TestImportExport:
             "\n"
             "Parent pages must have unique title+locale+slug combinations across Database and Import.\n"
             "\n"
-            'See <a href="/kb/1/">KB1</a> for detailed resolution steps.'
+            'See <a href="/kb/1/" target="_blank">KB1</a> for detailed resolution steps.'
         ]
 
     def test_message_for_missing_page(self, csv_impexp: ImportExport) -> None:
