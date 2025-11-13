@@ -1,0 +1,3 @@
+slug,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
+duplicate_test,UTILITY,"[{""type"": ""next_message"", ""title"": ""Next"", ""slug"": """"}]",en,,"First template with this slug",,,
+duplicate_test,UTILITY,"[{""type"": ""next_message"", ""title"": ""Next"", ""slug"": """"}]",en,,"Second template with same slug",,,

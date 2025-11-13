@@ -1,0 +1,2 @@
+slug,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
+empty_slug_test,UTILITY,"[{""type"": ""go_to_page"", ""title"": ""Go"", ""slug"": """"}]",en,,"Template with empty button slug",,,

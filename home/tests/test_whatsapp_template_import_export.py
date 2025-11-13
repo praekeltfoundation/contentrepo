@@ -693,6 +693,46 @@ class TestImportExport:
             "Validation error: message - Positional variables must increase sequentially, starting at 1. You provided \"['1', '2', '4']\"",
         ]
 
+    def test_duplicate_slug_in_import(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a CSV with duplicate slugs (same locale) should raise an error
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp-template-duplicate-slug.csv")
+
+        assert e.value.row_num == 2
+        assert "Duplicate slug 'duplicate_test' with locale 'en'" in e.value.message[0]
+
+    def test_empty_button_type(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a template with empty button type should raise validation error
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp-template-empty-button-type.csv")
+
+        assert e.value.row_num == 2
+        assert "Button 1 has empty type field" in e.value.message[0]
+
+    def test_empty_button_title(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a template with empty button title should raise validation error
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp-template-empty-button-title.csv")
+
+        assert e.value.row_num == 2
+        assert "Button 1 has empty title field" in e.value.message[0]
+
+    def test_empty_button_slug(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a template with empty button slug should raise validation error
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("whatsapp-template-empty-button-slug.csv")
+
+        assert e.value.row_num == 2
+        assert "Button 1 has empty slug field" in e.value.message[0]
+
     # TODO: Once named templates are supported, add checks here for import/export of them
 
     def test_invalid_template_already_in_db(self, csv_impexp: ImportExport) -> None:
