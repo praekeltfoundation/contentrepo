@@ -689,7 +689,7 @@ def kb_article_view(request, article_id):
         return HttpResponse(f"Article {article_id} not found", status=404)
 
     # Read and convert markdown to HTML
-    with open(kb_path, "r") as f:
+    with kb_path.open() as f:
         md_content = f.read()
 
     html_content = markdown.markdown(md_content, extensions=['fenced_code', 'tables'])
