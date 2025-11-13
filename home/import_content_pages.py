@@ -59,6 +59,7 @@ class ContentImporter:
         self.locale = locale
         self.locale_map: dict[str, Locale] = {}
         self.shadow_pages: dict[PageId, ShadowContentPage] = {}
+        self.imported_index_pages: set[PageId] = set()
         self.go_to_page_buttons: dict[PageId, dict[int, list[dict[str, Any]]]] = (
             defaultdict(lambda: defaultdict(list))
         )
@@ -167,12 +168,40 @@ class ContentImporter:
                 except Page.MultipleObjectsReturned:
                     parents = Page.objects.filter(
                         title=page.parent, locale=page.locale
-                    ).values_list("slug", flat=True)
-                    raise ImportException(
-                        f"Multiple pages with title '{page.parent}' and locale "
-                        f"'{page.locale}' for parent page: {list(parents)}",
-                        page.row_num,
+                    ).values("slug")
+
+                    # Check which parents are in import vs database only
+                    # Include both ContentPages (shadow_pages) and ContentPageIndex (imported_index_pages)
+                    import_slugs = {
+                        slug for slug, loc in self.shadow_pages if loc == page.locale
+                    } | {
+                        slug
+                        for slug, loc in self.imported_index_pages
+                        if loc == page.locale
+                    }
+
+                    parent_slugs = [p["slug"] for p in parents]
+                    in_import = [s for s in parent_slugs if s in import_slugs]
+                    in_db = [s for s in parent_slugs if s not in import_slugs]
+
+                    lines = [
+                        f"Cannot determine parent for page '{page.slug}'. "
+                        f"Multiple pages found with title '{page.parent}' and locale '{page.locale}':"
+                    ]
+                    if in_import:
+                        lines.append(f"  - Import: {in_import}")
+                    if in_db:
+                        lines.append(f"  - Database: {in_db}")
+                    lines.append("")
+                    lines.append(
+                        "Parent pages must have unique title+locale+slug combinations across Database and Import."
                     )
+                    lines.append("")
+                    lines.append(
+                        'See <a href="/kb/1/" target="_blank">KB1</a> for detailed resolution steps.'
+                    )
+
+                    raise ImportException("\n".join(lines), page.row_num)
 
                 try:
                     child = Page.objects.get(slug=page.slug, locale=page.locale)
@@ -260,6 +289,7 @@ class ContentImporter:
 
     def create_content_page_index_from_row(self, row: "ContentRow") -> None:
         locale = self._get_locale_from_row(row)
+        self.imported_index_pages.add((row.slug, locale))
         try:
             index = ContentPageIndex.objects.get(slug=row.slug, locale=locale)
         except ContentPageIndex.DoesNotExist:

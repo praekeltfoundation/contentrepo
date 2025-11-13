@@ -45,6 +45,7 @@ urlpatterns = [
         submit_to_meta_view,
         name="submit_to_meta",
     ),
+    path("kb/<int:article_id>/", home_views.kb_article_view, name="kb_article"),
 ]
 
 

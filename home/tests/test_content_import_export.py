@@ -928,8 +928,45 @@ class TestImportExport:
             csv_impexp.import_file("missing-parent.csv", purge=False)
         assert e.value.row_num == 2
         assert e.value.message == [
-            "Multiple pages with title 'missing-parent' and locale 'English' for "
-            "parent page: ['missing-parent1', 'missing-parent2']"
+            "Cannot determine parent for page 'ma_import-export'. "
+            "Multiple pages found with title 'missing-parent' and locale 'English':\n"
+            "  - Database: ['missing-parent1', 'missing-parent2']\n"
+            "\n"
+            "Parent pages must have unique title+locale+slug combinations across Database and Import.\n"
+            "\n"
+            'See <a href="/kb/1/" target="_blank">KB1</a> for detailed resolution steps.'
+        ]
+
+    def test_multiple_parents_import_and_database(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Test Scenario 2: Parent exists in both import and database with different slugs.
+        This occurs when the import file contains a parent page with the same title+locale
+        as a database page, but with a different slug.
+        """
+        home_page = HomePage.objects.first()
+        # Create parent in database with specific slug
+        PageBuilder.build_cpi(
+            home_page, "existing_onboarding_slug", "Onboarding Parent"
+        )
+
+        # Import file has same parent title but different slug
+        # The CSV should contain:
+        # - A parent page: title='Onboarding Parent', slug='new_onboarding_slug'
+        # - A child page referencing the parent
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("multiple-parents-import-db.csv", purge=False)
+
+        assert e.value.message == [
+            "Cannot determine parent for page 'child_page'. "
+            "Multiple pages found with title 'Onboarding Parent' and locale 'English':\n"
+            "  - Import: ['new_onboarding_slug']\n"
+            "  - Database: ['existing_onboarding_slug']\n"
+            "\n"
+            "Parent pages must have unique title+locale+slug combinations across Database and Import.\n"
+            "\n"
+            'See <a href="/kb/1/" target="_blank">KB1</a> for detailed resolution steps.'
         ]
 
     def test_message_for_missing_page(self, csv_impexp: ImportExport) -> None:
