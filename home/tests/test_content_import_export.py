@@ -928,8 +928,17 @@ class TestImportExport:
             csv_impexp.import_file("missing-parent.csv", purge=False)
         assert e.value.row_num == 2
         assert e.value.message == [
-            "Multiple pages with title 'missing-parent' and locale 'English' for "
-            "parent page: ['missing-parent1', 'missing-parent2']"
+            "Multiple parent pages found for page with slug 'ma_import-export'. "
+            "Multiple parent pages found with matching title 'missing-parent' and locale 'English', but mismatching slugs:\n"
+            "  - Database: ['missing-parent1', 'missing-parent2']\n"
+            "\n"
+            "Parent pages in the Database and Import combined must have unique "
+            "title+locale+slug combinations.\n"
+            "\n"
+            'For detailed guidance, see: <a href="/kb/1/">KB1</a>\n'
+            "\n"
+            "To update the existing parent page, update the slug in the import to match the one in the database.\n"
+            "To create a new parent page, update its title or locale in the import file, so it has a unique title+locale."
         ]
 
     def test_message_for_missing_page(self, csv_impexp: ImportExport) -> None:

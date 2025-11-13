@@ -2,9 +2,11 @@ import json
 import logging
 import queue
 import threading
+from pathlib import Path
 from typing import Any
 
 import django_filters
+import markdown
 from django.contrib import messages
 from django.db import connection as db_connection
 from django.db.models import Count, F
@@ -675,3 +677,26 @@ def submit_to_meta_view(request: Any, snippet_id: int) -> HttpResponse:
     submit_to_meta_action(revision)
     # Redirect back to the snippet list or detail page
     return redirect(request.META.get("HTTP_REFERER", "/admin/"))
+
+
+def kb_article_view(request, article_id):
+    """Render a knowledge base article from markdown."""
+    # Get the project root directory
+    base_dir = Path(__file__).resolve().parent.parent
+    kb_path = base_dir / "kb" / f"{article_id}.md"
+
+    if not kb_path.exists():
+        return HttpResponse(f"Article {article_id} not found", status=404)
+
+    # Read and convert markdown to HTML
+    with open(kb_path, "r") as f:
+        md_content = f.read()
+
+    html_content = markdown.markdown(md_content, extensions=['fenced_code', 'tables'])
+
+    context = {
+        'article_id': article_id,
+        'content': html_content,
+    }
+
+    return render(request, 'kb/article.html', context)

@@ -167,12 +167,35 @@ class ContentImporter:
                 except Page.MultipleObjectsReturned:
                     parents = Page.objects.filter(
                         title=page.parent, locale=page.locale
-                    ).values_list("slug", flat=True)
-                    raise ImportException(
-                        f"Multiple pages with title '{page.parent}' and locale "
-                        f"'{page.locale}' for parent page: {list(parents)}",
-                        page.row_num,
+                    ).values("slug")
+
+                    # Check which parents are in import vs database only
+                    import_slugs = {slug for slug, loc in self.shadow_pages.keys() if loc == page.locale}
+
+                    parent_slugs = [p["slug"] for p in parents]
+                    in_import = [s for s in parent_slugs if s in import_slugs]
+                    in_db = [s for s in parent_slugs if s not in import_slugs]
+
+                    lines = [
+                        f"Multiple parent pages found for page with slug '{page.slug}'. "
+                        f"Multiple parent pages found with matching title '{page.parent}' and locale '{page.locale}', but mismatching slugs:"
+                    ]
+                    if in_import:
+                        lines.append(f"  - Import: {in_import}")
+                    if in_db:
+                        lines.append(f"  - Database: {in_db}")
+                    lines.append("")
+                    lines.append(
+                        "Parent pages in the Database and Import combined must have unique "
+                        "title+locale+slug combinations."
                     )
+                    lines.append("")
+                    lines.append('For detailed guidance, see: <a href="/kb/1/">KB1</a>')
+                    lines.append("")
+                    lines.append("To update the existing parent page, update the slug in the import to match the one in the database.")
+                    lines.append("To create a new parent page, update its title or locale in the import file, so it has a unique title+locale.")
+
+                    raise ImportException("\n".join(lines), page.row_num)
 
                 try:
                     child = Page.objects.get(slug=page.slug, locale=page.locale)

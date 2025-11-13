@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base Article {{ article_id }}</title>
+    <link rel="stylesheet" href="{% static 'kb/article.css' %}">
+</head>
+<body>
+    <div class="kb-article">
+        {{ content|safe }}
+        <div class="back-link">
+            <a href="/admin/">← Back to Admin</a>
+        </div>
+    </div>
+</body>
+</html>
