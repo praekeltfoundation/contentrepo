@@ -177,8 +177,8 @@ class ContentImporter:
                     in_db = [s for s in parent_slugs if s not in import_slugs]
 
                     lines = [
-                        f"Multiple parent pages found for page with slug '{page.slug}'. "
-                        f"Multiple parent pages found with matching title '{page.parent}' and locale '{page.locale}', but mismatching slugs:"
+                        f"Cannot determine parent for page '{page.slug}'. "
+                        f"Multiple pages found with title '{page.parent}' and locale '{page.locale}':"
                     ]
                     if in_import:
                         lines.append(f"  - Import: {in_import}")
@@ -186,14 +186,10 @@ class ContentImporter:
                         lines.append(f"  - Database: {in_db}")
                     lines.append("")
                     lines.append(
-                        "Parent pages in the Database and Import combined must have unique "
-                        "title+locale+slug combinations."
+                        "Parent pages must have unique title+locale+slug combinations across Database and Import."
                     )
                     lines.append("")
-                    lines.append('For detailed guidance, see: <a href="/kb/1/">KB1</a>')
-                    lines.append("")
-                    lines.append("To update the existing parent page, update the slug in the import to match the one in the database.")
-                    lines.append("To create a new parent page, update its title or locale in the import file, so it has a unique title+locale.")
+                    lines.append('See <a href="/kb/1/">KB1</a> for detailed resolution steps.')
 
                     raise ImportException("\n".join(lines), page.row_num)
 
