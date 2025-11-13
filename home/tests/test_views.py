@@ -891,3 +891,30 @@ class TestPageViewReportView:
         filtered_queryset = filter_set.qs
 
         assert filtered_queryset.count() == 0
+
+
+@pytest.mark.django_db
+class TestKBArticleView:
+    """Test the knowledge base article view."""
+
+    def test_kb_article_exists(self, client):
+        """Test that KB article 1 can be accessed."""
+        response = client.get("/kb/1/")
+        assert response.status_code == 200
+        assert b"KB1 - Multiple Parents Error on Import" in response.content
+
+    def test_kb_article_not_found(self, client):
+        """Test that non-existent KB article returns 404."""
+        response = client.get("/kb/999/")
+        assert response.status_code == 404
+        assert b"Article 999 not found" in response.content
+
+    def test_kb_article_contains_markdown_rendered(self, client):
+        """Test that markdown is properly rendered to HTML."""
+        response = client.get("/kb/1/")
+        assert response.status_code == 200
+        # Check for HTML heading tags
+        assert b"<h1>" in response.content
+        assert b"<h2>" in response.content
+        # Check for rendered code blocks
+        assert b"<code>" in response.content
