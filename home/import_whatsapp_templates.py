@@ -230,6 +230,10 @@ class WhatsAppTemplateImporter:
         for index, item in enumerate(row_field):
             try:
                 if item["type"] == "next_message":
+                    if not item.get("title"):
+                        button_errors.append(
+                            f"{item_type} {index + 1} has empty title field"
+                        )
                     items.append(
                         {
                             "id": str(uuid4()),
@@ -238,12 +242,28 @@ class WhatsAppTemplateImporter:
                         }
                     )
                 elif item["type"] == "go_to_page":
+                    if not item.get("title"):
+                        button_errors.append(
+                            f"{item_type} {index + 1} has empty title field"
+                        )
+                    if not item.get("slug"):
+                        button_errors.append(
+                            f"{item_type} {index + 1} has empty slug field"
+                        )
                     item["index"] = index
                     if item_type == "button":
                         go_to_page = self.go_to_page_buttons
                     page_gtp = go_to_page[(slug, locale)]
                     page_gtp[len(template.message)].append(item)
                 elif item["type"] == "go_to_form":
+                    if not item.get("title"):
+                        button_errors.append(
+                            f"{item_type} {index + 1} has empty title field"
+                        )
+                    if not item.get("slug"):
+                        button_errors.append(
+                            f"{item_type} {index + 1} has empty slug field"
+                        )
                     form = self._get_form(
                         item["slug"],
                         locale,

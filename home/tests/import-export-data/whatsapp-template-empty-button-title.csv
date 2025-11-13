@@ -1,0 +1,2 @@
+slug,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
+empty_title_test,UTILITY,"[{""type"": ""next_message"", ""title"": """", ""slug"": """"}]",en,,"Template with empty button title",,,
