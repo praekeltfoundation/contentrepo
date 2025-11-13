@@ -39,6 +39,7 @@ class WhatsAppTemplateImporter:
         self.go_to_page_buttons: dict[PageId, dict[int, list[dict[str, Any]]]] = (
             defaultdict(lambda: defaultdict(list))
         )
+        self.seen_slugs: set[PageId] = set()
 
     def locale_from_language_code(self, lang_code_entry: str) -> Locale:
         if lang_code_entry not in self.locale_map:
@@ -87,6 +88,14 @@ class WhatsAppTemplateImporter:
 
     def create_whatsapp_template_from_row(self, row: "ContentRow") -> None:
         locale = self.locale_from_language_code(row.locale)
+
+        # Check for duplicate slug in import file
+        page_id = (row.slug, locale)
+        if page_id in self.seen_slugs:
+            raise ImportException(
+                f"Duplicate slug '{row.slug}' with locale '{locale.language_code}' found in import file"
+            )
+        self.seen_slugs.add(page_id)
 
         if row.category not in WhatsAppTemplate.Category.values:
             raise ImportException(
@@ -217,6 +226,7 @@ class WhatsAppTemplateImporter:
         item_type: str,
     ) -> list[dict[str, Any]]:
         items: list[dict[str, Any]] = []
+        button_errors: list[str] = []
         for index, item in enumerate(row_field):
             try:
                 if item["type"] == "next_message":
@@ -251,13 +261,21 @@ class WhatsAppTemplateImporter:
                         }
                     )
                 elif not item["type"]:
-                    pass
+                    button_errors.append(
+                        f"{item_type} {index + 1} has empty type field"
+                    )
                 else:
                     raise ImportException(
                         f"{item_type} with invalid type '{item['type']}'"
                     )
             except KeyError as e:
                 raise ImportException(f"{item_type} is missing key {e}")
+
+        if button_errors:
+            raise ImportException(
+                f"Button validation errors: {'; '.join(button_errors)}"
+            )
+
         return items
 
     def _get_form(
