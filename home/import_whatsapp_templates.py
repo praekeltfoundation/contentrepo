@@ -232,7 +232,7 @@ class WhatsAppTemplateImporter:
                 if item["type"] == "next_message":
                     if not item.get("title"):
                         button_errors.append(
-                            f"{item_type} {index + 1} has empty title field"
+                            f"{item_type.capitalize()} {index + 1} has empty title field"
                         )
                     items.append(
                         {
@@ -244,11 +244,11 @@ class WhatsAppTemplateImporter:
                 elif item["type"] == "go_to_page":
                     if not item.get("title"):
                         button_errors.append(
-                            f"{item_type} {index + 1} has empty title field"
+                            f"{item_type.capitalize()} {index + 1} has empty title field"
                         )
                     if not item.get("slug"):
                         button_errors.append(
-                            f"{item_type} {index + 1} has empty slug field"
+                            f"{item_type.capitalize()} {index + 1} has empty slug field"
                         )
                     item["index"] = index
                     if item_type == "button":
@@ -258,11 +258,11 @@ class WhatsAppTemplateImporter:
                 elif item["type"] == "go_to_form":
                     if not item.get("title"):
                         button_errors.append(
-                            f"{item_type} {index + 1} has empty title field"
+                            f"{item_type.capitalize()} {index + 1} has empty title field"
                         )
                     if not item.get("slug"):
                         button_errors.append(
-                            f"{item_type} {index + 1} has empty slug field"
+                            f"{item_type.capitalize()} {index + 1} has empty slug field"
                         )
                     form = self._get_form(
                         item["slug"],
@@ -282,7 +282,7 @@ class WhatsAppTemplateImporter:
                     )
                 elif not item["type"]:
                     button_errors.append(
-                        f"{item_type} {index + 1} has empty type field"
+                        f"{item_type.capitalize()} {index + 1} has empty type field"
                     )
                 else:
                     raise ImportException(

@@ -711,7 +711,7 @@ class TestImportExport:
             csv_impexp.import_file("whatsapp-template-empty-button-type.csv")
 
         assert e.value.row_num == 2
-        assert "button 1 has empty type field" in e.value.message[0]
+        assert "Button 1 has empty type field" in e.value.message[0]
 
     def test_empty_button_title(self, csv_impexp: ImportExport) -> None:
         """
@@ -721,7 +721,7 @@ class TestImportExport:
             csv_impexp.import_file("whatsapp-template-empty-button-title.csv")
 
         assert e.value.row_num == 2
-        assert "button 1 has empty title field" in e.value.message[0]
+        assert "Button 1 has empty title field" in e.value.message[0]
 
     def test_empty_button_slug(self, csv_impexp: ImportExport) -> None:
         """
@@ -731,7 +731,7 @@ class TestImportExport:
             csv_impexp.import_file("whatsapp-template-empty-button-slug.csv")
 
         assert e.value.row_num == 2
-        assert "button 1 has empty slug field" in e.value.message[0]
+        assert "Button 1 has empty slug field" in e.value.message[0]
 
     # TODO: Once named templates are supported, add checks here for import/export of them
 
