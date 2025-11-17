@@ -1077,6 +1077,20 @@ class TestImportExport:
         assert len(content_page.whatsapp_body) == 1
         assert content_page.whatsapp_body[0].value.message == "Message"
 
+    def test_wa_template_enables_whatsapp(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a page with a WhatsApp template should set enable_whatsapp
+        and whatsapp_title even when whatsapp_body is empty.
+        """
+        csv_impexp.import_whatsapp_template_file(
+            "whatsapp-template-simple-no-linked-pages.csv"
+        )
+        csv_impexp.import_file("content_with_simple_wa_template.csv")
+
+        [content_page] = ContentPage.objects.all()
+        assert content_page.enable_whatsapp is True
+        assert content_page.whatsapp_title == "mnch_appointment_child_2"
+
     def test_missing_wa_template(self, csv_impexp: ImportExport) -> None:
         """
         Importing a page with a non existent WhatsApp template should raise an error
