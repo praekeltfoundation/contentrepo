@@ -1,6 +1,6 @@
 {% extends "wagtailadmin/base.html" %}
 
-{% load wagtailadmin_tags wagtailcore_tags i18n static wagtailsettings_tags%}
+{% load wagtailadmin_tags wagtailcore_tags i18n static wagtailsettings_tags version_tags %}
 {% get_settings %}
 {% block furniture %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/contentrepo.css' %}">
@@ -42,4 +42,7 @@
             {% block content %}{% endblock %}
         </div>
     </main>
+    <div style="position: fixed; bottom: 10px; right: 20px; color: #999; font-size: 0.875rem; z-index: 1000;">
+        CMS v{% contentrepo_version %}
+    </div>
 {% endblock %}
