@@ -145,7 +145,8 @@ class ContentImporter:
             try:
                 return Locale.objects.get(language_code=row.language_code)
             except Locale.DoesNotExist:
-                raise ImportException(f"Language not found: {row.language_code}")
+                # language_code might be a display name, try that
+                return self.locale_from_display_name(row.language_code)
         else:
             return self.locale_from_display_name(row.locale)
 

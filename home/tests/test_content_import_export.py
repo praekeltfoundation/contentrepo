@@ -904,6 +904,15 @@ class TestImportExport:
         page = Page.objects.get(slug="uppercase-test")
         assert page.locale.language_code == "en"
 
+    def test_language_code_with_display_name(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing pages with display name in language_code field (e.g., language_code='English')
+        should work by falling back to display name matching
+        """
+        csv_impexp.import_file("language-code-display-name.csv")
+        page = Page.objects.get(slug="lang-code-display")
+        assert page.locale.language_code == "en"
+
     def test_locale_HomePage_DNE(self, csv_impexp: ImportExport) -> None:
         """
         Importing files with non default locale HomePages that do not exist in the db should raise
