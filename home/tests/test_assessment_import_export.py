@@ -721,7 +721,7 @@ class TestImportExport:
             csv_impexp.import_file("assessments_multiple_missing_headers.csv")
         assert (
             e.value.message == "Missing mandatory headers: title, slug, "
-            "generic_error, locale"
+            "generic_error, locale or language_code"
         )
         assert e.value.row_num == 1
 
@@ -756,7 +756,7 @@ class TestImportExport:
             csv_impexp.import_file("assessments_missing_row_values.csv")
         assert (
             e.value.message
-            == "Row missing values for required fields: title, slug, generic_error, locale"
+            == "Row missing values for required fields: title, slug, generic_error, locale or language_code"
         )
         assert e.value.row_num == 4
 
