@@ -1651,6 +1651,37 @@ class TestImportExport:
             ("relationship", "in_a_relationship"),
         ]
 
+    def test_import_ordered_sets_blank_optional_fields(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing ordered content sets with multiple pages and blank timing fields should work.
+        This tests that optional fields (time, unit, before_or_after, contact_field) can be left blank
+        when creating an ordered content set via import, matching the UI behavior.
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.read_bytes("ordered_content_blank_optional_fields.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        locale = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            slug="test_set_blank", locale=locale
+        ).first()
+
+        assert ordered_set is not None
+        assert ordered_set.name == "Test Set Blank Fields"
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 2
+
+        # Both pages should have the same (empty) timing values
+        for i in range(2):
+            page = pages[i][1]
+            assert page["contentpage"].slug == "first_time_user"
+            assert page["time"] == ""
+            assert page["unit"] == ""
+            assert page["before_or_after"] == ""
+            assert page["contact_field"] == ""
+
     def test_changed_parentpage(self, csv_impexp: ImportExport) -> None:
         """
         Users should not be allowed to import a file where a parent of an existing contentpage. A descriptive error should be sent back.
