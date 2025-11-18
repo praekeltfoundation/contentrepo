@@ -87,7 +87,7 @@ class WhatsAppTemplateImporter:
                 )
 
     def create_whatsapp_template_from_row(self, row: "ContentRow") -> None:
-        locale = self.locale_from_language_code(row.locale)
+        locale = self.locale_from_language_code(row.language_code or row.locale)
 
         # Check for duplicate slug in import file
         page_id = (row.slug, locale)
@@ -314,6 +314,7 @@ class ContentRow:
     slug: str = ""
     category: str = ""
     locale: str = ""
+    language_code: str = ""
     buttons: list[dict[str, Any]] = field(default_factory=list)
     image_link: str = ""
     message: str = ""

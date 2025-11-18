@@ -26,7 +26,7 @@ class ExportRow:
     before_or_after: str | None
     contact_field: str | None
     slug: str | None
-    locale: str | None
+    language_code: str | None
 
     @classmethod
     def headings(cls) -> list[str]:
@@ -60,7 +60,7 @@ class OrderedSetExporter:
                 before_or_after=str(item.before_or_after),
                 contact_field=item.contact_field,
                 slug=item.slug,
-                locale=item.locale.language_code,
+                language_code=item.locale.language_code,
             )
 
 
@@ -105,7 +105,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "before_or_after": 120,
         "contact_field": 100,
         "slug": 100,
-        "locale": 100,
+        "language_code": 100,
     }
     for column in sheet.iter_cols(max_row=1):
         [cell] = column

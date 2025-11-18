@@ -139,7 +139,7 @@ class AssessmentImporter:
     def create_shadow_assessment_from_row(
         self, row: "AssessmentRow", row_num: int
     ) -> None:
-        locale = self.locale_from_language_code(row.locale)
+        locale = self.locale_from_language_code(row.language_code or row.locale)
         if not (assessment := self.shadow_assessments.get((row.slug, locale))):
             assessment = self.shadow_assessments[(row.slug, locale)] = ShadowAssessment(
                 row_num=row_num,
@@ -364,6 +364,7 @@ class AssessmentRow:
     question: str
     generic_error: str
     locale: str
+    language_code: str = ""
     version: str = ""
     tags: list[str] = field(default_factory=list)
     question_type: str = ""

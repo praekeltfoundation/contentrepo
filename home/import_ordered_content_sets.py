@@ -119,7 +119,7 @@ class OrderedContentSetImporter:
                 before_or_after=before_or_after.lower(),
                 page_slug=page_slug,
                 contact_field=contact_field,
-                locale=row["locale"],
+                locale=row.get("language_code") or row["locale"],
             )
             for time, unit, before_or_after, page_slug, contact_field in zip(
                 times, units, before_or_afters, page_slugs, contact_fields, strict=False
@@ -196,8 +196,9 @@ class OrderedContentSetImporter:
         :return: An instance of OrderedContentSet.
         :raises ImportException: If time, units, before_or_afters, page_slugs and contact_fields are not all equal length.
         """
+        locale_val = row.get("language_code") or row["locale"]
         ordered_set = self._get_or_init_ordered_content_set(
-            index, row, row["slug"].lower(), row["locale"].lower()
+            index, row, row["slug"].lower(), locale_val.lower()
         )
         ordered_set.name = row["name"]
         self._add_profile_fields(ordered_set, row)
