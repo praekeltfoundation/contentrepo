@@ -89,9 +89,21 @@ class OrderedContentSetImporter:
         before_or_afters = self._csv_to_list(row["before or after"])
         page_slugs = self._csv_to_list(row["page slugs"])
         contact_fields = self._csv_to_list(row["contact field"])
-        # backwards compatiblilty if there's only one contact field
+
+        # Backwards compatibility: if there's only one value for optional fields
+        # and it's empty, expand it to match page_slugs count
+        num_pages = len(page_slugs)
+
+        if len(times) == 1 and (not times[0] or times[0] == "-"):
+            times = [times[0]] * num_pages
+        if len(units) == 1 and (not units[0] or units[0] == "-"):
+            units = [units[0]] * num_pages
+        if len(before_or_afters) == 1 and (
+            not before_or_afters[0] or before_or_afters[0] == "-"
+        ):
+            before_or_afters = [before_or_afters[0]] * num_pages
         if len(contact_fields) == 1:
-            contact_fields = [contact_fields[0]] * len(times)
+            contact_fields = [contact_fields[0]] * num_pages
 
         fields = [times, units, before_or_afters, page_slugs, contact_fields]
         if len({len(item) for item in fields}) != 1:
