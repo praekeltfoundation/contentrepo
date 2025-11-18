@@ -331,8 +331,9 @@ class ContentImporter:
         )
         self.shadow_pages[(row.slug, locale)] = page
 
-        if row.is_whatsapp_message:
+        if row.is_whatsapp_message or row.is_whatsapp_template_message:
             page.whatsapp_title = row.whatsapp_title
+            page.enable_whatsapp = True
 
         if row.is_whatsapp_template_message:
             try:
