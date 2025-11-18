@@ -72,7 +72,7 @@ class ContentImporter:
         if langname not in self.locale_map:
             codes = []
             for lang_code, lang_dn in get_content_languages().items():
-                if lang_dn == langname:
+                if lang_dn.lower() == langname.lower():
                     codes.append(lang_code)
             if not codes:
                 raise ImportException(f"Language not found: {langname}")
