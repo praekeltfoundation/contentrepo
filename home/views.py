@@ -42,7 +42,7 @@ from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTempla
 from home.whatsapp import submit_to_meta_action
 
 from .assessment_import_export import import_assessment
-from .content_import_export import import_content, import_ordered_sets
+from .content_import_export import import_content
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
 from .import_helpers import ImportAssessmentException, ImportException
 from .mixins import (
@@ -57,6 +57,7 @@ from .models import (
     OrderedContentSet,
     PageView,
 )
+from .ordered_content_import_export import import_ordered_sets
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
 from .whatsapp_template_import_export import (
     import_whatsapptemplate,

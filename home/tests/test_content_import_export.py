@@ -21,7 +21,7 @@ from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtailmedia.models import Media  # type: ignore
 
-from home.content_import_export import import_content, import_ordered_sets
+from home.content_import_export import import_content
 from home.import_helpers import ImportException
 from home.models import (
     Assessment,
@@ -34,6 +34,7 @@ from home.models import (
     OrderedContentSet,
     WhatsAppTemplate,
 )
+from home.ordered_content_import_export import import_ordered_sets
 from home.whatsapp_template_import_export import import_whatsapptemplate
 from home.xlsx_helpers import get_active_sheet
 

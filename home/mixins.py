@@ -3,10 +3,9 @@ from datetime import datetime
 from django.http import HttpResponse
 
 from .assessment_import_export import export_csv_assessment, export_xlsx_assessment
-from .content_import_export import (
-    export_csv_content,
+from .content_import_export import export_csv_content, export_xlsx_content
+from .ordered_content_import_export import (
     export_csv_ordered_content,
-    export_xlsx_content,
     export_xlsx_ordered_content,
 )
 from .whatsapp_template_import_export import (
