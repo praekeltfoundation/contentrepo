@@ -143,7 +143,7 @@ class ContentImporter:
     def _get_locale_from_row(self, row: "ContentRow") -> Locale:
         if row.language_code:
             try:
-                return Locale.objects.get(language_code=row.language_code)
+                return Locale.objects.get(language_code=row.language_code.lower())
             except Locale.DoesNotExist:
                 # language_code might be a display name, try that
                 return self.locale_from_display_name(row.language_code)

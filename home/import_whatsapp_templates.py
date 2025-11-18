@@ -46,7 +46,7 @@ class WhatsAppTemplateImporter:
             codes = []
             lang_name = ""
             for lang_code, lang_dn in get_content_languages().items():
-                if lang_code == lang_code_entry:
+                if lang_code.lower() == lang_code_entry.lower():
                     lang_name = lang_dn
                     codes.append(lang_code)
             if not codes:

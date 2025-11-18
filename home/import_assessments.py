@@ -50,7 +50,7 @@ class AssessmentImporter:
             codes = []
             lang_name = ""
             for lang_code, lang_dn in get_content_languages().items():
-                if lang_code == lang_code_entry or lang_dn.lower() == lang_code_entry.lower():
+                if lang_code.lower() == lang_code_entry.lower() or lang_dn.lower() == lang_code_entry.lower():
                     lang_name = lang_dn
                     codes.append(lang_code)
             if not codes:
@@ -206,9 +206,14 @@ class AssessmentImporter:
         assessment.questions.append(question)
 
     def validate_headers(self, headers: list[str], row_num: int) -> None:
-        missing_headers = [
-            header for header in MANDATORY_HEADERS if header not in headers
-        ]
+        missing_headers = []
+        for header in MANDATORY_HEADERS:
+            # Accept either 'locale' or 'language_code' as valid
+            if header == "locale":
+                if "locale" not in headers and "language_code" not in headers:
+                    missing_headers.append("locale or language_code")
+            elif header not in headers:
+                missing_headers.append(header)
         if missing_headers:
             raise ImportAssessmentException(
                 message=f"Missing mandatory headers: {', '.join(missing_headers)}",
@@ -363,7 +368,7 @@ class AssessmentRow:
     title: str
     question: str
     generic_error: str
-    locale: str
+    locale: str = ""
     language_code: str = ""
     version: str = ""
     tags: list[str] = field(default_factory=list)
@@ -403,6 +408,9 @@ class AssessmentRow:
         score = row.get("scores")
         check_score_field(score, row_num)
 
+        # Keep original row for error messages
+        original_row = row.copy()
+
         row = {
             key: value for key, value in row.items() if value and key in cls.fields()
         }
@@ -424,11 +432,19 @@ class AssessmentRow:
                 **row,
             )
         except TypeError:
-            missing_fields = [
-                field
-                for field in MANDATORY_HEADERS
-                if field not in row or row[field] == ""
-            ]
+            missing_fields = []
+            for field in MANDATORY_HEADERS:
+                # Accept either 'locale' or 'language_code' as valid
+                if field == "locale":
+                    if (
+                        "locale" not in original_row or original_row.get("locale") == ""
+                    ) and (
+                        "language_code" not in original_row
+                        or original_row.get("language_code") == ""
+                    ):
+                        missing_fields.append("locale or language_code")
+                elif field not in original_row or original_row[field] == "":
+                    missing_fields.append(field)
             raise ImportAssessmentException(
                 f"Row missing values for required fields: {', '.join(missing_fields)}",
                 row_num,

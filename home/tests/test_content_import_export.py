@@ -913,6 +913,15 @@ class TestImportExport:
         page = Page.objects.get(slug="lang-code-display")
         assert page.locale.language_code == "en"
 
+    def test_uppercase_language_code(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing pages with uppercase language code (e.g., language_code='EN')
+        should work by case-insensitive matching to 'en'
+        """
+        csv_impexp.import_file("uppercase-language-code.csv")
+        page = Page.objects.get(slug="uppercase-lang-code")
+        assert page.locale.language_code == "en"
+
     def test_locale_HomePage_DNE(self, csv_impexp: ImportExport) -> None:
         """
         Importing files with non default locale HomePages that do not exist in the db should raise

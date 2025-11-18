@@ -375,6 +375,7 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("bulk_assessments.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        src = normalize_locale_field(src)
         assert dst == src
 
     def test_assessments_with_blank_results(self, csv_impexp: ImportExport) -> None:
@@ -385,6 +386,7 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("results_assessments.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        src = normalize_locale_field(src)
         assert dst == src
 
     def test_comma_separated_answers(self, csv_impexp: ImportExport) -> None:
@@ -396,6 +398,7 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("comma_separated_answers.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        src = normalize_locale_field(src)
         assert dst == src
 
     def test_single_assessment(self, impexp: ImportExport) -> None:
@@ -513,10 +516,11 @@ class TestImportExport:
             csv_impexp.import_file("broken_assessment.csv")
         assert (
             e.value.message
-            == "Missing mandatory headers: title, question, slug, generic_error, locale"
+            == "Missing mandatory headers: title, question, slug, generic_error, locale or language_code"
         )
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        src = normalize_locale_field(src)
         assert dst == src
 
     def test_invalid_locale_code(self, csv_impexp: ImportExport) -> None:
@@ -802,4 +806,5 @@ class TestImportMultipleLanguages:
         csv_bytes = csv_impexp.import_file("multiple_language.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        src = normalize_locale_field(src)
         assert dst == src
