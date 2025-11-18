@@ -24,6 +24,19 @@ class OrderedContentSetPage:
 
 
 class OrderedContentSetImporter:
+    # Mapping from old Title Case headers to new lowercase headers
+    HEADER_MAPPING = {
+        "Name": "name",
+        "Profile Fields": "profile_fields",
+        "Page Slugs": "page_slugs",
+        "Time": "time",
+        "Unit": "unit",
+        "Before Or After": "before_or_after",
+        "Contact Field": "contact_field",
+        "Slug": "slug",
+        "Locale": "locale",
+    }
+
     def __init__(
         self,
         file: File,  # type: ignore
@@ -40,6 +53,25 @@ class OrderedContentSetImporter:
         self.file = file
         self.filetype = file_type
         self.progress_queue = progress_queue
+
+    @staticmethod
+    def _normalize_row(row: dict[str, str]) -> dict[str, str]:
+        """
+        Normalize row keys to support both old Title Case and new lowercase formats.
+
+        :param row: The row with potentially Title Case headers
+        :return: The row with lowercase_with_underscores headers
+        """
+        normalized = {}
+        for key, value in row.items():
+            # Check if it's an old Title Case header
+            if key in OrderedContentSetImporter.HEADER_MAPPING:
+                normalized_key = OrderedContentSetImporter.HEADER_MAPPING[key]
+            else:
+                # Convert any "lowercase with spaces" to "lowercase_with_underscores"
+                normalized_key = key.replace(" ", "_")
+            normalized[normalized_key] = value
+        return normalized
 
     def _get_or_init_ordered_content_set(
         self, index: int, row: dict[str, str], set_slug: str, set_locale: str
@@ -225,7 +257,9 @@ class OrderedContentSetImporter:
         self._set_progress(10)
 
         for index, row in rows:  # type: ignore
-            os = self._create_ordered_set_from_row(index, row)  # type: ignore
+            # Normalize row to support both old Title Case and new lowercase headers
+            normalized_row = self._normalize_row(row)  # type: ignore
+            os = self._create_ordered_set_from_row(index, normalized_row)  # type: ignore
             if not os:
                 raise ImportException("Ordered Content Set not created", index)
             # 10-100% for loading ordered content sets

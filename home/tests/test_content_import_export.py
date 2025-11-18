@@ -1558,6 +1558,37 @@ class TestImportExport:
             ("relationship", "in_a_relationship"),
         ]
 
+    def test_import_ordered_sets_legacy_headers_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV file with legacy Title Case headers should work (backward compatibility)
+        """
+        set_profile_field_options()
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+        csv_impexp.import_file("contentpage_required_fields_multi_locale.csv")
+        content = csv_impexp.read_bytes("ordered_content_legacy_headers.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        en = Locale.objects.get(language_code="en")
+
+        ordered_set = OrderedContentSet.objects.filter(
+            slug="test_set_legacy", locale=en
+        ).first()
+
+        assert ordered_set.name == "Test Set Legacy"
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 1
+
+        page = pages[0][1]
+        assert page["contentpage"].slug == "first_time_user"
+        assert page["time"] == "2"
+        assert page["unit"] == "days"
+        assert page["before_or_after"] == "before"
+        assert page["contact_field"] == "edd"
+        assert unwagtail(ordered_set.profile_fields) == [("gender", "male")]
+
     def test_import_ordered_sets_duplicate_header_csv(
         self, csv_impexp: ImportExport
     ) -> None:
