@@ -36,6 +36,19 @@ ExpDicts = list[ExpDict]
 ExpDictsPair = tuple[ExpDicts, ExpDicts]
 
 
+def normalize_locale_field(rows: ExpDicts) -> ExpDicts:
+    """
+    Normalize 'locale' field to 'language_code' for backward compatibility in tests.
+    Exports now use 'language_code' but old test CSVs may still use 'locale'.
+    """
+    normalized = []
+    for row in rows:
+        if "locale" in row and "language_code" not in row:
+            row["language_code"] = row.pop("locale")
+        normalized.append(row)
+    return normalized
+
+
 def csv2dicts(csv_bytes: bytes) -> ExpDicts:
     return list(csv.DictReader(StringIO(csv_bytes.decode())))
 
@@ -323,6 +336,7 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("assessment_simple.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        src = normalize_locale_field(src)
         assert dst == src
 
     def test_less_simple_multiple_questions(self, csv_impexp: ImportExport) -> None:
@@ -335,6 +349,7 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("assessment_less_simple.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        src = normalize_locale_field(src)
         assert dst == src
 
     def test_multiple_assessments(self, csv_impexp: ImportExport) -> None:
@@ -347,6 +362,7 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("multiple_assessments.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
+        src = normalize_locale_field(src)
         assert dst == src
 
     def test_bulk_assessments(self, csv_impexp: ImportExport) -> None:
