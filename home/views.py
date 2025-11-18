@@ -36,6 +36,7 @@ from wagtail.snippets.views.chooser import (
     SnippetChooserViewSet,
 )
 from wagtail.snippets.views.snippets import IndexView as IndexViewAssessment
+from wagtail.snippets.views.snippets import IndexView as IndexViewOrdered
 from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTemplate
 
 from home.whatsapp import submit_to_meta_action
@@ -47,6 +48,7 @@ from .import_helpers import ImportAssessmentException, ImportException
 from .mixins import (
     SpreadsheetExportMixin,
     SpreadsheetExportMixinAssessment,
+    SpreadsheetExportMixinOrdered,
     SpreadsheetExportMixinWhatsAppTemplate,
 )
 from .models import (
@@ -80,6 +82,10 @@ class CustomIndexViewAssessment(SpreadsheetExportMixinAssessment, IndexViewAsses
 class CustomIndexViewWhatsAppTemplate(
     SpreadsheetExportMixinWhatsAppTemplate, IndexViewWhatsAppTemplate
 ):
+    pass
+
+
+class CustomIndexViewOrdered(SpreadsheetExportMixinOrdered, IndexViewOrdered):
     pass
 
 

@@ -76,7 +76,7 @@ class OrderedContentSetImporter:
         :param row: The row of the CSV file, as a dict.
         """
         ordered_set.profile_fields = []
-        for field in [f.strip() for f in (row["profile fields"] or "").split(",")]:
+        for field in [f.strip() for f in (row["profile_fields"] or "").split(",")]:
             if field and field != "-":
                 [field_name, field_value] = field.lower().split(":")
                 ordered_set.profile_fields.append((field_name, field_value))
@@ -86,9 +86,9 @@ class OrderedContentSetImporter:
     ) -> list[OrderedContentSetPage]:
         times = self._csv_to_list(row["time"])
         units = self._csv_to_list(row["unit"])
-        before_or_afters = self._csv_to_list(row["before or after"])
-        page_slugs = self._csv_to_list(row["page slugs"])
-        contact_fields = self._csv_to_list(row["contact field"])
+        before_or_afters = self._csv_to_list(row["before_or_after"])
+        page_slugs = self._csv_to_list(row["page_slugs"])
+        contact_fields = self._csv_to_list(row["contact_field"])
         # backwards compatiblilty if there's only one contact field
         if len(contact_fields) == 1:
             contact_fields = [contact_fields[0]] * len(times)

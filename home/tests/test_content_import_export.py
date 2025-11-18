@@ -479,9 +479,8 @@ class ImportExport:
         """
         url = f"/admin/snippets/home/orderedcontentset/?export={self.format}"
 
-        stream = self.admin_client.get(url)
-        content = b"".join(stream.streaming_content)
-        return content
+        response = self.admin_client.get(url)
+        return response.content
 
     def import_content(self, content_bytes: bytes, **kw: Any) -> Any:
         """
