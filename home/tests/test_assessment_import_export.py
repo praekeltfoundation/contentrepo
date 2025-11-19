@@ -49,6 +49,11 @@ def normalize_locale_field(rows: ExpDicts) -> ExpDicts:
     return normalized
 
 
+CSV_FILTER_FUNCS = [
+    normalize_locale_field,
+]
+
+
 def csv2dicts(csv_bytes: bytes) -> ExpDicts:
     return list(csv.DictReader(StringIO(csv_bytes.decode())))
 
@@ -243,6 +248,8 @@ class ImportExport:
     def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
         src = csv2dicts(src_bytes)
         dst = csv2dicts(dst_bytes)
+        for ff in CSV_FILTER_FUNCS:
+            src = ff(src)
         return src, dst
 
     def get_assessment_json(self) -> DbDicts:
@@ -336,7 +343,6 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("assessment_simple.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        src = normalize_locale_field(src)
         assert dst == src
 
     def test_less_simple_multiple_questions(self, csv_impexp: ImportExport) -> None:
@@ -349,7 +355,6 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("assessment_less_simple.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        src = normalize_locale_field(src)
         assert dst == src
 
     def test_multiple_assessments(self, csv_impexp: ImportExport) -> None:
@@ -362,7 +367,6 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("multiple_assessments.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        src = normalize_locale_field(src)
         assert dst == src
 
     def test_bulk_assessments(self, csv_impexp: ImportExport) -> None:
@@ -375,7 +379,6 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("bulk_assessments.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        src = normalize_locale_field(src)
         assert dst == src
 
     def test_assessments_with_blank_results(self, csv_impexp: ImportExport) -> None:
@@ -386,7 +389,6 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("results_assessments.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        src = normalize_locale_field(src)
         assert dst == src
 
     def test_comma_separated_answers(self, csv_impexp: ImportExport) -> None:
@@ -398,7 +400,6 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("comma_separated_answers.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        src = normalize_locale_field(src)
         assert dst == src
 
     def test_single_assessment(self, impexp: ImportExport) -> None:
@@ -520,7 +521,6 @@ class TestImportExport:
         )
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        src = normalize_locale_field(src)
         assert dst == src
 
     def test_invalid_locale_code(self, csv_impexp: ImportExport) -> None:
@@ -806,5 +806,4 @@ class TestImportMultipleLanguages:
         csv_bytes = csv_impexp.import_file("multiple_language.csv")
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
-        src = normalize_locale_field(src)
         assert dst == src

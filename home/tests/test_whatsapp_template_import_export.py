@@ -60,6 +60,8 @@ def filter_exports(srcs: ExpDicts, dsts: ExpDicts) -> ExpDictsPair:
     for src, dst in zip(srcs, dsts, strict=True):
         fsrcs.append(src)
         fdsts.append(dst)
+    for ff in CSV_FILTER_FUNCS:
+        fsrcs = ff(fsrcs)
     return fsrcs, fdsts
 
 
@@ -198,6 +200,11 @@ def normalize_locale_field(rows: ExpDicts) -> ExpDicts:
             row["language_code"] = row.pop("locale")
         normalized.append(row)
     return normalized
+
+
+CSV_FILTER_FUNCS = [
+    normalize_locale_field,
+]
 
 
 @dataclass
@@ -438,7 +445,6 @@ class TestImportExportRoundtrip:
         iterator = iter(csv)
         first = next(iterator)
         del first["submission_status"]
-        csv = normalize_locale_field(csv)
         assert export == csv
 
         templates = WhatsAppTemplate.objects.all()
@@ -458,7 +464,6 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("whatsapp-template-less-simple.csv")
         content = csv_impexp.export_whatsapp_template()
         csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
-        csv = normalize_locale_field(csv)
         assert export == csv
 
     def test_multiple_whatsapp_templates(self, csv_impexp: ImportExport) -> None:
@@ -471,7 +476,6 @@ class TestImportExportRoundtrip:
         csv_bytes = csv_impexp.import_file("whatsapp-template-multiple.csv")
         content = csv_impexp.export_whatsapp_template()
         csv, export = csv_impexp.csvs2dicts(csv_bytes, content)
-        csv = normalize_locale_field(csv)
         assert export == csv
 
     @pytest.mark.usefixtures("result_content_pages")
@@ -598,7 +602,6 @@ class TestImportExport:
         iterator = iter(csv)
         first = next(iterator)
         del first["submission_status"]
-        csv = normalize_locale_field(csv)
         assert export == csv
 
     def test_import_error(elf, csv_impexp: ImportExport) -> None:
@@ -623,7 +626,6 @@ class TestImportExport:
         iterator = iter(csv)
         first = next(iterator)
         del first["submission_status"]
-        csv = normalize_locale_field(csv)
         assert export == csv
 
     def test_invalid_locale_code(self, csv_impexp: ImportExport) -> None:
