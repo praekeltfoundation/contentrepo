@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_a20243f409be1afc_export_content_pages_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.3">coverage.py v7.11.3</a>,
-            created at 2025-11-19 12:46 +0000
+            created at 2025-11-19 13:37 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -106,7 +106,7 @@
     <p class="pln"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="nam">tags</span><span class="op">:</span> <span class="nam">str</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">    <span class="nam">slug</span><span class="op">:</span> <span class="nam">str</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">    <span class="nam">version</span><span class="op">:</span> <span class="nam">str</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">    <span class="nam">locale</span><span class="op">:</span> <span class="nam">str</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">    <span class="nam">language_code</span><span class="op">:</span> <span class="nam">str</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">    <span class="nam">high_result_page</span><span class="op">:</span> <span class="nam">str</span> <span class="op">|</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="nam">high_inflection</span><span class="op">:</span> <span class="nam">str</span> <span class="op">|</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">medium_result_page</span><span class="op">:</span> <span class="nam">str</span> <span class="op">|</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
@@ -166,7 +166,7 @@
     <p class="run run2"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">                    <span class="nam">question_type</span><span class="op">=</span><span class="nam">question</span><span class="op">.</span><span class="nam">block_type</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">                    <span class="nam">slug</span><span class="op">=</span><span class="nam">item</span><span class="op">.</span><span class="nam">slug</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">                    <span class="nam">version</span><span class="op">=</span><span class="nam">item</span><span class="op">.</span><span class="nam">version</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">                    <span class="nam">locale</span><span class="op">=</span><span class="nam">item</span><span class="op">.</span><span class="nam">locale</span><span class="op">.</span><span class="nam">language_code</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">                    <span class="nam">language_code</span><span class="op">=</span><span class="nam">item</span><span class="op">.</span><span class="nam">locale</span><span class="op">.</span><span class="nam">language_code</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">                    <span class="nam">high_result_page</span><span class="op">=</span><span class="nam">getattr</span><span class="op">(</span><span class="nam">item</span><span class="op">.</span><span class="nam">high_result_page</span><span class="op">,</span> <span class="str">"slug"</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">                    <span class="nam">high_inflection</span><span class="op">=</span><span class="nam">getattr</span><span class="op">(</span><span class="nam">item</span><span class="op">,</span> <span class="str">"high_inflection"</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">                    <span class="nam">medium_result_page</span><span class="op">=</span><span class="nam">getattr</span><span class="op">(</span><span class="nam">item</span><span class="op">.</span><span class="nam">medium_result_page</span><span class="op">,</span> <span class="str">"slug"</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -250,7 +250,7 @@
     <p class="run run2"><span class="n"><a id="t168" href="#t168">168</a></span><span class="t">        <span class="str">"tags"</span><span class="op">:</span> <span class="num">110</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t">        <span class="str">"slug"</span><span class="op">:</span> <span class="num">110</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t170" href="#t170">170</a></span><span class="t">        <span class="str">"version"</span><span class="op">:</span> <span class="num">90</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">        <span class="str">"locale"</span><span class="op">:</span> <span class="num">50</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">        <span class="str">"language_code"</span><span class="op">:</span> <span class="num">50</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">        <span class="str">"high_result_page"</span><span class="op">:</span> <span class="num">110</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t173" href="#t173">173</a></span><span class="t">        <span class="str">"high_inflection"</span><span class="op">:</span> <span class="num">110</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">        <span class="str">"medium_result_page"</span><span class="op">:</span> <span class="num">120</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -321,7 +321,7 @@
             <a class="nav" href="z_a20243f409be1afc_export_content_pages_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.3">coverage.py v7.11.3</a>,
-            created at 2025-11-19 12:46 +0000
+            created at 2025-11-19 13:37 +0000
         </p>
     </div>
 </footer>

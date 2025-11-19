@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_a20243f409be1afc_forms_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.3">coverage.py v7.11.3</a>,
-            created at 2025-11-19 12:46 +0000
+            created at 2025-11-19 13:37 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -102,7 +102,7 @@
     <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="nam">slug</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">    <span class="nam">category</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">    <span class="nam">buttons</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">    <span class="nam">locale</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">    <span class="nam">language_code</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="nam">image</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">    <span class="nam">message</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">    <span class="nam">example_values</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
@@ -135,7 +135,7 @@
     <p class="run run2"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">                <span class="nam">slug</span><span class="op">=</span><span class="nam">item</span><span class="op">.</span><span class="nam">slug</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">                <span class="nam">category</span><span class="op">=</span><span class="nam">item</span><span class="op">.</span><span class="nam">category</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">                <span class="nam">buttons</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">serialise_buttons</span><span class="op">(</span><span class="nam">item</span><span class="op">.</span><span class="nam">buttons</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">                <span class="nam">locale</span><span class="op">=</span><span class="nam">str</span><span class="op">(</span><span class="nam">item</span><span class="op">.</span><span class="nam">locale</span><span class="op">.</span><span class="nam">language_code</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">                <span class="nam">language_code</span><span class="op">=</span><span class="nam">str</span><span class="op">(</span><span class="nam">item</span><span class="op">.</span><span class="nam">locale</span><span class="op">.</span><span class="nam">language_code</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">                <span class="nam">image</span><span class="op">=</span><span class="nam">str</span><span class="op">(</span><span class="nam">image_link</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">                <span class="nam">message</span><span class="op">=</span><span class="nam">str</span><span class="op">(</span><span class="nam">item</span><span class="op">.</span><span class="nam">message</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t">                <span class="nam">example_values</span><span class="op">=</span><span class="nam">serialize_list</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -222,7 +222,7 @@
     <p class="run run2"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">        <span class="str">"name"</span><span class="op">:</span> <span class="num">110</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t">        <span class="str">"category"</span><span class="op">:</span> <span class="num">110</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t">        <span class="str">"buttons"</span><span class="op">:</span> <span class="num">110</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">        <span class="str">"locale"</span><span class="op">:</span> <span class="num">118</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">        <span class="str">"language_code"</span><span class="op">:</span> <span class="num">118</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">        <span class="str">"image"</span><span class="op">:</span> <span class="num">110</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t145" href="#t145">145</a></span><span class="t">        <span class="str">"message"</span><span class="op">:</span> <span class="num">110</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t146" href="#t146">146</a></span><span class="t">        <span class="str">"example_values"</span><span class="op">:</span> <span class="num">110</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -292,7 +292,7 @@
             <a class="nav" href="z_a20243f409be1afc_forms_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.3">coverage.py v7.11.3</a>,
-            created at 2025-11-19 12:46 +0000
+            created at 2025-11-19 13:37 +0000
         </p>
     </div>
 </footer>
