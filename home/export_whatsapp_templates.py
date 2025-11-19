@@ -20,7 +20,7 @@ class ExportRow:
     slug: str = ""
     category: str = ""
     buttons: str = ""
-    locale: str = ""
+    language_code: str = ""
     image: str = ""
     message: str = ""
     example_values: str = ""
@@ -53,7 +53,7 @@ class WhatsAppTemplateExporter:
                 slug=item.slug,
                 category=item.category,
                 buttons=self.serialise_buttons(item.buttons),
-                locale=str(item.locale.language_code),
+                language_code=str(item.locale.language_code),
                 image=str(image_link),
                 message=str(item.message),
                 example_values=serialize_list(
@@ -140,7 +140,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "name": 110,
         "category": 110,
         "buttons": 110,
-        "locale": 118,
+        "language_code": 118,
         "image": 110,
         "message": 110,
         "example_values": 110,

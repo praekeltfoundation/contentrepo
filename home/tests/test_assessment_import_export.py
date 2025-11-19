@@ -36,6 +36,24 @@ ExpDicts = list[ExpDict]
 ExpDictsPair = tuple[ExpDicts, ExpDicts]
 
 
+def normalize_locale_field(rows: ExpDicts) -> ExpDicts:
+    """
+    Normalize 'locale' field to 'language_code' for backward compatibility in tests.
+    Exports now use 'language_code' but old test CSVs may still use 'locale'.
+    """
+    normalized = []
+    for row in rows:
+        if "locale" in row and "language_code" not in row:
+            row["language_code"] = row.pop("locale")
+        normalized.append(row)
+    return normalized
+
+
+CSV_FILTER_FUNCS = [
+    normalize_locale_field,
+]
+
+
 def csv2dicts(csv_bytes: bytes) -> ExpDicts:
     return list(csv.DictReader(StringIO(csv_bytes.decode())))
 
@@ -230,6 +248,8 @@ class ImportExport:
     def csvs2dicts(self, src_bytes: bytes, dst_bytes: bytes) -> ExpDictsPair:
         src = csv2dicts(src_bytes)
         dst = csv2dicts(dst_bytes)
+        for ff in CSV_FILTER_FUNCS:
+            src = ff(src)
         return src, dst
 
     def get_assessment_json(self) -> DbDicts:
@@ -497,7 +517,7 @@ class TestImportExport:
             csv_impexp.import_file("broken_assessment.csv")
         assert (
             e.value.message
-            == "Missing mandatory headers: title, question, slug, generic_error, locale"
+            == "Missing mandatory headers: title, question, slug, generic_error, locale or language_code"
         )
         content = csv_impexp.export_assessment()
         src, dst = csv_impexp.csvs2dicts(csv_bytes, content)
@@ -701,7 +721,7 @@ class TestImportExport:
             csv_impexp.import_file("assessments_multiple_missing_headers.csv")
         assert (
             e.value.message == "Missing mandatory headers: title, slug, "
-            "generic_error, locale"
+            "generic_error, locale or language_code"
         )
         assert e.value.row_num == 1
 
@@ -736,7 +756,7 @@ class TestImportExport:
             csv_impexp.import_file("assessments_missing_row_values.csv")
         assert (
             e.value.message
-            == "Row missing values for required fields: title, slug, generic_error, locale"
+            == "Row missing values for required fields: title, slug, generic_error, locale or language_code"
         )
         assert e.value.row_num == 4
 

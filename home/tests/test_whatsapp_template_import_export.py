@@ -60,6 +60,8 @@ def filter_exports(srcs: ExpDicts, dsts: ExpDicts) -> ExpDictsPair:
     for src, dst in zip(srcs, dsts, strict=True):
         fsrcs.append(src)
         fdsts.append(dst)
+    for ff in CSV_FILTER_FUNCS:
+        fsrcs = list(ff(fsrcs))
     return fsrcs, fdsts
 
 
@@ -184,6 +186,24 @@ WHATSAPP_TEMPLATE_FILTER_FUNCS = [
     remove_button_ids,
     remove_timestamps,
     normalise_revisions,
+]
+
+
+def normalize_locale_field(rows: ExpDicts) -> ExpDicts:
+    """
+    Normalize 'locale' field to 'language_code' for backward compatibility in tests.
+    Exports now use 'language_code' but old test CSVs may still use 'locale'.
+    """
+    normalized = []
+    for row in rows:
+        if "locale" in row and "language_code" not in row:
+            row["language_code"] = row.pop("locale")
+        normalized.append(row)
+    return normalized
+
+
+CSV_FILTER_FUNCS = [
+    normalize_locale_field,
 ]
 
 
