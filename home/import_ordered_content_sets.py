@@ -1,4 +1,5 @@
 import itertools
+import re
 from dataclasses import dataclass
 from logging import getLogger
 from queue import Queue
@@ -41,6 +42,21 @@ class OrderedContentSetImporter:
         self.filetype = file_type
         self.progress_queue = progress_queue
 
+    @staticmethod
+    def _normalize_row(row: dict[str, str]) -> dict[str, str]:
+        """
+        Normalize row keys to support both old Title Case and new lowercase formats.
+
+        :param row: The row with potentially Title Case headers
+        :return: The row with lowercase_with_underscores headers
+        """
+        normalized = {}
+        for key, value in row.items():
+            # Replace non-word characters with underscores, strip, and lowercase
+            normalized_key = re.sub(r"\W+", "_", key.strip()).lower().strip("_")
+            normalized[normalized_key] = value
+        return normalized
+
     def _get_or_init_ordered_content_set(
         self, index: int, row: dict[str, str], set_slug: str, set_locale: str
     ) -> OrderedContentSet:
@@ -76,7 +92,7 @@ class OrderedContentSetImporter:
         :param row: The row of the CSV file, as a dict.
         """
         ordered_set.profile_fields = []
-        for field in [f.strip() for f in (row["profile fields"] or "").split(",")]:
+        for field in [f.strip() for f in (row["profile_fields"] or "").split(",")]:
             if field and field != "-":
                 [field_name, field_value] = field.lower().split(":")
                 ordered_set.profile_fields.append((field_name, field_value))
@@ -86,9 +102,9 @@ class OrderedContentSetImporter:
     ) -> list[OrderedContentSetPage]:
         times = self._csv_to_list(row["time"])
         units = self._csv_to_list(row["unit"])
-        before_or_afters = self._csv_to_list(row["before or after"])
-        page_slugs = self._csv_to_list(row["page slugs"])
-        contact_fields = self._csv_to_list(row["contact field"])
+        before_or_afters = self._csv_to_list(row["before_or_after"])
+        page_slugs = self._csv_to_list(row["page_slugs"])
+        contact_fields = self._csv_to_list(row["contact_field"])
 
         # Backwards compatibility: if there's only one value for optional fields
         # and it's empty, expand it to match page_slugs count
@@ -119,7 +135,7 @@ class OrderedContentSetImporter:
                 before_or_after=before_or_after.lower(),
                 page_slug=page_slug,
                 contact_field=contact_field,
-                locale=row.get("language_code") or row["locale"],
+                locale=row.get("language_code") or row.get("locale", ""),
             )
             for time, unit, before_or_after, page_slug, contact_field in zip(
                 times, units, before_or_afters, page_slugs, contact_fields, strict=False
@@ -196,9 +212,9 @@ class OrderedContentSetImporter:
         :return: An instance of OrderedContentSet.
         :raises ImportException: If time, units, before_or_afters, page_slugs and contact_fields are not all equal length.
         """
-        locale_val = row.get("language_code") or row["locale"]
+        locale_val = row.get("language_code") or row.get("locale", "")
         ordered_set = self._get_or_init_ordered_content_set(
-            index, row, row["slug"].lower(), locale_val.lower()
+            index, row, row["slug"].lower(), locale_val.lower() if locale_val else ""
         )
         ordered_set.name = row["name"]
         self._add_profile_fields(ordered_set, row)
@@ -238,7 +254,9 @@ class OrderedContentSetImporter:
         self._set_progress(10)
 
         for index, row in rows:  # type: ignore
-            os = self._create_ordered_set_from_row(index, row)  # type: ignore
+            # Normalize row to support both old Title Case and new lowercase headers
+            normalized_row = self._normalize_row(row)  # type: ignore
+            os = self._create_ordered_set_from_row(index, normalized_row)  # type: ignore
             if not os:
                 raise ImportException("Ordered Content Set not created", index)
             # 10-100% for loading ordered content sets

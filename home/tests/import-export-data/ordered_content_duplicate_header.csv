@@ -1,3 +1,3 @@
-name,Profile Fields,Page Slugs,Time,Unit,Before Or After,Contact Field,Slug,Locale,slug
+name,profile_fields,page_slugs,time,unit,before_or_after,contact_field,slug,language_code,slug
 Test Set,"gender:male, relationship:in_a_relationship","first_time_user, first_time_user, first_time_user","2, 3, 4","days, months, minutes","before, before, after",edd,Test_Set,en,duplicate_slug
 Test Set PT,"gender:male, relationship:in_a_relationship",first_time_user,2,days,before,edd,test_set,pt,duplicate_slug

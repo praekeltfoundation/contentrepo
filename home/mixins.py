@@ -4,6 +4,10 @@ from django.http import HttpResponse
 
 from .assessment_import_export import export_csv_assessment, export_xlsx_assessment
 from .content_import_export import export_csv_content, export_xlsx_content
+from .ordered_content_import_export import (
+    export_csv_ordered_content,
+    export_xlsx_ordered_content,
+)
 from .whatsapp_template_import_export import (
     export_csv_whatsapp_template,
     export_xlsx_whatsapp_template,
@@ -19,7 +23,7 @@ class SpreadsheetExportMixin:
 
     def get_filename(self):
         """Gets the base filename for the exported spreadsheet, without extensions"""
-        return f'exported_content_{datetime.now().strftime("%Y%m%d")}'
+        return f'exported_pages_{datetime.now().strftime("%Y%m%d")}'
 
     def write_xlsx_response(self, queryset):
         ctype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -66,7 +70,7 @@ class SpreadsheetExportMixinAssessment:
 
     def get_filename(self):
         """Gets the base filename for the exported spreadsheet, without extensions"""
-        return f'exported_content_{datetime.now().strftime("%Y%m%d")}'
+        return f'exported_assessments_{datetime.now().strftime("%Y%m%d")}'
 
     def write_xlsx_response(self, queryset):
         response = HttpResponse(
@@ -117,7 +121,7 @@ class SpreadsheetExportMixinWhatsAppTemplate:
 
     def get_filename(self):
         """Gets the base filename for the exported spreadsheet, without extensions"""
-        return f'exported_content_{datetime.now().strftime("%Y%m%d")}'
+        return f'exported_templates_{datetime.now().strftime("%Y%m%d")}'
 
     def write_xlsx_response(self, queryset):
         response = HttpResponse(
@@ -135,6 +139,57 @@ class SpreadsheetExportMixinWhatsAppTemplate:
             f'attachment; filename="{self.get_filename()}.csv"'
         )
         export_csv_whatsapp_template(queryset, response)
+
+        return response
+
+    def as_spreadsheet(self, queryset, spreadsheet_format):
+        """Return a response with a spreadsheet representing the exported data from queryset, in the format specified"""
+        if spreadsheet_format == self.FORMAT_CSV:
+            return self.write_csv_response(queryset)
+        elif spreadsheet_format == self.FORMAT_XLSX:
+            return self.write_xlsx_response(queryset)
+
+    def get_export_url(self, format):
+        params = self.request.GET.copy()
+        params["export"] = format
+        return self.request.path + "?" + params.urlencode()
+
+    @property
+    def xlsx_export_url(self):
+        return self.get_export_url("xlsx")
+
+    @property
+    def csv_export_url(self):
+        return self.get_export_url("csv")
+
+
+class SpreadsheetExportMixinOrdered:
+    """A mixin for views, providing spreadsheet export functionality in csv and xlsx formats for Ordered Content Sets"""
+
+    FORMAT_XLSX = "xlsx"
+    FORMAT_CSV = "csv"
+    FORMATS = (FORMAT_XLSX, FORMAT_CSV)
+
+    def get_filename(self):
+        """Gets the base filename for the exported spreadsheet, without extensions"""
+        return f'exported_ordered_content_sets_{datetime.now().strftime("%Y%m%d")}'
+
+    def write_xlsx_response(self, queryset):
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = (
+            f'attachment; filename="{self.get_filename()}.xlsx"'
+        )
+        export_xlsx_ordered_content(queryset, response)
+        return response
+
+    def write_csv_response(self, queryset):
+        response = HttpResponse(content_type="application/CSV")
+        response["Content-Disposition"] = (
+            f'attachment; filename="{self.get_filename()}.csv"'
+        )
+        export_csv_ordered_content(queryset, response)
 
         return response
 

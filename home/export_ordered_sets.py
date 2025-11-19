@@ -9,7 +9,7 @@ from openpyxl.styles import Font, NamedStyle
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from wagtail.query import QuerySet  # type: ignore  # No typing available
+from wagtail.query import PageQuerySet  # type: ignore  # No typing available
 
 
 @dataclass
@@ -19,12 +19,12 @@ class ExportRow:
     """
 
     name: str
-    profile_field: str
+    profile_fields: str
     page_slugs: str
-    time: int | None
-    unit: str | None
-    before_or_after: str | None
-    contact_field: str | None
+    time: str
+    unit: str
+    before_or_after: str
+    contact_field: str
     slug: str | None
     language_code: str | None
 
@@ -45,7 +45,7 @@ class ExportRow:
 class OrderedSetExporter:
     rows: list[ExportRow]
 
-    def __init__(self, queryset: QuerySet):
+    def __init__(self, queryset: PageQuerySet):
         self.queryset = queryset
         self.rows = []
 
@@ -53,12 +53,12 @@ class OrderedSetExporter:
         for item in self.queryset:
             yield ExportRow(
                 name=item.name,
-                profile_field=item.profile_field,
-                page_slugs=item.page_slugs,
-                time=item.time,
-                unit=item.unit,
-                before_or_after=str(item.before_or_after),
-                contact_field=item.contact_field,
+                profile_fields=", ".join(item.profile_field()),
+                page_slugs=", ".join(item.page()),
+                time=", ".join(str(t) for t in item.time()),
+                unit=", ".join(item.unit()),
+                before_or_after=", ".join(item.before_or_after()),
+                contact_field=", ".join(item.contact_field()),
                 slug=item.slug,
                 language_code=item.locale.language_code,
             )
@@ -98,7 +98,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
     # Set columns based on best size
     column_widths_in_pts = {
         "name": 130,
-        "profile_field": 110,
+        "profile_fields": 110,
         "page_slugs": 100,
         "time": 100,
         "unit": 110,

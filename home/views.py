@@ -36,17 +36,19 @@ from wagtail.snippets.views.chooser import (
     SnippetChooserViewSet,
 )
 from wagtail.snippets.views.snippets import IndexView as IndexViewAssessment
+from wagtail.snippets.views.snippets import IndexView as IndexViewOrdered
 from wagtail.snippets.views.snippets import IndexView as IndexViewWhatsAppTemplate
 
 from home.whatsapp import submit_to_meta_action
 
 from .assessment_import_export import import_assessment
-from .content_import_export import import_content, import_ordered_sets
+from .content_import_export import import_content
 from .forms import UploadContentFileForm, UploadOrderedContentSetFileForm
 from .import_helpers import ImportAssessmentException, ImportException
 from .mixins import (
     SpreadsheetExportMixin,
     SpreadsheetExportMixinAssessment,
+    SpreadsheetExportMixinOrdered,
     SpreadsheetExportMixinWhatsAppTemplate,
 )
 from .models import (
@@ -55,6 +57,7 @@ from .models import (
     OrderedContentSet,
     PageView,
 )
+from .ordered_content_import_export import import_ordered_sets
 from .serializers import ContentPageRatingSerializer, PageViewSerializer
 from .whatsapp_template_import_export import (
     import_whatsapptemplate,
@@ -80,6 +83,10 @@ class CustomIndexViewAssessment(SpreadsheetExportMixinAssessment, IndexViewAsses
 class CustomIndexViewWhatsAppTemplate(
     SpreadsheetExportMixinWhatsAppTemplate, IndexViewWhatsAppTemplate
 ):
+    pass
+
+
+class CustomIndexViewOrdered(SpreadsheetExportMixinOrdered, IndexViewOrdered):
     pass
 
 

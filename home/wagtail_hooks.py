@@ -23,6 +23,7 @@ from .views import (  # isort:skip
     ContentPageReportView,
     CustomIndexView,
     CustomIndexViewAssessment,
+    CustomIndexViewOrdered,
     OrderedContentSetUploadView,
     PageViewReportView,
     ContentUploadView,
@@ -246,6 +247,7 @@ class OrderedContentSetViewSet(SnippetViewSet):
     add_to_admin_menu = True
     add_to_settings_menu = False
     exclude_from_explorer = False
+    index_view_class = CustomIndexViewOrdered
     list_display = ("name", "latest_draft_profile_fields", "num_pages", "status")
     list_export = (
         "name",

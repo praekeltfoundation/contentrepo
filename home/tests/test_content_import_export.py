@@ -21,7 +21,7 @@ from wagtail.images.models import Image  # type: ignore
 from wagtail.models import Locale, Page  # type: ignore
 from wagtailmedia.models import Media  # type: ignore
 
-from home.content_import_export import import_content, import_ordered_sets
+from home.content_import_export import import_content
 from home.import_helpers import ImportException
 from home.models import (
     Assessment,
@@ -34,6 +34,7 @@ from home.models import (
     OrderedContentSet,
     WhatsAppTemplate,
 )
+from home.ordered_content_import_export import import_ordered_sets
 from home.whatsapp_template_import_export import import_whatsapptemplate
 from home.xlsx_helpers import get_active_sheet
 
@@ -479,9 +480,8 @@ class ImportExport:
         """
         url = f"/admin/snippets/home/orderedcontentset/?export={self.format}"
 
-        stream = self.admin_client.get(url)
-        content = b"".join(stream.streaming_content)
-        return content
+        response = self.admin_client.get(url)
+        return response.content
 
     def import_content(self, content_bytes: bytes, **kw: Any) -> Any:
         """
@@ -1608,6 +1608,77 @@ class TestImportExport:
             ("gender", "male"),
             ("relationship", "in_a_relationship"),
         ]
+
+    def test_import_ordered_sets_legacy_headers_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV file with legacy Title Case headers should work (backward compatibility)
+        """
+        set_profile_field_options()
+        pt, _created = Locale.objects.get_or_create(language_code="pt")
+        HomePage.add_root(locale=pt, title="Home (pt)", slug="home-pt")
+        csv_impexp.import_file("contentpage_required_fields_multi_locale.csv")
+        content = csv_impexp.read_bytes("ordered_content_legacy_headers.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        en = Locale.objects.get(language_code="en")
+
+        ordered_set = OrderedContentSet.objects.filter(
+            slug="test_set_legacy", locale=en
+        ).first()
+
+        assert ordered_set.name == "Test Set Legacy"
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 1
+
+        page = pages[0][1]
+        assert page["contentpage"].slug == "first_time_user"
+        assert page["time"] == "2"
+        assert page["unit"] == "days"
+        assert page["before_or_after"] == "before"
+        assert page["contact_field"] == "edd"
+        assert unwagtail(ordered_set.profile_fields) == [("gender", "male")]
+
+    def test_import_ordered_sets_locale_header_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV file with legacy 'locale' header should work (backward compatibility)
+        """
+        set_profile_field_options()
+        csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.read_bytes("ordered_content_locale_header.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        en = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            slug="test_locale_header", locale=en
+        ).first()
+
+        assert ordered_set is not None
+        assert ordered_set.name == "Test Set Locale Header"
+        assert ordered_set.locale == en
+
+    def test_import_ordered_sets_language_code_header_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV file with 'language_code' header should work (standard format)
+        """
+        set_profile_field_options()
+        csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.read_bytes("ordered_content_language_code_header.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        en = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            slug="test_lang_code", locale=en
+        ).first()
+
+        assert ordered_set is not None
+        assert ordered_set.name == "Test Set Lang Code"
+        assert ordered_set.locale == en
 
     def test_import_ordered_sets_duplicate_header_csv(
         self, csv_impexp: ImportExport

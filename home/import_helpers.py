@@ -270,7 +270,19 @@ def parse_file(
 
 
 def read_csv(file_content: bytes) -> Iterator[dict[str, Any]]:
-    return csv.DictReader(StringIO(file_content.decode()))
+    content = StringIO(file_content.decode())
+    # Read first line to check for duplicates
+    first_line = content.readline()
+    headers = [h.strip() for h in next(csv.reader([first_line]))]
+    # Filter out empty headers before checking for duplicates
+    non_empty_headers = [h for h in headers if h]
+    if len(non_empty_headers) != len(set(non_empty_headers)):
+        raise ImportException(
+            "Invalid format. Please check that there are no duplicate headers."
+        )
+    # Reset to beginning and create DictReader
+    content.seek(0)
+    return csv.DictReader(content)
 
 
 def remove_trailing_nones(row: list[Any]) -> list[Any]:
