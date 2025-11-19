@@ -1640,6 +1640,46 @@ class TestImportExport:
         assert page["contact_field"] == "edd"
         assert unwagtail(ordered_set.profile_fields) == [("gender", "male")]
 
+    def test_import_ordered_sets_locale_header_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV file with legacy 'locale' header should work (backward compatibility)
+        """
+        set_profile_field_options()
+        csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.read_bytes("ordered_content_locale_header.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        en = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            slug="test_locale_header", locale=en
+        ).first()
+
+        assert ordered_set is not None
+        assert ordered_set.name == "Test Set Locale Header"
+        assert ordered_set.locale == en
+
+    def test_import_ordered_sets_language_code_header_csv(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing a CSV file with 'language_code' header should work (standard format)
+        """
+        set_profile_field_options()
+        csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.read_bytes("ordered_content_language_code_header.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        en = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            slug="test_lang_code", locale=en
+        ).first()
+
+        assert ordered_set is not None
+        assert ordered_set.name == "Test Set Lang Code"
+        assert ordered_set.locale == en
+
     def test_import_ordered_sets_duplicate_header_csv(
         self, csv_impexp: ImportExport
     ) -> None:
