@@ -1,4 +1,5 @@
 import itertools
+import re
 from dataclasses import dataclass
 from logging import getLogger
 from queue import Queue
@@ -24,19 +25,6 @@ class OrderedContentSetPage:
 
 
 class OrderedContentSetImporter:
-    # Mapping from old Title Case headers to new lowercase headers
-    HEADER_MAPPING = {
-        "Name": "name",
-        "Profile Fields": "profile_fields",
-        "Page Slugs": "page_slugs",
-        "Time": "time",
-        "Unit": "unit",
-        "Before Or After": "before_or_after",
-        "Contact Field": "contact_field",
-        "Slug": "slug",
-        "Locale": "locale",
-    }
-
     def __init__(
         self,
         file: File,  # type: ignore
@@ -64,12 +52,8 @@ class OrderedContentSetImporter:
         """
         normalized = {}
         for key, value in row.items():
-            # Check if it's an old Title Case header
-            if key in OrderedContentSetImporter.HEADER_MAPPING:
-                normalized_key = OrderedContentSetImporter.HEADER_MAPPING[key]
-            else:
-                # Convert any "lowercase with spaces" to "lowercase_with_underscores"
-                normalized_key = key.replace(" ", "_")
+            # Replace non-word characters with underscores, strip, and lowercase
+            normalized_key = re.sub(r"\W+", "_", key.strip()).lower().strip("_")
             normalized[normalized_key] = value
         return normalized
 
