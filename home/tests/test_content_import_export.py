@@ -1077,6 +1077,20 @@ class TestImportExport:
         assert len(content_page.whatsapp_body) == 1
         assert content_page.whatsapp_body[0].value.message == "Message"
 
+    def test_wa_template_enables_whatsapp(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a page with a WhatsApp template should set enable_whatsapp
+        and whatsapp_title even when whatsapp_body is empty.
+        """
+        csv_impexp.import_whatsapp_template_file(
+            "whatsapp-template-simple-no-linked-pages.csv"
+        )
+        csv_impexp.import_file("content_with_simple_wa_template.csv")
+
+        [content_page] = ContentPage.objects.all()
+        assert content_page.enable_whatsapp is True
+        assert content_page.whatsapp_title == "mnch_appointment_child_2"
+
     def test_missing_wa_template(self, csv_impexp: ImportExport) -> None:
         """
         Importing a page with a non existent WhatsApp template should raise an error
@@ -1667,6 +1681,37 @@ class TestImportExport:
             ("gender", "male"),
             ("relationship", "in_a_relationship"),
         ]
+
+    def test_import_ordered_sets_blank_optional_fields(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing ordered content sets with multiple pages and blank timing fields should work.
+        This tests that optional fields (time, unit, before_or_after, contact_field) can be left blank
+        when creating an ordered content set via import, matching the UI behavior.
+        """
+        csv_impexp.import_file("contentpage_required_fields.csv")
+        content = csv_impexp.read_bytes("ordered_content_blank_optional_fields.csv")
+        csv_impexp.import_ordered_sets(content)
+
+        locale = Locale.objects.get(language_code="en")
+        ordered_set = OrderedContentSet.objects.filter(
+            slug="test_set_blank", locale=locale
+        ).first()
+
+        assert ordered_set is not None
+        assert ordered_set.name == "Test Set Blank Fields"
+        pages = unwagtail(ordered_set.pages)
+        assert len(pages) == 2
+
+        # Both pages should have the same (empty) timing values
+        for i in range(2):
+            page = pages[i][1]
+            assert page["contentpage"].slug == "first_time_user"
+            assert page["time"] == ""
+            assert page["unit"] == ""
+            assert page["before_or_after"] == ""
+            assert page["contact_field"] == ""
 
     def test_changed_parentpage(self, csv_impexp: ImportExport) -> None:
         """
