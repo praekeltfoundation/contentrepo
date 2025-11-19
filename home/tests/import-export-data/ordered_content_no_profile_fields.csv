@@ -1,2 +1,2 @@
-name,profile_fields,page_slugs,time,unit,before_or_after,contact_field,slug,locale
+name,profile_fields,page_slugs,time,unit,before_or_after,contact_field,slug,language_code
 Test Set,,first_time_user,2,days,before,edd,test_set,en
