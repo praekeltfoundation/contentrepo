@@ -61,7 +61,7 @@ def filter_exports(srcs: ExpDicts, dsts: ExpDicts) -> ExpDictsPair:
         fsrcs.append(src)
         fdsts.append(dst)
     for ff in CSV_FILTER_FUNCS:
-        fsrcs = ff(fsrcs)
+        fsrcs = list(ff(fsrcs))
     return fsrcs, fdsts
 
 
