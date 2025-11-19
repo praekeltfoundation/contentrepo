@@ -24,7 +24,7 @@ class ExportRow:
     tags: str
     slug: str
     version: str
-    locale: str
+    language_code: str
     high_result_page: str | None
     high_inflection: str | None
     medium_result_page: str | None
@@ -84,7 +84,7 @@ class AssessmentExporter:
                     question_type=question.block_type,
                     slug=item.slug,
                     version=item.version,
-                    locale=item.locale.language_code,
+                    language_code=item.locale.language_code,
                     high_result_page=getattr(item.high_result_page, "slug", None),
                     high_inflection=getattr(item, "high_inflection", None),
                     medium_result_page=getattr(item.medium_result_page, "slug", None),
@@ -168,7 +168,7 @@ def _set_xlsx_styles(wb: Workbook, sheet: Worksheet) -> None:
         "tags": 110,
         "slug": 110,
         "version": 90,
-        "locale": 50,
+        "language_code": 50,
         "high_result_page": 110,
         "high_inflection": 110,
         "medium_result_page": 120,

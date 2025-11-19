@@ -72,7 +72,7 @@ class ContentImporter:
         if langname not in self.locale_map:
             codes = []
             for lang_code, lang_dn in get_content_languages().items():
-                if lang_dn == langname:
+                if lang_dn.lower() == langname.lower():
                     codes.append(lang_code)
             if not codes:
                 raise ImportException(f"Language not found: {langname}")
@@ -143,9 +143,10 @@ class ContentImporter:
     def _get_locale_from_row(self, row: "ContentRow") -> Locale:
         if row.language_code:
             try:
-                return Locale.objects.get(language_code=row.language_code)
+                return Locale.objects.get(language_code=row.language_code.lower())
             except Locale.DoesNotExist:
-                raise ImportException(f"Language not found: {row.language_code}")
+                # language_code might be a display name, try that
+                return self.locale_from_display_name(row.language_code)
         else:
             return self.locale_from_display_name(row.locale)
 
