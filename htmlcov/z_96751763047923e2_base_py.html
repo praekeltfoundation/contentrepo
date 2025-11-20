@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for contentrepo/settings/base.py: 87%</title>
+    <title>Coverage for contentrepo/settings/base.py: 88%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_a37fa487.css" type="text/css">
     <script src="coverage_html_cb_cadff66e.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>contentrepo/settings/base.py</b>:
-            <span class="pc_cov">87%</span>
+            <span class="pc_cov">88%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">79 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">69<span class="text"> run</span></button>
+            <span class="text">80 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">70<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">10<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_96751763047923e2_dev_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.3">coverage.py v7.11.3</a>,
-            created at 2025-11-20 07:13 +0000
+            created at 2025-11-20 09:48 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -347,11 +347,12 @@
     <p class="run"><span class="n"><a id="t265" href="#t265">265</a></span><span class="t"><span class="nam">EMAIL_SSL_CERTFILE</span> <span class="op">=</span> <span class="nam">env</span><span class="op">.</span><span class="nam">str</span><span class="op">(</span><span class="str">"EMAIL_SSL_CERTFILE"</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t266" href="#t266">266</a></span><span class="t"><span class="nam">EMAIL_SSL_KEYFILE</span> <span class="op">=</span> <span class="nam">env</span><span class="op">.</span><span class="nam">str</span><span class="op">(</span><span class="str">"EMAIL_SSL_KEYFILE"</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t267" href="#t267">267</a></span><span class="t"><span class="nam">EMAIL_TIMEOUT</span> <span class="op">=</span> <span class="nam">env</span><span class="op">.</span><span class="nam">int</span><span class="op">(</span><span class="str">"EMAIL_TIMEOUT"</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t268" href="#t268">268</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t269" href="#t269">269</a></span><span class="t"><span class="com"># Flag for turning on Standalone Whatsapp Templates, still in development</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t270" href="#t270">270</a></span><span class="t"><span class="nam">ENABLE_STANDALONE_WHATSAPP_TEMPLATES</span> <span class="op">=</span> <span class="nam">env</span><span class="op">.</span><span class="nam">bool</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t271" href="#t271">271</a></span><span class="t">    <span class="str">"ENABLE_STANDALONE_WHATSAPP_TEMPLATES"</span><span class="op">,</span> <span class="key">False</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t272" href="#t272">272</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t268" href="#t268">268</a></span><span class="t"><span class="nam">CONTAINER_IMAGE</span> <span class="op">=</span> <span class="nam">env</span><span class="op">.</span><span class="nam">str</span><span class="op">(</span><span class="str">"CONTAINER_IMAGE"</span><span class="op">,</span> <span class="str">"Unknown"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t269" href="#t269">269</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t270" href="#t270">270</a></span><span class="t"><span class="com"># Flag for turning on Standalone Whatsapp Templates, still in development</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t271" href="#t271">271</a></span><span class="t"><span class="nam">ENABLE_STANDALONE_WHATSAPP_TEMPLATES</span> <span class="op">=</span> <span class="nam">env</span><span class="op">.</span><span class="nam">bool</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t272" href="#t272">272</a></span><span class="t">    <span class="str">"ENABLE_STANDALONE_WHATSAPP_TEMPLATES"</span><span class="op">,</span> <span class="key">False</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t273" href="#t273">273</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -361,7 +362,7 @@
             <a class="nav" href="z_96751763047923e2_dev_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.3">coverage.py v7.11.3</a>,
-            created at 2025-11-20 07:13 +0000
+            created at 2025-11-20 09:48 +0000
         </p>
     </div>
 </footer>
