@@ -5,7 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-<!--
 ## Unreleased
 ### Added
 - Use buttons for Whatsapp Templates instead of quick replies
@@ -19,14 +18,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added migration to migrate ContentPage templates to standalone templates
 - Added '/api/v3/indexes' endpoint
 - Added support for 'child_of' param filter on the 'api/v3/pages' endpoint
+- Standalone template API endpoint
+- CMS version display in admin UI footer
+- Container image hash in CMS version display
+- KB article system for documentation
+- KB2: Import/Export File Structure Reference
+- Import/export guide for ContentPages and WhatsAppTemplates
+- Footer field for WhatsApp messages
+- Group auto-populated fields in WhatsApp Template admin
+- Improved variable validation for WhatsApp templates
+- Single brace variable validation
+- Improved multiple parents error message
+
+### Changed
+- Standardize locale/language_code handling with flexible import support
+- Convert WhatsApp template category to uppercase on import
+- Footer field changed to empty string default
+- Refactored param filtering
+- Cleanup whatsapp templates
+- Moved wiki documentation
+- Missing fields added back in serializer representation
+
 ### Removed
 - Removed deprecated field 'next_prompt'
+
 ### Fixed
 - Resubmit templates when button titles change
 - Fix slug not populated in wa template export
 - Fix export issue for contentpages because of Standalone Templates
+- Ordered content export bugs and standardized header format
+- Ordered content import validation for blank optional fields
+- WhatsApp template import missing title and enable setting
+- Silent validation errors in WhatsApp template import
+- WhatsAppTemplate chooser search
+- Mandatory button validation
+
 ### Security
--->
 
 ## v1.5.0 - 2025-03-25
 ### Added
