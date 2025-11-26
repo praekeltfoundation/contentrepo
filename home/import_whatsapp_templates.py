@@ -97,8 +97,8 @@ class WhatsAppTemplateImporter:
             )
         self.seen_slugs.add(page_id)
 
-        # Convert category to uppercase
-        category = row.category.upper()
+        # Convert category to uppercase and strip whitespace
+        category = row.category.strip().upper()
 
         if category not in WhatsAppTemplate.Category.values:
             raise ImportException(

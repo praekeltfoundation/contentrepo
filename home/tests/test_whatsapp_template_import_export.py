@@ -691,6 +691,18 @@ class TestImportExport:
         template = WhatsAppTemplate.objects.get(slug="test-lowercase-category")
         assert template.category == "MARKETING"
 
+    def test_category_with_whitespace_import(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a WhatsApp template with whitespace around category should work
+        as the importer strips whitespace and converts to uppercase.
+        """
+        csv_impexp.import_file("whatsapp-template-category-with-whitespace.csv")
+
+        from home.models import WhatsAppTemplate
+
+        template = WhatsAppTemplate.objects.get(slug="test-category-whitespace")
+        assert template.category == "MARKETING"
+
     def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
         """
         Importing a WhatsApp template with invalid variables should raise an
