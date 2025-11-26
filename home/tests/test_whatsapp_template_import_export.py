@@ -676,8 +676,20 @@ class TestImportExport:
         assert e.value.row_num == 2
 
         assert e.value.message == [
-            "Validation error: whatsapp_template_category - Select a valid choice. Marketing is not one of the available choices."
+            "Validation error: whatsapp_template_category - Select a valid choice. InvalidCategory is not one of the available choices."
         ]
+
+    def test_lowercase_category_import(self, csv_impexp: ImportExport) -> None:
+        """
+        Importing a WhatsApp template with lowercase category should work
+        as the importer converts category to uppercase automatically.
+        """
+        csv_impexp.import_file("whatsapp-template-lowercase-category.csv")
+
+        from home.models import WhatsAppTemplate
+
+        template = WhatsAppTemplate.objects.get(slug="test-lowercase-category")
+        assert template.category == "MARKETING"
 
     def test_invalid_wa_template_vars(self, csv_impexp: ImportExport) -> None:
         """

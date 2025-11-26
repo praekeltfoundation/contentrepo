@@ -97,12 +97,15 @@ class WhatsAppTemplateImporter:
             )
         self.seen_slugs.add(page_id)
 
-        if row.category not in WhatsAppTemplate.Category.values:
+        # Convert category to uppercase
+        category = row.category.upper()
+
+        if category not in WhatsAppTemplate.Category.values:
             raise ImportException(
                 f"Validation error: whatsapp_template_category - Select a valid choice. {row.category} is not one of the available choices."
             )
 
-        template = self._update_or_create_whatsapp_template(row, locale)
+        template = self._update_or_create_whatsapp_template(row, locale, category)
         template.full_clean()
         template.save()
 
@@ -115,11 +118,11 @@ class WhatsAppTemplateImporter:
         template.save_revision().publish()
 
     def _update_or_create_whatsapp_template(
-        self, row: "ContentRow", locale: Locale
+        self, row: "ContentRow", locale: Locale, category: str
     ) -> WhatsAppTemplate:
         try:
             template = WhatsAppTemplate.objects.get(slug=row.slug, locale=locale)
-            template.category = row.category
+            template.category = category
             template.message = row.message
             template.example_values = [
                 ("example_values", v) for v in row.example_values
@@ -135,7 +138,7 @@ class WhatsAppTemplateImporter:
         except WhatsAppTemplate.DoesNotExist:
             return WhatsAppTemplate(
                 slug=row.slug,
-                category=row.category,
+                category=category,
                 locale=locale,
                 message=row.message,
                 example_values=[("example_values", v) for v in row.example_values],
