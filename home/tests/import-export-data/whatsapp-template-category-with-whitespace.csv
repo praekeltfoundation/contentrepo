@@ -1,0 +1,2 @@
+slug,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
+test-category-whitespace, marketing ,"[{""type"": ""next_message"", ""title"": ""Next"", ""slug"": """"}]",en,,Test message with whitespace in category,,,,

@@ -1,0 +1,2 @@
+slug,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
+test-lowercase-category,marketing,"[{""type"": ""next_message"", ""title"": ""Next"", ""slug"": """"}]",en,,Test message with lowercase category,,,,

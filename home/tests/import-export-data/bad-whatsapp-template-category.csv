@@ -1,2 +1,2 @@
-name,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
-Bad Test Template Simple,Marketing,"[{""type"": ""next_message"", ""title"": ""Sure, remind me"", ""slug"": """"}, {""type"": ""next_message"", ""title"": ""No, go to main menu"", ""slug"": """"}]",en,,Message,,,,
+slug,category,buttons,locale,image,message,example_values,submission_name,submission_status,submission_result
+bad-test-template-simple,InvalidCategory,"[{""type"": ""next_message"", ""title"": ""Sure, remind me"", ""slug"": """"}, {""type"": ""next_message"", ""title"": ""No, go to main menu"", ""slug"": """"}]",en,,Message,,,,
