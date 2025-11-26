@@ -152,7 +152,7 @@
 | home/templatetags/container\_tags.py                                                         |        9 |        1 |     89% |        12 |
 | home/templatetags/version\_tags.py                                                           |        6 |        0 |    100% |           |
 | home/views.py                                                                                |      380 |      158 |     58% |75, 109, 113-114, 181, 219-223, 228-230, 233-271, 276-278, 281-308, 313-314, 317-338, 355-374, 381-394, 408-431, 438-448, 463-483, 490-502, 509-511, 514-533, 550-570, 577-589, 645, 649-654, 678-686 |
-| home/wagtail\_hooks.py                                                                       |      144 |        6 |     96% |100, 165-166, 169, 175, 367 |
+| home/wagtail\_hooks.py                                                                       |      144 |        6 |     96% |100, 165-166, 169, 175, 372 |
 | home/whatsapp.py                                                                             |      229 |        0 |    100% |           |
 | home/whatsapp\_template\_import\_export.py                                                   |       19 |        0 |    100% |           |
 | home/xlsx\_helpers.py                                                                        |        5 |        0 |    100% |           |
