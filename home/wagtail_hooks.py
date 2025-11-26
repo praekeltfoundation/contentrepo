@@ -304,11 +304,16 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
                 FieldPanel("buttons"),
                 FieldPanel("locale"),
                 FieldPanel("example_values"),
+            ],
+            heading="Whatsapp Template",
+        ),
+        MultiFieldPanel(
+            [
                 FieldPanel("submission_name", read_only=True),
                 FieldPanel("submission_status", read_only=True),
                 FieldPanel("submission_result", read_only=True),
             ],
-            heading="Whatsapp Template",
+            heading="Meta Submission Status (read-only)",
         ),
     ]
 
