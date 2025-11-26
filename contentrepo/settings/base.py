@@ -265,6 +265,7 @@ EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", False)
 EMAIL_SSL_CERTFILE = env.str("EMAIL_SSL_CERTFILE", None)
 EMAIL_SSL_KEYFILE = env.str("EMAIL_SSL_KEYFILE", None)
 EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", None)
+CONTAINER_IMAGE = env.str("CONTAINER_IMAGE", "Unknown")
 
 # Flag for turning on Standalone Whatsapp Templates, still in development
 ENABLE_STANDALONE_WHATSAPP_TEMPLATES = env.bool(
