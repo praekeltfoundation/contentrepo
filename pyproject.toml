@@ -41,7 +41,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.10"
 wagtail = "~5.2.6"  # Latest LTS
-django = "~4.2.25"  # Latest LTS
+django = "~4.2.27"  # Latest LTS
 dj-database-url = "^2.1.0"
 psycopg2-binary = "^2.9.9"
 django-environ = "^0.11.2"
