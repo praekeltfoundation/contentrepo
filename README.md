@@ -156,7 +156,7 @@
 | home/whatsapp.py                                                                             |      229 |        0 |    100% |           |
 | home/whatsapp\_template\_import\_export.py                                                   |       19 |        0 |    100% |           |
 | home/xlsx\_helpers.py                                                                        |        5 |        0 |    100% |           |
-|                                                                                    **TOTAL** | **5370** |  **472** | **91%** |           |
+| **TOTAL**                                                                                    | **5370** |  **472** | **91%** |           |
 
 
 ## Setup coverage badge
