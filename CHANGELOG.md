@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!--
 ## Unreleased
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+### Security
+-->
+
+## v1.6.0 - 2025-12-16
+### Added
 - Use buttons for Whatsapp Templates instead of quick replies
 - Allow pages to link to Whatsapp templates
 - Updated standalone template import / export and pages import / export to link to templates
@@ -55,7 +67,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mandatory button validation
 
 ### Security
--->
+Updated django from 4.2.25 to 4.2.27
+Updated urllib3 from 2.5.0 to 2.6.0
+
 
 ## v1.5.0 - 2025-03-25
 ### Added
