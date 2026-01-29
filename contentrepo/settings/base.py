@@ -153,6 +153,7 @@ MEDIA_URL = "/media/"
 WAGTAIL_SITE_NAME = "contentrepo"
 WAGTAIL_I18N_ENABLED = True
 WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
+    ("af", "Afrikaans"),
     ("ar", "Arabic"),
     ("id", "Bahasa"),
     ("bn", "Bangla"),
@@ -165,14 +166,22 @@ WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
     ("it", "Italian"),
     ("ku", "Kurdish"),
     ("lv", "Latvian"),
+    ("nr", "isiNdebele"),
     ("ps", "Pashto"),
     ("pl", "Polish"),
     ("pt", "Portuguese"),
     ("ru", "Russian"),
+    ("nso", "Sesotho sa Leboa / Pedi"),
+    ("st", "Sesotho"),
     ("so", "Somali"),
     ("es", "Spanish"),
+    ("ss", "siSwati"),
     ("sw", "Swahili"),
+    ("tn", "Setswana"),
+    ("ts", "Xitsonga"),
     ("ur", "Urdu"),
+    ("ve", "Tshivenda"),
+    ("xh", "isiXhosa"),
 ]
 
 # Base URL to use when referring to full URLs
