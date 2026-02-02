@@ -182,6 +182,7 @@ WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
     ("ur", "Urdu"),
     ("ve", "Tshivenda"),
     ("xh", "isiXhosa"),
+    ("zu", "isiZulu"),
 ]
 
 # Base URL to use when referring to full URLs
