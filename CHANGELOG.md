@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!--
 ## Unreleased
 ### Added
+- Added additional languages for translations (Afrikaans, isiNdebele, Pedi, Sesotho, siSwati, Setswana, Xitsonga, Tshivenda, isiXhosa, isiZulu)
 
 ### Changed
 
