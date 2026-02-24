@@ -1866,7 +1866,7 @@ class TestImportExport:
 
     def test_button_max_length(self, csv_impexp: ImportExport) -> None:
         """
-        Import a page that doesn't have language code set
+        Import a page that has a button with more than 20 characters, it should return an error message indicating the problem
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("button_max_length.csv")
@@ -1877,7 +1877,7 @@ class TestImportExport:
 
     def test_button_message_max_length(self, csv_impexp: ImportExport) -> None:
         """
-        Import a page that doesn't have language code set
+        Import a page that has a button message with more than 1024 characters, it should return an error message indicating the problem
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("button_message_max_length.csv")
