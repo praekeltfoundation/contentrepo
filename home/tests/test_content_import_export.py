@@ -1864,12 +1864,23 @@ class TestImportExport:
         src, dst = csv_impexp.csvs2dicts(new_export_content, content)
         assert dst == src
 
-    def test_button_max_length(self, csv_impexp: ImportExport) -> None:
+    def test_button_next_message_max_length(self, csv_impexp: ImportExport) -> None:
         """
-        Import a page that has a button with more than 20 characters, it should return an error message indicating the problem
+        Import a page that has a next message button with more than 20 characters, it should return an error message indicating the problem
         """
         with pytest.raises(ImportException) as e:
-            csv_impexp.import_file("button_max_length.csv")
+            csv_impexp.import_file("button_next_message_max_length.csv")
+        assert e.value.row_num == 3
+        assert e.value.message == [
+            "Validation error: buttons - Ensure this value has at most 20 characters (it has 45)."
+        ]
+
+    def test_button_go_to_page_max_length(self, csv_impexp: ImportExport) -> None:
+        """
+        Import a page that has a go_to_page button with more than 20 characters, it should return an error message indicating the problem
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("button_go_to_page_max_length.csv")
         assert e.value.row_num == 4
         assert e.value.message == [
             "Validation error: buttons - Ensure this value has at most 20 characters (it has 47)."
