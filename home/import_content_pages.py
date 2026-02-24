@@ -236,6 +236,7 @@ class ContentImporter:
         self, items_dict: dict[PageId, dict[int, list[dict[str, Any]]]], item_type: str
     ) -> None:
         for (slug, locale), messages in items_dict.items():
+            row_num = self.shadow_pages[(slug, locale)].row_num
             try:
                 page = ContentPage.objects.get(slug=slug, locale=locale)
             except ContentPage.DoesNotExist:
@@ -261,6 +262,8 @@ class ContentImporter:
                         item["index"],
                         ("go_to_page", {"page": related_page, "title": title}),
                     )
+            edit_handler = page.edit_handler.bind_to_model(ContentPage)
+            validate_using_form(edit_handler, page, row_num)
             page.save()
 
     def parse_file(self) -> list["ContentRow"]:
