@@ -1870,6 +1870,17 @@ class TestImportExport:
         """
         with pytest.raises(ImportException) as e:
             csv_impexp.import_file("button_max_length.csv")
+        assert e.value.row_num == 4
+        assert e.value.message == [
+            "Validation error: buttons - Ensure this value has at most 20 characters (it has 47)."
+        ]
+
+    def test_button_message_max_length(self, csv_impexp: ImportExport) -> None:
+        """
+        Import a page that doesn't have language code set
+        """
+        with pytest.raises(ImportException) as e:
+            csv_impexp.import_file("button_message_max_length.csv")
         assert e.value.row_num == 3
         assert e.value.message == [
             "Validation error: message - A WhatsApp message with interactive items cannot be longer than 1024 characters, your message is 1075 characters long"
