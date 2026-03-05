@@ -9,7 +9,7 @@ import django_filters
 import markdown
 from django.contrib import messages
 from django.db import connection as db_connection
-from django.db.models import Count, F
+from django.db.models import Count, F, Q
 from django.db.models.functions import TruncMonth
 from django.forms import MultiWidget
 from django.forms.widgets import NumberInput
@@ -87,7 +87,13 @@ class CustomIndexViewWhatsAppTemplate(
 
 
 class CustomIndexViewOrdered(SpreadsheetExportMixinOrdered, IndexViewOrdered):
-    pass
+    def search_queryset(self, queryset):
+        if self.search_query:
+            return queryset.filter(
+                Q(name__icontains=self.search_query)
+                | Q(profile_fields__icontains=self.search_query)
+            )
+        return queryset
 
 
 class WhatsAppTemplateChooseView(ChooseView):
