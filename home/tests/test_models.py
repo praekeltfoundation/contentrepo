@@ -404,6 +404,61 @@ class OrderedContentSetTests(TestCase):
 
         assert ordered_content_set.status() == "In Moderation"
 
+    def test_search_fields_include_profile_fields(self) -> None:
+        """
+        OrderedContentSet search config should index concrete fields used by the
+        snippets listing search.
+        """
+        search_fields = {
+            (search_field.__class__.__name__, search_field.field_name)
+            for search_field in OrderedContentSet.search_fields
+        }
+
+        self.assertSetEqual(
+            search_fields,
+            {
+                ("SearchField", "name"),
+                ("AutocompleteField", "name"),
+                ("SearchField", "profile_fields"),
+                ("AutocompleteField", "profile_fields"),
+            },
+        )
+
+    def test_search_fields_do_not_use_profile_methods(self) -> None:
+        """
+        Search indexing must not use model methods because DB-backed search expects
+        concrete fields.
+        """
+        indexed_names = {
+            search_field.field_name for search_field in OrderedContentSet.search_fields
+        }
+        self.assertFalse({"get_gender", "get_age", "get_relationship"} & indexed_names)
+
+    def test_admin_search_returns_only_matching_ordered_content_set(self) -> None:
+        """
+        Admin snippets search should return only OrderedContentSet instances matching
+        the search query.
+        """
+        User.objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="pass",  # noqa: S106
+        )
+        self.client.login(username="admin", password="pass")  # noqa: S106
+
+        locale = Locale.objects.get(language_code="en")
+        OrderedContentSet.objects.create(name="Hello", slug="hello", locale=locale)
+        OrderedContentSet.objects.create(name="Goodbye", slug="goodbye", locale=locale)
+
+        response = self.client.get(
+            "/admin/snippets/home/orderedcontentset/", {"q": "He"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Hello", content)
+        self.assertNotIn("Goodbye", content)
+
 
 class WhatsappBlockTests(TestCase):
     def create_message_value(

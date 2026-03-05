@@ -1104,9 +1104,9 @@ class OrderedContentSet(
     )
     search_fields = [
         index.SearchField("name"),
-        index.SearchField("get_gender"),
-        index.SearchField("get_age"),
-        index.SearchField("get_relationship"),
+        index.AutocompleteField("name"),
+        index.SearchField("profile_fields"),
+        index.AutocompleteField("profile_fields"),
     ]
     pages = StreamField(
         [
