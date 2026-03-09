@@ -264,7 +264,6 @@ class OrderedContentSetViewSet(SnippetViewSet):
     export_headings = {"language_code": "Locale"}
 
     list_filter = ("locale",)
-    search_fields = ("name", "profile_fields")
 
 
 class WhatsAppTemplateAdmin(SnippetViewSet):
