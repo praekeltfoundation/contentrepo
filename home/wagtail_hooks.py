@@ -287,7 +287,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
         "slug",
         "category",
         "message",
-        "locale__language_code",
+        "locale",
     )
 
     index_view_class = CustomIndexViewWhatsAppTemplate

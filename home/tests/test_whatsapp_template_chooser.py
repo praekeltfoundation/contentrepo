@@ -59,7 +59,8 @@ class TestWhatsAppTemplateChooser:
     ) -> None:
         """Test that searching by slug returns matching templates."""
         response = admin_client.get(
-            "/admin/snippets/choose/home/whatsapptemplate/", {"q": "template-1"}
+            "/admin/snippets/choose/home/whatsapptemplate/",
+            {"q": "template-1-marketing"},
         )
         assert response.status_code == 200
         content = response.content.decode()
