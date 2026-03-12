@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix go_to_page item validation
 - Fix Ordered Content Set search
+- Fix WhatsApp Template search
 
 ### Security
 -->

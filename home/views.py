@@ -7,6 +7,7 @@ from typing import Any
 
 import django_filters
 import markdown
+from django.conf import settings
 from django.contrib import messages
 from django.db import connection as db_connection
 from django.db.models import Count, F, Q
@@ -83,7 +84,26 @@ class CustomIndexViewAssessment(SpreadsheetExportMixinAssessment, IndexViewAsses
 class CustomIndexViewWhatsAppTemplate(
     SpreadsheetExportMixinWhatsAppTemplate, IndexViewWhatsAppTemplate
 ):
-    pass
+    def search_queryset(self, queryset):
+        if not self.search_query:
+            return queryset
+
+        query = self.search_query.strip()
+        lowered_query = query.lower()
+
+        matching_language_codes = [
+            code
+            for code, language_name in settings.LANGUAGES
+            if lowered_query in code.lower() or lowered_query in language_name.lower()
+        ]
+
+        return queryset.filter(
+            Q(slug__icontains=query)
+            | Q(category__icontains=query)
+            | Q(message__icontains=query)
+            | Q(locale__language_code__icontains=query)
+            | Q(locale__language_code__in=matching_language_codes)
+        )
 
 
 class CustomIndexViewOrdered(SpreadsheetExportMixinOrdered, IndexViewOrdered):

@@ -34,6 +34,7 @@ from home.models import (
     WhatsappBlock,
     WhatsAppTemplate,
 )
+from home.views import CustomIndexViewWhatsAppTemplate
 from home.whatsapp import submit_to_meta_action
 
 from .page_builder import PageBtn, PageBuilder, WABlk, WABody
@@ -624,6 +625,53 @@ class SMSBlockTests(TestCase):
 
 @pytest.mark.django_db
 class WhatsAppTemplateTests(TestCase):
+    def test_search_queryset_matches_locale_queries(self) -> None:
+        """
+        WhatsAppTemplate snippets search should match locale code and language
+        name fragments.
+        """
+        en_locale = Locale.objects.get(language_code="en")
+        pt_locale = Locale.objects.create(language_code="pt")
+        WhatsAppTemplate.objects.create(
+            slug="english-template",
+            message="English template",
+            category=WhatsAppTemplate.Category.UTILITY,
+            locale=en_locale,
+        )
+        WhatsAppTemplate.objects.create(
+            slug="portuguese-template",
+            message="Portuguese template",
+            category=WhatsAppTemplate.Category.UTILITY,
+            locale=pt_locale,
+        )
+
+        view = CustomIndexViewWhatsAppTemplate()
+
+        view.search_query = "en"
+        en_results = set(
+            view.search_queryset(WhatsAppTemplate.objects.all()).values_list(
+                "slug", flat=True
+            )
+        )
+        self.assertIn("english-template", en_results)
+        self.assertNotIn("portuguese-template", en_results)
+
+        view.search_query = "pt"
+        pt_results = set(
+            view.search_queryset(WhatsAppTemplate.objects.all()).values_list(
+                "slug", flat=True
+            )
+        )
+        self.assertIn("portuguese-template", pt_results)
+
+        view.search_query = "po"
+        po_results = set(
+            view.search_queryset(WhatsAppTemplate.objects.all()).values_list(
+                "slug", flat=True
+            )
+        )
+        self.assertIn("portuguese-template", po_results)
+
     @override_settings(WHATSAPP_ALLOW_NAMED_VARIABLES=False)
     def test_whitespace_in_positional_variables_are_invalid(self) -> None:
         """

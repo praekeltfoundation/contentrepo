@@ -1585,10 +1585,13 @@ class WhatsAppTemplate(
         index.SearchField("category"),
         index.SearchField("message"),
         index.AutocompleteField("message"),
+        index.SearchField("locale"),
+        index.AutocompleteField("locale"),
         index.RelatedFields(
             "locale",
             [
                 index.SearchField("language_code"),
+                index.AutocompleteField("language_code"),
             ],
         ),
     ]
