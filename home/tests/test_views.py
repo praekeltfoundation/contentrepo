@@ -279,6 +279,31 @@ class TestEditPageView:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_explorer_search_on_content_page_parent(self, admin_client):
+        """
+        Explorer search should work on nested ContentPage parents.
+        """
+        home_page = HomePage.objects.first()
+        main_menu = home_page.get_children().filter(slug="main-menu").first()
+        if not main_menu:
+            main_menu = PageBuilder.build_cpi(home_page, "main-menu", "Main Menu")
+
+        parent = PageBuilder.build_cp(
+            parent=main_menu,
+            slug="parent-page",
+            title="Parent Page",
+            bodies=[WABody("Parent", [WABlk("Parent body")])],
+        )
+        PageBuilder.build_cp(
+            parent=parent,
+            slug="child-page",
+            title="Child Searchable",
+            bodies=[WABody("Child", [WABlk("Child body")])],
+        )
+
+        response = admin_client.get(f"/admin/pages/{parent.id}/", {"q": "child"})
+        assert response.status_code == status.HTTP_200_OK
+
     def test_contains_options_for_submission(self, admin_client):
         """
         The edit page has the option to Publish, Unpublish, Submit to Moderators approval or Save draft
