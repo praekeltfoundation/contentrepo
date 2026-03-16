@@ -777,9 +777,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                     return WhatsAppTemplate.objects.get(id=block["value"])
         return None
 
-    def get_descendants(self, inclusive: bool = False) -> Any:
-        return ContentPage.objects.descendant_of(self, inclusive)
-
     def _calc_avg_rating(self, ratings: Any) -> str:
         if ratings:
             helpful = 0
