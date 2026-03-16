@@ -777,11 +777,6 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                     return WhatsAppTemplate.objects.get(id=block["value"])
         return None
 
-    def get_descendants(self, inclusive: bool = False) -> Any:
-        # Keep Wagtail's default PageQuerySet behavior; narrowing this to
-        # ContentPage can break explorer search queryset combination.
-        return super().get_descendants(inclusive=inclusive)
-
     def _calc_avg_rating(self, ratings: Any) -> str:
         if ratings:
             helpful = 0
