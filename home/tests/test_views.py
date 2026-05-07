@@ -106,6 +106,27 @@ class TestPageRatings:
             "revision": page.get_latest_revision().id,
         }
 
+    def test_page_rating_uses_live_revision_when_draft_exists(self, api_client):
+        page = self.create_content_page()
+        live_revision = page.live_revision
+
+        draft = page.get_latest_revision().as_object()
+        draft.title = "Draft title"
+        draft_revision = draft.save_revision()
+
+        response = api_client.post(
+            "/api/v2/custom/ratings/",
+            {
+                "page": page.id,
+                "helpful": True,
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["revision"] == live_revision.id
+        assert response.json()["revision"] != draft_revision.id
+
     def test_page_rating_required_fields(self, api_client):
         """
         Ensure that the helpful, page and revision fields are required
@@ -216,6 +237,22 @@ class TestPageViews:
             "platform": "web",
             "message": None,
         }
+
+    def test_page_view_uses_live_revision_when_draft_exists(self, api_client):
+        page = self.create_content_page()
+        live_revision = page.live_revision
+
+        draft = page.get_latest_revision().as_object()
+        draft.title = "Draft title"
+        draft_revision = draft.save_revision()
+
+        response = api_client.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
+
+        assert response.status_code == status.HTTP_200_OK
+        page_view = PageView.objects.latest("id")
+        assert page_view.page_id == page.id
+        assert page_view.revision_id == live_revision.id
+        assert page_view.revision_id != draft_revision.id
 
 
 @pytest.mark.django_db

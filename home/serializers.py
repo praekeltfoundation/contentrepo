@@ -140,6 +140,15 @@ def format_whatsapp_template_message(message_index, content_page) -> dict[str, A
     return text
 
 
+def get_content_page_response_revision(page: ContentPage, request) -> int | None:
+    if request.GET.get("qa", "").lower() == "true":
+        revision = page.get_latest_revision()
+    else:
+        revision = page.get_live_revision_or_latest()
+
+    return revision.id if revision else None
+
+
 def format_whatsapp_message(message_index, content_page, platform):
     text = content_page.whatsapp_body._raw_data[message_index]
 
@@ -239,7 +248,10 @@ def body_field_representation(page: Any, request: Any) -> Any:
                                 "text",
                                 format_whatsapp_template_message(message, page),
                             ),
-                            ("revision", page.get_latest_revision().id),
+                            (
+                                "revision",
+                                get_content_page_response_revision(page, request),
+                            ),
                             ("is_whatsapp_template", True),
                             ("whatsapp_template_name", template.submission_name),
                             (
@@ -265,20 +277,21 @@ def body_field_representation(page: Any, request: Any) -> Any:
                             and "value" in formatted_message
                             and "message" in formatted_message["value"]
                         ):
-                            formatted_message["value"][
-                                "message"
-                            ] = latest_revision.whatsapp_body.raw_data[message][
-                                "value"
-                            ][
-                                "message"
-                            ]  # Your modified message
+                            formatted_message["value"]["message"] = (
+                                latest_revision.whatsapp_body.raw_data[
+                                    message
+                                ]["value"]["message"]
+                            )  # Your modified message
                     api_body.update(
                         [
                             (
                                 "text",
                                 formatted_message,
                             ),
-                            ("revision", page.get_latest_revision().id),
+                            (
+                                "revision",
+                                get_content_page_response_revision(page, request),
+                            ),
                             ("is_whatsapp_template", False),
                             ("whatsapp_template_name", ""),
                             ("whatsapp_template_category", "UTILITY"),

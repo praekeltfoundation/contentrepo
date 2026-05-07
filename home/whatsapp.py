@@ -351,11 +351,12 @@ def create_standalone_template_header_components(
 
 
 def submit_to_meta_action(template: "WhatsAppTemplate | Revision") -> None:
-    is_revision = isinstance(template, Revision)
-    if is_revision:
-        template = template.as_object()
+    revision = template if isinstance(template, Revision) else None
+    is_revision = revision is not None
+    if revision:
+        template = revision.as_object()
 
-    template_name = template.create_whatsapp_template_name()
+    template_name = template.create_whatsapp_template_name(revision=revision)
     try:
         response_json = create_standalone_whatsapp_template(
             name=template_name,

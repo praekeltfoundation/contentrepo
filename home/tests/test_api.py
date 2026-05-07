@@ -503,6 +503,24 @@ class TestContentPageAPI:
         body = content["body"]["text"]["value"]["message"]
         assert body == "*Default whatsapp Content 1* 🏥"
 
+    def test_whatsapp_response_uses_live_revision_when_draft_exists(
+        self, uclient: Any
+    ) -> None:
+        page = self.create_content_page()
+        live_revision = page.live_revision
+
+        draft = page.get_latest_revision().as_object()
+        draft.whatsapp_body.raw_data[0]["value"]["message"] = "Draft whatsapp content"
+        draft_revision = draft.save_revision()
+
+        response = uclient.get(f"/api/v2/pages/{page.id}/?whatsapp=True")
+        content = response.json()
+
+        assert content["body"]["revision"] == live_revision.id
+        assert content["body"]["revision"] != draft_revision.id
+        body = content["body"]["text"]["value"]["message"]
+        assert body == "*Default whatsapp Content 1* 🏥"
+
     @pytest.mark.parametrize("platform", ALL_PLATFORMS_EXCL_WHATSAPP)
     def test_no_message_number_specified(self, uclient, platform):
         """

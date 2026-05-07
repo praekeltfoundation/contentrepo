@@ -201,7 +201,6 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
         return self.process_detail_view(request, slug=slug)
 
     def listing_view(self, request, *args, **kwargs):
-
         channel = self.validate_channel()
         queryset = self.get_queryset()
         if channel:
