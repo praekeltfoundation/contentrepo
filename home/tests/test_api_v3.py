@@ -899,9 +899,9 @@ class TestContentPageAPIV3:
             publish=True, title="Content Page 1", body_type=channel
         )
 
-        page.whatsapp_body[0].value["message"] = (
-            "Message changed in unpublished revision"
-        )
+        page.whatsapp_body[0].value[
+            "message"
+        ] = "Message changed in unpublished revision"
         page.save_revision()
 
         url = f"/api/v3/pages/?slug=content-page-1&channel={channel}&return_drafts=True"
