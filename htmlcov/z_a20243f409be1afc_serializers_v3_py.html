@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for home/serializers_v3.py: 95%</title>
+    <title>Coverage for home/serializers_v3.py: 96%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_9ff733b0.css" type="text/css">
     <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>home&#8201;/&#8201;serializers_v3.py</b>:
-            <span class="pc_cov">95%</span>
+            <span class="pc_cov">96%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">155 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">148<span class="text"> run</span></button>
+            <span class="text">162 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">155<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">7<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_29d2a0ba3c071515_container_tags_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
-            created at 2026-03-16 09:16 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-05-11 14:30 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -329,7 +329,7 @@
     <p class="run"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t"><span class="key">class</span> <span class="nam">WhatsAppTemplateSerializer</span><span class="op">(</span><span class="nam">serializers</span><span class="op">.</span><span class="nam">ModelSerializer</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">    <span class="nam">slug</span> <span class="op">=</span> <span class="nam">serializers</span><span class="op">.</span><span class="nam">CharField</span><span class="op">(</span><span class="nam">default</span><span class="op">=</span><span class="str">"default-slug"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t">    <span class="nam">locale</span> <span class="op">=</span> <span class="nam">serializers</span><span class="op">.</span><span class="nam">CharField</span><span class="op">(</span><span class="nam">source</span><span class="op">=</span><span class="str">"locale.language_code"</span><span class="op">,</span> <span class="nam">default</span><span class="op">=</span><span class="str">"en"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">    <span class="nam">revision</span> <span class="op">=</span> <span class="nam">serializers</span><span class="op">.</span><span class="nam">IntegerField</span><span class="op">(</span><span class="nam">source</span><span class="op">=</span><span class="str">"get_latest_revision.id"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">    <span class="nam">revision</span> <span class="op">=</span> <span class="nam">serializers</span><span class="op">.</span><span class="nam">SerializerMethodField</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">    <span class="nam">buttons</span> <span class="op">=</span> <span class="nam">serializers</span><span class="op">.</span><span class="nam">SerializerMethodField</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t252" href="#t252">252</a></span><span class="t">    <span class="nam">example_values</span> <span class="op">=</span> <span class="nam">serializers</span><span class="op">.</span><span class="nam">SerializerMethodField</span><span class="op">(</span><span class="nam">default</span><span class="op">=</span><span class="op">[</span><span class="str">"Example Value 1"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t253" href="#t253">253</a></span><span class="t">    <span class="nam">detail_url</span> <span class="op">=</span> <span class="nam">serializers</span><span class="op">.</span><span class="nam">SerializerMethodField</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -362,14 +362,24 @@
     <p class="pln"><span class="n"><a id="t280" href="#t280">280</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t281" href="#t281">281</a></span><span class="t">        <span class="key">return</span> <span class="nam">super</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">to_representation</span><span class="op">(</span><span class="nam">instance</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t282" href="#t282">282</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t283" href="#t283">283</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_buttons</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">obj</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t284" href="#t284">284</a></span><span class="t">        <span class="key">return</span> <span class="nam">format_buttons_and_list_items</span><span class="op">(</span><span class="nam">obj</span><span class="op">.</span><span class="nam">buttons</span><span class="op">.</span><span class="nam">raw_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t285" href="#t285">285</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t286" href="#t286">286</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_example_values</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">obj</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t287" href="#t287">287</a></span><span class="t">        <span class="key">return</span> <span class="nam">format_example_values</span><span class="op">(</span><span class="nam">obj</span><span class="op">.</span><span class="nam">example_values</span><span class="op">.</span><span class="nam">raw_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t288" href="#t288">288</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t289" href="#t289">289</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_detail_url</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">obj</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t290" href="#t290">290</a></span><span class="t">        <span class="key">return</span> <span class="nam">format_detail_url</span><span class="op">(</span><span class="nam">obj</span><span class="op">=</span><span class="nam">obj</span><span class="op">,</span> <span class="nam">request</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">context</span><span class="op">[</span><span class="str">"request"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t283" href="#t283">283</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_revision</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">obj</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t284" href="#t284">284</a></span><span class="t">        <span class="nam">request</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">context</span><span class="op">[</span><span class="str">"request"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t285" href="#t285">285</a></span><span class="t">        <span class="nam">return_drafts</span> <span class="op">=</span> <span class="nam">request</span><span class="op">.</span><span class="nam">query_params</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"return_drafts"</span><span class="op">,</span> <span class="str">""</span><span class="op">)</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span> <span class="op">==</span> <span class="str">"true"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t286" href="#t286">286</a></span><span class="t">        <span class="key">if</span> <span class="nam">return_drafts</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t287" href="#t287">287</a></span><span class="t">            <span class="nam">revision</span> <span class="op">=</span> <span class="nam">obj</span><span class="op">.</span><span class="nam">get_latest_revision</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t288" href="#t288">288</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t289" href="#t289">289</a></span><span class="t">            <span class="nam">revision</span> <span class="op">=</span> <span class="nam">obj</span><span class="op">.</span><span class="nam">get_live_revision_or_latest</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t290" href="#t290">290</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t291" href="#t291">291</a></span><span class="t">        <span class="key">return</span> <span class="nam">revision</span><span class="op">.</span><span class="nam">id</span> <span class="key">if</span> <span class="nam">revision</span> <span class="key">else</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t292" href="#t292">292</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t293" href="#t293">293</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_buttons</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">obj</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t294" href="#t294">294</a></span><span class="t">        <span class="key">return</span> <span class="nam">format_buttons_and_list_items</span><span class="op">(</span><span class="nam">obj</span><span class="op">.</span><span class="nam">buttons</span><span class="op">.</span><span class="nam">raw_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t295" href="#t295">295</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t296" href="#t296">296</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_example_values</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">obj</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t297" href="#t297">297</a></span><span class="t">        <span class="key">return</span> <span class="nam">format_example_values</span><span class="op">(</span><span class="nam">obj</span><span class="op">.</span><span class="nam">example_values</span><span class="op">.</span><span class="nam">raw_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t298" href="#t298">298</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t299" href="#t299">299</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_detail_url</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">obj</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t300" href="#t300">300</a></span><span class="t">        <span class="key">return</span> <span class="nam">format_detail_url</span><span class="op">(</span><span class="nam">obj</span><span class="op">=</span><span class="nam">obj</span><span class="op">,</span> <span class="nam">request</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">context</span><span class="op">[</span><span class="str">"request"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -378,8 +388,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_29d2a0ba3c071515_container_tags_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
-            created at 2026-03-16 09:16 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-05-11 14:30 +0000
         </p>
     </div>
 </footer>

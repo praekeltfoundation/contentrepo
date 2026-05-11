@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_a20243f409be1afc_wagtail_hooks_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
-            created at 2026-03-16 09:16 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-05-11 14:30 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -774,7 +774,7 @@
     <p class="run"><span class="n"><a id="t692" href="#t692">692</a></span><span class="t">            <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t693" href="#t693">693</a></span><span class="t">                <span class="nam">page</span> <span class="op">=</span> <span class="nam">ContentPage</span><span class="op">.</span><span class="nam">objects</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">id</span><span class="op">=</span><span class="nam">request</span><span class="op">.</span><span class="nam">data</span><span class="op">[</span><span class="str">"page"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t694" href="#t694">694</a></span><span class="t">                <span class="com"># FIXME: why are we altering the request data here</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t695" href="#t695">695</a></span><span class="t">                <span class="nam">request</span><span class="op">.</span><span class="nam">data</span><span class="op">[</span><span class="str">"revision"</span><span class="op">]</span> <span class="op">=</span> <span class="nam">page</span><span class="op">.</span><span class="nam">get_latest_revision</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">id</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t695" href="#t695">695</a></span><span class="t">                <span class="nam">request</span><span class="op">.</span><span class="nam">data</span><span class="op">[</span><span class="str">"revision"</span><span class="op">]</span> <span class="op">=</span> <span class="nam">page</span><span class="op">.</span><span class="nam">get_live_revision_or_latest</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">id</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t696" href="#t696">696</a></span><span class="t">            <span class="key">except</span> <span class="nam">ContentPage</span><span class="op">.</span><span class="nam">DoesNotExist</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t697" href="#t697">697</a></span><span class="t">                <span class="key">raise</span> <span class="nam">ValidationError</span><span class="op">(</span><span class="op">{</span><span class="str">"page"</span><span class="op">:</span> <span class="op">[</span><span class="str">"Page matching query does not exist."</span><span class="op">]</span><span class="op">}</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t698" href="#t698">698</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -832,8 +832,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_a20243f409be1afc_wagtail_hooks_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
-            created at 2026-03-16 09:16 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-05-11 14:30 +0000
         </p>
     </div>
 </footer>
