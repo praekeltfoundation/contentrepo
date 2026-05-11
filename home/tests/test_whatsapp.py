@@ -282,7 +282,7 @@ class DummyRevisionObj:
         self.SubmissionStatus = DummySubmissionStatus
 
     def create_whatsapp_template_name(
-        self, revision: "DummyRevision" | None = None
+        self, revision: "DummyRevision | None" = None
     ) -> str:
         return "template_123"
 
