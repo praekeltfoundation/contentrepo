@@ -247,7 +247,7 @@ class ContentPageSerializerV3(PageSerializer):
 class WhatsAppTemplateSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(default="default-slug")
     locale = serializers.CharField(source="locale.language_code", default="en")
-    revision = serializers.IntegerField(source="get_latest_revision.id")
+    revision = serializers.SerializerMethodField()
     buttons = serializers.SerializerMethodField()
     example_values = serializers.SerializerMethodField(default=["Example Value 1"])
     detail_url = serializers.SerializerMethodField()
@@ -279,6 +279,16 @@ class WhatsAppTemplateSerializer(serializers.ModelSerializer):
             return super().to_representation(instance.get_latest_revision().as_object())
 
         return super().to_representation(instance)
+
+    def get_revision(self, obj):
+        request = self.context["request"]
+        return_drafts = request.query_params.get("return_drafts", "").lower() == "true"
+        if return_drafts:
+            revision = obj.get_latest_revision()
+        else:
+            revision = obj.get_live_revision_or_latest()
+
+        return revision.id if revision else None
 
     def get_buttons(self, obj):
         return format_buttons_and_list_items(obj.buttons.raw_data)

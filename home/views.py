@@ -692,7 +692,7 @@ class ContentPageRatingViewSet(GenericListViewset, CreateModelMixin):
             try:
                 page = ContentPage.objects.get(id=request.data["page"])
                 # FIXME: why are we altering the request data here
-                request.data["revision"] = page.get_latest_revision().id
+                request.data["revision"] = page.get_live_revision_or_latest().id
             except ContentPage.DoesNotExist:
                 raise ValidationError({"page": ["Page matching query does not exist."]})
 

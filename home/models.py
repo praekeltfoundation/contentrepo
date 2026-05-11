@@ -752,6 +752,9 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
             self.ratings.filter(revision=self.get_latest_revision())
         )
 
+    def get_live_revision_or_latest(self) -> Revision | None:
+        return self.live_revision or self.get_latest_revision()
+
     @property
     def has_whatsapp_template(self) -> bool:
         """
@@ -812,7 +815,7 @@ class ContentPage(UniqueSlugMixin, Page, ContentImportMixin):
                 data[key] = value
 
         page_view = {
-            "revision": self.get_latest_revision(),
+            "revision": self.get_live_revision_or_latest(),
             "data": data,
             "platform": f"{platform}",
         }
@@ -1681,5 +1684,11 @@ class WhatsAppTemplate(
             [b["value"]["title"] for b in self.buttons.raw_data],
         )
 
-    def create_whatsapp_template_name(self) -> str:
-        return f"{self.prefix}_{self.get_latest_revision().pk}"
+    def get_live_revision_or_latest(self) -> Revision | None:
+        return self.live_revision or self.get_latest_revision()
+
+    def create_whatsapp_template_name(self, revision: Revision | None = None) -> str:
+        revision = revision or self.get_live_revision_or_latest()
+        if revision is None:
+            raise ValidationError("Cannot create a template name without a revision.")
+        return f"{self.prefix}_{revision.pk}"

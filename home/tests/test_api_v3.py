@@ -313,20 +313,23 @@ class TestWhatsAppTemplateAPIV3:
             locale="en",
             publish=True,
         )
+        live_revision = template.live_revision
 
         template.message = "Message changed in unpublished revision"
-        template.save_revision()
+        draft_revision = template.save_revision()
 
         url = f"/api/v3/whatsapptemplates/{template.id}/"
         response = uclient.get(url)
         content = response.json()
         assert content["message"] == "*Default published template 1* 🏥"
+        assert content["revision"] == live_revision.id
 
         url = f"/api/v3/whatsapptemplates/{template.id}/?return_drafts=true"
         response = uclient.get(url)
         content = response.json()
 
         assert content["message"] == "Message changed in unpublished revision"
+        assert content["revision"] == draft_revision.id
 
     def test_template_detail_buttons(self, uclient):
         """

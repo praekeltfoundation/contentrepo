@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Ordered Content Set search
 - Fix WhatsApp Template search
 - Fix Page search for nested pages
+- Standalone Templates corrctly use the current live version
 
 ### Security
 -->
