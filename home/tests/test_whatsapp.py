@@ -281,7 +281,9 @@ class DummyRevisionObj:
         self.submission_result: str = ""
         self.SubmissionStatus = DummySubmissionStatus
 
-    def create_whatsapp_template_name(self, revision: DummyRevision | None = None) -> str:
+    def create_whatsapp_template_name(
+        self, revision: "DummyRevision" | None = None
+    ) -> str:
         return "template_123"
 
     def save(self) -> None:
@@ -310,7 +312,9 @@ class DummyModel:
     def get_latest_revision(self) -> DummyRevision | None:
         return self._revision
 
-    def create_whatsapp_template_name(self, revision: DummyRevision | None = None) -> str:
+    def create_whatsapp_template_name(
+        self, revision: DummyRevision | None = None
+    ) -> str:
         return "template_123"
 
     def save(self) -> None:
