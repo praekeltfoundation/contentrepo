@@ -19,7 +19,6 @@ from drf_spectacular.views import (  # isort:skip
     SpectacularSwaggerView,
 )
 
-
 custom_v2router = routers.DefaultRouter()
 custom_v2router.register("ratings", home_views.ContentPageRatingViewSet)
 custom_v2router.register("pageviews", home_views.PageViewViewSet)
