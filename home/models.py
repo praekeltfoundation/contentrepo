@@ -60,7 +60,6 @@ from .constants import (  # isort:skip
     RELATIONSHIP_STATUS_CHOICES,
 )
 
-
 logger = logging.getLogger(__name__)
 
 

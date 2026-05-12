@@ -41,7 +41,7 @@ class ExportRow:
 
 class WhatsAppTemplateExporter:
     def __init__(self, queryset: PageQuerySet):
-        self.rows = []  #  type:  list[dict[str | int, str | int]]
+        self.rows = []  # type: list[dict[str | int, str | int]]
         self.queryset = queryset
 
     def perform_export(self) -> Iterable[ExportRow]:
