@@ -179,6 +179,7 @@ WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
     ("sw", "Swahili"),
     ("tn", "Setswana"),
     ("ts", "Xitsonga"),
+    ("uk", "Ukrainian"),
     ("ur", "Urdu"),
     ("ve", "Tshivenda"),
     ("xh", "isiXhosa"),
