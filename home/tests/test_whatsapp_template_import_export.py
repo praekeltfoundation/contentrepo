@@ -639,6 +639,28 @@ class TestImportExport:
         assert e.value.row_num == 2
         assert e.value.message == ["Language code not found: fakecode"]
 
+    def test_import_chinese_dialect_language_codes(
+        self, csv_impexp: ImportExport
+    ) -> None:
+        """
+        Importing whatsapp templates with configured Chinese dialect language codes should work.
+        """
+        expected_templates = {
+            "test-template-zh-cn": "zh_CN",
+            "test-template-zh-hk": "zh_HK",
+            "test-template-zh-tw": "zh_TW",
+        }
+        for language_code in expected_templates.values():
+            Locale.objects.get_or_create(language_code=language_code)
+
+        csv_impexp.import_file("whatsapp-template-chinese-dialects.csv")
+
+        assert WhatsAppTemplate.objects.count() == len(expected_templates)
+        for slug, language_code in expected_templates.items():
+            assert WhatsAppTemplate.objects.filter(
+                slug=slug, locale__language_code=language_code
+            ).exists()
+
     def test_go_to_page_button_missing_page(self, csv_impexp: ImportExport) -> None:
         """
         Go to page buttons in the import file link to other pages using the slug. But

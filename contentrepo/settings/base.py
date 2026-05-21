@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 import dj_database_url
-import environ
+import environ  # type: ignore[import-untyped]
 
 env = environ.Env()
 
@@ -158,6 +158,9 @@ WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
     ("id", "Bahasa"),
     ("bn", "Bangla"),
     ("zh", "Chinese"),
+    ("zh_CN", "Chinese (CHN)"),
+    ("zh_HK", "Chinese (HKG)"),
+    ("zh_TW", "Chinese (TAI)"),
     ("prs", "Dari"),
     ("en", "English"),
     ("fr", "French"),
