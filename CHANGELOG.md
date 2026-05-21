@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 -->
 
-## v1.6.1 - 2026-05-21
+## v1.6.2 - 2026-05-21
 ### Added
 - Added additional languages for translations (Afrikaans, isiNdebele, Pedi, Sesotho, siSwati, Setswana, Xitsonga, Tshivenda, isiXhosa, isiZulu, Chinese)
 
@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standalone Templates correctly use the current live version
 
 ### Security
+
+## v1.6.1 - 2026-05-21 - BROKEN
 
 ## v1.6.0 - 2025-12-16
 ### Added
