@@ -262,6 +262,16 @@ class TestWhatsApp:
             "components": [{"type": "BODY", "text": "Corpo de Teste"}],
         }
 
+        # Test that Chinese locales are correctly converted to the WhatsApp format.
+        zhcn, _created = Locale.objects.get_or_create(language_code="zh_CN")
+        create_whatsapp_template("test-zh-cn", "测试消息", "UTILITY", locale=zhcn)
+        assert json.loads(responses.calls[-1].request.body) == {
+            "category": "UTILITY",
+            "name": "test-zh-cn",
+            "language": "zh_CN",
+            "components": [{"type": "BODY", "text": "测试消息"}],
+        }
+
 
 class DummySubmissionStatus:
     SUBMITTED = "SUBMITTED"

@@ -646,9 +646,9 @@ class TestImportExport:
         Importing whatsapp templates with configured Chinese dialect language codes should work.
         """
         expected_templates = {
-            "test-template-zh-cn": "zh_CN",
-            "test-template-zh-hk": "zh_HK",
-            "test-template-zh-tw": "zh_TW",
+            "test-template-zh-cn": "zh-cn",
+            "test-template-zh-hk": "zh-hk",
+            "test-template-zh-tw": "zh-tw",
         }
         for language_code in expected_templates.values():
             Locale.objects.get_or_create(language_code=language_code)
