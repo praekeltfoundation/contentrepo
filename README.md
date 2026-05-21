@@ -6,7 +6,7 @@
 |--------------------------------------------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | contentrepo/\_\_init\_\_.py                                                                  |        0 |        0 |    100% |           |
 | contentrepo/settings/\_\_init\_\_.py                                                         |        0 |        0 |    100% |           |
-| contentrepo/settings/base.py                                                                 |       80 |       10 |     88% |197, 232-234, 236-238, 241-245 |
+| contentrepo/settings/base.py                                                                 |       80 |       10 |     88% |200, 235-237, 239-241, 244-248 |
 | contentrepo/settings/dev.py                                                                  |        6 |        0 |    100% |           |
 | contentrepo/settings/test.py                                                                 |        9 |        0 |    100% |           |
 | contentrepo/urls.py                                                                          |       24 |        4 |     83% |     52-57 |
