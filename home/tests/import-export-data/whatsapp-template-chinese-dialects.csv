@@ -1,4 +1,4 @@
 slug,category,buttons,language_code,image,message,example_values,submission_name,submission_status,submission_result
-test-template-zh-cn,MARKETING,[],zh_CN,,Chinese mainland message,,,,
-test-template-zh-hk,MARKETING,[],zh_HK,,Hong Kong Chinese message,,,,
-test-template-zh-tw,MARKETING,[],zh_TW,,Taiwan Chinese message,,,,
+test-template-zh-cn,MARKETING,[],zh-cn,,Chinese mainland message,,,,
+test-template-zh-hk,MARKETING,[],zh-hk,,Hong Kong Chinese message,,,,
+test-template-zh-tw,MARKETING,[],zh-tw,,Taiwan Chinese message,,,,
