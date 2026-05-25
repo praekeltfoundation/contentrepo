@@ -15,6 +15,7 @@ from home.models import WhatsAppTemplate
 from home.whatsapp import (
     TemplateSubmissionClientException,
     TemplateSubmissionServerException,
+    WhatsAppLanguage,
     create_whatsapp_template,
     submit_to_meta_action,
 )
@@ -22,6 +23,14 @@ from home.whatsapp import (
 
 @pytest.mark.django_db
 class TestWhatsApp:
+    def test_whatsapp_language_from_locale_returns_meta_compatible_zh_cn(
+        self,
+    ) -> None:
+        locale, _created = Locale.objects.get_or_create(language_code="zh-cn")
+
+        assert WhatsAppLanguage.from_locale(locale) == WhatsAppLanguage.zh_CN
+        assert WhatsAppLanguage.from_locale(locale).value == "zh_CN"
+
     @responses.activate
     def test_create_whatsapp_template(self, settings: SettingsWrapper) -> None:
         """

@@ -27,5 +27,8 @@ WHATSAPP_LANGUAGE_MAPPING = MappingProxyType(
     {
         "en": "en_US",  # FIXME: Do we need to keep this for backcompat?
         "pt": "pt_PT",  # FIXME: Should this perhaps be pt_BR instead?
+        "zh-cn": "zh_CN",
+        "zh-hk": "zh_HK",
+        "zh-tw": "zh_TW",
     }
 )
