@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 -->
 
+## v1.6.3 - 2026-05-25
+## Unreleased
+### Added
+### Removed
+### Fixed
+- Chinese template submission (fixed Wagtail -> Meta language code)
+### Security
+
 ## v1.6.2 - 2026-05-21
 ### Added
 - Added additional languages for translations (Afrikaans, isiNdebele, Pedi, Sesotho, siSwati, Setswana, Xitsonga, Tshivenda, isiXhosa, isiZulu, Chinese)
