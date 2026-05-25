@@ -561,6 +561,46 @@ class TestImportExportRoundtrip:
             del item["fields"]["has_unpublished_changes"]
         assert imported == orig
 
+    def test_zh_cn_template_export_can_be_reimported(
+        self, impexp: ImportExport
+    ) -> None:
+        """
+        Exporting a zh-cn template produces importable content with the same language code.
+        """
+        locale, _created = Locale.objects.get_or_create(language_code="zh-cn")
+        WhatsAppTemplate.objects.create(
+            slug="wa-zh-cn",
+            message="Chinese template message",
+            category="UTILITY",
+            buttons=[],
+            locale=locale,
+            example_values=[],
+        )
+
+        exported_content = impexp.export_whatsapp_template()
+        if impexp.format == "csv":
+            exported_rows = list(csv.DictReader(StringIO(exported_content.decode())))
+        else:
+            workbook = load_workbook(BytesIO(exported_content))
+            worksheet = workbook.worksheets[0]
+            header = next(worksheet.iter_rows(max_row=1, values_only=True))
+            row = next(worksheet.iter_rows(min_row=2, max_row=2, values_only=True))
+            exported_rows = [
+                {
+                    key: value
+                    for key, value in zip(header, row, strict=True)
+                    if isinstance(key, str)
+                }
+            ]
+
+        assert len(exported_rows) == 1
+        assert exported_rows[0]["language_code"] == "zh-cn"
+
+        impexp.import_whatsapp_template(exported_content, purge=True)
+
+        template = WhatsAppTemplate.objects.get(slug="wa-zh-cn")
+        assert template.locale.language_code == "zh-cn"
+
 
 @pytest.mark.django_db()
 class TestImportExport:
