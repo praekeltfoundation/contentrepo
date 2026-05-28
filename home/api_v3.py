@@ -215,7 +215,9 @@ class ContentPagesV3APIViewset(PagesAPIViewSet):
 
     def get_queryset(self) -> Any:
         all_queryset = (
-            ContentPage.objects.all().order_by("pk").prefetch_related("locale")
+            ContentPage.objects.all()
+            .order_by("pk")
+            .select_related("locale", "live_revision", "latest_revision")
         )
         draft_queryset = all_queryset.filter(has_unpublished_changes=True)
         live_queryset = all_queryset.filter(live=True)
