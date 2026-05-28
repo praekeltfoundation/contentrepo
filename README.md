@@ -13,7 +13,7 @@
 | home/\_\_init\_\_.py                                                                         |        0 |        0 |    100% |           |
 | home/admin.py                                                                                |        5 |        0 |    100% |           |
 | home/api.py                                                                                  |      176 |        5 |     97% |91-94, 102 |
-| home/api\_v3.py                                                                              |      197 |       12 |     94% |121, 182-186, 246, 248-252, 264-265, 275, 301-304 |
+| home/api\_v3.py                                                                              |      197 |       12 |     94% |121, 182-186, 248, 250-254, 266-267, 277, 303-306 |
 | home/assessment\_import\_export.py                                                           |       19 |        0 |    100% |           |
 | home/constants.py                                                                            |        5 |        0 |    100% |           |
 | home/content\_import\_export.py                                                              |       21 |        0 |    100% |           |
@@ -147,7 +147,7 @@
 | home/ordered\_content\_import\_export.py                                                     |       17 |        0 |    100% |           |
 | home/panels.py                                                                               |       13 |        2 |     85% |     15-16 |
 | home/serializers.py                                                                          |      317 |       73 |     77% |22, 25-26, 54, 57, 70, 73, 200, 203-204, 404, 407-408, 412-413, 419-437, 532, 535-536, 539-569, 587-588, 590-591, 593-594, 596-597, 599-600 |
-| home/serializers\_v3.py                                                                      |      162 |        7 |     96% |61-64, 94, 101, 132, 189 |
+| home/serializers\_v3.py                                                                      |      170 |        7 |     96% |61-64, 94, 101, 132, 189 |
 | home/templatetags/\_\_init\_\_.py                                                            |        0 |        0 |    100% |           |
 | home/templatetags/container\_tags.py                                                         |        9 |        1 |     89% |        12 |
 | home/templatetags/version\_tags.py                                                           |        6 |        0 |    100% |           |
@@ -156,7 +156,7 @@
 | home/whatsapp.py                                                                             |      230 |        0 |    100% |           |
 | home/whatsapp\_template\_import\_export.py                                                   |       19 |        0 |    100% |           |
 | home/xlsx\_helpers.py                                                                        |        5 |        0 |    100% |           |
-| **TOTAL**                                                                                    | **5400** |  **470** | **91%** |           |
+| **TOTAL**                                                                                    | **5408** |  **470** | **91%** |           |
 
 
 ## Setup coverage badge
