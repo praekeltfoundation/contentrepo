@@ -205,6 +205,7 @@ class ContentPageSerializerV3(PageSerializer):
     messages = serializers.SerializerMethodField()
     detail_url = serializers.SerializerMethodField()
     related_pages = serializers.SerializerMethodField()
+    revision = serializers.SerializerMethodField()
     meta_fields = []
 
     class Meta:
@@ -220,6 +221,7 @@ class ContentPageSerializerV3(PageSerializer):
             "triggers",
             "has_children",
             "related_pages",
+            "revision",
         ]
         depth = 1  # Include related fields
 
@@ -242,6 +244,16 @@ class ContentPageSerializerV3(PageSerializer):
 
     def get_related_pages(self, obj):
         return format_related_pages(page=obj, request=self.context["request"])
+
+    def get_revision(self, obj):
+        request = self.context["request"]
+        return_drafts = request.query_params.get("return_drafts", "").lower() == "true"
+        if return_drafts:
+            revision = obj.get_latest_revision()
+        else:
+            revision = obj.get_live_revision_or_latest()
+
+        return revision.id if revision else None
 
 
 class WhatsAppTemplateSerializer(serializers.ModelSerializer):

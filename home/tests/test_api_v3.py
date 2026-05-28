@@ -690,7 +690,7 @@ class TestContentPageAPIV3:
         page = self.create_content_page(page, title="Content Page 1")
         uclient.get("/api/v3/pages/")
 
-        with django_assert_num_queries(10):
+        with django_assert_num_queries(9):
             uclient.get("/api/v3/pages/")
 
     @pytest.mark.parametrize("channel", ALL_CHANNELS)
@@ -711,6 +711,7 @@ class TestContentPageAPIV3:
             "detail_url": "http://localhost/api/v3/pages/default-page/",
             "subtitle": "",
             "locale": "en",
+            "revision": page.live_revision_id,
             "messages": {"text": []},
             "tags": ["self_help"],
             "triggers": [],
@@ -766,6 +767,7 @@ class TestContentPageAPIV3:
             "locale": "en",
             "title": "Content Page 1",
             "subtitle": "",
+            "revision": page1.live_revision_id,
             "messages": {"text": []},
             "tags": [],
             "triggers": [],
@@ -800,6 +802,7 @@ class TestContentPageAPIV3:
             "locale": "en",
             "title": "Content Page 1",
             "subtitle": "",
+            "revision": page_1.live_revision_id,
             "messages": {"text": []},
             "tags": [],
             "triggers": [],
@@ -827,6 +830,7 @@ class TestContentPageAPIV3:
             "locale": "en",
             "title": "Content Page 1",
             "subtitle": "",
+            "revision": page_1.get_latest_revision().id,
             "messages": {"text": []},
             "tags": [],
             "triggers": [],
@@ -882,12 +886,57 @@ class TestContentPageAPIV3:
             "locale": "en",
             "title": "Content Page 1",
             "subtitle": "",
+            "revision": page1.live_revision_id,
             "messages": {"text": []},
             "tags": [],
             "triggers": [],
             "has_children": False,
             "related_pages": [],
         }
+
+    def test_detail_view_revision_uses_live_revision_when_newer_draft_exists(
+        self, uclient
+    ):
+        page = self.create_content_page(title="Content Page 1", publish=True)
+        live_revision = page.live_revision
+
+        page.title = "Content Page 1 Draft"
+        draft_revision = page.save_revision()
+
+        response = uclient.get(f"/api/v3/pages/{page.id}/")
+        content = response.json()
+
+        assert response.status_code == 200
+        assert content["revision"] == live_revision.id
+        assert content["revision"] != draft_revision.id
+
+    def test_detail_view_revision_uses_latest_revision_when_returning_drafts(
+        self, uclient
+    ):
+        page = self.create_content_page(title="Content Page 1", publish=True)
+        live_revision = page.live_revision
+
+        page.title = "Content Page 1 Draft"
+        draft_revision = page.save_revision()
+
+        response = uclient.get(f"/api/v3/pages/{page.id}/?return_drafts=true")
+        content = response.json()
+
+        assert response.status_code == 200
+        assert content["revision"] == draft_revision.id
+        assert content["revision"] != live_revision.id
+
+    def test_list_view_includes_revision(self, uclient):
+        page = self.create_content_page(title="Content Page 1", publish=True)
+
+        response = uclient.get("/api/v3/pages/")
+        content = response.json()
+
+        assert response.status_code == 200
+        page_result = next(
+            result for result in content["results"] if result["slug"] == page.slug
+        )
+        assert page_result["revision"] == page.live_revision_id
 
     def test_page_list_unpublished_after_published(self, uclient):
         """
