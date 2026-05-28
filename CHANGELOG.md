@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 -->
 
+## v1.6.4 - 2026-05-28
+## Unreleased
+### Added
+- Add revision field to ContentPageSerializer and update API views to include revision information
+### Removed
+### Fixed
+### Security
+- switch actions to commit shas
+
 ## v1.6.3 - 2026-05-25
 ## Unreleased
 ### Added
