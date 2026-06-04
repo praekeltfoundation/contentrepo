@@ -22,9 +22,8 @@ class TitleField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        page = value
         request = self.context["request"]
-        return title_field_representation(page, request)
+        return title_field_representation(value, request)
 
 
 def title_field_representation(page, request):
