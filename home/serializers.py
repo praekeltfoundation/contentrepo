@@ -22,8 +22,7 @@ class TitleField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        request = self.context["request"]
-        return title_field_representation(value, request)
+        return title_field_representation(value, self.context["request"])
 
 
 def title_field_representation(page, request):
@@ -200,8 +199,7 @@ class BodyField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        request = self.context["request"]
-        return body_field_representation(value, request)
+        return body_field_representation(value, self.context["request"])
 
 
 def body_field_representation(page: Any, request: Any) -> Any:
@@ -402,8 +400,7 @@ class RelatedPagesField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        request = self.context["request"]
-        return related_pages_field_representation(value, request)
+        return related_pages_field_representation(value, self.context["request"])
 
 
 def get_related_page_as_content_page(page):
