@@ -8,7 +8,7 @@ WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH"
 ENV UV_PYTHON_DOWNLOADS=0
 
-RUN uv sync --locked --no-dev --no-install-project
+RUN uv sync --locked --no-dev
 
 ENV DJANGO_SETTINGS_MODULE=contentrepo.settings.production
 
