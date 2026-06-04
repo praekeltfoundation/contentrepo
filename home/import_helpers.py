@@ -128,7 +128,7 @@ def validate_using_form(edit_handler: Any, model: Model, row_num: int) -> None:
             raise ImportException(errors, row_num)
 
 
-def errors_to_list(errs: dict[str, list[str]]) -> str | list[str]:
+def errors_to_list(errs: Any) -> Any:
     def _extract_errors(
         data: dict[str | int, Any] | list[str],
     ) -> Iterator[tuple[list[str], str]]:
@@ -224,7 +224,7 @@ def fix_rows(rows: Iterator[dict[str | Any, Any]]) -> Iterator[dict[str, str | N
     try:
         first_row = next(rows)
     except StopIteration:
-        return iter([])
+        return
 
     if len(first_row) != len(fix_row(first_row)):
         raise ImportException(
@@ -304,7 +304,7 @@ def read_xlsx(file_content: bytes) -> Iterator[dict[str, Any]]:
     header = remove_trailing_nones(header)
 
     for row in worksheet.iter_rows(min_row=2, values_only=True):
-        row = remove_trailing_nones(row)  # type: ignore # Mypy cannot guarantee row is a list; rows may be tuples so we bypass.
+        row = remove_trailing_nones(row)  # type: ignore # Static analysis cannot guarantee row is a list; rows may be tuples so we bypass.
         r = {}
         if len(row) > len(header):
             raise ImportException(

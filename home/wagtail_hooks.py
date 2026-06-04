@@ -271,7 +271,7 @@ class WhatsAppTemplateAdmin(SnippetViewSet):
     body_truncate_size = 200
     icon = "order"
     menu_order = 200
-    add_to_admin_menu = True
+    add_to_admin_menu = settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES
     add_to_settings_menu = False
     exclude_from_explorer = False
     list_export = "slug"
@@ -366,6 +366,4 @@ class AssessmentAdmin(SnippetViewSet):
 modeladmin_register(ContentPageAdmin)
 register_snippet(AssessmentAdmin)
 register_snippet(OrderedContentSetViewSet)
-# Flag for turning on Standalone Whatsapp Templates, still in development
-if settings.ENABLE_STANDALONE_WHATSAPP_TEMPLATES:
-    register_snippet(WhatsAppTemplateAdmin)
+register_snippet(WhatsAppTemplateAdmin)

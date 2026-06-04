@@ -42,6 +42,7 @@ from .helpers import set_profile_field_options
 from .page_builder import (
     FormBtn,
     FormListItem,
+    ListItem,
     MBlk,
     MBody,
     NextBtn,
@@ -2864,7 +2865,7 @@ class TestExportImportRoundtrip:
         form = Assessment.objects.create(
             title="Test form", slug="test-form", locale=home_page.locale
         )
-        list_items = [
+        list_items: list[ListItem] = [
             NextListItem("Item 1"),
             PageListItem("Item 2", page=ha_menu),
             FormListItem("Item 3", form=form),

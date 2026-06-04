@@ -1,13 +1,18 @@
 FROM ghcr.io/praekeltfoundation/docker-django-bootstrap-nw:py3.10-buster
 
-RUN pip install poetry==2.1.1
+COPY --from=ghcr.io/astral-sh/uv:0.11.18 /uv /uvx /bin/
+
 COPY . /app
-RUN poetry config virtualenvs.create false \
-    && poetry install --without dev --no-interaction --no-ansi --no-cache
+WORKDIR /app
 
-ENV DJANGO_SETTINGS_MODULE contentrepo.settings.production
+ENV PATH="/app/.venv/bin:$PATH"
+ENV UV_PYTHON_DOWNLOADS=0
 
-RUN django-admin collectstatic --noinput --settings=contentrepo.settings.base
+RUN uv sync --locked --no-dev --no-install-project
+
+ENV DJANGO_SETTINGS_MODULE=contentrepo.settings.production
+
+RUN python manage.py collectstatic --noinput --settings=contentrepo.settings.base
 
 CMD [\
     "contentrepo.wsgi:application",\
