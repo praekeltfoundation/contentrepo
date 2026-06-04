@@ -54,8 +54,7 @@ class SubtitleField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        page = value
-        return subtitle_field_representation(page)
+        return subtitle_field_representation(value)
 
 
 def subtitle_field_representation(page):
@@ -71,8 +70,7 @@ class HasChildrenField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        page = value
-        return has_children_field_representation(page)
+        return has_children_field_representation(value)
 
 
 def has_children_field_representation(page):
@@ -202,9 +200,8 @@ class BodyField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        page = value
         request = self.context["request"]
-        return body_field_representation(page, request)
+        return body_field_representation(value, request)
 
 
 def body_field_representation(page: Any, request: Any) -> Any:
@@ -405,9 +402,8 @@ class RelatedPagesField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        page = value
         request = self.context["request"]
-        return related_pages_field_representation(page, request)
+        return related_pages_field_representation(value, request)
 
 
 def get_related_page_as_content_page(page):
@@ -526,8 +522,7 @@ class NameField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        instance = value
-        return instance.name
+        return value.name
 
 
 class PagesField(serializers.Field):
@@ -539,10 +534,9 @@ class PagesField(serializers.Field):
             return ContentPage.objects.filter(id=page.id).first()
 
     def to_representation(self, value):
-        instance = value
         request = self.context["request"]
         pages = []
-        for member in instance.pages:
+        for member in value.pages:
             page = self.get_page_as_content_page(member.value)
             title = page.title
             if "whatsapp" in request.GET and page.enable_whatsapp is True:
@@ -582,10 +576,9 @@ class OrderedPagesField(serializers.Field):
             return ContentPage.objects.filter(id=page.id).first()
 
     def to_representation(self, value):
-        instance = value
         request = self.context["request"]
         pages = []
-        for member in instance.pages:
+        for member in value.pages:
             page = self.get_page_as_content_page(member.value.get("contentpage"))
             title = page.title if page else ""
             if "whatsapp" in request.GET and page.enable_whatsapp is True:
@@ -629,9 +622,8 @@ class ProfileFieldsField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        instance = value
         text = []
-        for field in instance.profile_fields.raw_data:
+        for field in value.profile_fields.raw_data:
             text.append(
                 {
                     "profile_field": field["type"],
@@ -650,8 +642,7 @@ class OrderedLocaleField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        instance = value
-        return instance.locale.language_code
+        return value.locale.language_code
 
 
 class OrderedContentSetSerializer(BaseSerializer):
@@ -689,10 +680,9 @@ class QuestionField(serializers.Field):
         return instance
 
     def to_representation(self, value):
-        page = value
         questions = []
 
-        for question in page.questions.raw_data:
+        for question in value.questions.raw_data:
             questions.append(
                 {
                     "id": question["id"],
