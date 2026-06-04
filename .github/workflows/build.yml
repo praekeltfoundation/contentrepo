@@ -33,30 +33,32 @@ jobs:
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
       with:
         python-version: ${{ matrix.python-version }}
-    - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4
+    - name: Install uv
+      uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       with:
-        poetry-version: "1.7.1"
+        version: "0.11.18"
+        enable-cache: true
     - name: Install dependencies
       id: install-deps
       run: |
-        poetry install
+        uv sync --locked --dev
     - name: Check formatting
       # Lints/tests should always run, even if other lints/tests have failed.
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        poetry run black --check .
+        uv run ruff format --check .
     - name: Lint
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        poetry run ruff check .
+        uv run ruff check .
     - name: Check types
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        poetry run mypy
+        uv run ty check
     - name: Run tests
       if: success() || failure() && steps.install-deps.outcome == 'success'
       run: |
-        poetry run pytest -vv
+        uv run pytest -vv
     - name: Coverage comment
       id: coverage_comment
       uses: py-cov-action/python-coverage-comment-action@63f52f4fbbffada6e8dee8ec432de7e01df9ba79  # v3.41

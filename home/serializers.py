@@ -21,9 +21,8 @@ class TitleField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
-    def to_representation(self, page):
-        request = self.context["request"]
-        return title_field_representation(page, request)
+    def to_representation(self, value):
+        return title_field_representation(value, self.context["request"])
 
 
 def title_field_representation(page, request):
@@ -53,8 +52,8 @@ class SubtitleField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
-    def to_representation(self, page):
-        return subtitle_field_representation(page)
+    def to_representation(self, value):
+        return subtitle_field_representation(value)
 
 
 def subtitle_field_representation(page):
@@ -69,8 +68,8 @@ class HasChildrenField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
-    def to_representation(self, page):
-        return has_children_field_representation(page)
+    def to_representation(self, value):
+        return has_children_field_representation(value)
 
 
 def has_children_field_representation(page):
@@ -199,9 +198,8 @@ class BodyField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
-    def to_representation(self, page):
-        request = self.context["request"]
-        return body_field_representation(page, request)
+    def to_representation(self, value):
+        return body_field_representation(value, self.context["request"])
 
 
 def body_field_representation(page: Any, request: Any) -> Any:
@@ -277,13 +275,11 @@ def body_field_representation(page: Any, request: Any) -> Any:
                             and "value" in formatted_message
                             and "message" in formatted_message["value"]
                         ):
-                            formatted_message["value"][
-                                "message"
-                            ] = latest_revision.whatsapp_body.raw_data[message][
-                                "value"
-                            ][
-                                "message"
-                            ]  # Your modified message
+                            formatted_message["value"]["message"] = (
+                                latest_revision.whatsapp_body.raw_data[
+                                    message
+                                ]["value"]["message"]
+                            )  # Your modified message
                     api_body.update(
                         [
                             (
@@ -403,9 +399,8 @@ class RelatedPagesField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
-    def to_representation(self, page):
-        request = self.context["request"]
-        return related_pages_field_representation(page, request)
+    def to_representation(self, value):
+        return related_pages_field_representation(value, self.context["request"])
 
 
 def get_related_page_as_content_page(page):
@@ -523,8 +518,8 @@ class NameField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
-    def to_representation(self, instance):
-        return instance.name
+    def to_representation(self, value):
+        return value.name
 
 
 class PagesField(serializers.Field):
@@ -535,10 +530,10 @@ class PagesField(serializers.Field):
         if page.id:
             return ContentPage.objects.filter(id=page.id).first()
 
-    def to_representation(self, instance):
+    def to_representation(self, value):
         request = self.context["request"]
         pages = []
-        for member in instance.pages:
+        for member in value.pages:
             page = self.get_page_as_content_page(member.value)
             title = page.title
             if "whatsapp" in request.GET and page.enable_whatsapp is True:
@@ -577,10 +572,10 @@ class OrderedPagesField(serializers.Field):
         if page.id:
             return ContentPage.objects.filter(id=page.id).first()
 
-    def to_representation(self, instance):
+    def to_representation(self, value):
         request = self.context["request"]
         pages = []
-        for member in instance.pages:
+        for member in value.pages:
             page = self.get_page_as_content_page(member.value.get("contentpage"))
             title = page.title if page else ""
             if "whatsapp" in request.GET and page.enable_whatsapp is True:
@@ -623,9 +618,9 @@ class ProfileFieldsField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
-    def to_representation(self, instance):
+    def to_representation(self, value):
         text = []
-        for field in instance.profile_fields.raw_data:
+        for field in value.profile_fields.raw_data:
             text.append(
                 {
                     "profile_field": field["type"],
@@ -643,8 +638,8 @@ class OrderedLocaleField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
-    def to_representation(self, instance):
-        return instance.locale.language_code
+    def to_representation(self, value):
+        return value.locale.language_code
 
 
 class OrderedContentSetSerializer(BaseSerializer):
@@ -681,10 +676,10 @@ class QuestionField(serializers.Field):
     def get_attribute(self, instance):
         return instance
 
-    def to_representation(self, page):
+    def to_representation(self, value):
         questions = []
 
-        for question in page.questions.raw_data:
+        for question in value.questions.raw_data:
             questions.append(
                 {
                     "id": question["id"],

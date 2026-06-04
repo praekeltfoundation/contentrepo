@@ -91,10 +91,10 @@ createdb contentrepo
 
 Run the following in a virtual environment
 ```bash
-poetry install
-poetry run ./manage.py migrate
-poetry run ./manage.py createsuperuser
-poetry run ./manage.py runserver
+uv sync
+uv run ./manage.py migrate
+uv run ./manage.py createsuperuser
+uv run ./manage.py runserver
 ```
 
 ### Automated tests

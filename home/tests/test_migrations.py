@@ -220,7 +220,9 @@ class MigrationTests(TestCase):
         "up to it, which means you can't perform any operations on it."
     )
     def test_template_name_lower_case_migration(self) -> None:
-        page = create_page(whatsapp_template_name="WA_Title_1")
+        page = create_page(
+            whatsapp_template_name="WA_Title_1",  # ty: ignore[unknown-argument]
+        )
 
         revision = page.save_revision()
         revision.publish()

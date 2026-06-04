@@ -14,7 +14,6 @@ from openpyxl import load_workbook
 from pytest_django.fixtures import SettingsWrapper
 from wagtail.blocks.stream_block import StreamValue  # type: ignore
 from wagtail.models import Locale  # type: ignore
-from wagtail.snippets.models import register_snippet  # type: ignore
 
 from home.assessment_import_export import import_assessment
 from home.content_import_export import import_content
@@ -24,7 +23,6 @@ from home.models import (
     HomePage,
     WhatsAppTemplate,
 )
-from home.wagtail_hooks import WhatsAppTemplateAdmin
 from home.whatsapp_template_import_export import import_whatsapptemplate
 
 from .page_builder import (
@@ -406,10 +404,6 @@ def result_content_pages() -> None:
             MBody("Skip Score", [MBlk("Skip Result Page")]),
         ],
     )
-
-
-# Needs this here while standalone templates are hidden behind feature flag
-register_snippet(WhatsAppTemplateAdmin)
 
 
 @pytest.mark.django_db()

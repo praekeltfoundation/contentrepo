@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 from wagtail.models import Locale  # type: ignore
 
@@ -47,7 +49,7 @@ def create_content_page(
     if wa_gender_var is None:
         wa_gender_var = []
 
-    bodies = [
+    bodies: list[Any] = [
         MBody(title, [MBlk("Messenger 1"), MBlk("Messenger 2")]),
         SBody(title, [SBlk("SMS 1"), SBlk("SMS 2")]),
         UBody(title, [UBlk("USSD 1"), UBlk("USSD 2")]),

@@ -1,123 +1,67 @@
-# # FIXME: Translate some of these fields to poetry
-# [project]
-# name = "contentrepo"
-# version = "1.1.1-dev.0"
-# authors = [
-#   { name="Praekelt.org", email="dev@praekelt.org" },
-# ]
-# description = "A CMS for messaging systems"
-# readme = "README.md"
-# requires-python = ">=3.10"
-# dynamic = ["dependencies", "optional-dependencies"]
-
-# [project.urls]
-# "Homepage" = "https://github.com/praekeltfoundation/contentrepo"
-# "Bug Tracker" = "https://github.com/praekeltfoundation/contentrepo/issues"
-
-# [tool.setuptools]
-# packages = ["contentrepo", "home"]
-
-# [tool.setuptools.dynamic]
-# dependencies = {file = ["requirements.txt"]}
-# optional-dependencies.dev = {file = ["requirements-dev.txt"]}
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry]
+[project]
 name = "contentrepo"
 version = "1.6.5-dev.0"
 description = "A CMS for messaging systems"
-authors = ["Praekelt.org <dev@praekelt.org>"]
+authors = [
+    { name = "Praekelt.org", email = "dev@praekelt.org" },
+]
 readme = "README.md"
-homepage ="https://github.com/praekeltfoundation/contentrepo"
-repository ="https://github.com/praekeltfoundation/contentrepo"
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "wagtail>=5.2.6,<5.3.0", # Latest LTS
+    "django>=4.2.27,<4.3.0", # Latest LTS
+    "dj-database-url>=2.1.0,<3.0.0",
+    "psycopg2-binary>=2.9.9,<3.0.0",
+    "django-environ>=0.11.2,<0.12.0",
+    "wagtail-content-import>=0.11.0,<0.12.0",
+    "wagtailmedia>=0.15.1,<0.16.0",
+    "drf-spectacular>=0.27.1,<0.28.0",
+    "openpyxl>=3.1.2,<4.0.0",
+    "wagtail-modeladmin>=2.0.0,<3.0.0",
+    # These aren't needed in tests, but are probably used in production:
+    "django-storages>=1.14.2,<2.0.0",
+    "django-redis>=5.4.0,<6.0.0",
+    "sentry-sdk>=2.8.0,<3.0.0",
+    "boto3>=1.34.56,<2.0.0",
+    "pyparsing>=3.2.3,<4.0.0",
+    "markdown>=3.10,<4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/praekeltfoundation/contentrepo"
+Repository = "https://github.com/praekeltfoundation/contentrepo"
+"Bug Tracker" = "https://github.com/praekeltfoundation/contentrepo/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.2,<9.0.0",
+    "pytest-django>=4.8.0,<5.0.0",
+    "pytest-cov>=4.1.0,<5.0.0",
+    "pytest-xdist>=3.5.0,<4.0.0",
+    "ruff>=0.6.9,<0.7.0",
+    "ty>=0.0.39,<0.1.0",
+    "responses>=0.25.0,<0.26.0",
+    "types-openpyxl>=3.1.0.20240301,<4.0.0",
+    "types-requests>=2.31.0.20240311,<3.0.0",
+    "django-stubs>=5.2.0,<6.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
 packages = [
-  { include = "contentrepo" },
-  { include = "home" },
+    "contentrepo",
+    "home",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-wagtail = "~5.2.6"  # Latest LTS
-django = "~4.2.27"  # Latest LTS
-dj-database-url = "^2.1.0"
-psycopg2-binary = "^2.9.9"
-django-environ = "^0.11.2"
-wagtail-content-import = "^0.11.0"
-wagtailmedia = "^0.15.1"
-drf-spectacular = "^0.27.1"
-openpyxl = "^3.1.2"
-wagtail-modeladmin = "^2.0.0"
-# These aren't needed in tests, but are probably used in production:
-django-storages = "^1.14.2"
-django-redis = "^5.4.0"
-sentry-sdk = "^2.8.0"
-boto3 = "^1.34.56"
-pyparsing = "^3.2.3"
-markdown = "^3.10"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.0.2"
-pytest-django = "^4.8.0"
-pytest-cov = "^4.1.0"
-pytest-xdist = "^3.5.0"
-mypy = "^1.8.0"
-ruff = "^0.6.9"
-black = ">=24.3,<27.0"
-responses = "^0.25.0"
-types-openpyxl = "^3.1.0.20240301"
-types-requests = "^2.31.0.20240311"
-django-stubs = "^5.2.0"
-
-[[tool.poetry.source]]
-name = "pytorch-stable-cpu"
-url = "https://download.pytorch.org/whl/cpu"
-priority = "explicit"
-
-[tool.black]
-line-length = 88
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | \.ve
-  | ve
-  | env
-  | _build
-  | buck-out
-  | build
-  | dist
-  | migrations
-)/
-'''
-
-[tool.mypy]
-exclude = [  # Regexes.
-    '^manage\.py',
-    '^contentrepo/',
-    '^home/(management|migrations)/',
-    '^home/(admin|apps|api|api_v3|constants|content_import_export|forms)\.py',
-    '^home/(mappers|mixins|models|panels|serializers|serializers_v3)\.py',
-    '^home/(views|wagtail_hooks)\.py',
-    '^home/tests/utils\.py',
-    '^home/tests/test_(api|deduplicate_slugs_migration|json_import)\.py',
-    '^home/tests/test_api_v3\.py',
-    '^home/tests/test_(management|management_related_tag|models)\.py',
-    '^home/tests/test_(unique_slug_hook|views|wagtail_hooks)\.py',
-    '^home/tests/test_(whatsapp_template_name_migration)\.py',
-    '^home/tests/test_(forms)\.py',
-    '^home/tests/test_(management|management_import_json_content_turn)\.py',
+[tool.uv]
+constraint-dependencies = [
+    "wagtail==5.2.6",
+    "wagtail-modeladmin==2.0.0",
+    "wagtailmedia==0.15.1",
 ]
-files = "."
-follow_imports = "skip"
-disallow_untyped_defs = true
-disallow_any_generics = true
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "contentrepo.settings.test"
@@ -131,10 +75,15 @@ filterwarnings = [
 ]
 
 [tool.ruff]
+line-length = 88
 target-version = "py310"
 extend-exclude = [
     "*/migrations/*.py",
-    ]
+]
+
+[tool.ruff.format]
+line-ending = "auto"
+
 [tool.ruff.lint]
 select = [
     "E", "F", "W", # pycodestyle + pyflakes == flake8 - mccabe
@@ -169,4 +118,65 @@ ignore = [
     "E501",  # Long lines are okay in generated code.
     "I001",  # We don't care about import sorting in generated code.
     "UP",  # We don't care about new syntax in generated code.
+]
+
+[tool.ty.environment]
+python-version = "3.10"
+
+[tool.ty.analysis]
+replace-imports-with-any = [
+    "django.**",
+    "openpyxl.**",
+    "pytest.**",
+    "pytest_django.**",
+    "responses.**",
+    "wagtail.**",
+    "home.models",
+    "home.models.**",
+]
+
+[tool.ty.rules]
+redundant-cast = "ignore"
+unused-type-ignore-comment = "ignore"
+
+[tool.ty.src]
+include = [
+    "manage.py",
+    "contentrepo",
+    "home",
+]
+exclude = [
+    "manage.py",
+    "contentrepo",
+    "home/management",
+    "home/migrations",
+    "home/admin.py",
+    "home/apps.py",
+    "home/api.py",
+    "home/api_v3.py",
+    "home/constants.py",
+    "home/content_import_export.py",
+    "home/forms.py",
+    "home/mappers.py",
+    "home/mixins.py",
+    "home/models.py",
+    "home/panels.py",
+    "home/serializers.py",
+    "home/serializers_v3.py",
+    "home/views.py",
+    "home/wagtail_hooks.py",
+    "home/tests/utils.py",
+    "home/tests/test_api.py",
+    "home/tests/test_deduplicate_slugs_migration.py",
+    "home/tests/test_json_import.py",
+    "home/tests/test_api_v3.py",
+    "home/tests/test_management.py",
+    "home/tests/test_management_related_tag.py",
+    "home/tests/test_models.py",
+    "home/tests/test_unique_slug_hook.py",
+    "home/tests/test_views.py",
+    "home/tests/test_wagtail_hooks.py",
+    "home/tests/test_whatsapp_template_name_migration.py",
+    "home/tests/test_forms.py",
+    "home/tests/test_management_import_json_content_turn.py",
 ]
