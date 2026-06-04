@@ -12,7 +12,7 @@ RUN uv sync --locked --no-dev
 
 ENV DJANGO_SETTINGS_MODULE=contentrepo.settings.production
 
-RUN python manage.py collectstatic --noinput --settings=contentrepo.settings.base
+RUN django-admin collectstatic --noinput --settings=contentrepo.settings.base
 
 CMD [\
     "contentrepo.wsgi:application",\
