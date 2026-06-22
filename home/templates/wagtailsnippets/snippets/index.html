@@ -11,13 +11,8 @@
         {% if view.list_export %}
             {% include view.export_buttons_template_name %}
         {% endif %}
-	{# begin customisation #}
-        {% if view.list_export or user_can_create %}
-            <div class="actionbutton">
-                {% if user_can_create %}
-                    {% include 'wagtailsnippets/snippets/includes/button.html' with button=view.button_helper.add_button %}
-                {% endif %}
-            </div>
+        {# begin customisation #}
+        {% if view.list_export or can_add_snippet %}
             {% block import_button %}
                 <div class="actionbutton">
                         <div class="dropdown dropdown-button match-width col">
@@ -26,9 +21,8 @@
 
                 </div>
             {% endblock %}
-
         {% endif %}
-	{# end customisation #}
+        {# end customisation #}
     {% endfragment %}
 
     {% include 'wagtailadmin/shared/header.html' with title=model_opts.verbose_name_plural|capfirst icon=header_icon search_url=search_url base_actions=base_action_locale action_url=action_url_add_snippet action_icon="plus" action_text=action_text_snippet extra_actions=extra_actions search_results_url=index_results_url %}
