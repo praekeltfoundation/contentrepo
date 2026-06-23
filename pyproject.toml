@@ -57,6 +57,7 @@ packages = [
 ]
 
 [tool.uv]
+exclude-newer = "7 days"
 constraint-dependencies = [
     "wagtail==5.2.6",
     "wagtail-modeladmin==2.0.0",
