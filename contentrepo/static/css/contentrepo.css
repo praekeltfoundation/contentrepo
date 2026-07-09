@@ -89,3 +89,39 @@ pre {
 * {
   box-sizing: border-box;
 }
+
+/* Wagtail admin header actions: keep consistent spacing next to search */
+.w-header--hasform .right {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.w-header--hasform .right > .actionbutton,
+.w-header--hasform .right > .dropdown {
+  margin: 0;
+}
+
+.w-header--hasform .right.is-wrapped {
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+/* ModelAdmin override uses header-right as the action wrapper */
+.w-header--hasform .header-right {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+/* When the header wraps, make actions flow as a tidy full-width row */
+@media (max-width: 1200px) {
+  .w-header--hasform .right {
+    justify-content: flex-end;
+    width: 100%;
+  }
+}
