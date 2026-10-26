@@ -6,13 +6,13 @@
 |--------------------------------------------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | contentrepo/\_\_init\_\_.py                                                                  |        0 |        0 |    100% |           |
 | contentrepo/settings/\_\_init\_\_.py                                                         |        0 |        0 |    100% |           |
-| contentrepo/settings/base.py                                                                 |       80 |       10 |     88% |200, 235-237, 239-241, 244-248 |
+| contentrepo/settings/base.py                                                                 |       81 |       10 |     88% |200, 236-238, 240-242, 245-249 |
 | contentrepo/settings/dev.py                                                                  |        6 |        0 |    100% |           |
 | contentrepo/settings/test.py                                                                 |        9 |        0 |    100% |           |
 | contentrepo/urls.py                                                                          |       24 |        4 |     83% |     52-57 |
 | home/\_\_init\_\_.py                                                                         |        0 |        0 |    100% |           |
 | home/admin.py                                                                                |        5 |        0 |    100% |           |
-| home/api.py                                                                                  |      176 |        5 |     97% |91-94, 102 |
+| home/api.py                                                                                  |      188 |        5 |     97% |95-98, 106 |
 | home/api\_v3.py                                                                              |      197 |       12 |     94% |121, 182-186, 248, 250-254, 266-267, 277, 303-306 |
 | home/assessment\_import\_export.py                                                           |       19 |        0 |    100% |           |
 | home/constants.py                                                                            |        5 |        0 |    100% |           |
@@ -156,7 +156,7 @@
 | home/whatsapp.py                                                                             |      230 |        0 |    100% |           |
 | home/whatsapp\_template\_import\_export.py                                                   |       19 |        0 |    100% |           |
 | home/xlsx\_helpers.py                                                                        |        5 |        0 |    100% |           |
-| **TOTAL**                                                                                    | **5405** |  **466** | **91%** |           |
+| **TOTAL**                                                                                    | **5418** |  **466** | **91%** |           |
 
 
 ## Setup coverage badge
