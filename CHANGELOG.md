@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!--
 ## Unreleased
 ### Added
+- Cache ordered content set list and detail API responses using Django's configured cache backend, varying by query parameters and request headers. Configure the cache lifetime with `ORDERED_CONTENT_CACHE_TTL` (default: 60 seconds).
 ### Removed
 ### Fixed
 ### Security
