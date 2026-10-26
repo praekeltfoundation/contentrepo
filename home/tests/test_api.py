@@ -1,6 +1,5 @@
 import json
 import queue
-import time
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -13,6 +12,7 @@ from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
 from django.urls import reverse
+from django.utils.cache import get_cache_key
 from pytest_django.asserts import assertTemplateUsed
 from taggit.models import Tag  # type: ignore
 from wagtail import blocks
@@ -1349,12 +1349,16 @@ class TestOrderedContentSetAPI:
     def test_cache_retains_response_until_expiry(self, uclient):
         """Content edits become visible after the cached response's TTL expires."""
         url = f"/api/v2/orderedcontent/{self.ordered_content_set.pk}/"
-        first = uclient.get(url).json()
+        first = uclient.get(url)
         self.ordered_content_set.name = "Changed set"
         self.ordered_content_set.save()
-        assert uclient.get(url).json() == first
-        with patch("time.time", return_value=time.time() + 61):
-            assert uclient.get(url).json()["name"] == "Changed set"
+        assert uclient.get(url).json() == first.json()
+
+        # Expire the entry on the backend; mocking Python time doesn't affect Redis.
+        key = get_cache_key(first.wsgi_request)
+        assert key is not None
+        assert cache.touch(key, timeout=0)
+        assert uclient.get(url).json()["name"] == "Changed set"
 
     def test_warm_cache_requires_authentication(self, uclient, client):
         """Anonymous requests are denied even after an authenticated response is cached."""
