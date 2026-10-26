@@ -200,6 +200,7 @@ if "REDIS_LOCATION" in os.environ:
     os.environ["CACHE_URL"] = os.environ["REDIS_LOCATION"]
 
 CACHES = {"default": env.cache("CACHE_URL", default="redis://127.0.0.1:6379/1")}
+ORDERED_CONTENT_CACHE_TTL = env.int("ORDERED_CONTENT_CACHE_TTL", default=60)
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",

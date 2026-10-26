@@ -122,6 +122,7 @@ There is a [docker image](https://github.com/praekeltfoundation/contentrepo/pkgs
 | ALLOWED_HOSTS | Comma separated list of hostnames for this service, eg. `host1.example.org,host2.example.org` |
 | CSRF_TRUSTED_ORIGINS | A list of trusted origins for unsafe requests  |
 | CACHE_URL | Where to find the cache backend, format: redis://host:post/db . See [the django-environ docs](https://django-environ.readthedocs.io/en/latest/types.html#environ-env-cache-url) for more cache backends. |
+| ORDERED_CONTENT_CACHE_TTL | Ordered content API response cache lifetime in seconds (default 60). Set to 0 to disable. Uses Django's default cache backend, including local memory. |
 | SENTRY_DSN | Where to send exceptions to |
 | AWS_ACCESS_KEY_ID | Specifies an AWS access key associated with an IAM account |
 | AWS_SECRET_ACCESS_KEY | Specifies the secret key associated with the access key. This is essentially the "password" for the access key |

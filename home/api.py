@@ -1,3 +1,7 @@
+from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -103,6 +107,20 @@ class ContentPageIndexViewSet(PagesAPIViewSet):
 
 
 class OrderedContentSetViewSet(BaseAPIViewSet):
+    @method_decorator(cache_page(settings.ORDERED_CONTENT_CACHE_TTL))
+    @method_decorator(
+        vary_on_headers("Accept", "Accept-Language", "Cookie", "Authorization")
+    )
+    def listing_view(self, request):
+        return super().listing_view(request)
+
+    @method_decorator(cache_page(settings.ORDERED_CONTENT_CACHE_TTL))
+    @method_decorator(
+        vary_on_headers("Accept", "Accept-Language", "Cookie", "Authorization")
+    )
+    def detail_view(self, request, pk):
+        return super().detail_view(request, pk)
+
     model = OrderedContentSet
     base_serializer_class = OrderedContentSetSerializer
     listing_default_fields = BaseAPIViewSet.listing_default_fields + [

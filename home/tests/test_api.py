@@ -1,11 +1,14 @@
 import json
 import queue
+import time
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from bs4 import BeautifulSoup
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.exceptions import ValidationError  # type: ignore
 from django.core.files.base import File  # type: ignore
 from django.core.files.images import ImageFile  # type: ignore
@@ -180,9 +183,9 @@ class TestContentPageAPI:
 
         for i in range(body_count):
             if msg_prefix:
-                msg_body = f"{msg_prefix} {i+1}"
+                msg_body = f"{msg_prefix} {i + 1}"
             else:
-                msg_body = f"*Default {body_type} Content {i+1}* 🏥"
+                msg_body = f"*Default {body_type} Content {i + 1}* 🏥"
             match body_type:
                 case "whatsapp":
                     bodies.append(WABody(title, [WABlk(msg_body)]))
@@ -1275,6 +1278,120 @@ class TestWhatsAppMessages:
 
 @pytest.mark.django_db
 class TestOrderedContentSetAPI:
+    @pytest.fixture(autouse=True)
+    def isolate_cache(self):
+        """Keep cached responses from leaking between tests."""
+        cache.clear()
+        yield
+        cache.clear()
+
+    @pytest.mark.parametrize("detail", [False, True])
+    @pytest.mark.parametrize("header", ["Cookie", "Authorization"])
+    def test_cache_isolates_authentication_headers(self, uclient, detail, header):
+        """List and detail responses use separate entries for authentication headers."""
+        from home.api import OrderedContentSetViewSet
+
+        url = "/api/v2/orderedcontent/"
+        if detail:
+            url += f"{self.ordered_content_set.pk}/"
+        first = uclient.get(url)
+        assert first.status_code == 200
+        assert header.lower() in first["Vary"].lower()
+        if header == "Authorization":
+            headers = {"HTTP_AUTHORIZATION": "Basic dGVzdDp0ZXN0"}
+        else:
+            cookies = uclient.cookies.output(header="", sep=";").strip()
+            headers = {"HTTP_COOKIE": cookies + "; cache_variant=1"}
+        with patch.object(
+            OrderedContentSetViewSet,
+            "get_queryset",
+            autospec=True,
+            side_effect=OrderedContentSetViewSet.get_queryset,
+        ) as queryset:
+            assert uclient.get(url, **headers).status_code == 200
+        queryset.assert_called()
+
+    def test_cache_isolates_parameter_values(self, uclient):
+        """Distinct query strings coexist in the cache and retain their own results."""
+        from home.api import OrderedContentSetViewSet
+
+        url = "/api/v2/orderedcontent/"
+        variants = {
+            "?gender=female": 2,
+            "?gender=male": 0,
+            "?gender=": 2,
+            "": 2,
+            "?gender=female&gender=male": 0,
+            "?gender=male&gender=female": 2,
+        }
+        responses = {}
+        with patch.object(
+            OrderedContentSetViewSet,
+            "get_queryset",
+            autospec=True,
+            side_effect=OrderedContentSetViewSet.get_queryset,
+        ) as queryset:
+            for query, expected_count in variants.items():
+                queryset.reset_mock()
+                response = uclient.get(url + query)
+                assert response.status_code == 200
+                queryset.assert_called()
+                responses[query] = response.json()
+                assert len(responses[query]["results"]) == expected_count
+
+        with patch(
+            "home.api.OrderedContentSetViewSet.get_queryset",
+            side_effect=AssertionError("cache miss"),
+        ):
+            for query, expected in responses.items():
+                assert uclient.get(url + query).json() == expected
+
+    def test_cache_retains_response_until_expiry(self, uclient):
+        """Content edits become visible after the cached response's TTL expires."""
+        url = f"/api/v2/orderedcontent/{self.ordered_content_set.pk}/"
+        first = uclient.get(url).json()
+        self.ordered_content_set.name = "Changed set"
+        self.ordered_content_set.save()
+        assert uclient.get(url).json() == first
+        with patch("time.time", return_value=time.time() + 61):
+            assert uclient.get(url).json()["name"] == "Changed set"
+
+    def test_warm_cache_requires_authentication(self, uclient, client):
+        """Anonymous requests are denied even after an authenticated response is cached."""
+        url = "/api/v2/orderedcontent/"
+        assert uclient.get(url).status_code == 200
+        client.logout()
+        assert client.get(url).status_code in (401, 403)
+
+    @pytest.mark.parametrize("detail", [False, True])
+    def test_cache_isolates_content_negotiation(self, uclient, detail):
+        """List and detail endpoints cache JSON and HTML representations separately."""
+        url = "/api/v2/orderedcontent/"
+        if detail:
+            url += f"{self.ordered_content_set.pk}/"
+
+        # Establish the browsable API's CSRF cookie before populating variants.
+        assert uclient.get(url, HTTP_ACCEPT="text/html").status_code == 200
+        cache.clear()
+        responses = {}
+        for media_type in ("application/json", "text/html"):
+            response = uclient.get(url, HTTP_ACCEPT=media_type)
+            assert response.status_code == 200
+            assert response["Content-Type"].split(";")[0] == media_type
+            responses[media_type] = response.content
+        assert json.loads(responses["application/json"])
+        assert b"<html" in responses["text/html"].lower()
+
+        with patch(
+            "home.api.OrderedContentSetViewSet.get_queryset",
+            side_effect=AssertionError("cache miss"),
+        ):
+            for media_type, expected in responses.items():
+                response = uclient.get(url, HTTP_ACCEPT=media_type)
+                assert response.status_code == 200
+                assert response["Content-Type"].split(";")[0] == media_type
+                assert response.content == expected
+
     @pytest.fixture(autouse=True)
     def create_test_data(self) -> None:
         """
