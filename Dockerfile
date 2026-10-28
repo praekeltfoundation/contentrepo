@@ -5,10 +5,11 @@ COPY --from=ghcr.io/astral-sh/uv:0.11.18 /uv /uvx /bin/
 COPY . /app
 WORKDIR /app
 
-ENV PATH="/app/.venv/bin:$PATH"
+ENV UV_PROJECT_ENVIRONMENT=/usr/local
 ENV UV_PYTHON_DOWNLOADS=0
 
-RUN uv sync --locked --no-dev
+# Keep the base image's Gunicorn and other runtime packages.
+RUN uv sync --locked --no-dev --inexact
 
 ENV DJANGO_SETTINGS_MODULE=contentrepo.settings.production
 
