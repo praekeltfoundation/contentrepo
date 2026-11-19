@@ -232,8 +232,10 @@ dependencies = [
     { name = "django-redis" },
     { name = "django-storages" },
     { name = "drf-spectacular" },
+    { name = "gunicorn" },
     { name = "markdown" },
     { name = "openpyxl" },
+    { name = "pillow-heif" },
     { name = "psycopg2-binary" },
     { name = "pyparsing" },
     { name = "sentry-sdk" },
@@ -241,6 +243,7 @@ dependencies = [
     { name = "wagtail-content-import" },
     { name = "wagtail-modeladmin" },
     { name = "wagtailmedia" },
+    { name = "whitenoise" },
 ]
 
 [package.dev-dependencies]
@@ -266,8 +269,10 @@ requires-dist = [
     { name = "django-redis", specifier = ">=5.4.0,<6.0.0" },
     { name = "django-storages", specifier = ">=1.14.2,<2.0.0" },
     { name = "drf-spectacular", specifier = ">=0.27.1,<0.28.0" },
+    { name = "gunicorn", specifier = ">=23.0.0,<24.0.0" },
     { name = "markdown", specifier = ">=3.10,<4.0" },
     { name = "openpyxl", specifier = ">=3.1.2,<4.0.0" },
+    { name = "pillow-heif", specifier = ">=0.22.0,<0.23.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.9,<3.0.0" },
     { name = "pyparsing", specifier = ">=3.2.3,<4.0.0" },
     { name = "sentry-sdk", specifier = ">=2.8.0,<3.0.0" },
@@ -275,6 +280,7 @@ requires-dist = [
     { name = "wagtail-content-import", specifier = ">=0.11.0,<0.12.0" },
     { name = "wagtail-modeladmin", specifier = ">=2.0.0,<3.0.0" },
     { name = "wagtailmedia", specifier = ">=0.15.1,<0.16.0" },
+    { name = "whitenoise", specifier = ">=6.12.0,<7.0.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -643,6 +649,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/bb/29/745f7d30d47fe0f251d3ad3dc2978a23141917661998763bebb6da007eb1/filetype-1.2.0.tar.gz", hash = "sha256:66b56cd6474bf41d8c54660347d37afcc3f7d1970648de365c102ef77548aadb", size = 998020, upload-time = "2022-11-02T17:34:04.141Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/18/79/1b8fa1bb3568781e84c9200f951c735f3f157429f44be0495da55894d620/filetype-1.2.0-py2.py3-none-any.whl", hash = "sha256:7ce71b6880181241cf7ac8697a2f1eb6a8bd9b429f7ad6d27b8db9ba5f1c2d25", size = 19970, upload-time = "2022-11-02T17:34:01.425Z" },
+]
+
+[[package]]
+name = "gunicorn"
+version = "23.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/34/72/9614c465dc206155d93eff0ca20d42e1e35afc533971379482de953521a4/gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec", size = 375031, upload-time = "2024-08-10T20:25:27.378Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/7d/6dac2a6e1eba33ee43f318edbed4ff29151a49b5d37f080aad1e6469bca4/gunicorn-23.0.0-py3-none-any.whl", hash = "sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d", size = 85029, upload-time = "2024-08-10T20:25:24.996Z" },
 ]
 
 [[package]]
@@ -1855,6 +1873,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/0b/02/ae6ceac1baeda530866a85075641cec12989bd8d31af6d5ab4a3e8c92f47/webencodings-0.5.1.tar.gz", hash = "sha256:b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923", size = 9721, upload-time = "2017-04-05T20:21:34.189Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/24/2a3e3df732393fed8b3ebf2ec078f05546de641fe1b667ee316ec1dcf3b7/webencodings-0.5.1-py2.py3-none-any.whl", hash = "sha256:a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78", size = 11774, upload-time = "2017-04-05T20:21:32.581Z" },
+]
+
+[[package]]
+name = "whitenoise"
+version = "6.12.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cb/2a/55b3f3a4ec326cd077c1c3defeee656b9298372a69229134d930151acd01/whitenoise-6.12.0.tar.gz", hash = "sha256:f723ebb76a112e98816ff80fcea0a6c9b8ecde835f8ddda25df7a30a3c2db6ad", size = 26841, upload-time = "2026-02-27T00:05:42.028Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/db/eb/d5583a11486211f3ebd4b385545ae787f32363d453c19fffd81106c9c138/whitenoise-6.12.0-py3-none-any.whl", hash = "sha256:fc5e8c572e33ebf24795b47b6a7da8da3c00cff2349f5b04c02f28d0cc5a3cc2", size = 20302, upload-time = "2026-02-27T00:05:40.086Z" },
 ]
 
 [[package]]
