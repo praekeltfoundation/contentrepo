@@ -4,6 +4,30 @@
 {% get_settings %}
 {% block furniture %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/contentrepo.css' %}">
+    <script>
+        (function () {
+            function updateHeaderWrapState() {
+                document
+                    .querySelectorAll(".w-header--hasform .row")
+                    .forEach(function (row) {
+                        var left = row.querySelector(".left");
+                        var right = row.querySelector(".right");
+                        if (!left || !right) {
+                            return;
+                        }
+                        var isWrapped = right.offsetTop >= left.offsetTop + left.offsetHeight - 4;
+                        right.classList.toggle("is-wrapped", isWrapped);
+                    });
+            }
+
+            function scheduleUpdate() {
+                window.requestAnimationFrame(updateHeaderWrapState);
+            }
+
+            document.addEventListener("DOMContentLoaded", scheduleUpdate);
+            window.addEventListener("resize", scheduleUpdate);
+        })();
+    </script>
     <template data-wagtail-sidebar-branding-logo>{% block branding_logo %}
       {% if settings.home.SiteSettings.favicon %}
         <img src={{settings.home.SiteSettings.favicon.url }} alt={{settings.home.SiteSettings.title}} width="80" />
