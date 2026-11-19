@@ -1,6 +1,8 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: runtime
     ports:
       - 8000:8000
     working_dir: /app
